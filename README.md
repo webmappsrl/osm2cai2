@@ -35,7 +35,7 @@ chown -R 33 /var/log/
 
 At the end run install command to for this instance
 ```bash
-geobox_install osm2cai
+geobox_install osm2cai2
 ```
 
 *Important NOTE*: 
