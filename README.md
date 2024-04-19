@@ -12,7 +12,7 @@ First of all install the [GEOBOX](https://github.com/webmappsrl/geobox) repo and
 Replace `${instance name}` with the instance name (APP_NAME in .env file)
 
 ```sh
-git clone git@github.com:webmappsrl/${repository_name}.git ${instance name}
+git clone git@github.com:webmappsrl/osm2cai2.git osm2cai2
 git flow init
 ```
 
@@ -21,21 +21,21 @@ Important NOTE: remember to checkout the develop branch.
 ```sh
 cd ${instance name}
 bash docker/init-docker.sh
-docker exec -u 0 -it php81_${instance name} bash
-chown -R 33 storage
+docker exec -u 0 -it php81_osm2cai2 bash
+chown -R .
 ```
 
 *Important NOTE*: if you have installed XDEBUG you need to create the xdebug.log file on the docker:
 
 ```bash
-docker exec -u 0 -it php81_${instance name} bash
+docker exec -u 0 -it php81_osm2cai2 bash
 touch /var/log/xdebug.log
 chown -R 33 /var/log/
 ```
 
 At the end run install command to for this instance
 ```bash
-geobox_install ${instance name}
+geobox_install osm2cai
 ```
 
 *Important NOTE*: 
@@ -48,7 +48,7 @@ composer update wm/wp-package
 Finally to import a fresh copy of database use Geobox restore command:
 
 ```bash
-geobox_dump_restore ${instance name}
+geobox_dump_restore osm2cai2
 ```
 
 ## Run web server from shell outside docker
@@ -57,7 +57,7 @@ In order to start a web server in local environment use the following command:
 Replace `${instance name}` with the instance name (APP_NAME in .env file)
 
 ```sh
-geobox_serve ${instance name}
+geobox_serve osm2cai2
 ```
 
 ### Differenze ambiente produzione locale
