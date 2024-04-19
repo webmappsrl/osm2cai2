@@ -13,6 +13,9 @@ composer install  --no-interaction --prefer-dist --optimize-autoloader
 # Run database migrations
 php artisan migrate
 
+# Create admin user
+php artisan db:seed
+
 php artisan optimize:clear
 php artisan config:clear
 

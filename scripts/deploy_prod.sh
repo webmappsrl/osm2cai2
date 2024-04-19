@@ -20,6 +20,9 @@ php artisan clear-compiled
 
 php artisan migrate
 
+# Create admin user
+php artisan db:seed
+
 php artisan up
 
 echo "Deployment finished!"

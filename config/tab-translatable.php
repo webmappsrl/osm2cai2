@@ -12,7 +12,7 @@ return [
      * If you choose array selection, you should add all supported translation on it as "code"
      */
     'locales' => [
-        'it', 'en'
+        'it', 'en',
     ],
 
     /*
@@ -23,7 +23,7 @@ return [
         'model' => 'App\\Model\\Language',
         'code_field' => 'lang',
         'sort_by' => 'id',
-        'sort_direction' => 'asc'
+        'sort_direction' => 'asc',
     ],
 
     /*

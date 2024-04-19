@@ -1,0 +1,25 @@
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: Make a release
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/marketplace/actions/release-please-action
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: php
+          commit-search-depth: 50
+          package-name: release-please-action
+          pull-request-title-pattern: "release${component} ${version}"
+          pull-request-header: ":robot: I have created a release. Changelog updated with this data:"
+          extra-files: |
+            config/app.php

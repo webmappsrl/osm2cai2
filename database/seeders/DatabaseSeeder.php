@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         //create admin user
         $admin = User::where('email', 'team@webmapp.it')->first();
 
-        if (!$admin) {
+        if (! $admin) {
             User::factory()->create();
         }
     }
