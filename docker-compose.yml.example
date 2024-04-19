@@ -1,4 +1,4 @@
-version: "3.7"
+version: "4"
 services:
   phpfpm:
     extra_hosts:
@@ -15,8 +15,9 @@ services:
       - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
     working_dir: '/var/www/html/${DOCKER_PROJECT_DIR_NAME}'
   db:
-    image: postgis/postgis:14-3.3
+    image: postgis/postgis:16-3.4
     container_name: "postgres_${APP_NAME}"
+    shm_size: 512m
     restart: always
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD:?err}
