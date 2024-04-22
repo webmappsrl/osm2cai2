@@ -1,6 +1,6 @@
 ## Laravel 11 Project based on Nova 4
 
-Progetto Laravel 11 basato su php 8.2 e posgres + postgis. Supporto locale per web server php ed xdebug.
+Osm2cai2 is a Laravel 11 project based on php 8.2 and Laravel Nova 4.
 
 ## INSTALL
 
