@@ -15,10 +15,9 @@ php artisan config:clear
 # Clear the old cache
 php artisan clear-compiled
 
-# TODO: Uncomment when api.favorite issue will be resolved
-# php artisan optimize
+php artisan optimize
 
-php artisan migrate
+php artisan migrate --force
 
 # Create admin user
 php artisan db:seed
