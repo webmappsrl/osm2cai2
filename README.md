@@ -1,6 +1,6 @@
 ## Laravel 11 Project based on Nova 4
 
-Osm2cai2 is a Laravel 11 project based on php 8.2 and Laravel Nova 4.
+Osm2cai2 is a Laravel 11 project based on php 8.2 and Laravel Nova 4 with postgis extension.
 
 ## INSTALL
 
