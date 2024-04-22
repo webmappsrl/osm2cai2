@@ -2,7 +2,7 @@
 
 Osm2cai2 is a Laravel 11 project based on php 8.2 and Laravel Nova 4 with postgis extension.
 
-## INSTALLATION
+## INSTALL
 
 First of all install the [GEOBOX](https://github.com/webmappsrl/geobox) repo and configure the [ALIASES command](https://github.com/webmappsrl/geobox#aliases-and-global-shell-variable).
 Replace `${instance name}` with the instance name (APP_NAME in .env file)
