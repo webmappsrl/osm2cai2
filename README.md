@@ -1,10 +1,6 @@
-# Laravel Postgis Boilerplate
+## Laravel 11 Project based on Nova 4
 
-Webmapp's Starting point
-
-## Laravel 10 Project based on Nova 4
-
-Boilerplate per Laravel 10 basato su php 8.2 e posgres + postgis. Supporto locale per web server php ed xdebug.
+Progetto Laravel 11 basato su php 8.2 e posgres + postgis. Supporto locale per web server php ed xdebug.
 
 ## INSTALL
 
@@ -25,7 +21,7 @@ docker exec -u 0 -it php81_osm2cai2 bash
 chown -R 33 .
 ```
 
-*Important NOTE*: if you have installed XDEBUG you need to create the xdebug.log file on the docker:
+_Important NOTE_: if you have installed XDEBUG you need to create the xdebug.log file on the docker:
 
 ```bash
 docker exec -u 0 -it php81_osm2cai2 bash
@@ -34,13 +30,16 @@ chown -R 33 /var/log/
 ```
 
 At the end run install command to for this instance
+
 ```bash
 geobox_install osm2cai2
 ```
 
-*Important NOTE*: 
-- Update your local repository of Geobox following its [Aliases instructions](https://github.com/webmappsrl/geobox#aliases-and-global-shell-variable). Make sure that you have set the environment variable GEOBOX_PATH correctly.
-- Make sure that the version of wm-package of your instance is at leaset 1.1. Use command:
+_Important NOTE_:
+
+-   Update your local repository of Geobox following its [Aliases instructions](https://github.com/webmappsrl/geobox#aliases-and-global-shell-variable). Make sure that you have set the environment variable GEOBOX_PATH correctly.
+-   Make sure that the version of wm-package of your instance is at leaset 1.1. Use command:
+
 ```bash
 composer update wm/wp-package
 ```
@@ -191,6 +190,7 @@ Durante l'esecuzione degli script potrebbero verificarsi problemi di scrittura s
     NOTA: per eseguire il comando chown potrebbe essere necessario avere i privilegi di root. In questo caso si deve effettuare l'accesso al cointainer del docker utilizzando lo specifico utente root (-u 0). Questo è valido anche sbloccare la possibilità di scrivere nella cartella /var/log per il funzionamento di Xdedug
 
     Utilizzare il parametro `-u` per il comando `docker exec` così da specificare l'id utente, eg come utente root (utilizzare `APP_NAME` al posto di `$nomeApp`):
+
     ```bash
     docker exec -u 0 -it php81_$nomeApp bash
     chown -R 33 storage
