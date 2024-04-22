@@ -19,9 +19,6 @@ php artisan optimize
 
 php artisan migrate --force
 
-# Create admin user
-php artisan db:seed
-
 php artisan up
 
 echo "Deployment finished!"
