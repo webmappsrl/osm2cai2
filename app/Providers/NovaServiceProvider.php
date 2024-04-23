@@ -11,6 +11,8 @@ use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB as FacadesDB;
+use Laravel\Nova\Badge;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -35,9 +37,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(User::class),
                 ]),
                 MenuSection::make('Tools', [
-                    MenuItem::make('Display Jobs')->path('/jobs')->withBadgeIf('Failed Jobs', 'warning', function () {
-                        DB::table('failed_jobs')->count() > 0;
-                    })
+                    MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('One or more jobs are failed', 'warning'), 'warning', fn () => DB::table('failed_jobs')->count() > 0)->openInNewTab(),
+
                 ])->icon('briefcase'),
             ];
         });
