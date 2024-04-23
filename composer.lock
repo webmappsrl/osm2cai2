@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "96a72ad736a42192de390e735b02573f",
+    "content-hash": "e86496bbf7789acbd49000ec25a5a70f",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1406,6 +1406,52 @@
                 }
             ],
             "time": "2023-12-03T19:50:20+00:00"
+        },
+        {
+            "name": "imumz/nova-4-field-map",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/iMuMz/Nova4FieldMap.git",
+                "reference": "cc197d0e22dbc14af44a4c2b26fcdb547c310b5d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/iMuMz/Nova4FieldMap/zipball/cc197d0e22dbc14af44a4c2b26fcdb547c310b5d",
+                "reference": "cc197d0e22dbc14af44a4c2b26fcdb547c310b5d",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0",
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Imumz\\Nova4FieldMap\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Imumz\\Nova4FieldMap\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/iMuMz/Nova4FieldMap/issues",
+                "source": "https://github.com/iMuMz/Nova4FieldMap/tree/v1.0.4"
+            },
+            "time": "2024-03-26T09:44:09+00:00"
         },
         {
             "name": "inertiajs/inertia-laravel",

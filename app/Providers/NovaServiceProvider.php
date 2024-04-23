@@ -7,6 +7,7 @@ use App\Nova\User;
 use Laravel\Nova\Nova;
 use Illuminate\Http\Request;
 use App\Nova\Dashboards\Main;
+use App\Nova\MountainGroups;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
@@ -35,6 +36,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('Resources', [
                     MenuItem::resource(User::class),
+                    MenuItem::resource(MountainGroups::class)
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('One or more jobs are failed', 'warning'), 'warning', fn () => DB::table('failed_jobs')->count() > 0)->openInNewTab(),
