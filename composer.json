@@ -13,6 +13,7 @@
         "kongulov/nova-tab-translatable": "^2.1",
         "laravel/framework": "^11.0",
         "laravel/nova": "^4.33",
+        "laravel/prompts": "^0.1.19",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
