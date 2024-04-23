@@ -16,10 +16,11 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
+        "romanzipp/laravel-queue-monitor": "^5.2",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-translatable": "^6.3",
-        "wm/wm-package": "*",
-        "wm/wm-internal": "*"
+        "wm/wm-internal": "*",
+        "wm/wm-package": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
