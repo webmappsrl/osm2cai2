@@ -2,19 +2,19 @@
 
 namespace App\Providers;
 
-use DB;
-use App\Nova\User;
-use Laravel\Nova\Nova;
-use Laravel\Nova\Badge;
-use App\Nova\NaturalSpring;
-use App\Nova\MountainGroups;
-use Illuminate\Http\Request;
 use App\Nova\Dashboards\Main;
-use Laravel\Nova\Menu\MenuItem;
-use Laravel\Nova\Menu\MenuSection;
-use Illuminate\Support\Facades\Gate;
+use App\Nova\MountainGroups;
+use App\Nova\NaturalSpring;
+use App\Nova\User;
+use DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB as FacadesDB;
+use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Badge;
+use Laravel\Nova\Menu\MenuItem;
+use Laravel\Nova\Menu\MenuSection;
+use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -37,7 +37,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('Resources', [
                     MenuItem::resource(User::class),
                     MenuItem::resource(MountainGroups::class),
-                    MenuItem::resource(NaturalSpring::class)
+                    MenuItem::resource(NaturalSpring::class),
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('Some jobs failed', 'warning'), 'warning', fn () => DB::table('queue_monitor')->where('status', 2)->count() > 0)->openInNewTab(),

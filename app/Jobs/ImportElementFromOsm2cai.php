@@ -41,7 +41,8 @@ class ImportElementFromOsm2cai implements ShouldQueue
         $response = Http::get($this->apiUrl);
 
         if ($response->failed()) {
-            Log::error('Failed to retrieve data from OSM2CAI API' . $response->body());
+            Log::error('Failed to retrieve data from OSM2CAI API'.$response->body());
+
             return;
         }
 
@@ -51,7 +52,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         $model = new $this->modelClass();
 
         if ($this->skipAlreadyImported && $model->where('id', $data['id'])->exists()) {
-            Log::info($model . ' with id: ' . $data['id'] . ' already imported, skipping');
+            Log::info($model.' with id: '.$data['id'].' already imported, skipping');
 
             return;
         }
@@ -74,10 +75,10 @@ class ImportElementFromOsm2cai implements ShouldQueue
             'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
             'sections' => json_decode($data['sections_intersecting'], true),
             'huts' => json_decode($data['huts_intersecting']),
-            'ec_pois' => json_decode($data['ec_pois_intersecting'], true)
+            'ec_pois' => json_decode($data['ec_pois_intersecting'], true),
         ];
 
-        $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+        $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
 
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
         $intersect['aggregated_data'] = json_encode($intersect['aggregated_data']);
@@ -90,7 +91,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
     {
         $columnsToImport = ['id', 'code', 'loc_ref', 'source', 'source_ref', 'source_code', 'name', 'region', 'province', 'municipality', 'operator', 'type', 'volume', 'time', 'mass_flow_rate', 'temperature', 'conductivity', 'survey_date', 'lat', 'lon', 'elevation', 'note', 'geometry'];
 
-        $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+        $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
 
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 

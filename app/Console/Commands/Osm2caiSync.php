@@ -29,15 +29,15 @@ class Osm2caiSync extends Command
     public function handle()
     {
         $model = $this->argument('model');
-        $modelClass = 'App\\Models\\' . str_replace('_', '', ucwords($model, '_'));
+        $modelClass = 'App\\Models\\'.str_replace('_', '', ucwords($model, '_'));
 
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             //remove final 's' from model name
             $modelName = substr($model, 0, -1);
-            $modelClass = 'App\\Models\\' . str_replace('_', '', ucwords($modelName, '_'));
-            if (!class_exists($modelClass)) {
+            $modelClass = 'App\\Models\\'.str_replace('_', '', ucwords($modelName, '_'));
+            if (! class_exists($modelClass)) {
                 $this->error('Model class not found');
-                Log::error('Model' . $modelClass . ' class not found');
+                Log::error('Model'.$modelClass.' class not found');
 
                 return;
             }
@@ -50,12 +50,12 @@ class Osm2caiSync extends Command
 
         if ($response->failed()) {
             $this->error('Failed to retrieve data from OSM2CAI API');
-            Log::error('Failed to retrieve data from OSM2CAI API' . $response->body());
+            Log::error('Failed to retrieve data from OSM2CAI API'.$response->body());
         }
 
         $data = $response->json();
 
-        $this->info('Dispatching ' . count($data) . ' jobs for ' . $model . ' model');
+        $this->info('Dispatching '.count($data).' jobs for '.$model.' model');
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
@@ -67,7 +67,7 @@ class Osm2caiSync extends Command
                 continue;
             }
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
-            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi,));
+            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi, ));
             $progressBar->advance();
         }
         $progressBar->finish();
