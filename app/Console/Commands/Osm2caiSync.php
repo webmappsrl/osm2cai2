@@ -6,6 +6,8 @@ use App\Jobs\ImportElementFromOsm2cai;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\DomParser;
+
 
 class Osm2caiSync extends Command
 {
@@ -29,33 +31,28 @@ class Osm2caiSync extends Command
     public function handle()
     {
         $model = $this->argument('model');
-        $modelClass = 'App\\Models\\'.str_replace('_', '', ucwords($model, '_'));
-
-        if (! class_exists($modelClass)) {
-            //remove final 's' from model name
-            $modelName = substr($model, 0, -1);
-            $modelClass = 'App\\Models\\'.str_replace('_', '', ucwords($modelName, '_'));
-            if (! class_exists($modelClass)) {
-                $this->error('Model class not found');
-                Log::error('Model'.$modelClass.' class not found');
-
-                return;
-            }
-        }
+        $modelClass = $this->parseModelClass($model);
 
         $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
 
         //perform the request to the API
         $response = Http::get($listApi);
 
-        if ($response->failed()) {
-            $this->error('Failed to retrieve data from OSM2CAI API');
-            Log::error('Failed to retrieve data from OSM2CAI API'.$response->body());
+        if ($response->failed() || $response->json() === null) {
+            //renaming the model to match the API endpoint
+            $model = $this->mapModelToendPoint($model);
+            $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
+            $response = Http::get($listApi);
+            if ($response->failed() || $response->json() === null) {
+                $this->error('Failed to retrieve data from API: ' . $listApi);
+                Log::error('Failed to retrieve data from API: ' . $listApi . ' ' . $response->body());
+                return;
+            }
         }
 
         $data = $response->json();
 
-        $this->info('Dispatching '.count($data).' jobs for '.$model.' model');
+        $this->info('Dispatching ' . count($data) . ' jobs for ' . $model . ' model');
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
@@ -67,7 +64,7 @@ class Osm2caiSync extends Command
                 continue;
             }
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
-            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi, ));
+            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi,));
             $progressBar->advance();
         }
         $progressBar->finish();
@@ -75,5 +72,33 @@ class Osm2caiSync extends Command
         $this->info(''); // Add an empty line
         $this->info('Jobs dispatched');
         Log::info('Jobs dispatched');
+    }
+
+    private function parseModelClass($model)
+    {
+        $model = str_replace('_', '', ucwords($model, '_'));
+        $modelClass =  'App\\Models\\' . $model;
+
+        if (!class_exists($modelClass)) {
+            //remove final 's' from model name
+            $modelName = substr($model, 0, -1);
+            $modelClass = 'App\\Models\\' . $modelName;
+            if (!class_exists($modelClass)) {
+                $this->error('Model class not found');
+                Log::error('Model' . $modelClass . ' class not found');
+                return;
+            }
+        }
+
+        return $modelClass;
+    }
+
+    private function mapModelToendPoint($model)
+    {
+        switch ($model) {
+            case 'cai_huts':
+                return 'huts';
+                break;
+        }
     }
 }
