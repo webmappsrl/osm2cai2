@@ -2,18 +2,18 @@
 
 namespace App\Providers;
 
-use DB;
-use App\Nova\User;
-use Laravel\Nova\Nova;
-use Illuminate\Http\Request;
 use App\Nova\Dashboards\Main;
 use App\Nova\MountainGroups;
-use Laravel\Nova\Menu\MenuItem;
-use Laravel\Nova\Menu\MenuSection;
-use Illuminate\Support\Facades\Gate;
+use App\Nova\User;
+use DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB as FacadesDB;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Nova\Badge;
+use Laravel\Nova\Menu\MenuItem;
+use Laravel\Nova\Menu\MenuSection;
+use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -27,7 +27,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         parent::boot();
 
-
         $this->getFooter();
 
         Nova::mainMenu(function (Request $request) {
@@ -36,7 +35,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('Resources', [
                     MenuItem::resource(User::class),
-                    MenuItem::resource(MountainGroups::class)
+                    MenuItem::resource(MountainGroups::class),
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('One or more jobs are failed', 'warning'), 'warning', fn () => DB::table('failed_jobs')->count() > 0)->openInNewTab(),
@@ -70,7 +69,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         Gate::define('viewNova', function ($user) {
             return in_array($user->email, [
-                'team@webmapp.it'
+                'team@webmapp.it',
             ]);
         });
     }
@@ -83,7 +82,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function dashboards()
     {
         return [
-            new \App\Nova\Dashboards\Main,
+            new Main,
         ];
     }
 

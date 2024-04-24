@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 use App\Jobs\ImportElementFromOsm2cai;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Osm2caiSync extends Command
 {
@@ -30,11 +30,12 @@ class Osm2caiSync extends Command
     {
         $model = $this->argument('model');
         $skip = $this->option('skip-already-imported');
-        $modelClass = "App\\Models\\" . str_replace('_', '', ucwords($model, '_'));
+        $modelClass = 'App\\Models\\'.str_replace('_', '', ucwords($model, '_'));
 
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             $this->error('Model class not found');
-            Log::error('Model' . $modelClass . ' class not found');
+            Log::error('Model'.$modelClass.' class not found');
+
             return;
         }
 
@@ -45,12 +46,12 @@ class Osm2caiSync extends Command
 
         if ($response->failed()) {
             $this->error('Failed to retrieve data from OSM2CAI API');
-            Log::error('Failed to retrieve data from OSM2CAI API' . $response->body());
+            Log::error('Failed to retrieve data from OSM2CAI API'.$response->body());
         }
 
         $data = $response->json();
 
-        $this->info('Dispatching ' . count($data) . ' jobs for ' . $model . ' model');
+        $this->info('Dispatching '.count($data).' jobs for '.$model.' model');
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 

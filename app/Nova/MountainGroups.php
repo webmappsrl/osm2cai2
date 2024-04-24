@@ -2,11 +2,11 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
+use Imumz\Nova4FieldMap\Nova4FieldMap;
+use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
-use Imumz\Nova4FieldMap\Nova4FieldMap;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class MountainGroups extends Resource
@@ -37,17 +37,18 @@ class MountainGroups extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(Request $request)
     {
         $aggregatedData = json_decode($this->aggregated_data);
         $intersectings = json_decode($this->intersectings, true);
+
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make("Nome", "name")->sortable(),
-            Textarea::make("Descrizione", "description")->hideFromIndex(),
+            Text::make('Nome', 'name')->sortable(),
+            Textarea::make('Descrizione', 'description')->hideFromIndex(),
             Nova4FieldMap::make('Mappa')
                 ->type('GeoJson')
                 ->geoJson(json_encode($this->getEmptyGeojson()))
@@ -84,7 +85,7 @@ class MountainGroups extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -95,7 +96,7 @@ class MountainGroups extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -106,7 +107,7 @@ class MountainGroups extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -117,7 +118,7 @@ class MountainGroups extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)

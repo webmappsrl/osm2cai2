@@ -2,12 +2,12 @@
 
 namespace App\Traits;
 
-use Exception;
 use App\Services\GeometryService;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Symm\Gisconverter\Gisconverter;
 use Symm\Gisconverter\Exceptions\InvalidText;
+use Symm\Gisconverter\Gisconverter;
 
 trait GeojsonableTrait
 {
@@ -21,7 +21,7 @@ trait GeojsonableTrait
         $model = get_class($this);
         $obj = $model::where('id', '=', $this->id)
             ->select(
-                DB::raw("ST_AsGeoJSON(geometry) as geom")
+                DB::raw('ST_AsGeoJSON(geometry) as geom')
             )
             ->first();
 
@@ -32,12 +32,13 @@ trait GeojsonableTrait
 
         if (isset($geom)) {
             return [
-                "type" => "Feature",
-                "properties" => [],
-                "geometry" => json_decode($geom, true)
+                'type' => 'Feature',
+                'properties' => [],
+                'geometry' => json_decode($geom, true),
             ];
-        } else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -50,7 +51,7 @@ trait GeojsonableTrait
         $model = get_class($this);
         $obj = $model::where('id', '=', $this->id)
             ->select(
-                DB::raw("ST_AsGeoJSON(geometry) as geom")
+                DB::raw('ST_AsGeoJSON(geometry) as geom')
             )
             ->first();
 
@@ -61,37 +62,38 @@ trait GeojsonableTrait
 
         $obj_raw_data = $model::where('id', '=', $this->id)
             ->select(
-                DB::raw("ST_AsGeoJSON(geometry_raw_data) as geom_raw")
+                DB::raw('ST_AsGeoJSON(geometry_raw_data) as geom_raw')
             )
             ->first();
         $geom_raw = $obj_raw_data->geom_raw;
 
         if (isset($geom_raw) && isset($geom)) {
             return [
-                "type" => "FeatureCollection",
-                "features" => [
+                'type' => 'FeatureCollection',
+                'features' => [
                     0 => [
-                        "type" => "Feature",
-                        "properties" => [],
-                        "geometry" => json_decode($geom, true),
+                        'type' => 'Feature',
+                        'properties' => [],
+                        'geometry' => json_decode($geom, true),
                     ],
                     1 => [
-                        "type" => "Feature",
-                        "properties" => [],
-                        "geometry" => json_decode($geom_raw, true),
+                        'type' => 'Feature',
+                        'properties' => [],
+                        'geometry' => json_decode($geom_raw, true),
                     ],
-                ]
+                ],
             ];
         }
 
         if (isset($geom)) {
             return [
-                "type" => "Feature",
-                "properties" => [],
-                "geometry" => json_decode($geom, true)
+                'type' => 'Feature',
+                'properties' => [],
+                'geometry' => json_decode($geom, true),
             ];
-        } else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -103,7 +105,7 @@ trait GeojsonableTrait
      */
     public function getCentroidGeojson(): ?array
     {
-        \Log::info('Getting centroid geojson for id: ' . $this->id);
+        \Log::info('Getting centroid geojson for id: '.$this->id);
 
         $model = get_class($this);
         if ($this->id == null) {
@@ -111,12 +113,13 @@ trait GeojsonableTrait
         }
         $obj = $model::where('id', '=', $this->id)
             ->select(
-                DB::raw("ST_Asgeojson(ST_Centroid(geometry)) as geom")
+                DB::raw('ST_Asgeojson(ST_Centroid(geometry)) as geom')
             )
             ->first();
 
         if (is_null($obj)) {
-            \Log::warning('No record found for id: ' . $this->id);
+            \Log::warning('No record found for id: '.$this->id);
+
             return null;
         }
 
@@ -124,12 +127,13 @@ trait GeojsonableTrait
 
         if (isset($geom)) {
             return [
-                "type" => "Feature",
-                "properties" => [],
-                "geometry" => json_decode($geom, true)
+                'type' => 'Feature',
+                'properties' => [],
+                'geometry' => json_decode($geom, true),
             ];
         } else {
-            \Log::warning('No geometry found for id: ' . $this->id);
+            \Log::warning('No geometry found for id: '.$this->id);
+
             return null;
         }
     }
@@ -140,25 +144,22 @@ trait GeojsonableTrait
     public function getCentroid(): ?array
     {
         $geojson = $this->getCentroidGeojson();
-        if (!is_null($geojson)) {
+        if (! is_null($geojson)) {
             return $geojson['geometry']['coordinates'];
         }
+
         return null;
     }
-
-
 
     public function textToGeojson($text = '')
     {
         return  GeometryService::getService()->textToGeojson($text);
     }
 
-
     public function geojsonToGeometry($geojson)
     {
         return GeometryService::getService()->geojsonToGeometry($geojson);
     }
-
 
     /**
      * @param string json encoded geometry.
@@ -167,8 +168,9 @@ trait GeojsonableTrait
     {
         $geometry = null;
         $geojson = $this->textToGeojson($fileContent);
-        if ($geojson)
+        if ($geojson) {
             $geometry = $this->geojsonToGeometry($geojson);
+        }
 
         return $geometry;
     }
@@ -191,27 +193,28 @@ trait GeojsonableTrait
         foreach ($classes as $class => $table) {
             $result = DB::select(
                 'SELECT id FROM '
-                    . $table
-                    . ' WHERE user_id = ?'
-                    . " AND ABS(EXTRACT(EPOCH FROM created_at) - EXTRACT(EPOCH FROM TIMESTAMP '"
-                    . $model->created_at
-                    . "')) < 5400"
-                    . ' AND St_DWithin(geometry, ?, 400);',
+                    .$table
+                    .' WHERE user_id = ?'
+                    ." AND ABS(EXTRACT(EPOCH FROM created_at) - EXTRACT(EPOCH FROM TIMESTAMP '"
+                    .$model->created_at
+                    ."')) < 5400"
+                    .' AND St_DWithin(geometry, ?, 400);',
                 [
                     $model->user_id,
-                    $model->geometry
+                    $model->geometry,
                 ]
             );
             foreach ($result as $row) {
                 $geojson = $class::find($row->id)->getGeojson();
-                if (isset($geojson))
+                if (isset($geojson)) {
                     $features[] = $geojson;
+                }
             }
         }
 
         return [
-            "type" => "FeatureCollection",
-            "features" => $features
+            'type' => 'FeatureCollection',
+            'features' => $features,
         ];
     }
 }
