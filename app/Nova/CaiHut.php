@@ -2,13 +2,13 @@
 
 namespace App\Nova;
 
-use Wm\MapPoint\MapPoint;
-use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\MapPoint\MapPoint;
 
 class CaiHut extends Resource
 {
@@ -32,13 +32,13 @@ class CaiHut extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name'
+        'id', 'name',
     ];
 
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -57,9 +57,8 @@ class CaiHut extends Resource
                 'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
                 'minZoom' => 8,
                 'maxZoom' => 17,
-                'defaultZoom' => 13
+                'defaultZoom' => 13,
             ])->hideFromIndex(),
-
 
         ];
     }
@@ -67,7 +66,7 @@ class CaiHut extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -78,7 +77,7 @@ class CaiHut extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -89,7 +88,7 @@ class CaiHut extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -100,7 +99,7 @@ class CaiHut extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)

@@ -3,19 +3,19 @@
 namespace App\Providers;
 
 use App\Nova\CaiHut;
-use DB;
-use App\Nova\User;
-use Laravel\Nova\Nova;
-use Laravel\Nova\Badge;
-use App\Nova\NaturalSpring;
-use App\Nova\MountainGroups;
-use Illuminate\Http\Request;
 use App\Nova\Dashboards\Main;
+use App\Nova\MountainGroups;
+use App\Nova\NaturalSpring;
+use App\Nova\User;
+use DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB as FacadesDB;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Badge;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
+use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
