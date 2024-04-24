@@ -14,7 +14,7 @@ class Osm2caiSync extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai:sync {model} {--skip-already-imported}';
+    protected $signature = 'osm2cai:sync {model}';
 
     /**
      * The console command description.
@@ -29,14 +29,18 @@ class Osm2caiSync extends Command
     public function handle()
     {
         $model = $this->argument('model');
-        $skip = $this->option('skip-already-imported');
         $modelClass = 'App\\Models\\'.str_replace('_', '', ucwords($model, '_'));
 
         if (! class_exists($modelClass)) {
-            $this->error('Model class not found');
-            Log::error('Model'.$modelClass.' class not found');
+            //remove final 's' from model name
+            $modelName = substr($model, 0, -1);
+            $modelClass = 'App\\Models\\'.str_replace('_', '', ucwords($modelName, '_'));
+            if (! class_exists($modelClass)) {
+                $this->error('Model class not found');
+                Log::error('Model'.$modelClass.' class not found');
 
-            return;
+                return;
+            }
         }
 
         $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
@@ -56,8 +60,14 @@ class Osm2caiSync extends Command
         $progressBar->start();
 
         foreach ($data as $id => $udpated_at) {
+            $modelInstance = new $modelClass();
+            //if the model already exists in the database skip the import
+            if ($modelInstance->where('id', $id)->exists()) {
+                $progressBar->advance();
+                continue;
+            }
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
-            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi, $skip));
+            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi, ));
             $progressBar->advance();
         }
         $progressBar->finish();

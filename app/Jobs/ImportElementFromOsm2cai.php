@@ -25,11 +25,10 @@ class ImportElementFromOsm2cai implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(string $modelClass, string $apiUrl, bool $skipAlreadyImported = false)
+    public function __construct(string $modelClass, string $apiUrl)
     {
         $this->modelClass = $modelClass;
         $this->apiUrl = $apiUrl;
-        $this->skipAlreadyImported = $skipAlreadyImported;
     }
 
     /**
@@ -61,6 +60,9 @@ class ImportElementFromOsm2cai implements ShouldQueue
         if ($model instanceof \App\Models\MountainGroups) {
             $this->importMountainGroups($model, $data);
         }
+        if ($model instanceof \App\Models\NaturalSpring) {
+            $this->importNaturalSprings($model, $data);
+        }
 
         $this->queueProgress(100);
     }
@@ -69,17 +71,30 @@ class ImportElementFromOsm2cai implements ShouldQueue
     {
         $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'intersectings'];
 
-        $data['intersectings'] = ['hiking_routes' => json_decode($data['hiking_routes_intersecting'], true), 'sections' => json_decode($data['sections_intersecting'], true), 'huts' => json_decode($data['huts_intersecting']), 'ec_pois' => json_decode($data['ec_pois_intersecting'], true)];
-        // Decodifica il campo geometry dal formato GeoJSON e lo converte in un oggetto ST_Geometry
+        $data['intersectings'] = [
+            'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
+            'sections' => json_decode($data['sections_intersecting'], true),
+            'huts' => json_decode($data['huts_intersecting']),
+            'ec_pois' => json_decode($data['ec_pois_intersecting'], true),
+        ];
+
         $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
 
-        $flip = array_flip($columnsToImport);
-        $intersect = array_intersect_key($data, $flip);
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
         $intersect['aggregated_data'] = json_encode($intersect['aggregated_data']);
         $intersect['intersectings'] = json_encode($intersect['intersectings']);
-        $model->updateOrCreate(
-            ['id' => $data['id']],
-            $intersect
-        );
+
+        $model->updateOrCreate(['id' => $data['id']], $intersect);
+    }
+
+    private function importNaturalSprings($model, $data)
+    {
+        $columnsToImport = ['id', 'code', 'loc_ref', 'source', 'source_ref', 'source_code', 'name', 'region', 'province', 'municipality', 'operator', 'type', 'volume', 'time', 'mass_flow_rate', 'temperature', 'conductivity', 'survey_date', 'lat', 'lon', 'elevation', 'note', 'geometry'];
+
+        $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
+
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        $model->updateOrCreate(['id' => $data['id']], $intersect);
     }
 }

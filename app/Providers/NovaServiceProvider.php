@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Nova\Dashboards\Main;
 use App\Nova\MountainGroups;
+use App\Nova\NaturalSpring;
 use App\Nova\User;
 use DB;
 use Illuminate\Http\Request;
@@ -36,9 +37,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('Resources', [
                     MenuItem::resource(User::class),
                     MenuItem::resource(MountainGroups::class),
+                    MenuItem::resource(NaturalSpring::class),
                 ]),
                 MenuSection::make('Tools', [
-                    MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('One or more jobs are failed', 'warning'), 'warning', fn () => DB::table('failed_jobs')->count() > 0)->openInNewTab(),
+                    MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('Some jobs failed', 'warning'), 'warning', fn () => DB::table('queue_monitor')->where('status', 2)->count() > 0)->openInNewTab(),
 
                 ])->icon('briefcase'),
             ];
