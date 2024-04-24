@@ -87,7 +87,11 @@ class ImportElementFromOsm2cai implements ShouldQueue
         $intersect['aggregated_data'] = json_encode($intersect['aggregated_data']);
         $intersect['intersectings'] = json_encode($intersect['intersectings']);
 
-        $model->updateOrCreate(['id' => $data['id']], $intersect);
+        foreach ($intersect as $key => $value) {
+            $model->$key = $value;
+        }
+
+        $model->save();
     }
 
     private function importNaturalSprings($model, $data)
@@ -98,7 +102,11 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
-        $model->updateOrCreate(['id' => $data['id']], $intersect);
+        foreach ($intersect as $key => $value) {
+            $model->$key = $value;
+        }
+
+        $model->save();
     }
 
     private function importCaiHuts($model, $data)
@@ -109,6 +117,10 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
-        $model->updateOrCreate(['id' => $data['id']], $intersect);
+        foreach ($intersect as $key => $value) {
+            $model->$key = $value;
+        }
+
+        $model->save();
     }
 }

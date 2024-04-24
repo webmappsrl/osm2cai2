@@ -53,7 +53,6 @@ class MountainGroups extends Resource
                 ->type('GeoJson')
                 ->geoJson(json_encode($this->getEmptyGeojson()))
                 ->zoom(9)
-                ->popup('popup')
                 ->onlyOnDetail(),
             Text::make('POI Generico', function () use ($aggregatedData) {
                 return $aggregatedData->ec_pois_count;

@@ -32,6 +32,13 @@ class Osm2caiSync extends Command
         $model = $this->argument('model');
         $modelClass = $this->parseModelClass($model);
 
+        if ($modelClass === null) {
+            $this->error('Model class not found');
+            Log::error('Model'.$modelClass.' class not found');
+
+            return;
+        }
+
         $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
 
         //perform the request to the API
@@ -84,10 +91,7 @@ class Osm2caiSync extends Command
             $modelName = substr($model, 0, -1);
             $modelClass = 'App\\Models\\'.$modelName;
             if (! class_exists($modelClass)) {
-                $this->error('Model class not found');
-                Log::error('Model'.$modelClass.' class not found');
-
-                return;
+                return null;
             }
         }
 
