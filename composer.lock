@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e86496bbf7789acbd49000ec25a5a70f",
+    "content-hash": "a201ccecead281016ae5d54b8696252b",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -7176,6 +7176,51 @@
                 "source": "https://github.com/webmozarts/assert/tree/1.11.0"
             },
             "time": "2022-06-03T18:03:27+00:00"
+        },
+        {
+            "name": "wm/map-point",
+            "version": "v0.0.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webmappsrl/map-point.git",
+                "reference": "eeceb44f2088955a33d28da77de04b075fd1adc0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webmappsrl/map-point/zipball/eeceb44f2088955a33d28da77de04b075fd1adc0",
+                "reference": "eeceb44f2088955a33d28da77de04b075fd1adc0",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Wm\\MapPoint\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Wm\\MapPoint\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/webmappsrl/map-point/issues",
+                "source": "https://github.com/webmappsrl/map-point/tree/v0.0.9"
+            },
+            "time": "2023-03-16T14:26:41+00:00"
         },
         {
             "name": "wm/wm-internal",

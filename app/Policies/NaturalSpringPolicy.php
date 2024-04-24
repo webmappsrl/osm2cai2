@@ -13,7 +13,7 @@ class NaturalSpringPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class NaturalSpringPolicy
      */
     public function view(User $user, NaturalSpring $naturalSpring): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class NaturalSpringPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -37,7 +37,7 @@ class NaturalSpringPolicy
      */
     public function update(User $user, NaturalSpring $naturalSpring): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -45,7 +45,7 @@ class NaturalSpringPolicy
      */
     public function delete(User $user, NaturalSpring $naturalSpring): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -53,7 +53,7 @@ class NaturalSpringPolicy
      */
     public function restore(User $user, NaturalSpring $naturalSpring): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -61,6 +61,6 @@ class NaturalSpringPolicy
      */
     public function forceDelete(User $user, NaturalSpring $naturalSpring): bool
     {
-        //
+        return false;
     }
 }

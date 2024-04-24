@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('natural_springs', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('code', 9);
+            $table->string('code', 9)->nullable();
             $table->string('loc_ref')->nullable();
             $table->string('source')->nullable();
             $table->string('source_ref')->nullable();
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->decimal('lon', 11, 8)->nullable();
             $table->smallInteger('elevation')->nullable();
             $table->string('note')->nullable();
-            $table->geography('geometry', 'point', 4326);
+            $table->geography('geometry', 'point', 4326)->nullable();
         });
     }
 
