@@ -32,6 +32,12 @@ class Osm2caiSync extends Command
         $model = $this->argument('model');
         $modelClass = $this->parseModelClass($model);
 
+        if ($modelClass === null) {
+            $this->error('Model class not found');
+            Log::error('Model' . $modelClass . ' class not found');
+            return;
+        }
+
         $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
 
         //perform the request to the API
@@ -43,8 +49,8 @@ class Osm2caiSync extends Command
             $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
             $response = Http::get($listApi);
             if ($response->failed() || $response->json() === null) {
-                $this->error('Failed to retrieve data from API: '.$listApi);
-                Log::error('Failed to retrieve data from API: '.$listApi.' '.$response->body());
+                $this->error('Failed to retrieve data from API: ' . $listApi);
+                Log::error('Failed to retrieve data from API: ' . $listApi . ' ' . $response->body());
 
                 return;
             }
@@ -52,7 +58,7 @@ class Osm2caiSync extends Command
 
         $data = $response->json();
 
-        $this->info('Dispatching '.count($data).' jobs for '.$model.' model');
+        $this->info('Dispatching ' . count($data) . ' jobs for ' . $model . ' model');
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
@@ -64,7 +70,7 @@ class Osm2caiSync extends Command
                 continue;
             }
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
-            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi, ));
+            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi,));
             $progressBar->advance();
         }
         $progressBar->finish();
@@ -77,17 +83,14 @@ class Osm2caiSync extends Command
     private function parseModelClass($model)
     {
         $model = str_replace('_', '', ucwords($model, '_'));
-        $modelClass = 'App\\Models\\'.$model;
+        $modelClass = 'App\\Models\\' . $model;
 
-        if (! class_exists($modelClass)) {
+        if (!class_exists($modelClass)) {
             //remove final 's' from model name
             $modelName = substr($model, 0, -1);
-            $modelClass = 'App\\Models\\'.$modelName;
-            if (! class_exists($modelClass)) {
-                $this->error('Model class not found');
-                Log::error('Model'.$modelClass.' class not found');
-
-                return;
+            $modelClass = 'App\\Models\\' . $modelName;
+            if (!class_exists($modelClass)) {
+                return null;
             }
         }
 
