@@ -42,9 +42,8 @@ class MountainGroups extends Resource
      */
     public function fields(Request $request)
     {
-        $centerLat = $this->getCentroid()[1] ?? 0;
-        $centerLng = $this->getCentroid()[0] ?? 0;
         $aggregatedData = json_decode($this->aggregated_data);
+        $intersectings = json_decode($this->intersectings, true);
         return [
             ID::make(__('ID'), 'id')->sortable(),
             Text::make("Nome", "name")->sortable(),
@@ -52,9 +51,8 @@ class MountainGroups extends Resource
             Nova4FieldMap::make('Mappa')
                 ->type('GeoJson')
                 ->geoJson(json_encode($this->getEmptyGeojson()))
-                ->center($centerLat, $centerLng)
                 ->zoom(9)
-                ->popup()
+                ->popup('popup')
                 ->onlyOnDetail(),
             Text::make('POI Generico', function () use ($aggregatedData) {
                 return $aggregatedData->ec_pois_count;
@@ -68,6 +66,18 @@ class MountainGroups extends Resource
             Text::make('Attivitá o Esperienze', function () use ($aggregatedData) {
                 return $aggregatedData->sections_count;
             })->sortable(),
+            // Text::make('Rifugi Intersecanti', function () use ($intersectings) {
+            //     return count($intersectings['huts']);
+            // })->sortable(),
+            // Text::make('POI Intersecanti', function () use ($intersectings) {
+            //     return count($intersectings['ec_pois']);
+            // })->sortable(),
+            // Text::make('Sezioni Intersecanti', function () use ($intersectings) {
+            //     return count($intersectings['sections']);
+            // })->sortable(),
+            // Text::make('Percorsi Intersecanti', function () use ($intersectings) {
+            //     return count($intersectings['hiking_routes']);
+            // })->sortable(),
         ];
     }
 

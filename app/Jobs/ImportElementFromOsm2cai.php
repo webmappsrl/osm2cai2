@@ -53,7 +53,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
     {
         $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'intersectings'];
 
-        $data['intersectings'] = ['hiking_routes' => json_decode($data['hiking_routes_intersecting'], true), 'sections' => $data['sections_intersecting'], 'huts' => $data['huts_intersecting'], 'ec_pois' => $data['ec_pois_intersecting']];
+        $data['intersectings'] = ['hiking_routes' => json_decode($data['hiking_routes_intersecting'], true), 'sections' => json_decode($data['sections_intersecting'], true), 'huts' => json_decode($data['huts_intersecting']), 'ec_pois' => json_decode($data['ec_pois_intersecting'], true)];
         // Decodifica il campo geometry dal formato GeoJSON e lo converte in un oggetto ST_Geometry
         $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
 
