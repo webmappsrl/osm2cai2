@@ -2,7 +2,17 @@
 
 namespace App\Providers;
 
+use App\Nova\Dashboards\Main;
+use App\Nova\MountainGroups;
+use App\Nova\User;
+use DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB as FacadesDB;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Badge;
+use Laravel\Nova\Menu\MenuItem;
+use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
@@ -16,6 +26,23 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function boot()
     {
         parent::boot();
+
+        $this->getFooter();
+
+        Nova::mainMenu(function (Request $request) {
+            return [
+                MenuSection::dashboard(Main::class)->icon('chart-bar'),
+
+                MenuSection::make('Resources', [
+                    MenuItem::resource(User::class),
+                    MenuItem::resource(MountainGroups::class),
+                ]),
+                MenuSection::make('Tools', [
+                    MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('One or more jobs are failed', 'warning'), 'warning', fn () => DB::table('failed_jobs')->count() > 0)->openInNewTab(),
+
+                ])->icon('briefcase'),
+            ];
+        });
     }
 
     /**
@@ -26,9 +53,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function routes()
     {
         Nova::routes()
-                ->withAuthenticationRoutes()
-                ->withPasswordResetRoutes()
-                ->register();
+            ->withAuthenticationRoutes()
+            ->withPasswordResetRoutes()
+            ->register();
     }
 
     /**
@@ -42,7 +69,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         Gate::define('viewNova', function ($user) {
             return in_array($user->email, [
-                //
+                'team@webmapp.it',
             ]);
         });
     }
@@ -55,7 +82,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function dashboards()
     {
         return [
-            new \App\Nova\Dashboards\Main,
+            new Main,
         ];
     }
 
@@ -66,7 +93,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function tools()
     {
-        return [];
+        return [
+            //
+        ];
     }
 
     /**
@@ -77,5 +106,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function register()
     {
         //
+    }
+
+    //create a footer
+    private function getFooter()
+    {
+        Nova::footer(function () {
+            return Blade::render('nova/footer');
+        });
     }
 }

@@ -10,8 +10,8 @@
             "request": "launch",
             "port": 9200,
             "pathMappings": {
-              "/var/www/html/geomixer2": "${workspaceRoot}"
-            },
+                "/var/www/html/osm2cai2": "${workspaceRoot}"
+            }
         }
     ]
 }

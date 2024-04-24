@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a611f44159622747858c570e03e6f9e",
+    "content-hash": "e86496bbf7789acbd49000ec25a5a70f",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1406,6 +1406,52 @@
                 }
             ],
             "time": "2023-12-03T19:50:20+00:00"
+        },
+        {
+            "name": "imumz/nova-4-field-map",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/iMuMz/Nova4FieldMap.git",
+                "reference": "cc197d0e22dbc14af44a4c2b26fcdb547c310b5d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/iMuMz/Nova4FieldMap/zipball/cc197d0e22dbc14af44a4c2b26fcdb547c310b5d",
+                "reference": "cc197d0e22dbc14af44a4c2b26fcdb547c310b5d",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0",
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Imumz\\Nova4FieldMap\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Imumz\\Nova4FieldMap\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/iMuMz/Nova4FieldMap/issues",
+                "source": "https://github.com/iMuMz/Nova4FieldMap/tree/v1.0.4"
+            },
+            "time": "2024-03-26T09:44:09+00:00"
         },
         {
             "name": "inertiajs/inertia-laravel",
@@ -4205,6 +4251,76 @@
                 }
             ],
             "time": "2024-03-06T16:03:49+00:00"
+        },
+        {
+            "name": "romanzipp/laravel-queue-monitor",
+            "version": "5.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/romanzipp/Laravel-Queue-Monitor.git",
+                "reference": "454f0843409de68535383f5e8bdbdd2fac86d6ed"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/romanzipp/Laravel-Queue-Monitor/zipball/454f0843409de68535383f5e8bdbdd2fac86d6ed",
+                "reference": "454f0843409de68535383f5e8bdbdd2fac86d6ed",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "illuminate/database": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "illuminate/queue": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "illuminate/support": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "nesbot/carbon": "^2.0|^3.0",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "doctrine/dbal": "^3.1",
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "laravel/framework": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "mockery/mockery": "^1.3.2",
+                "orchestra/testbench": ">=3.8",
+                "phpstan/phpstan": "^0.12.99|^1.0",
+                "phpunit/phpunit": "^8.5.23|^9.0|^10.5",
+                "romanzipp/php-cs-fixer-config": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "romanzipp\\QueueMonitor\\Providers\\QueueMonitorProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "romanzipp\\QueueMonitor\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "romanzipp",
+                    "email": "ich@ich.wtf",
+                    "homepage": "https://ich.wtf"
+                }
+            ],
+            "description": "Queue Monitoring for Laravel Database Job Queue",
+            "support": {
+                "issues": "https://github.com/romanzipp/Laravel-Queue-Monitor/issues",
+                "source": "https://github.com/romanzipp/Laravel-Queue-Monitor/tree/5.2.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/romanzipp",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-03-15T08:49:25+00:00"
         },
         {
             "name": "spatie/db-dumper",
@@ -9667,5 +9783,5 @@
         "php": "^8.2.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
