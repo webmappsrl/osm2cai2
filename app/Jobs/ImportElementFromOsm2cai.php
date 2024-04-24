@@ -18,14 +18,16 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
     protected $apiUrl;
     protected $modelClass;
+    protected $skipAlreadyImported;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $modelClass, string $apiUrl)
+    public function __construct(string $modelClass, string $apiUrl, bool $skipAlreadyImported = false)
     {
         $this->modelClass = $modelClass;
         $this->apiUrl = $apiUrl;
+        $this->skipAlreadyImported = $skipAlreadyImported;
     }
 
     /**
@@ -33,6 +35,8 @@ class ImportElementFromOsm2cai implements ShouldQueue
      */
     public function handle(): void
     {
+        $this->queueProgress(0);
+
         $response = Http::get($this->apiUrl);
 
         if ($response->failed()) {
@@ -41,12 +45,20 @@ class ImportElementFromOsm2cai implements ShouldQueue
         }
 
         $data = $response->json();
+        $this->queueProgress(50);
 
         $model = new $this->modelClass();
+
+        if ($this->skipAlreadyImported && $model->where('id', $data['id'])->exists()) {
+            Log::info($model . ' with id: ' . $data['id'] . ' already imported, skipping');
+            return;
+        }
 
         if ($model instanceof \App\Models\MountainGroups) {
             $this->importMountainGroups($model, $data);
         }
+
+        $this->queueProgress(100);
     }
 
     private function importMountainGroups($model, $data)

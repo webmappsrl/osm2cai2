@@ -14,7 +14,7 @@ class Osm2caiSync extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai:sync {model}';
+    protected $signature = 'osm2cai:sync {model} {--skip-already-imported}';
 
     /**
      * The console command description.
@@ -29,6 +29,7 @@ class Osm2caiSync extends Command
     public function handle()
     {
         $model = $this->argument('model');
+        $skip = $this->option('skip-already-imported');
         $modelClass = "App\\Models\\" . str_replace('_', '', ucwords($model, '_'));
 
         if (!class_exists($modelClass)) {
@@ -49,9 +50,19 @@ class Osm2caiSync extends Command
 
         $data = $response->json();
 
+        $this->info('Dispatching ' . count($data) . ' jobs for ' . $model . ' model');
+        $progressBar = $this->output->createProgressBar(count($data));
+        $progressBar->start();
+
         foreach ($data as $id => $udpated_at) {
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
-            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi));
+            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi, $skip));
+            $progressBar->advance();
         }
+        $progressBar->finish();
+
+        $this->info(''); // Add an empty line
+        $this->info('Jobs dispatched');
+        Log::info('Jobs dispatched');
     }
 }
