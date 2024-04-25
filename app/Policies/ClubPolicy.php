@@ -13,7 +13,7 @@ class ClubPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class ClubPolicy
      */
     public function view(User $user, Club $club): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class ClubPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -37,7 +37,7 @@ class ClubPolicy
      */
     public function update(User $user, Club $club): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -45,7 +45,7 @@ class ClubPolicy
      */
     public function delete(User $user, Club $club): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -53,7 +53,7 @@ class ClubPolicy
      */
     public function restore(User $user, Club $club): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -61,6 +61,6 @@ class ClubPolicy
      */
     public function forceDelete(User $user, Club $club): bool
     {
-        //
+        return false;
     }
 }
