@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->string('name')->unique();
             $table->string('cai_code')->unique();
-            $table->geography('geometry', 'point', 4326);
+            $table->geography('geometry', 'point', 4326)->nullable();
             $table->string('addr_city')->nullable();
             $table->string('addr_street')->nullable();
             $table->string('addr_housenumber')->nullable();
