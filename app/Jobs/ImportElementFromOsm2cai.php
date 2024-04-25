@@ -112,7 +112,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         try {
             $model->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save mountain group with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save mountain group with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 
@@ -132,7 +132,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         try {
             $model->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save natural spring with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save natural spring with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 
@@ -152,7 +152,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         try {
             $model->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save huts with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save huts with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 
@@ -174,7 +174,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         try {
             $model->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Club with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Club with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 }
