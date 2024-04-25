@@ -41,7 +41,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         $response = Http::get($this->apiUrl);
 
         if ($response->failed()) {
-            Log::error('Failed to retrieve data from OSM2CAI API' . $response->body());
+            Log::error('Failed to retrieve data from OSM2CAI API'.$response->body());
 
             return;
         }
@@ -52,7 +52,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         $model = new $this->modelClass();
 
         if ($model->where('id', $data['id'])->exists()) {
-            Log::info($model . ' with id: ' . $data['id'] . ' already imported, skipping');
+            Log::info($model.' with id: '.$data['id'].' already imported, skipping');
 
             return;
         }
@@ -85,7 +85,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         ];
 
         if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
         }
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
         $intersect['aggregated_data'] = json_encode($intersect['aggregated_data']);
@@ -103,7 +103,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         $columnsToImport = ['id', 'code', 'loc_ref', 'source', 'source_ref', 'source_code', 'name', 'region', 'province', 'municipality', 'operator', 'type', 'volume', 'time', 'mass_flow_rate', 'temperature', 'conductivity', 'survey_date', 'lat', 'lon', 'elevation', 'note', 'geometry'];
 
         if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
         }
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
@@ -119,7 +119,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
         $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map'];
 
         if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
         }
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
@@ -133,11 +133,11 @@ class ImportElementFromOsm2cai implements ShouldQueue
     private function importClubs($model, $data)
     {
         $columnsToImport = [
-            'id', 'name', 'cai_code', 'geometry', 'website', 'email', 'phone', 'fax', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'opening_hours', 'wheelchair'
+            'id', 'name', 'cai_code', 'geometry', 'website', 'email', 'phone', 'fax', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'opening_hours', 'wheelchair',
         ];
 
         if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
         }
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
