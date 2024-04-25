@@ -20,8 +20,6 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
     protected $modelClass;
 
-    protected $skipAlreadyImported;
-
     /**
      * Create a new job instance.
      */
@@ -58,16 +56,32 @@ class ImportElementFromOsm2cai implements ShouldQueue
         }
 
         if ($model instanceof \App\Models\MountainGroups) {
-            $this->importMountainGroups($model, $data);
+            try {
+                $this->importMountainGroups($model, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Mountain Group with id: '.$data['id'].' '.$e->getMessage());
+            }
         }
         if ($model instanceof \App\Models\NaturalSpring) {
-            $this->importNaturalSprings($model, $data);
+            try {
+                $this->importNaturalSprings($model, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Natural Spring with id: '.$data['id'].' '.$e->getMessage());
+            }
         }
         if ($model instanceof \App\Models\CaiHut) {
-            $this->importCaiHuts($model, $data);
+            try {
+                $this->importCaiHuts($model, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Cai Hut with id: '.$data['id'].' '.$e->getMessage());
+            }
         }
         if ($model instanceof \App\Models\Club) {
-            $this->importClubs($model, $data);
+            try {
+                $this->importClubs($model, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Club with id: '.$data['id'].' '.$e->getMessage());
+            }
         }
 
         $this->queueProgress(100);
