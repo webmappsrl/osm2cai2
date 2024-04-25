@@ -11,5 +11,20 @@ class Club extends Model
 
     protected $table = 'clubs';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'id',
+        'name',
+        'cai_code',
+        'geometry',
+        'addr_city',
+        'addr_street',
+        'addr_housenumber',
+        'addr_postcode',
+        'website',
+        'phone',
+        'email',
+        'opening_hours',
+        'wheelchair',
+        'fax',
+    ];
 }
