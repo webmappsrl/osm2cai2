@@ -91,7 +91,12 @@ class Osm2caiSync extends Command
             $modelName = substr($model, 0, -1);
             $modelClass = 'App\\Models\\'.$modelName;
             if (! class_exists($modelClass)) {
-                return null;
+                //rename section model to club
+                if ($modelName === 'Section') {
+                    $modelClass = 'App\\Models\\Club';
+                } else {
+                    return null;
+                }
             }
         }
 
