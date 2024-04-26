@@ -55,6 +55,13 @@ class ImportElementFromOsm2cai implements ShouldQueue
             return;
         }
 
+        $this->performImport($model, $data);
+
+        $this->queueProgress(100);
+    }
+
+    private function performImport($model, $data)
+    {
         if ($model instanceof \App\Models\MountainGroups) {
             try {
                 $this->importMountainGroups($model, $data);
@@ -83,8 +90,13 @@ class ImportElementFromOsm2cai implements ShouldQueue
                 Log::error('Failed to import Club with id: '.$data['id'].' '.$e->getMessage());
             }
         }
-
-        $this->queueProgress(100);
+        if ($model instanceof \App\Models\Sector) {
+            try {
+                $this->importSectors($model, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Sector with id: '.$data['id'].' '.$e->getMessage());
+            }
+        }
     }
 
     private function importMountainGroups($model, $data)
@@ -175,6 +187,26 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $model->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Club with id: '.$data['id'].' '.$e->getMessage());
+        }
+    }
+
+    private function importSectors($model, $data)
+    {
+        $columnsToImport = ['id', 'name', 'geometry', 'code', 'full_code', 'num_expected', 'human_name', 'manager'];
+
+        if ($data['geometry'] !== null) {
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
+        }
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        foreach ($intersect as $key => $value) {
+            $model->$key = $value;
+        }
+
+        try {
+            $model->save();
+        } catch (\Exception $e) {
+            Log::error('Failed to save Sector with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 }

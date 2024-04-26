@@ -7,6 +7,7 @@ use App\Nova\Club;
 use App\Nova\Dashboards\Main;
 use App\Nova\MountainGroups;
 use App\Nova\NaturalSpring;
+use App\Nova\Sector;
 use App\Nova\User;
 use DB;
 use Illuminate\Http\Request;
@@ -42,6 +43,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(NaturalSpring::class),
                     MenuItem::resource(CaiHut::class),
                     MenuItem::resource(Club::class),
+                    MenuItem::resource(Sector::class),
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('Some jobs failed', 'warning'), 'warning', fn () => DB::table('queue_monitor')->where('status', 2)->count() > 0)->openInNewTab(),
