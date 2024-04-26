@@ -66,12 +66,13 @@ trait GeojsonableTrait
                     [
                         'type' => 'Feature',
                         'properties' => [
-                            'popup' => 'I am a Popup'
+                            'popup' => 'I am a Popup',
                         ],
                         'geometry' => json_decode($geom, true),
                     ],
                 ],
             ];
+
             return $featureCollection;
         } else {
             return null;
@@ -142,7 +143,7 @@ trait GeojsonableTrait
      */
     public function getCentroidGeojson(): ?array
     {
-        \Log::info('Getting centroid geojson for id: ' . $this->id);
+        \Log::info('Getting centroid geojson for id: '.$this->id);
 
         $model = get_class($this);
         if ($this->id == null) {
@@ -155,7 +156,7 @@ trait GeojsonableTrait
             ->first();
 
         if (is_null($obj)) {
-            \Log::warning('No record found for id: ' . $this->id);
+            \Log::warning('No record found for id: '.$this->id);
 
             return null;
         }
@@ -169,7 +170,7 @@ trait GeojsonableTrait
                 'geometry' => json_decode($geom, true),
             ];
         } else {
-            \Log::warning('No geometry found for id: ' . $this->id);
+            \Log::warning('No geometry found for id: '.$this->id);
 
             return null;
         }
@@ -181,7 +182,7 @@ trait GeojsonableTrait
     public function getCentroid(): ?array
     {
         $geojson = $this->getCentroidGeojson();
-        if (!is_null($geojson)) {
+        if (! is_null($geojson)) {
             return $geojson['geometry']['coordinates'];
         }
 
@@ -230,12 +231,12 @@ trait GeojsonableTrait
         foreach ($classes as $class => $table) {
             $result = DB::select(
                 'SELECT id FROM '
-                    . $table
-                    . ' WHERE user_id = ?'
-                    . " AND ABS(EXTRACT(EPOCH FROM created_at) - EXTRACT(EPOCH FROM TIMESTAMP '"
-                    . $model->created_at
-                    . "')) < 5400"
-                    . ' AND St_DWithin(geometry, ?, 400);',
+                    .$table
+                    .' WHERE user_id = ?'
+                    ." AND ABS(EXTRACT(EPOCH FROM created_at) - EXTRACT(EPOCH FROM TIMESTAMP '"
+                    .$model->created_at
+                    ."')) < 5400"
+                    .' AND St_DWithin(geometry, ?, 400);',
                 [
                     $model->user_id,
                     $model->geometry,

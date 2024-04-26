@@ -45,7 +45,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(CaiHut::class),
                     MenuItem::resource(Club::class),
                     MenuItem::resource(Sector::class),
-                    MenuItem::resource(Area::class)
+                    MenuItem::resource(Area::class),
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('Some jobs failed', 'warning'), 'warning', fn () => DB::table('queue_monitor')->where('status', 2)->count() > 0)->openInNewTab(),
