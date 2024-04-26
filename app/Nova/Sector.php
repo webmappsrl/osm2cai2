@@ -61,7 +61,7 @@ class Sector extends Resource
             })->onlyOnForms()->hideWhenUpdating()->required(),
             Nova4FieldMap::make('Mappa')
                 ->type('GeoJson')
-                ->geoJson(json_encode($this->getEmptyGeojson())),
+                ->geoJson(json_encode($this->getFeatureCollection())),
         ];
     }
 
