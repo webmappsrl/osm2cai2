@@ -97,6 +97,13 @@ class ImportElementFromOsm2cai implements ShouldQueue
                 Log::error('Failed to import Sector with id: '.$data['id'].' '.$e->getMessage());
             }
         }
+        if ($model instanceof \App\Models\Area) {
+            try {
+                $this->importAreas($model, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Area with id: '.$data['id'].' '.$e->getMessage());
+            }
+        }
     }
 
     private function importMountainGroups($model, $data)
@@ -207,6 +214,26 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $model->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Sector with id: '.$data['id'].' '.$e->getMessage());
+        }
+    }
+
+    private function importAreas($model, $data)
+    {
+        $columnsToImport = ['id', 'code', 'name', 'geometry', 'full_code', 'num_expected'];
+
+        if ($data['geometry'] !== null) {
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
+        }
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        foreach ($intersect as $key => $value) {
+            $model->$key = $value;
+        }
+
+        try {
+            $model->save();
+        } catch (\Exception $e) {
+            Log::error('Failed to save Area with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 }

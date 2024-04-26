@@ -42,6 +42,44 @@ trait GeojsonableTrait
     }
 
     /**
+     * Get a feature collection with the geometry of the model
+     * @return array
+     */
+    public function getFeatureCollection(): ?array
+    {
+        $model = get_class($this);
+        $obj = $model::where('id', '=', $this->id)
+            ->select(
+                DB::raw('ST_AsGeoJSON(geometry) as geom')
+            )
+            ->first();
+
+        if (is_null($obj)) {
+            return null;
+        }
+        $geom = $obj->geom;
+
+        if (isset($geom)) {
+            $featureCollection = [
+                'type' => 'FeatureCollection',
+                'features' => [
+                    [
+                        'type' => 'Feature',
+                        'properties' => [
+                            'popup' => 'I am a Popup',
+                        ],
+                        'geometry' => json_decode($geom, true),
+                    ],
+                ],
+            ];
+
+            return $featureCollection;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Calculate the geojson of a model with only the geometry
      *
      * @return array
