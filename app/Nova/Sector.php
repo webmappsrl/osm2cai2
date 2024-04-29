@@ -3,12 +3,12 @@
 namespace App\Nova;
 
 use Illuminate\Http\Request;
-use Imumz\Nova4FieldMap\Nova4FieldMap;
 use Laravel\Nova\Fields\File;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class Sector extends Resource
 {
@@ -59,9 +59,10 @@ class Sector extends Resource
             File::make('Geometry')->store(function (Request $request, $model) {
                 return $model->fileToGeometry($request->geometry->get());
             })->onlyOnForms()->hideWhenUpdating()->required(),
-            Nova4FieldMap::make('Mappa')
-                ->type('GeoJson')
-                ->geoJson(json_encode($this->getFeatureCollection())),
+            MapMultiPolygon::make('Geometry')->withMeta([
+                'center' => ['42.795977075', '10.326813853'],
+                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+            ])->hideFromIndex(),
         ];
     }
 

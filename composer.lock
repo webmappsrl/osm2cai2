@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a201ccecead281016ae5d54b8696252b",
+    "content-hash": "c1349aea3734ff50debe53a32c8c378e",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -7178,6 +7178,51 @@
             "time": "2022-06-03T18:03:27+00:00"
         },
         {
+            "name": "wm/map-multi-polygon",
+            "version": "V0.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webmappsrl/map-multi-polygon.git",
+                "reference": "64a10c23929462f71fb2d4ba82a3337da8640956"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webmappsrl/map-multi-polygon/zipball/64a10c23929462f71fb2d4ba82a3337da8640956",
+                "reference": "64a10c23929462f71fb2d4ba82a3337da8640956",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Wm\\MapMultiPolygon\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Wm\\MapMultiPolygon\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/webmappsrl/map-multi-polygon/issues",
+                "source": "https://github.com/webmappsrl/map-multi-polygon/tree/V0.0.3"
+            },
+            "time": "2023-03-29T06:53:45+00:00"
+        },
+        {
             "name": "wm/map-point",
             "version": "v0.0.9",
             "source": {
@@ -9828,5 +9873,5 @@
         "php": "^8.2.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
