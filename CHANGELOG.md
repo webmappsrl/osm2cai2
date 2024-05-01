@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/webmappsrl/osm2cai2/compare/v1.6.0...v1.7.0) (2024-05-01)
+
+
+### Features
+
+* created municipalities model, nova resource an configured policies ([d64412c](https://github.com/webmappsrl/osm2cai2/commit/d64412cbbd96179c82b2ffb5dd565f8764ba859d))
+
 ## [1.6.0](https://github.com/webmappsrl/osm2cai2/compare/v1.5.0...v1.6.0) (2024-04-29)
 
 
