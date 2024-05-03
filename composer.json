@@ -25,7 +25,7 @@
         "wm/map-point": "^0.0.9",
         "wm/wm-internal": "*",
         "wm/wm-package": "*",
-        "webmapp/wm-osmfeatures": "dev-develop"
+        "webmapp/wm-osmfeatures": "dev-main"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
