@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/webmappsrl/osm2cai2/compare/v1.7.0...v1.8.0) (2024-05-03)
+
+
+### Features
+
+* implemented wm-osmfeatures configuration ([fd3decf](https://github.com/webmappsrl/osm2cai2/commit/fd3decfd0bd06f7d9c62d0b97888a7f54a0f063a))
+
 ## [1.7.0](https://github.com/webmappsrl/osm2cai2/compare/v1.6.0...v1.7.0) (2024-05-01)
 
 
