@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8a57a413259a6d1f2a359cae37e56880",
+    "content-hash": "ae0585ecc1792afdf71aedf29f4647b6",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -7128,11 +7128,11 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-develop",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-osmfeatures",
-                "reference": "a5206ec4ea1a7fd425c856f4c0d76eebfca813f2"
+                "reference": "85db3a49f77369e4de2b254bc40fad806441932c"
             },
             "require": {
                 "illuminate/contracts": "^10.0||^11.0",
