@@ -10,7 +10,7 @@ use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
-class Municipality extends Model implements OsmfeaturesSyncableInterface
+class Region extends Model implements OsmfeaturesSyncableInterface
 {
     use HasFactory, OsmfeaturesSyncableTrait;
 
@@ -38,7 +38,7 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
      */
     public static function getOsmfeaturesListQueryParameters(): array
     {
-        return ['admin_level' => 8];
+        return ['admin_level' => 4];
     }
 
     /**
@@ -57,12 +57,12 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
         if ($osmfeaturesData['geometry']) {
             $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
         } else {
-            Log::info('No geometry found for Municipality '.$osmfeaturesId);
+            Log::info('No geometry found for Province '.$osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::info('No name found for Municipality '.$osmfeaturesId);
+            Log::info('No name found for Province '.$osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];

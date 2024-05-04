@@ -9,6 +9,8 @@ use App\Nova\Dashboards\Main;
 use App\Nova\MountainGroups;
 use App\Nova\Municipality;
 use App\Nova\NaturalSpring;
+use App\Nova\Province;
+use App\Nova\Region;
 use App\Nova\Sector;
 use App\Nova\User;
 use DB;
@@ -48,6 +50,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Sector::class),
                     MenuItem::resource(Area::class),
                     MenuItem::resource(Municipality::class),
+                    MenuItem::resource(Province::class),
+                    MenuItem::resource(Region::class),
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('Some jobs failed', 'warning'), 'warning', fn () => DB::table('queue_monitor')->where('status', 2)->count() > 0)->openInNewTab(),

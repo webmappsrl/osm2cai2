@@ -11,14 +11,14 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 
-class Municipality extends Resource
+class Region extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Municipality>
+     * @var class-string<\App\Models\Region>
      */
-    public static $model = \App\Models\Municipality::class;
+    public static $model = \App\Models\Region::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.

@@ -11,14 +11,14 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 
-class Municipality extends Resource
+class Province extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Municipality>
+     * @var class-string<\App\Models\Province>
      */
-    public static $model = \App\Models\Municipality::class;
+    public static $model = \App\Models\Province::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -55,7 +55,6 @@ class Municipality extends Resource
             ])->hideFromIndex(),
             Text::make('Osmfeatures ID', 'osmfeatures_id'),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
-
         ];
     }
 
