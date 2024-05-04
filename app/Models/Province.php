@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Province extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory;
+    use HasFactory, OsmfeaturesSyncableTrait;
 
-    protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
+    protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'name', 'geometry'];
 
     protected $casts = [
-        'osmfeatures_data' => 'array',
         'osmfeatures_updated_at' => 'datetime',
     ];
 

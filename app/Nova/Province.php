@@ -2,13 +2,14 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\DateTime;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Panel;
 
 class Province extends Resource
 {
@@ -45,18 +46,15 @@ class Province extends Resource
     {
         return [
             ID::make()->sortable(),
+            Text::make('Name', 'name')->sortable(),
             DateTime::make('Created At', 'created_at')->hideFromIndex(),
             DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
             MapMultiPolygon::make('Geometry')->withMeta([
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
-            Panel::make('Osmfeatures', [
-                ID::make('Osmfeatures ID', 'osmfeatures_id'),
-                DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
-                Code::make('Osmfeatures data', 'osmfeatures_data')->json(),
-            ])
-
+            Text::make('Osmfeatures ID', 'osmfeatures_id'),
+            DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
         ];
     }
 
