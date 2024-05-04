@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0](https://github.com/webmappsrl/osm2cai2/compare/v1.8.0...v1.9.0) (2024-05-04)
+
+
+### Features
+
+* created province model and defined policies ([b6d51d8](https://github.com/webmappsrl/osm2cai2/commit/b6d51d879d9e1157f8fd77522dc5b595c562b035))
+* created region model ([ad579eb](https://github.com/webmappsrl/osm2cai2/commit/ad579ebde7d06dcddb27fd9e92fce2111b6b5db2))
+* created region nova resource and defined index and details fields ([56c78a7](https://github.com/webmappsrl/osm2cai2/commit/56c78a7b390a759152348ccda93ed7abf4192128))
+* implemented province nova resource ([86a2001](https://github.com/webmappsrl/osm2cai2/commit/86a2001ca8e416f958e69371f5ff4a1fac4420fd))
+* initialized province model for osmfeatures sync ([69147ae](https://github.com/webmappsrl/osm2cai2/commit/69147aec3749c7d1e7d53abdb89d78a4192ef45f))
+* initialized region model for osmfeatures sync ([aaee38e](https://github.com/webmappsrl/osm2cai2/commit/aaee38e70efc954a7abbd411bd7d58108b227c82))
+
+
+### Bug Fixes
+
+* changed queue timeout time ([0dcc90c](https://github.com/webmappsrl/osm2cai2/commit/0dcc90c76e5efca55bfea48ad012f4d10b95b837))
+
 ## [1.8.0](https://github.com/webmappsrl/osm2cai2/compare/v1.7.0...v1.8.0) (2024-05-03)
 
 
