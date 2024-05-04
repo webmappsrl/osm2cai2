@@ -13,7 +13,7 @@ class ProvincePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class ProvincePolicy
      */
     public function view(User $user, Province $province): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class ProvincePolicy
      */
     public function create(User $user): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -37,7 +37,7 @@ class ProvincePolicy
      */
     public function update(User $user, Province $province): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -45,7 +45,7 @@ class ProvincePolicy
      */
     public function delete(User $user, Province $province): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -53,7 +53,7 @@ class ProvincePolicy
      */
     public function restore(User $user, Province $province): bool
     {
-        //
+        return false;
     }
 
     /**
@@ -61,6 +61,6 @@ class ProvincePolicy
      */
     public function forceDelete(User $user, Province $province): bool
     {
-        //
+        return false;
     }
 }
