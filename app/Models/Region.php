@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
@@ -47,7 +47,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     public static function osmfeaturesUpdateLocalAfterSync(string $osmfeaturesId): void
     {
         $model = self::where('osmfeatures_id', $osmfeaturesId)->first();
-        if (!$model) {
+        if (! $model) {
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
@@ -55,14 +55,14 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
         } else {
-            Log::info('No geometry found for Province ' . $osmfeaturesId);
+            Log::info('No geometry found for Province '.$osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::info('No name found for Province ' . $osmfeaturesId);
+            Log::info('No name found for Province '.$osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];
