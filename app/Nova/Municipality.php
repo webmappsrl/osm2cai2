@@ -2,11 +2,13 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
 use Wm\MapMultiPolygon\MapMultiPolygon;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Municipality extends Resource
 {
@@ -49,6 +51,11 @@ class Municipality extends Resource
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
+            Panel::make('Osmfeatures', [
+                ID::make('Osmfeatures ID', 'osmfeatures_id'),
+                DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
+                Code::make('Osmfeatures data', 'osmfeatures_data')->json(),
+            ])
 
         ];
     }
