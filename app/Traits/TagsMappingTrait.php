@@ -15,11 +15,11 @@ trait TagsMappingTrait
         $result = '';
 
         //if the table has not the tags column search in the osmfeatures_data column for the tags
-        if (!property_exists($this, 'tags')) {
-            $result = $this->osmfeatures_data;
-            $tags = json_decode($result, true)['properties']['osm_tags'];
+        if (!$this->tags && $this->osmfeatures_data) {
+            $tags = json_decode($this->osmfeatures_data, true)['properties']['osm_tags'];
+        } else {
+            $tags = json_decode($this->tags, true);
         }
-        $tags = json_decode($this->tags, true);
 
         foreach ($tags as $key => $value) {
             if (array_key_exists($key, $mapping)) {
@@ -29,6 +29,6 @@ trait TagsMappingTrait
             }
         }
 
-        return $result;
+        return substr($result, 0, -1);
     }
 }
