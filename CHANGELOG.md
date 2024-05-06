@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/webmappsrl/osm2cai2/compare/v1.10.0...v1.11.0) (2024-05-06)
+
+
+### Features
+
+* updated wm-osmfeatures package version ([ac454d1](https://github.com/webmappsrl/osm2cai2/commit/ac454d159fe104665596f5b1e6634bc65a1ec06f))
+
 ## [1.10.0](https://github.com/webmappsrl/osm2cai2/compare/v1.9.0...v1.10.0) (2024-05-06)
 
 
