@@ -7129,21 +7129,22 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmappsrl/wm-osmfeatures.git",
-                "reference": "15ecbe8cb9dc152cec4a7f83aaf3af6dc7b5889d"
+                "reference": "1168a60814e1a3c9eb83ee15b160592028790054"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/15ecbe8cb9dc152cec4a7f83aaf3af6dc7b5889d",
-                "reference": "15ecbe8cb9dc152cec4a7f83aaf3af6dc7b5889d",
+                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/1168a60814e1a3c9eb83ee15b160592028790054",
+                "reference": "1168a60814e1a3c9eb83ee15b160592028790054",
                 "shasum": ""
             },
             "require": {
                 "illuminate/contracts": "^10.0||^11.0",
                 "php": "^8.2",
+                "romanzipp/laravel-queue-monitor": "^5.2",
                 "spatie/laravel-package-tools": "^1.16"
             },
             "require-dev": {
@@ -7196,7 +7197,7 @@
             ],
             "support": {
                 "issues": "https://github.com/webmappsrl/wm-osmfeatures/issues",
-                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.0.0"
+                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.1.0"
             },
             "funding": [
                 {
@@ -7204,7 +7205,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-05-03T12:14:16+00:00"
+            "time": "2024-05-06T06:46:03+00:00"
         },
         {
             "name": "webmozart/assert",
