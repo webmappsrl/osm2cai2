@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->integer('score')->default(1);
             $table->string('type')->nullable()->default('generic');
+            $table->geography('geometry', 'point', 4326)->nullable();
         });
     }
 

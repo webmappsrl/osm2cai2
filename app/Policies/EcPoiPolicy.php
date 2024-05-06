@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\EcPois;
+use App\Models\EcPoi;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class EcPoisPolicy
+class EcPoiPolicy
 {
     /**
      * Determine whether the user can view any models.

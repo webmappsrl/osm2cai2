@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEcPoisRequest;
 use App\Http\Requests\UpdateEcPoisRequest;
-use App\Models\EcPois;
+use App\Models\EcPoi;
 
-class EcPoisController extends Controller
+class EcPoiController extends Controller
 {
     /**
      * Display a listing of the resource.
