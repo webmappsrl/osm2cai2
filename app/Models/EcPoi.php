@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
@@ -22,6 +23,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_updated_at',
         'type',
         'score',
+        'user_id'
     ];
 
     protected $casts = [
@@ -55,7 +57,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     public static function osmfeaturesUpdateLocalAfterSync(string $osmfeaturesId): void
     {
         $model = self::where('osmfeatures_id', $osmfeaturesId)->first();
-        if (! $model) {
+        if (!$model) {
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
@@ -63,14 +65,14 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::info('No geometry found for Municipality '.$osmfeaturesId);
+            Log::info('No geometry found for Municipality ' . $osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::info('No name found for Ec Poi '.$osmfeaturesId);
+            Log::info('No name found for Ec Poi ' . $osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];
@@ -82,5 +84,10 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
             'score' => $osmfeaturesData['properties']['score'],
             'type' => $model->getTagsMapping(),
         ]);
+    }
+
+    public function User()
+    {
+        return $this->belongsTo(User::class);
     }
 }
