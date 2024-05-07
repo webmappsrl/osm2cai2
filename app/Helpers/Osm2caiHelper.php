@@ -4,7 +4,6 @@ namespace App\Helpers;
 
 class Osm2caiHelper
 {
-
     /**
      * Get the openstreetmap url by parsing the osmfeatures id
      * @param string $id
@@ -21,7 +20,7 @@ class Osm2caiHelper
         };
         $osmid = substr($id, 1);
 
-        return 'https://www.openstreetmap.org/' . $finalType . '/' . $osmid;
+        return 'https://www.openstreetmap.org/'.$finalType.'/'.$osmid;
     }
 
     /**
@@ -31,7 +30,7 @@ class Osm2caiHelper
      */
     public static function getOpenstreetmapUrlAsHtml(string $id): string
     {
-        return '<a style="color:darkgreen;" target="_blank" href="' . self::getOpenstreetmapUrl($id) . '" target="_blank">' . $id . '</a>';
+        return '<a style="color:darkgreen;" target="_blank" href="'.self::getOpenstreetmapUrl($id).'" target="_blank">'.$id.'</a>';
     }
 
     /**

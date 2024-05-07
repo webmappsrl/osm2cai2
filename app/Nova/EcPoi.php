@@ -7,12 +7,12 @@ use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
-use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\MapPoint\MapPoint;
 
@@ -38,7 +38,7 @@ class EcPoi extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'type'
+        'id', 'name', 'type',
     ];
 
     /**

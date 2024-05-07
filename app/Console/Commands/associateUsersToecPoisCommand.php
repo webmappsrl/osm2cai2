@@ -5,8 +5,8 @@ namespace App\Console\Commands;
 use App\Models\EcPoi;
 use App\Models\User;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class associateUsersToecPoisCommand extends Command
 {
@@ -36,18 +36,19 @@ class associateUsersToecPoisCommand extends Command
         $response = Http::get($usersApiList);
 
         if ($response->failed() || $response->json() === null) {
-            $this->info('Failed to retrieve data from API: ' . $usersApiList);
-            Log::error('Failed to retrieve data from API: ' . $usersApiList . ' ' . $response->body());
+            $this->info('Failed to retrieve data from API: '.$usersApiList);
+            Log::error('Failed to retrieve data from API: '.$usersApiList.' '.$response->body());
+
             return;
         }
         $list = $response->json();
 
         foreach ($list as $userId => $updated_at) {
-            $userData = Http::get('https://osm2cai.cai.it/api/v2/export/users/' . $userId);
+            $userData = Http::get('https://osm2cai.cai.it/api/v2/export/users/'.$userId);
 
             if ($userData->failed() || $userData->json() === null) {
-                $this->info('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/users/' . $userId);
-                Log::error('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/users/' . $userId . ' ' . $userData->body());
+                $this->info('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/users/'.$userId);
+                Log::error('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/users/'.$userId.' '.$userData->body());
                 continue;
             }
 
@@ -68,17 +69,17 @@ class associateUsersToecPoisCommand extends Command
             }
         }
 
-        $this->info('Imported ' . count($list) . ' users');
+        $this->info('Imported '.count($list).' users');
 
         //get all ec_pois
         $ecPois = EcPoi::all();
 
         foreach ($ecPois as $ecPoi) {
-            $ecPoiApiData = Http::get('https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id);
+            $ecPoiApiData = Http::get('https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id);
 
             if ($ecPoiApiData->failed() || $ecPoiApiData->json() === null) {
-                $this->info('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id);
-                Log::error('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id . ' ' . $ecPoiApiData->body());
+                $this->info('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id);
+                Log::error('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id.' '.$ecPoiApiData->body());
             }
 
             $ecPoiApiData = $ecPoiApiData->json();
