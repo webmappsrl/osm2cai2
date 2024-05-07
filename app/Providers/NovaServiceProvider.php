@@ -6,6 +6,7 @@ use App\Nova\Area;
 use App\Nova\CaiHut;
 use App\Nova\Club;
 use App\Nova\Dashboards\Main;
+use App\Nova\EcPoi;
 use App\Nova\MountainGroups;
 use App\Nova\Municipality;
 use App\Nova\NaturalSpring;
@@ -52,6 +53,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Municipality::class),
                     MenuItem::resource(Province::class),
                     MenuItem::resource(Region::class),
+                    MenuItem::resource(EcPoi::class),
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Display Jobs', url('/jobs'))->withBadgeIf(Badge::make('Some jobs failed', 'warning'), 'warning', fn () => DB::table('queue_monitor')->where('status', 2)->count() > 0)->openInNewTab(),

@@ -3,8 +3,12 @@
 namespace App\Nova;
 
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\MapPoint\MapPoint;
 
 class EcPoi extends Resource
 {
@@ -28,7 +32,7 @@ class EcPoi extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'id', 'name',
     ];
 
     /**
@@ -41,6 +45,21 @@ class EcPoi extends Resource
     {
         return [
             ID::make()->sortable(),
+            Text::make('Name', 'name')->sortable(),
+            DateTime::make('Created At', 'created_at')->hideFromIndex(),
+            DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
+            Number::make('Score', 'score')->sortable(),
+            Text::make('Type', 'type')->sortable(),
+            MapPoint::make('geometry')->withMeta([
+                'center' => [42, 10],
+                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+                'minZoom' => 8,
+                'maxZoom' => 17,
+                'defaultZoom' => 13,
+            ])->hideFromIndex(),
+            Text::make('Osmfeatures ID', 'osmfeatures_id'),
+            DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
         ];
     }
 
