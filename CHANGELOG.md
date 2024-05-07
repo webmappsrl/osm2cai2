@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.12.0](https://github.com/webmappsrl/osm2cai2/compare/v1.11.0...v1.12.0) (2024-05-07)
+
+
+### Features
+
+* added osm2cai config file ([8fbfc8e](https://github.com/webmappsrl/osm2cai2/commit/8fbfc8eada76d40aff0ecf8bb1c97437f022cd18))
+* added tags mapping trait ([8e6b95f](https://github.com/webmappsrl/osm2cai2/commit/8e6b95f15a502a5ea23caad2b5b03fc61f23b5e4))
+* added type mapping for ec poi ([9850118](https://github.com/webmappsrl/osm2cai2/commit/9850118a253cc03421b0128e1045e322d31a19ab))
+* created ec pois model and nova resource ([bd2f46b](https://github.com/webmappsrl/osm2cai2/commit/bd2f46bcc187d04ca9d2c60f624afd51311c0655))
+* ec pois migration ([287059b](https://github.com/webmappsrl/osm2cai2/commit/287059bd420a6615a1bd41171176d59dbc548eef))
+* initialized ecPoi model for osmfeatures import ([49e1ff7](https://github.com/webmappsrl/osm2cai2/commit/49e1ff7a21496a750682817f5c4e35b19fa811c7))
+* updated wm-osmfeatures package dependency ([09cf0d1](https://github.com/webmappsrl/osm2cai2/commit/09cf0d168b015fe61b884bb7fabdc593a21846f6))
+
+
+### Bug Fixes
+
+* typo in ec poi class ([2798e90](https://github.com/webmappsrl/osm2cai2/commit/2798e9014569f4ca9a32c9230a17d0df39022ec2))
+
 ## [1.11.0](https://github.com/webmappsrl/osm2cai2/compare/v1.10.0...v1.11.0) (2024-05-06)
 
 
