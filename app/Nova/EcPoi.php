@@ -2,9 +2,11 @@
 
 namespace App\Nova;
 
+use App\Helpers\Osm2caiHelper;
+use App\Nova\Filters\ScoreFilter;
+use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -32,7 +34,7 @@ class EcPoi extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id', 'name', 'type'
     ];
 
     /**
@@ -48,7 +50,9 @@ class EcPoi extends Resource
             Text::make('Name', 'name')->sortable(),
             DateTime::make('Created At', 'created_at')->hideFromIndex(),
             DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
-            Number::make('Score', 'score')->sortable(),
+            Text::make('Score', 'score')->displayUsing(function ($value) {
+                return Osm2caiHelper::getScoreAsStars($value);
+            })->sortable(),
             Text::make('Type', 'type')->sortable(),
             MapPoint::make('geometry')->withMeta([
                 'center' => [42, 10],
@@ -58,7 +62,9 @@ class EcPoi extends Resource
                 'maxZoom' => 17,
                 'defaultZoom' => 13,
             ])->hideFromIndex(),
-            Text::make('Osmfeatures ID', 'osmfeatures_id'),
+            Text::make('Osmfeatures ID', function () {
+                return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
+            })->asHtml(),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
         ];
     }
@@ -82,7 +88,9 @@ class EcPoi extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            (new ScoreFilter),
+        ];
     }
 
     /**
