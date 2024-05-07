@@ -4,11 +4,15 @@ namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Filters\ScoreFilter;
+use App\Nova\Filters\WikiDataFilter;
+use App\Nova\Filters\WikiMediaFilter;
+use App\Nova\Filters\WikiPediaFilter;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\MapPoint\MapPoint;
 
@@ -54,6 +58,7 @@ class EcPoi extends Resource
                 return Osm2caiHelper::getScoreAsStars($value);
             })->sortable(),
             Text::make('Type', 'type')->sortable(),
+            BelongsTo::make('User')->sortable(),
             MapPoint::make('geometry')->withMeta([
                 'center' => [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
