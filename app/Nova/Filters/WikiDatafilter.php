@@ -5,7 +5,7 @@ namespace App\Nova\Filters;
 use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class WikiDataFilter extends BooleanFilter
+class WikiDatafilter extends BooleanFilter
 {
     public $name = 'WikiData';
 

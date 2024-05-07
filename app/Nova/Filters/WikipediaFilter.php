@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class WikiPediaFilter extends BooleanFilter
+class WikipediaFilter extends BooleanFilter
 {
     public $name = 'WikiPedia';
 
@@ -20,7 +20,6 @@ class WikiPediaFilter extends BooleanFilter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-
         if ($value['has_wikipedia']) {
             return $query->whereRaw("jsonb_exists(cast(osmfeatures_data->'properties'->'osm_tags' as jsonb), 'wikipedia')");
         }
