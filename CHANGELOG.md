@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/webmappsrl/osm2cai2/compare/v1.12.0...v1.13.0) (2024-05-07)
+
+
+### Features
+
+* ecpoi nova resource update ([80e4f73](https://github.com/webmappsrl/osm2cai2/commit/80e4f73a1b2bcc334bce3f175be8a53c7f9f3d4e))
+
 ## [1.12.0](https://github.com/webmappsrl/osm2cai2/compare/v1.11.0...v1.12.0) (2024-05-07)
 
 
