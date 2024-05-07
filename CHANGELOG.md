@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.14.0](https://github.com/webmappsrl/osm2cai2/compare/v1.13.0...v1.14.0) (2024-05-07)
+
+
+### Features
+
+* added score nova filter for ec pois ([38cf453](https://github.com/webmappsrl/osm2cai2/commit/38cf453dfde94ec78ea74bee82caa7755ab77d5d))
+* added user id and elevation to ec_poi ([63100b4](https://github.com/webmappsrl/osm2cai2/commit/63100b4cda94e4b4c2849c5c550a7ba189f5200e))
+* added user relation to nova resource ec poi ([26a589b](https://github.com/webmappsrl/osm2cai2/commit/26a589b52f4676f7b7fc5d14a071f199d01964ba))
+* created associate user ec poi command ([7e1e564](https://github.com/webmappsrl/osm2cai2/commit/7e1e564e7422f5b81d7a58b638c3871c4cc68e4b))
+* defined relation between ecpoi and user ([6089808](https://github.com/webmappsrl/osm2cai2/commit/6089808630a22a28d2702dc3147d7ba47bf40819))
+
 ## [1.13.0](https://github.com/webmappsrl/osm2cai2/compare/v1.12.0...v1.13.0) (2024-05-07)
 
 
