@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/webmappsrl/osm2cai2/compare/v1.14.0...v1.15.0) (2024-05-07)
+
+
+### Features
+
+* added wiki filters ([e7aa6d2](https://github.com/webmappsrl/osm2cai2/commit/e7aa6d2989da4f7f0bd80fd7229aa7264e45f209))
+
 ## [1.14.0](https://github.com/webmappsrl/osm2cai2/compare/v1.13.0...v1.14.0) (2024-05-07)
 
 
