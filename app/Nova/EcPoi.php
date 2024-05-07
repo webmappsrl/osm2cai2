@@ -95,6 +95,9 @@ class EcPoi extends Resource
     {
         return [
             (new ScoreFilter),
+            (new WikiPediaFilter),
+            (new WikiDataFilter),
+            (new WikiMediaFilter),
         ];
     }
 
