@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_updated_at',
         'type',
         'score',
+        'user_id',
     ];
 
     protected $casts = [
@@ -82,5 +84,10 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
             'score' => $osmfeaturesData['properties']['score'],
             'type' => $model->getTagsMapping(),
         ]);
+    }
+
+    public function User()
+    {
+        return $this->belongsTo(User::class);
     }
 }
