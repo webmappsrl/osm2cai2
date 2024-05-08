@@ -58,6 +58,12 @@ class Province extends Resource
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml(),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
+            Code::make('Osmfeatures Data', 'osmfeatures_data')
+                ->json()
+                ->language('php')
+                ->resolveUsing(function ($value) {
+                    return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
+                })
         ];
     }
 

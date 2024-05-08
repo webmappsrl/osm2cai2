@@ -44,7 +44,7 @@ class EcPoi extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'type',
+        'id', 'name', 'type', 'osmfeatures_id'
     ];
 
     /**
