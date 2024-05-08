@@ -4,6 +4,8 @@ namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Filters\ScoreFilter;
+use App\Nova\Filters\SourceFilter;
+use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
@@ -98,6 +100,8 @@ class EcPoi extends Resource
             (new WikiPediaFilter),
             (new WikiDataFilter),
             (new WikiMediaFilter),
+            (new WebsiteFilter),
+            (new SourceFilter)
         ];
     }
 
