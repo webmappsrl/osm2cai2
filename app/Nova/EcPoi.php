@@ -58,7 +58,7 @@ class EcPoi extends Resource
                 return Osm2caiHelper::getScoreAsStars($value);
             })->sortable(),
             Text::make('Type', 'type')->sortable(),
-            BelongsTo::make('User')->sortable(),
+            BelongsTo::make('User')->sortable()->filterable()->searchable(),
             MapPoint::make('geometry')->withMeta([
                 'center' => [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
