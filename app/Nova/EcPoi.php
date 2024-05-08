@@ -2,24 +2,25 @@
 
 namespace App\Nova;
 
+use Davidpiesse\Map\Map;
+use Wm\MapPoint\MapPoint;
+use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
+use function Pest\Laravel\json;
+use Laravel\Nova\Fields\Number;
 use App\Nova\Filters\ScoreFilter;
+use Laravel\Nova\Fields\DateTime;
 use App\Nova\Filters\SourceFilter;
+use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
-use App\Nova\Filters\WikiPediaFilter;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Wm\MapPoint\MapPoint;
 
-use function Pest\Laravel\json;
+use App\Nova\Filters\WikiPediaFilter;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class EcPoi extends Resource
 {
@@ -71,7 +72,8 @@ class EcPoi extends Resource
                 'minZoom' => 8,
                 'maxZoom' => 17,
                 'defaultZoom' => 13,
-            ])->hideFromIndex(),
+                'defaultCenter' => [42, 10],
+            ])->onlyOnDetail(),
             Text::make('Osmfeatures ID', function () {
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml(),
@@ -79,6 +81,9 @@ class EcPoi extends Resource
             Code::make('Osmfeatures Data', 'osmfeatures_data')
                 ->json()
                 ->language('php')
+                ->resolveUsing(function ($value) {
+                    return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
+                })
         ];
     }
 

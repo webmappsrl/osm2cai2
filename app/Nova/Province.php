@@ -2,14 +2,15 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Panel;
+use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Panel;
+use App\Helpers\Osm2caiHelper;
+use Laravel\Nova\Fields\DateTime;
 use Wm\MapMultiPolygon\MapMultiPolygon;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Province extends Resource
 {
@@ -33,7 +34,7 @@ class Province extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id', 'name', 'osmfeatures_id'
     ];
 
     /**
@@ -53,7 +54,9 @@ class Province extends Resource
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
-            Text::make('Osmfeatures ID', 'osmfeatures_id'),
+            Text::make('Osmfeatures ID', function () {
+                return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
+            })->asHtml(),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
         ];
     }
