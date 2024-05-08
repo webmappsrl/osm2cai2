@@ -18,6 +18,7 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
+        'osmfeatures_data' => 'json',
     ];
 
     /**
@@ -47,7 +48,7 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
     public static function osmfeaturesUpdateLocalAfterSync(string $osmfeaturesId): void
     {
         $model = self::where('osmfeatures_id', $osmfeaturesId)->first();
-        if (! $model) {
+        if (!$model) {
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
@@ -55,14 +56,14 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::info('No geometry found for Municipality '.$osmfeaturesId);
+            Log::info('No geometry found for Municipality ' . $osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::info('No name found for Municipality '.$osmfeaturesId);
+            Log::info('No name found for Municipality ' . $osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];
