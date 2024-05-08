@@ -11,12 +11,15 @@ use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\MapPoint\MapPoint;
+
+use function Pest\Laravel\json;
 
 class EcPoi extends Resource
 {
@@ -73,6 +76,9 @@ class EcPoi extends Resource
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml(),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
+            Code::make('Osmfeatures Data', 'osmfeatures_data')
+                ->json()
+                ->language('php')
         ];
     }
 
