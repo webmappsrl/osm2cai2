@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "159957425f328bb7daeda376e522a408",
+    "content-hash": "2e31a3ca49584c8d93deee8e978dd933",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1534,6 +1534,62 @@
             "time": "2024-03-09T00:30:58+00:00"
         },
         {
+            "name": "interaction-design-foundation/nova-html-card",
+            "version": "3.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/InteractionDesignFoundation/nova-html-card.git",
+                "reference": "09aed5a48d5ab67e15f5064f68c63cb66688e046"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/InteractionDesignFoundation/nova-html-card/zipball/09aed5a48d5ab67e15f5064f68c63cb66688e046",
+                "reference": "09aed5a48d5ab67e15f5064f68c63cb66688e046",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.20",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "interaction-design-foundation/coding-standard": "^0.2.0",
+                "orchestra/testbench": "^8.3",
+                "phpunit/phpunit": "^10.5 || ^11.0",
+                "vimeo/psalm": "^5.22"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "InteractionDesignFoundation\\HtmlCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "InteractionDesignFoundation\\HtmlCard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova card to display arbitrary HTML content",
+            "keywords": [
+                "html",
+                "laravel",
+                "laravel-nova-card",
+                "markdown",
+                "nova",
+                "text"
+            ],
+            "support": {
+                "issues": "https://github.com/InteractionDesignFoundation/nova-html-card/issues",
+                "source": "https://github.com/InteractionDesignFoundation/nova-html-card/tree/3.3.0"
+            },
+            "time": "2024-03-12T13:56:50+00:00"
+        },
+        {
             "name": "kongulov/nova-tab-translatable",
             "version": "2.1.3",
             "source": {
@@ -2687,6 +2743,52 @@
                 }
             ],
             "time": "2024-01-28T23:22:08+00:00"
+        },
+        {
+            "name": "m-a-k-o/nova-custom-table-card",
+            "version": "4.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/m-a-k-o/nova-custom-table-card.git",
+                "reference": "d91ec1312959f5efbfd39bbe148f75f1ceb94e5f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/m-a-k-o/nova-custom-table-card/zipball/d91ec1312959f5efbfd39bbe148f75f1ceb94e5f",
+                "reference": "d91ec1312959f5efbfd39bbe148f75f1ceb94e5f",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0",
+                "php": "^8.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Mako\\CustomTableCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Mako\\CustomTableCard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Nova custom table card. Show your latest data (orders, posts,...) as card or data you prefer.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/m-a-k-o/nova-custom-table-card/issues",
+                "source": "https://github.com/m-a-k-o/nova-custom-table-card/tree/4.0.1"
+            },
+            "time": "2022-08-12T14:17:48+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -7129,17 +7231,11 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "1.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/webmappsrl/wm-osmfeatures.git",
-                "reference": "b8a3428845dcfffbdf0400a2ce790b99706166a2"
-            },
+            "version": "dev-main",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/b8a3428845dcfffbdf0400a2ce790b99706166a2",
-                "reference": "b8a3428845dcfffbdf0400a2ce790b99706166a2",
-                "shasum": ""
+                "type": "path",
+                "url": "./wm-osmfeatures",
+                "reference": "8d53083c2d855d7d3b96317195dec01f3c2b11c8"
             },
             "require": {
                 "illuminate/contracts": "^10.0||^11.0",
@@ -7177,7 +7273,44 @@
                     "Wm\\WmOsmfeatures\\Database\\Factories\\": "database/factories/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Wm\\WmOsmfeatures\\Tests\\": "tests/",
+                    "Workbench\\App\\": "workbench/app/"
+                }
+            },
+            "scripts": {
+                "post-autoload-dump": [
+                    "@composer run prepare"
+                ],
+                "clear": [
+                    "@php vendor/bin/testbench package:purge-wm-osmfeatures --ansi"
+                ],
+                "prepare": [
+                    "@php vendor/bin/testbench package:discover --ansi"
+                ],
+                "build": [
+                    "@composer run prepare",
+                    "@php vendor/bin/testbench workbench:build --ansi"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "@composer run build",
+                    "@php vendor/bin/testbench serve"
+                ],
+                "analyse": [
+                    "vendor/bin/phpstan analyse"
+                ],
+                "test": [
+                    "vendor/bin/pest"
+                ],
+                "test-coverage": [
+                    "vendor/bin/pest --coverage"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -7195,17 +7328,9 @@
                 "webmappsrl",
                 "wm-osmfeatures"
             ],
-            "support": {
-                "issues": "https://github.com/webmappsrl/wm-osmfeatures/issues",
-                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.2.0"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/wm",
-                    "type": "github"
-                }
-            ],
-            "time": "2024-05-07T06:42:56+00:00"
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "webmozart/assert",
@@ -9955,7 +10080,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "webmapp/wm-osmfeatures": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
