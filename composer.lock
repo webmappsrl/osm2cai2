@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2e31a3ca49584c8d93deee8e978dd933",
+    "content-hash": "162e45fe5fa64fc56e28d39a82cc9804",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -7231,11 +7231,17 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-main",
+            "version": "1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webmappsrl/wm-osmfeatures.git",
+                "reference": "b81ceaccf37b97e312b707542f0bb5cfebb8eb8c"
+            },
             "dist": {
-                "type": "path",
-                "url": "./wm-osmfeatures",
-                "reference": "8d53083c2d855d7d3b96317195dec01f3c2b11c8"
+                "type": "zip",
+                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/b81ceaccf37b97e312b707542f0bb5cfebb8eb8c",
+                "reference": "b81ceaccf37b97e312b707542f0bb5cfebb8eb8c",
+                "shasum": ""
             },
             "require": {
                 "illuminate/contracts": "^10.0||^11.0",
@@ -7273,44 +7279,7 @@
                     "Wm\\WmOsmfeatures\\Database\\Factories\\": "database/factories/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Wm\\WmOsmfeatures\\Tests\\": "tests/",
-                    "Workbench\\App\\": "workbench/app/"
-                }
-            },
-            "scripts": {
-                "post-autoload-dump": [
-                    "@composer run prepare"
-                ],
-                "clear": [
-                    "@php vendor/bin/testbench package:purge-wm-osmfeatures --ansi"
-                ],
-                "prepare": [
-                    "@php vendor/bin/testbench package:discover --ansi"
-                ],
-                "build": [
-                    "@composer run prepare",
-                    "@php vendor/bin/testbench workbench:build --ansi"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "@composer run build",
-                    "@php vendor/bin/testbench serve"
-                ],
-                "analyse": [
-                    "vendor/bin/phpstan analyse"
-                ],
-                "test": [
-                    "vendor/bin/pest"
-                ],
-                "test-coverage": [
-                    "vendor/bin/pest --coverage"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -7328,9 +7297,17 @@
                 "webmappsrl",
                 "wm-osmfeatures"
             ],
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/webmappsrl/wm-osmfeatures/issues",
+                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.3.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/wm",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-05-08T07:30:52+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -10080,9 +10057,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "webmapp/wm-osmfeatures": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
