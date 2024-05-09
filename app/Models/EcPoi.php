@@ -28,6 +28,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
+        'osmfeatures_data' => 'json',
     ];
 
     /**

@@ -4,16 +4,21 @@ namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Filters\ScoreFilter;
+use App\Nova\Filters\SourceFilter;
+use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
+use Davidpiesse\Map\Map;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use function Pest\Laravel\json;
 use Wm\MapPoint\MapPoint;
 
 class EcPoi extends Resource
@@ -38,7 +43,7 @@ class EcPoi extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'type',
+        'id', 'name', 'type', 'osmfeatures_id',
     ];
 
     /**
@@ -58,7 +63,7 @@ class EcPoi extends Resource
                 return Osm2caiHelper::getScoreAsStars($value);
             })->sortable(),
             Text::make('Type', 'type')->sortable(),
-            BelongsTo::make('User')->sortable(),
+            BelongsTo::make('User')->sortable()->filterable()->searchable(),
             MapPoint::make('geometry')->withMeta([
                 'center' => [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
@@ -66,11 +71,18 @@ class EcPoi extends Resource
                 'minZoom' => 8,
                 'maxZoom' => 17,
                 'defaultZoom' => 13,
-            ])->hideFromIndex(),
+                'defaultCenter' => [42, 10],
+            ])->onlyOnDetail(),
             Text::make('Osmfeatures ID', function () {
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml(),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
+            Code::make('Osmfeatures Data', 'osmfeatures_data')
+                ->json()
+                ->language('php')
+                ->resolveUsing(function ($value) {
+                    return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
+                }),
         ];
     }
 
@@ -98,6 +110,8 @@ class EcPoi extends Resource
             (new WikiPediaFilter),
             (new WikiDataFilter),
             (new WikiMediaFilter),
+            (new WebsiteFilter),
+            (new SourceFilter),
         ];
     }
 

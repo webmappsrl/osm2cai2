@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Helpers\Osm2caiHelper;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
@@ -53,8 +54,16 @@ class Region extends Resource
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
-            Text::make('Osmfeatures ID', 'osmfeatures_id'),
+            Text::make('Osmfeatures ID', function () {
+                return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
+            })->asHtml(),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
+            Code::make('Osmfeatures Data', 'osmfeatures_data')
+                ->json()
+                ->language('php')
+                ->resolveUsing(function ($value) {
+                    return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
+                }),
 
         ];
     }
