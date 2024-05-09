@@ -2,15 +2,15 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Panel;
-use Laravel\Nova\Fields\ID;
+use App\Helpers\Osm2caiHelper;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
-use App\Helpers\Osm2caiHelper;
 use Laravel\Nova\Fields\DateTime;
-use Wm\MapMultiPolygon\MapMultiPolygon;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Panel;
+use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class Municipality extends Resource
 {
@@ -63,7 +63,7 @@ class Municipality extends Resource
                 ->language('php')
                 ->resolveUsing(function ($value) {
                     return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
-                })
+                }),
 
         ];
     }

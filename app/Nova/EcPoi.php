@@ -2,25 +2,24 @@
 
 namespace App\Nova;
 
-use Davidpiesse\Map\Map;
-use Wm\MapPoint\MapPoint;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use function Pest\Laravel\json;
-use Laravel\Nova\Fields\Number;
 use App\Nova\Filters\ScoreFilter;
-use Laravel\Nova\Fields\DateTime;
 use App\Nova\Filters\SourceFilter;
-use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
-
 use App\Nova\Filters\WikiPediaFilter;
+use Davidpiesse\Map\Map;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use function Pest\Laravel\json;
+use Wm\MapPoint\MapPoint;
 
 class EcPoi extends Resource
 {
@@ -44,7 +43,7 @@ class EcPoi extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'type', 'osmfeatures_id'
+        'id', 'name', 'type', 'osmfeatures_id',
     ];
 
     /**
@@ -83,7 +82,7 @@ class EcPoi extends Resource
                 ->language('php')
                 ->resolveUsing(function ($value) {
                     return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
-                })
+                }),
         ];
     }
 
@@ -112,7 +111,7 @@ class EcPoi extends Resource
             (new WikiDataFilter),
             (new WikiMediaFilter),
             (new WebsiteFilter),
-            (new SourceFilter)
+            (new SourceFilter),
         ];
     }
 

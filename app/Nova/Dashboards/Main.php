@@ -2,24 +2,23 @@
 
 namespace App\Nova\Dashboards;
 
-use Laravel\Nova\Cards\Help;
 use App\Helpers\Osm2caiHelper;
-use Illuminate\Support\Facades\DB;
-use Mako\CustomTableCard\Table\Row;
 use Illuminate\Support\Facades\Auth;
-use Mako\CustomTableCard\Table\Cell;
-use Mako\CustomTableCard\CustomTableCard;
-use Laravel\Nova\Dashboards\Main as Dashboard;
+use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Cards\Help;
+use Laravel\Nova\Dashboards\Main as Dashboard;
+use Mako\CustomTableCard\CustomTableCard;
+use Mako\CustomTableCard\Table\Cell;
+use Mako\CustomTableCard\Table\Row;
 
 class Main extends Dashboard
 {
-
-
     public function name()
     {
         return __('Dashboard');
     }
+
     /**
      * Get the cards for the dashboard.
      *
@@ -43,13 +42,11 @@ class Main extends Dashboard
         return $cards;
     }
 
-
     /**
      * @return CustomTableCard
      */
     private function _getRegionsTableCard(): CustomTableCard
     {
-
         $regionsCard = new CustomTableCard();
         $regionsCard->title(__('SDA e SAL Regioni'));
 
@@ -73,10 +70,9 @@ class Main extends Dashboard
 
         $data = [];
         foreach ($items as $item) {
-
             $tot = 'x';
             $sal = 0;
-            $sal_color = Osm2CaiHelper::getSalColor($sal);
+            $sal_color = Osm2caiHelper::getSalColor($sal);
 
             $row = new Row(
                 new Cell("{$item->name}"),
@@ -86,7 +82,7 @@ class Main extends Dashboard
                 new Cell($tot),
                 new Cell($tot),
                 new Cell($tot),
-                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
+                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
             );
             $data[] = $row;
         }

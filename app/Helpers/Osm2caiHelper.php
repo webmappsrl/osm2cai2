@@ -20,7 +20,7 @@ class Osm2caiHelper
         };
         $osmid = substr($id, 1);
 
-        return 'https://www.openstreetmap.org/' . $finalType . '/' . $osmid;
+        return 'https://www.openstreetmap.org/'.$finalType.'/'.$osmid;
     }
 
     /**
@@ -30,7 +30,7 @@ class Osm2caiHelper
      */
     public static function getOpenstreetmapUrlAsHtml(string $id): string
     {
-        return '<a style="color:darkgreen;" target="_blank" href="' . self::getOpenstreetmapUrl($id) . '" target="_blank">' . $id . '</a>';
+        return '<a style="color:darkgreen;" target="_blank" href="'.self::getOpenstreetmapUrl($id).'" target="_blank">'.$id.'</a>';
     }
 
     /**
@@ -62,6 +62,7 @@ class Osm2caiHelper
         $data = json_decode($data, true);
         unset($data['type']);
         unset($data['geometry']);
+
         return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
@@ -81,15 +82,16 @@ class Osm2caiHelper
         $color = '';
         if ($sal <= 0.2) {
             $color = '#f1eef6';
-        } else if ($sal <= 0.4) {
+        } elseif ($sal <= 0.4) {
             $color = '#bdc9e1';
-        } else if ($sal <= 0.6) {
+        } elseif ($sal <= 0.6) {
             $color = '#74a9cf';
-        } else if ($sal <= 0.8) {
+        } elseif ($sal <= 0.8) {
             $color = '#2b8cbe';
         } else {
             $color = '#045a8d';
         }
+
         return $color;
     }
 
@@ -123,6 +125,7 @@ class Osm2caiHelper
                 $color = '#47AC34';
                 break;
         }
+
         return $color;
     }
 }

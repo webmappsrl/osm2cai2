@@ -12,7 +12,7 @@ class SourceFilter extends BooleanFilter
     /**
      * Apply the filter to the given query.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder

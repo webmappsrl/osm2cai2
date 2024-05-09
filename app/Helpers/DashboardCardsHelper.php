@@ -2,23 +2,20 @@
 
 namespace App\Helpers;
 
+use App\Helpers\Osm2CaiHelper;
+use App\Models\HikingRoute;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\HikingRoute;
-use Illuminate\Support\Arr;
-use App\Helpers\Osm2CaiHelper;
-use Illuminate\Support\Facades\DB;
-use Mako\CustomTableCard\Table\Row;
-use Illuminate\Support\Facades\Auth;
-use Mako\CustomTableCard\Table\Cell;
 use Ericlagarda\NovaTextCard\TextCard;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Mako\CustomTableCard\CustomTableCard;
-
+use Mako\CustomTableCard\Table\Cell;
+use Mako\CustomTableCard\Table\Row;
 
 class DashboardCardsHelper
 {
-
-
     public function getNationalSalCard()
     {
         $sal = (HikingRoute::where('osm2cai_status', 1)->count() * 0.25 +
@@ -30,20 +27,18 @@ class DashboardCardsHelper
 
         return (new TextCard())
             ->width('1/4')
-            ->heading('<div style="background-color: ' . $sal_color . '; color: white; font-size: xx-large">' . number_format($sal * 100, 2) . ' %</div>')
+            ->heading('<div style="background-color: '.$sal_color.'; color: white; font-size: xx-large">'.number_format($sal * 100, 2).' %</div>')
             ->headingAsHtml()
             ->text('SAL Nazionale');
     }
-
 
     /**
      * @return CustomTableCard
      */
     public function getSectorsTableCard(): CustomTableCard
     {
-
         $sectorsCard = new CustomTableCard();
-        $sectorsCard->title(__('SDA e SAL Settori - ' . Auth::user()->region->name));
+        $sectorsCard->title(__('SDA e SAL Settori - '.Auth::user()->region->name));
 
         // Headings
         $sectorsCard->header([
@@ -80,12 +75,12 @@ class DashboardCardsHelper
 
         $data = [];
         foreach ($items as $item) {
-
             $tot = $item->tot1 + $item->tot2 + $item->tot3 + $item->tot4;
-            if ($item->num_expected == 0)
+            if ($item->num_expected == 0) {
                 $sal = 0;
-            else
+            } else {
                 $sal = (($item->tot1 * 0.25) + ($item->tot2 * 0.50) + ($item->tot3 * 0.75) + ($item->tot4)) / $item->num_expected;
+            }
             $sal_color = Osm2CaiHelper::getSalColor($sal);
             $sector = Sector::find($item->id);
 
@@ -98,8 +93,8 @@ class DashboardCardsHelper
                 new Cell($item->tot4),
                 new Cell($tot),
                 new Cell($item->num_expected),
-                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
-                new Cell('<a href="/resources/sectors/' . $item->id . '">[VIEW]</a>'),
+                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
+                new Cell('<a href="/resources/sectors/'.$item->id.'">[VIEW]</a>'),
             );
             $data[] = $row;
         }
@@ -109,20 +104,17 @@ class DashboardCardsHelper
         return $sectorsCard;
     }
 
-
-
     public function getTotalKmSda3Sda4Card()
     {
         $tot = DB::table('regions_view')->selectRaw('SUM(km_tot3) + SUM (km_tot4) as total')
             ->get();
 
-
-        $formatted = doubleval($tot->first()->total);
+        $formatted = floatval($tot->first()->total);
 
         return (new TextCard())
             ->width('1/4')
             ->text('Totale km #sda3 e #sda4')
-            ->heading('<div style="font-size: xx-large">' . $formatted . '</div>')
+            ->heading('<div style="font-size: xx-large">'.$formatted.'</div>')
             ->headingAsHtml();
     }
 
@@ -131,13 +123,12 @@ class DashboardCardsHelper
         $tot = DB::table('regions_view')->selectRaw('SUM (km_tot4) as total')
             ->get();
 
-
-        $formatted = doubleval($tot->first()->total);
+        $formatted = floatval($tot->first()->total);
 
         return (new TextCard())
             ->width('1/4')
             ->text('Totale km #sda4')
-            ->heading('<div style="font-size: xx-large">' . $formatted . '</div>')
+            ->heading('<div style="font-size: xx-large">'.$formatted.'</div>')
             ->headingAsHtml();
     }
 }
