@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
+
+
+### Features
+
+* added filter for user to ecpoi ([648ea32](https://github.com/webmappsrl/osm2cai2/commit/648ea32a2a37a90bb5d42fe2888306e3e4fbdcb3))
+* added osmfeatures data to detail province nova resource ([9727f94](https://github.com/webmappsrl/osm2cai2/commit/9727f94c8ea89876bee481d3db6945ecdbfd1978))
+* added osmfeatures_data and clickable osmfeatures id to municipality nova resource ([13e827d](https://github.com/webmappsrl/osm2cai2/commit/13e827de869b09ec14a767f935d021cb2c40d442))
+* added osmfeatures_data and clickable osmfeatures id to region nova resource ([e03cecf](https://github.com/webmappsrl/osm2cai2/commit/e03cecfc50b24df5bf08c7d61a8d622babf3c83e))
+* added osmfeatures_data to ec poi detail ([c035a1e](https://github.com/webmappsrl/osm2cai2/commit/c035a1e95bc7f2a4485a8c68d91d3e7d7147ed68))
+* added source filter and website filter for ec pois ([b315424](https://github.com/webmappsrl/osm2cai2/commit/b315424b4500758640a0e845a15e470bfede59b9))
+* main dashboard first version ([a957323](https://github.com/webmappsrl/osm2cai2/commit/a9573233db00754c319c12f3c1367f231d21fc0e))
+* osm2cai helper class enhancement ([21359e1](https://github.com/webmappsrl/osm2cai2/commit/21359e1a20c51b9235d0b90284cb331e38e519d9))
+* province nova resource searchable by osmfeatures id ([18e5fa1](https://github.com/webmappsrl/osm2cai2/commit/18e5fa1217544c198387704f6af4ae6b23c20c09))
+* updated dependencies ([a68240e](https://github.com/webmappsrl/osm2cai2/commit/a68240e495e4ce4410f070d37e80e0336dafc31e))
+* updated municipality model casts ([c8d703e](https://github.com/webmappsrl/osm2cai2/commit/c8d703e9f5405935a10d3c550073cb61e19bdba6))
+
 ## [1.15.0](https://github.com/webmappsrl/osm2cai2/compare/v1.14.0...v1.15.0) (2024-05-07)
 
 
