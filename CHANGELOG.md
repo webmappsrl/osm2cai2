@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/webmappsrl/osm2cai2/compare/v1.16.0...v1.17.0) (2024-05-09)
+
+
+### Features
+
+* updated dependencies ([0af478f](https://github.com/webmappsrl/osm2cai2/commit/0af478f28b65010df4e9f3b38d983015d9075e69))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
