@@ -29,7 +29,11 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     {
         Gate::define('viewHorizon', function ($user) {
             return in_array($user->email, [
-                //
+                'giuseppebonfanti@webmapp.it',
+                'alessiopiccioli@webmapp.it',
+                'rubensgarofalo@webmapp.it',
+                'gennaromanzo@webmapp.it',
+                'alessandropeci@webmapp.it'
             ]);
         });
     }
