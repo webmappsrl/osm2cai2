@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Facade;
 use Illuminate\Redis\RedisServiceProvider;
+use Illuminate\Support\Facades\Facade;
 
 return [
 

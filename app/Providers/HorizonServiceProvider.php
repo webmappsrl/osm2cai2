@@ -33,7 +33,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
                 'alessiopiccioli@webmapp.it',
                 'rubensgarofalo@webmapp.it',
                 'gennaromanzo@webmapp.it',
-                'alessandropeci@webmapp.it'
+                'alessandropeci@webmapp.it',
             ]);
         });
     }

@@ -18,5 +18,6 @@ Route::get('/test-horizon', function () {
     for ($i = 0; $i < 1000; $i++) {
         TestJob::dispatch();
     }
+
     return 'Dispatched 1000 jobs';
 });
