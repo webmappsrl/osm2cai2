@@ -35,6 +35,6 @@ class TestJob implements ShouldQueue
 
         Redis::set('test_key', 'test_value');
         $value = Redis::get('test_key');
-        Log::info('Redis value: ' . $value);
+        Log::info('Redis value: '.$value);
     }
 }
