@@ -1,10 +1,8 @@
-version: "4"
+version: "3.8"
 services:
   phpfpm:
-    extra_hosts:
-        - host.docker.internal:host-gateway
-    # user: root
-    build: ./docker/configs/phpfpm
+    build:
+      context: ./docker/configs/phpfpm
     restart: always
     container_name: "php81_${APP_NAME}"
     image: wm-phpfpm:8.2.15-fpm
@@ -12,19 +10,51 @@ services:
       - ${DOCKER_PHP_PORT}:9000
       - ${DOCKER_SERVE_PORT}:8000
     volumes:
-      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
-    working_dir: '/var/www/html/${DOCKER_PROJECT_DIR_NAME}'
+      - .:/var/www/html/${DOCKER_PROJECT_DIR_NAME}
+    working_dir: /var/www/html/${DOCKER_PROJECT_DIR_NAME}
+    depends_on:
+     - db
+     - redis
+    networks:
+      - laravel
   db:
     image: postgis/postgis:16-3.4
     container_name: "postgres_${APP_NAME}"
     shm_size: 512m
     restart: always
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?err}
-      POSTGRES_USER_PASSWORD: ${DB_PASSWORD:?err}
-      POSTGRES_USER: ${DB_USERNAME:?err}
-      POSTGRES_DB: ${DB_DATABASE:?err}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE}
     volumes:
-      - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
-    ports: 
+      - ./docker/volumes/postgresql/data:/var/lib/postgresql/data
+    ports:
       - ${DOCKER_PSQL_PORT}:5432
+    networks:
+      - laravel
+  redis:
+    image: redis:latest
+    container_name: "redis_${APP_NAME}"
+    ports:
+      - "6739:6379"
+    networks:
+      - laravel
+
+  horizon:
+    image: wm-phpfpm:8.1
+    container_name: "horizon_${APP_NAME}"
+    working_dir: /var/www/html/${DOCKER_PROJECT_DIR_NAME}
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    entrypoint: ["php", "/var/www/html/${DOCKER_PROJECT_DIR_NAME}/artisan", "horizon"]
+    depends_on:
+      - redis
+      - phpfpm
+    networks:
+      - laravel
+networks:
+  laravel:
+    driver: bridge
+
+   
