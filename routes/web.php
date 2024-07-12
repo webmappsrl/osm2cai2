@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/test-horizon', function () {
-    TestJob::dispatch();
-    return 'Test job dispatched';
+    for ($i = 0; $i < 1000; $i++) {
+        TestJob::dispatch();
+    }
+    return 'Dispatched 1000 jobs';
 });
