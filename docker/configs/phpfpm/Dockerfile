@@ -42,15 +42,14 @@ RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-w
     pgsql \
     pdo_pgsql \
     exif \
-    # && pecl install xdebug \
+    && docker-php-ext-install pcntl \
+    && pecl install redis \
     && pecl install imagick \
-    # && docker-php-ext-enable xdebug \
     && pecl install apcu \
-    #&& pecl install mcrypt-1.0.2 \
-    #&& docker-php-ext-enable mcrypt \
     && docker-php-ext-enable apcu \
     && docker-php-ext-enable exif \
     && docker-php-ext-enable imagick \
+    && docker-php-ext-enable redis \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sS https://getcomposer.org/installer | php \
