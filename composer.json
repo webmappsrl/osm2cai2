@@ -22,7 +22,6 @@
         "league/flysystem-aws-s3-v3": "^3.12",
         "m-a-k-o/nova-custom-table-card": "^4.0",
         "predis/predis": "^2.2",
-        "romanzipp/laravel-queue-monitor": "^5.2",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-translatable": "^6.3",
         "webmapp/wm-osmfeatures": "^1.2.0",
