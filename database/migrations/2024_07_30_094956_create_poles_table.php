@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('poles', function (Blueprint $table) {
-            $table->char('osm_type', 1); // bpchar(1)
-            $table->bigInteger('osm_id'); // int8
+            $table->char('osm_type', 1)->nullable(); // bpchar(1)
+            $table->bigInteger('osm_id')->nullable(); // int8
             $table->increments('id'); // int4 with auto-increment
             $table->text('name')->nullable(); // text with nullable
             $table->json('tags')->nullable(); // jsonb with nullable
