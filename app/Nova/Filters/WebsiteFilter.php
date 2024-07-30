@@ -20,10 +20,12 @@ class WebsiteFilter extends BooleanFilter
     public function apply(NovaRequest $request, $query, $value)
     {
         if ($value['has_website']) {
-            return $query->whereRaw("jsonb_exists(cast(osmfeatures_data->'properties'->'osm_tags' as jsonb), 'website')");
+            \Log::debug('Applying has_website filter');
+            return $query->whereRaw("jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'website') AND osmfeatures_data->'properties'->'osm_tags'->>'website' IS NOT NULL");
         }
         if ($value['no_website']) {
-            return $query->whereRaw("NOT jsonb_exists(cast(osmfeatures_data->'properties'->'osm_tags' as jsonb), 'website')");
+            \Log::debug('Applying no_website filter');
+            return $query->whereRaw("NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'website') OR osmfeatures_data->'properties'->'osm_tags'->>'website' IS NULL");
         }
 
         return $query;
