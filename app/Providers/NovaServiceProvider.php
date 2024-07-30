@@ -10,6 +10,7 @@ use App\Nova\EcPoi;
 use App\Nova\MountainGroups;
 use App\Nova\Municipality;
 use App\Nova\NaturalSpring;
+use App\Nova\Poles;
 use App\Nova\Province;
 use App\Nova\Region;
 use App\Nova\Sector;
@@ -54,6 +55,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Province::class),
                     MenuItem::resource(Region::class),
                     MenuItem::resource(EcPoi::class),
+                    MenuItem::resource(Poles::class)
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab(),

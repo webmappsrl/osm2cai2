@@ -77,7 +77,7 @@ class Poles extends Model implements OsmfeaturesSyncableInterface
             $geometry = null;
         }
 
-        if ($osmfeaturesData['properties']['ref'] === null) {
+        if ($osmfeaturesData['properties']['ref'] === null || $osmfeaturesData['properties']['ref'] === '') {
             Log::info('No ref found for Pole ' . $osmfeaturesId);
             $ref = 'noname(' . $osmfeaturesId . ')';
         } else {
@@ -88,6 +88,7 @@ class Poles extends Model implements OsmfeaturesSyncableInterface
             'osm_type' => $osmfeaturesData['properties']['osm_type'],
             'osm_id' => $osmfeaturesData['properties']['osm_id'],
             'ref' => $ref,
+            'score' => $osmfeaturesData['properties']['score'],
             'geometry' => $geometry,
         ]);
     }
