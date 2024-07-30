@@ -20,7 +20,7 @@ class Osm2caiHelper
         };
         $osmid = substr($id, 1);
 
-        return 'https://www.openstreetmap.org/'.$finalType.'/'.$osmid;
+        return 'https://www.openstreetmap.org/' . $finalType . '/' . $osmid;
     }
 
     /**
@@ -30,7 +30,7 @@ class Osm2caiHelper
      */
     public static function getOpenstreetmapUrlAsHtml(string $id): string
     {
-        return '<a style="color:darkgreen;" target="_blank" href="'.self::getOpenstreetmapUrl($id).'" target="_blank">'.$id.'</a>';
+        return '<a style="color:darkgreen;" target="_blank" href="' . self::getOpenstreetmapUrl($id) . '" target="_blank">' . $id . '</a>';
     }
 
     /**
@@ -38,7 +38,7 @@ class Osm2caiHelper
      * @param int $score
      * @return string
      */
-    public static function getScoreAsStars(int $score): string
+    public static function getScoreAsStars(?int $score): string
     {
         $stars = '';
 
@@ -60,8 +60,13 @@ class Osm2caiHelper
     public static function getOsmfeaturesDataForNovaDetail(string $data): string
     {
         $data = json_decode($data, true);
+        while (!is_array($data)) {
+            $data = json_decode($data, true);
+        }
+
         unset($data['type']);
         unset($data['geometry']);
+
 
         return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
