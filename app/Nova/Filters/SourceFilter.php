@@ -19,17 +19,29 @@ class SourceFilter extends BooleanFilter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        if ($value['has_source']) {
-            \Log::debug('Applying has_source filter');
-            return $query->whereRaw("jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') AND osmfeatures_data->'properties'->'osm_tags'->>'source' IS NOT NULL");
+        if (!$value) {
+            return $query;
         }
+
+        if ($value['has_source']) {
+            $sql = <<<SQL
+            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') 
+            AND osmfeatures_data->'properties'->'osm_tags'->>'source' IS NOT NULL
+        SQL;
+            return $query->whereRaw($sql);
+        }
+
         if ($value['no_source']) {
-            \Log::debug('Applying no_source filter');
-            return $query->whereRaw("NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') OR osmfeatures_data->'properties'->'osm_tags'->>'source' IS NULL");
+            $sql = <<<SQL
+            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') 
+            OR osmfeatures_data->'properties'->'osm_tags'->>'source' IS NULL
+        SQL;
+            return $query->whereRaw($sql);
         }
 
         return $query;
     }
+
 
     /**
      * Get the filter's available options.

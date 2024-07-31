@@ -20,12 +20,18 @@ class WikipediaFilter extends BooleanFilter
     public function apply(NovaRequest $request, $query, $value)
     {
         if ($value['has_wikipedia']) {
-            \Log::debug('Applying has_wikipedia filter');
-            return $query->whereRaw("jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia') AND osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NOT NULL");
+            $sql = <<<SQL
+            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
+            AND osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NOT NULL
+        SQL;
+            return $query->whereRaw($sql);
         }
         if ($value['no_wikipedia']) {
-            \Log::debug('Applying no_wikipedia filter');
-            return $query->whereRaw("NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia') OR osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NULL");
+            $sql = <<<SQL
+            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
+            OR osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NULL
+        SQL;
+            return $query->whereRaw($sql);
         }
 
         return $query;

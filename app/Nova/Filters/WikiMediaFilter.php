@@ -20,12 +20,18 @@ class WikiMediaFilter extends BooleanFilter
     public function apply(NovaRequest $request, $query, $value)
     {
         if ($value['has_wikimedia']) {
-            \Log::debug('Applying has_wikimedia filter');
-            return $query->whereRaw("jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikimedia_commons') AND osmfeatures_data->'properties'->'osm_tags'->>'wikimedia_commons' IS NOT NULL");
+            $sql = <<<SQL
+            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikimedia_commons')
+            AND osmfeatures_data->'properties'->'osm_tags'->>'wikimedia_commons' IS NOT NULL
+        SQL;
+            return $query->whereRaw($sql);
         }
         if ($value['no_wikimedia']) {
-            \Log::debug('Applying no_wikimedia filter');
-            return $query->whereRaw("NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikimedia_commons') OR osmfeatures_data->'properties'->'osm_tags'->>'wikimedia_commons' IS NULL");
+            $sql = <<<SQL
+            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikimedia_commons')
+            OR osmfeatures_data->'properties'->'osm_tags'->>'wikimedia_commons' IS NULL
+        SQL;
+            return $query->whereRaw($sql);
         }
 
         return $query;
