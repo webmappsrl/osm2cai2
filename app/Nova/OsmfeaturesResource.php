@@ -2,27 +2,27 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Resource;
-use Wm\MapPoint\MapPoint;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\SourceFilter;
 use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Resource;
+use Wm\MapPoint\MapPoint;
 
 abstract class OsmfeaturesResource extends Resource
 {
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -60,7 +60,7 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -78,7 +78,7 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -89,7 +89,7 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -100,7 +100,7 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)

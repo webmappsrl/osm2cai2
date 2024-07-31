@@ -58,27 +58,28 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     public static function osmfeaturesUpdateLocalAfterSync(string $osmfeaturesId): void
     {
         $model = self::where('osmfeatures_id', $osmfeaturesId)->first();
-        if (!$model) {
+        if (! $model) {
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
         $osmfeaturesData = json_decode($model->osmfeatures_data, true);
 
-        if (!$osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi ' . $osmfeaturesId);
+        if (! $osmfeaturesData) {
+            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi '.$osmfeaturesId);
+
             return;
         }
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi '.$osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi '.$osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];

@@ -13,7 +13,6 @@ class PolesPolicy
      */
     public function viewAny(User $user): bool
     {
-
         return true;
     }
 
@@ -22,7 +21,6 @@ class PolesPolicy
      */
     public function view(User $user, Poles $poles): bool
     {
-
         return true;
     }
 
@@ -31,7 +29,6 @@ class PolesPolicy
      */
     public function create(User $user): bool
     {
-
         return false;
     }
 
@@ -40,7 +37,6 @@ class PolesPolicy
      */
     public function update(User $user, Poles $poles): bool
     {
-
         return false;
     }
 
@@ -49,7 +45,6 @@ class PolesPolicy
      */
     public function delete(User $user, Poles $poles): bool
     {
-
         return false;
     }
 
@@ -58,7 +53,6 @@ class PolesPolicy
      */
     public function restore(User $user, Poles $poles): bool
     {
-
         return false;
     }
 
@@ -67,7 +61,6 @@ class PolesPolicy
      */
     public function forceDelete(User $user, Poles $poles): bool
     {
-
         return false;
     }
 }

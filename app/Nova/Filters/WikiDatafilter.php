@@ -5,7 +5,7 @@ namespace App\Nova\Filters;
 use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class WikiDataFilter extends BooleanFilter
+class WikiDatafilter extends BooleanFilter
 {
     public $name = 'WikiData';
 
@@ -20,17 +20,19 @@ class WikiDataFilter extends BooleanFilter
     public function apply(NovaRequest $request, $query, $value)
     {
         if ($value['has_wikidata']) {
-            $sql = <<<SQL
+            $sql = <<<'SQL'
             jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikidata')
             AND osmfeatures_data->'properties'->'osm_tags'->>'wikidata' IS NOT NULL
         SQL;
+
             return $query->whereRaw($sql);
         }
         if ($value['no_wikidata']) {
-            $sql = <<<SQL
+            $sql = <<<'SQL'
             NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikidata')
             OR osmfeatures_data->'properties'->'osm_tags'->>'wikidata' IS NULL
         SQL;
+
             return $query->whereRaw($sql);
         }
 
