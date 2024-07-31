@@ -2,13 +2,12 @@
 
 namespace App\Nova\Filters;
 
-use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class WikipediaFilter extends BooleanFilter
 {
-    public $name = 'WikiPedia';
+    public $name = 'Wikipedia';
 
     /**
      * Apply the filter to the given query.
@@ -21,10 +20,18 @@ class WikipediaFilter extends BooleanFilter
     public function apply(NovaRequest $request, $query, $value)
     {
         if ($value['has_wikipedia']) {
-            return $query->whereRaw("jsonb_exists(cast(osmfeatures_data->'properties'->'osm_tags' as jsonb), 'wikipedia')");
+            $sql = <<<SQL
+            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
+            AND osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NOT NULL
+        SQL;
+            return $query->whereRaw($sql);
         }
         if ($value['no_wikipedia']) {
-            return $query->whereRaw("NOT jsonb_exists(cast(osmfeatures_data->'properties'->'osm_tags' as jsonb), 'wikipedia')");
+            $sql = <<<SQL
+            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
+            OR osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NULL
+        SQL;
+            return $query->whereRaw($sql);
         }
 
         return $query;

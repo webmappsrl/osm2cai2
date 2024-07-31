@@ -2,28 +2,33 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Illuminate\Database\Eloquent\Model;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
-class EcPoi extends Model implements OsmfeaturesSyncableInterface
+class Poles extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait;
+    use HasFactory, OsmfeaturesImportableTrait, OsmfeaturesSyncableTrait;
 
     protected $fillable = [
         'name',
         'geometry',
+        'osm_type',
+        'osm_id',
+        'tags',
+        'ele',
+        'ref',
+        'destination',
+        'support',
+        'score',
         'osmfeatures_id',
         'osmfeatures_data',
         'osmfeatures_updated_at',
-        'type',
-        'score',
-        'user_id',
     ];
 
     protected $casts = [
@@ -36,7 +41,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
      */
     public static function getOsmfeaturesEndpoint(): string
     {
-        return 'https://osmfeatures.maphub.it/api/v1/features/places/';
+        return 'https://osmfeatures.maphub.it/api/v1/features/poles/';
     }
 
     /**
@@ -62,38 +67,38 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
-        $osmfeaturesData = json_decode($model->osmfeatures_data, true);
-
-        if (!$osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi ' . $osmfeaturesId);
+        if (!$model->osmfeatures_data) {
+            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole ' . $osmfeaturesId);
             return;
         }
+        $osmfeaturesData = json_decode($model->osmfeatures_data, true);
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
             $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Pole ' . $osmfeaturesId);
             $geometry = null;
         }
+        $properties = $osmfeaturesData['properties'];
+        if (!$properties) {
+            Log::channel('wm-osmfeatures')->info('No properties found for Pole ' . $osmfeaturesId);
+            return;
+        }
 
-        if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi ' . $osmfeaturesId);
-            $name = null;
+        if ($properties['ref'] === null || $properties['ref'] === '') {
+            Log::channel('wm-osmfeatures')->info('No ref found for Pole ' . $osmfeaturesId);
+            $ref = 'noname(' . $osmfeaturesId . ')';
         } else {
-            $name = $osmfeaturesData['properties']['name'];
+            $ref = $properties['ref'];
         }
 
         $model->update([
-            'name' => $name,
+            'osm_type' => $properties['osm_type'],
+            'osm_id' => $properties['osm_id'],
+            'ref' => $ref,
+            'score' => $properties['score'],
             'geometry' => $geometry,
-            'score' => $osmfeaturesData['properties']['score'],
-            'type' => $model->getTagsMapping(),
         ]);
-    }
-
-    public function User()
-    {
-        return $this->belongsTo(User::class);
     }
 }
