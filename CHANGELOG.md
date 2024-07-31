@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.17.0](https://github.com/webmappsrl/osm2cai2/compare/v1.16.0...v1.17.0) (2024-07-31)
+
+
+### Features
+
+* add_poles OC: 3699 ([#55](https://github.com/webmappsrl/osm2cai2/issues/55)) ([b09cd96](https://github.com/webmappsrl/osm2cai2/commit/b09cd96bc01167cef0d0000381cf863531058a2c))
+* added horizon authorizations ([38c5d87](https://github.com/webmappsrl/osm2cai2/commit/38c5d87aa34b7ec95de59feb49f211cd1054576b))
+* added horizon link to nova side menu ([cf2e880](https://github.com/webmappsrl/osm2cai2/commit/cf2e880b4d1f1332d467fd69702501a11850bbbc))
+* added launch_horizon script to prod deploy workflos ([9e5860f](https://github.com/webmappsrl/osm2cai2/commit/9e5860f50147be974b1c999c1b8987cd141acfb7))
+* added metric snapshot scheduled command to horizon ([3371986](https://github.com/webmappsrl/osm2cai2/commit/3371986761e1e39d31469990c08210eaee67cfb4))
+* added redis to docker container ([6f9c222](https://github.com/webmappsrl/osm2cai2/commit/6f9c2225a837f5958c907ded2ac7f7ea5dbc1049))
+* horizon configuration ([8a1dc8e](https://github.com/webmappsrl/osm2cai2/commit/8a1dc8e14df77b63ef51585f263da6d35c093c7a))
+* installed laravel horizon ([748bf9c](https://github.com/webmappsrl/osm2cai2/commit/748bf9c0cb82618468c5032a2fc1353025c8cb0d))
+* installed predis package ([c5a6a0a](https://github.com/webmappsrl/osm2cai2/commit/c5a6a0ae70e571e6d1a9b266f3204fdb8c0d3cf2))
+* redis configuration ([0a98b4c](https://github.com/webmappsrl/osm2cai2/commit/0a98b4cfde8775b9e5be5c0e93084b9400995592))
+* updated dependencies ([0af478f](https://github.com/webmappsrl/osm2cai2/commit/0af478f28b65010df4e9f3b38d983015d9075e69))
+
+
+### Miscellaneous Chores
+
+* created testjob ([fd28db0](https://github.com/webmappsrl/osm2cai2/commit/fd28db046f8ee8a791885f3250937ecaf595ed37))
+* removed romanzipp laravel-queue-monitor package ([3e98d56](https://github.com/webmappsrl/osm2cai2/commit/3e98d565e0a2bf7a9338ee417ca9e2d19f483d92))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
