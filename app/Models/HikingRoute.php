@@ -29,6 +29,33 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_updated_at' => 'datetime',
     ];
 
+    // Metodo magico per ottenere valori dinamici
+    public function __get($key)
+    {
+        if (array_key_exists($key, $this->attributes)) {
+            return parent::__get($key);
+        }
+        $osmfeaturesData = json_decode($this->osmfeatures_data, true);
+
+        if (isset($osmfeaturesData['properties'][$key])) {
+            return $osmfeaturesData['properties'][$key];
+        }
+
+        return parent::__get($key);
+    }
+
+    // Metodo magico per impostare valori dinamici
+    public function __set($key, $value)
+    {
+        if (array_key_exists($key, $this->attributes)) {
+            parent::__set($key, $value);
+        } else {
+            $data = $this->osmfeatures_data;
+            $data['properties'][$key] = $value;
+            $this->attributes['osmfeatures_data'] = json_encode($data);
+        }
+    }
+
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */

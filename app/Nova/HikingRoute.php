@@ -2,8 +2,9 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class HikingRoute extends OsmfeaturesResource
@@ -29,7 +30,23 @@ class HikingRoute extends OsmfeaturesResource
      */
     public static $search = [
         'id',
+        'osmfeatures_id'
     ];
+
+    /**
+     * Get the fields displayed by the resource.
+     *
+     * @param  NovaRequest  $request
+     * @return array
+     */
+    public function fields(NovaRequest $request)
+    {
+        $osmfeaturesFields = parent::fields($request);
+        $indexFields = $this->getIndexFields();
+        $detailFields = $this->getDetailFields();
+
+        return array_merge($osmfeaturesFields, $indexFields);
+    }
 
 
     /**
@@ -79,4 +96,55 @@ class HikingRoute extends OsmfeaturesResource
     {
         return [];
     }
+
+    private function getIndexFields()
+    {
+        $jsonKeys = ['osm2cai_status'];
+
+        $specificFields = [
+            Text::make('Regioni', function () {
+                return 'TBI';
+            }),
+            Text::make('Province', function () {
+                return 'TBI';
+            }),
+            Text::make('Aree', function () {
+                return 'TBI';
+            }),
+            Text::make('Settori', function () {
+                return 'TBI';
+            }),
+            Text::make('Ref', function () {
+                return 'TBI';
+            }),
+            Text::make('Cod_rei_osm', function () {
+                return 'TBI';
+            }),
+            Text::make('Cod_rei_comp', function () {
+                return 'TBI';
+            }),
+            Text::make('Percorribilitá', function () {
+                return 'TBI';
+            }),
+            Text::make('Ultima Ricognizione', function () {
+                return 'TBI';
+            }),
+
+        ];
+
+        foreach ($jsonKeys as $key) {
+            $specificFields[] = Text::make(ucfirst(str_replace('_', ' ', $key)), $key)
+                ->sortable()
+                ->resolveUsing(function () use ($key) {
+                    return $this->{$key};
+                })
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($key) {
+                    $model->{$key} = $request->get($requestAttribute);
+                });
+        }
+
+        return $specificFields;
+    }
+
+    private function getDetailFields() {}
 }
