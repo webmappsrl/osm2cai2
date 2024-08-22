@@ -4,8 +4,70 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "807579c94b102849a8f9c788bc2a3a73",
+    "content-hash": "7074b055fd845c12439a9fad5305f795",
     "packages": [
+        {
+            "name": "abordage/nova-html-card",
+            "version": "0.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/abordage/nova-html-card.git",
+                "reference": "0a10d7f681999b610abbbc6fdfa173f8da8f9d4b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/abordage/nova-html-card/zipball/0a10d7f681999b610abbbc6fdfa173f8da8f9d4b",
+                "reference": "0a10d7f681999b610abbbc6fdfa173f8da8f9d4b",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "nunomaduro/collision": "^5.0 || ^6.0 || ^7.0 || ^8.0",
+                "nunomaduro/larastan": "^1.0 || ^2.0",
+                "orchestra/testbench": "^6.0 || ^7.0 || ^8.0 || ^9.0",
+                "phpunit/phpunit": "^9.6 || ^10.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Abordage\\HtmlCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Abordage\\HtmlCard\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Pavel Bychko",
+                    "email": "box@abordage.dev",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel Nova card that displays any html content, e.g. lists, notifications, small custom reports",
+            "homepage": "https://github.com/abordage/nova-html-card",
+            "keywords": [
+                "laravel nova",
+                "nova card",
+                "nova html card"
+            ],
+            "support": {
+                "issues": "https://github.com/abordage/nova-html-card/issues",
+                "source": "https://github.com/abordage/nova-html-card/tree/0.3.1"
+            },
+            "time": "2024-03-23T18:22:42+00:00"
+        },
         {
             "name": "aws/aws-crt-php",
             "version": "v1.2.5",
