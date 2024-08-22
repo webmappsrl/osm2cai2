@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('hiking_routes', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->geography('geometry', 'multilinestring', 4326);
+            $table->geography('geometry', 'multilinestring', 4326)->nullable();
         });
     }
 

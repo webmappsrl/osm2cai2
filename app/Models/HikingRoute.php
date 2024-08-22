@@ -3,14 +3,20 @@
 namespace App\Models;
 
 use App\Traits\TagsMappingTrait;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait;
+    use HasFactory;
+    use OsmfeaturesImportableTrait;
+    use OsmfeaturesSyncableTrait;
+    use TagsMappingTrait;
 
     protected $fillable = [
         'geometry',
@@ -21,7 +27,6 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
-        'osmfeatures_data' => 'json',
     ];
 
     /**
