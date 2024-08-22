@@ -20,7 +20,7 @@ class GeometryService
 
     public function geojsonToGeometry($geojson)
     {
-        return DB::select(DB::raw("select (ST_Force3D(ST_GeomFromGeoJSON('".$geojson."'))) as g "))[0]->g;
+        return DB::select(DB::raw("select (ST_Force3D(ST_GeomFromGeoJSON('" . $geojson . "'))) as g "))[0]->g;
     }
 
     /**
@@ -33,7 +33,7 @@ class GeometryService
     {
         return DB::select(DB::raw("select (
         ST_Multi(
-          ST_GeomFromGeoJSON('".$geojson."')
+          ST_GeomFromGeoJSON('" . $geojson . "')
         )
     ) as g "))[0]->g;
     }
@@ -48,7 +48,7 @@ class GeometryService
     {
         return DB::select(DB::raw("select (
         ST_Multi(
-          ST_Transform( ST_GeomFromGeoJSON('".$geojson."' ) , 3857 )
+          ST_Transform( ST_GeomFromGeoJSON('" . $geojson . "' ) , 3857 )
         )
     ) as g "))[0]->g;
     }
@@ -56,7 +56,7 @@ class GeometryService
     public function geometryTo4326Srid($geometry)
     {
         return DB::select(DB::raw("select (
-      ST_Transform('".$geometry."', 4326)
+      ST_Transform('" . $geometry . "', 4326)
     ) as g "))[0]->g;
     }
 
@@ -116,5 +116,43 @@ class GeometryService
 
             return $geometry;
         }
+    }
+
+    /**
+     * Get the geometry type of the given model.
+     *
+     * @param string $table The name of the table.
+     * @param string $geometryColumn The name of the geometry column.
+     * @return string
+     */
+    public static function getGeometryType(string $table, string $geometryColumn)
+    {
+        // Costruire la query per determinare il tipo di geometria
+        if ($table == 'hiking_routes') {
+            $query = "
+            SELECT 
+                ST_GeometryType(
+                    CASE 
+                        WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}::geometry
+                        ELSE {$geometryColumn}::geometry
+                    END
+                ) AS geom_type
+            FROM {$table}
+            LIMIT 1;
+        ";
+        } else {
+            $query = "
+            SELECT 
+                ST_GeometryType({$geometryColumn}::geometry) AS geom_type
+            FROM {$table}
+            LIMIT 1;
+        ";
+        }
+
+        // Eseguire la query e ottenere il tipo di geometria
+        $type = DB::selectOne($query);
+
+        // Restituire il tipo di geometria senza il prefisso "ST_"
+        return $type ? str_replace('ST_', '', $type->geom_type) : 'Unknown';
     }
 }

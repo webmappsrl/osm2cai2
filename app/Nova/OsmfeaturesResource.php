@@ -2,20 +2,23 @@
 
 namespace App\Nova;
 
+use Wm\MapPoint\MapPoint;
+use Laravel\Nova\Resource;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Filters\ScoreFilter;
+use App\Services\GeometryService;
+use Laravel\Nova\Fields\DateTime;
 use App\Nova\Filters\SourceFilter;
 use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Text;
+use Wm\MapMultiPolygon\MapMultiPolygon;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Resource;
-use Wm\MapPoint\MapPoint;
+use Wm\MapMultiLinestring\MapMultiLinestring;
 
 abstract class OsmfeaturesResource extends Resource
 {
@@ -27,23 +30,49 @@ abstract class OsmfeaturesResource extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        return [
+        $geometryField = null;
+        $model = $this->model();
+        //get the table name for the model
+        $tableName = $model->getTable();
+        //get the geometry type of the model class
+        $geometryType = GeometryService::getGeometryType($tableName, 'geometry');
+        //if geometry type is point return MapPoint::make, if is multipolygon return MapMultiPolygon if is multilinestring return MapMultiLineString
+        switch ($geometryType) {
+            case 'Point':
+                $geometryField = MapPoint::make('geometry')->withMeta([
+                    'center' => [42, 10],
+                    'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                    'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+                    'minZoom' => 8,
+                    'maxZoom' => 17,
+                    'defaultZoom' => 13,
+                    'defaultCenter' => [42, 10],
+                ])->hideFromIndex();
+                break;
+            case 'MultiPolygon':
+                $geometryField = MapMultiPolygon::make('Geometry')->withMeta([
+                    'center' => ['42.795977075', '10.326813853'],
+                    'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                ])->hideFromIndex();
+                break;
+            default:
+                $geometryField = MapMultiLinestring::make('geometry')->withMeta([
+                    'center' => [42, 10],
+                    'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                    'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+                    'minZoom' => 5,
+                    'maxZoom' => 17,
+                    'defaultZoom' => 10,
+                    'graphhopper_api' => 'https://graphhopper.webmapp.it/route',
+                    'graphhopper_profile' => 'hike'
+                ])->hideFromIndex();
+                break;
+        }
+        $fields = [
             ID::make()->sortable(),
             Text::make('Name', 'name')->sortable(),
             DateTime::make('Created At', 'created_at')->hideFromIndex(),
             DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
-            Text::make('Score', 'score')->displayUsing(function ($value) {
-                return Osm2caiHelper::getScoreAsStars($value);
-            })->sortable(),
-            MapPoint::make('geometry')->withMeta([
-                'center' => [42, 10],
-                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-                'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
-                'minZoom' => 8,
-                'maxZoom' => 17,
-                'defaultZoom' => 13,
-                'defaultCenter' => [42, 10],
-            ])->onlyOnDetail(),
             Text::make('Osmfeatures ID', function () {
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml(),
@@ -55,6 +84,12 @@ abstract class OsmfeaturesResource extends Resource
                     return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
                 }),
         ];
+
+        if ($geometryField) {
+            return array_merge($fields, [$geometryField]);
+        }
+
+        return $fields;
     }
 
     /**

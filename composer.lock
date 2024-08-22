@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1d76391c36ab2bdb6b7112ef739a516e",
+    "content-hash": "807579c94b102849a8f9c788bc2a3a73",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -7507,6 +7507,51 @@
             "time": "2022-06-03T18:03:27+00:00"
         },
         {
+            "name": "wm/map-multi-linestring",
+            "version": "v0.0.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webmappsrl/map-multi-linestring.git",
+                "reference": "e491a317f0402a9a6b3c7e678ef1a89513813ead"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webmappsrl/map-multi-linestring/zipball/e491a317f0402a9a6b3c7e678ef1a89513813ead",
+                "reference": "e491a317f0402a9a6b3c7e678ef1a89513813ead",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Wm\\MapMultiLinestring\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Wm\\MapMultiLinestring\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/webmappsrl/map-multi-linestring/issues",
+                "source": "https://github.com/webmappsrl/map-multi-linestring/tree/v0.0.10"
+            },
+            "time": "2024-08-20T12:56:47+00:00"
+        },
+        {
             "name": "wm/map-multi-polygon",
             "version": "V0.0.3",
             "source": {
@@ -7598,7 +7643,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/setup_laravel_horizon",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -10203,5 +10248,5 @@
         "php": "^8.2.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }

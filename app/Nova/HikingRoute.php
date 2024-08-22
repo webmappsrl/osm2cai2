@@ -2,32 +2,25 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Panel;
-use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
-use App\Helpers\Osm2caiHelper;
-use App\Nova\OsmfeaturesResource;
-use Laravel\Nova\Fields\DateTime;
-use Wm\MapMultiPolygon\MapMultiPolygon;
+use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class Municipality extends OsmfeaturesResource
+class HikingRoute extends OsmfeaturesResource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Municipality>
+     * @var class-string<\App\Models\HikingRoute>
      */
-    public static $model = \App\Models\Municipality::class;
+    public static $model = \App\Models\HikingRoute::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
      *
      * @var string
      */
-    public static $title = 'name';
+    public static $title = 'id';
 
     /**
      * The columns that should be searched.
@@ -36,14 +29,13 @@ class Municipality extends OsmfeaturesResource
      */
     public static $search = [
         'id',
-        'name',
     ];
 
 
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -54,13 +46,13 @@ class Municipality extends OsmfeaturesResource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
     {
         $parentFilters = parent::filters($request);
-        //remove scorefilter
+        //remove score filter
         unset($parentFilters[0]);
 
         return $parentFilters;
@@ -69,7 +61,7 @@ class Municipality extends OsmfeaturesResource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -80,7 +72,7 @@ class Municipality extends OsmfeaturesResource
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)
