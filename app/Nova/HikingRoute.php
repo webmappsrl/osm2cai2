@@ -122,7 +122,7 @@ class HikingRoute extends OsmfeaturesResource
         if ($request->resourceId) {
             // Accedi al modello corrente tramite l'ID della risorsa
             $hr = \App\Models\HikingRoute::find($request->resourceId);
-            $osmfeaturesData = json_decode($hr->osmfeatures_data, true);
+            $osmfeaturesData = $hr->osmfeatures_data;
             $linksCardData = $hr->getDataForNovaLinksCard();
             $refCardData = $osmfeaturesData['properties']['osm_tags'];
             $osm2caiStatusCardData = $osmfeaturesData['properties']['osm2cai_status'];
@@ -208,22 +208,29 @@ class HikingRoute extends OsmfeaturesResource
             Text::make('Ultima Ricognizione', function () {
                 return 'TBI';
             })->hideFromDetail(),
-
         ];
 
+        // Generate fields using dot notation for JSON data
+        $osmfeaturesFields = [];
         foreach ($jsonKeys as $key) {
-            $osmfeaturesFields[] = Text::make(ucfirst(str_replace('_', ' ', $key)), $key)
+            $osmfeaturesFields[] = Text::make(
+                ucfirst(str_replace('_', ' ', $key)), // Label
+                "osmfeatures_data->properties->$key" // Use the `->` notation for JSON access
+            )
                 ->sortable()
-                ->resolveUsing(function () use ($key) {
-                    return $this->{$key};
+                ->resolveUsing(function ($value) {
+                    return $value;
                 })
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($key) {
-                    $model->{$key} = $request->get($requestAttribute);
-                })->hideFromDetail();
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $model->{$attribute} = $request->get($requestAttribute);
+                })
+                ->hideFromDetail();
         }
 
+        // Merge and return all fields
         return array_merge($osmfeaturesFields, $specificFields);
     }
+
 
     private function getDetailFields()
     {
@@ -232,19 +239,19 @@ class HikingRoute extends OsmfeaturesResource
         $osmfeaturesFields = [];
 
         foreach ($jsonKeys as $key) {
-            $osmfeaturesFields[] = Text::make(ucfirst(str_replace('_', ' ', $key)), $key)
+            $osmfeaturesFields[] = Text::make(
+                ucfirst(str_replace('_', ' ', $key)), // Label
+                "osmfeatures_data->properties->$key" // Use the `->` notation for JSON access
+            )
                 ->sortable()
-                ->resolveUsing(function () use ($key) {
-                    return $this->{$key};
+                ->resolveUsing(function ($value) {
+                    return $value;
                 })
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($key) {
-                    $model->{$key} = $request->get($requestAttribute);
-                })->hideFromDetail();
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $model->{$attribute} = $request->get($requestAttribute);
+                });
         }
         $fields = [
-            Text::make('Percorribilitá', function () {
-                return 'TBI';
-            })->onlyOnDetail(),
             Text::make('Legenda', function () {
                 return "<ul><li>Linea blu: percorso OSM2CAI/OSM</li><li>Linea rossa: percorso caricato dall'utente</li></ul>";
             })->asHtml()->onlyOnDetail(),
@@ -255,172 +262,110 @@ class HikingRoute extends OsmfeaturesResource
 
     private function getTabs()
     {
-        $tabs =  [Tabs::make('Metadata', [
-            Tab::make('Main', [
-                Text::make('Source', function () {
-                    return 'TBI';
-                }),
-                Text::make('Data ricognizione', function () {
-                    return 'TBI';
-                }),
-                Text::make('Codice Sezione CAI', function () {
-                    return 'TBI';
-                }),
-                Text::make('REF precedente', function () {
-                    return 'TBI';
-                }),
-                Text::make('REF rei', function () {
-                    return 'TBI';
-                }),
-                Text::make('REF regionale', function () {
-                    return 'TBI';
-                }),
-
-            ]),
-            Tab::make('General', [
-                Text::make('Localitá di partenza', function () {
-                    return 'TBI';
-                }),
-                Text::make('Localitá di arrivo', function () {
-                    return 'TBI';
-                }),
-                Text::make('Nome del percorso', function () {
-                    return 'TBI';
-                }),
-                Text::make('Tipo di rete escursionistica', function () {
-                    return 'TBI';
-                }),
-                Text::make('Codice OSM segnaletica', function () {
-                    return 'TBI';
-                }),
-                Text::make('Segnaletica descr. (EN)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Segnaletica descr. (IT)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Percorso ad anello', function () {
-                    return 'TBI';
-                }),
-                Text::make('Nome rete escursionistica', function () {
-                    return 'TBI';
-                }),
-
-            ]),
-            Tab::make('Tech', [
-                Text::make('Lunghezza in Km', function () {
-                    return 'TBI';
-                }),
-                Text::make('Diff CAI', function () {
-                    return 'TBI';
-                }),
-                Text::make('Dislivello positivo in metri', function () {
-                    return 'TBI';
-                }),
-                Text::make('Dislivello negativo in metri', function () {
-                    return 'TBI';
-                }),
-                Text::make('Durata (P->A)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Durata (A->P)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Quota Massima', function () {
-                    return 'TBI';
-                }),
-                Text::make('Quota Minima', function () {
-                    return 'TBI';
-                }),
-                Text::make('Quota punto di partenza', function () {
-                    return 'TBI';
-                }),
-                Text::make('Quota punto di arrivo', function () {
-                    return 'TBI';
-                }),
-            ]),
-            Tab::make('Other', [
-                Text::make('Descrizione (EN)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Descrizione (IT)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Manutenzione (EN)', function () {
-                    return 'TBI';
-                }),
-                Text::make('MANUTENZIONE (IT)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Note (EN)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Note (IT)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Note di progetto', function () {
-                    return 'TBI';
-                }),
-                Text::make('Operatore', function () {
-                    return 'TBI';
-                }),
-                Text::make('Stato del percorso', function () {
-                    return 'TBI';
-                }),
-                Text::make('Indirizzo web', function () {
-                    return 'TBI';
-                }),
-                Text::make('Immagine su wikimedia', function () {
-                    return 'TBI';
-                }),
-            ]),
-            Tab::make('Content', [
-                Text::make('Automatic Name (computed for TDH)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Automatic Abstract (computed for TDH)', function () {
-                    return 'TBI';
-                }),
-                Text::make('Feature Image', function () {
-                    return 'TBI';
-                }),
-                Text::make('Description CAI IT', function () {
-                    return 'TBI';
-                }),
-            ]),
-            Tab::make('Issues', [
-                Text::make('Issue Status', function () {
-                    return 'TBI';
-                }),
-                Text::make('Issue Description', function () {
-                    return 'TBI';
-                }),
-                Text::make('Issue Date', function () {
-                    return 'TBI';
-                }),
-                Text::make('Issue Author', function () {
-                    return 'TBI';
-                }),
-                Text::make('Cronologia Percorribilità', function () {
-                    return 'TBI';
-                }),
-            ]),
-            Tab::make('POI', [
-                Text::make('POI in buffer (1km)', function () {
-                    return 'TBI';
-                })
-            ]),
-            Tab::make('Huts', [
-                Text::make('Huts nelle vicinanze', function () {
-                    return 'TBI';
-                })
-            ]),
-            Tab::make('Natural Springs', [
-                Text::make('Huts nelle vicinanze', function () {
-                    return 'TBI';
-                })
+        $tabs =  [
+            Tabs::make('Metadata', [
+                Tab::make('Main', [
+                    Text::make('Source', "osmfeatures_data->properties->source")->hideFromIndex(),
+                    Text::make('Data ricognizione', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Codice Sezione CAI', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('REF precedente', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('REF rei', 'osmfeatures_data->properties->ref_REI')->hideFromIndex(),
+                    Text::make('REF regionale', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                ]),
+                Tab::make('General', [
+                    Text::make('Localitá di partenza', 'osmfeatures_data->properties->from')->hideFromIndex(),
+                    Text::make('Localitá di arrivo', 'osmfeatures_data->properties->to')->hideFromIndex(),
+                    Text::make('Nome del percorso', 'osmfeatures_data->properties->name')->hideFromIndex(),
+                    Text::make('Tipo di rete escursionistica', 'osmfeatures_data->properties->osm_tags->type')->hideFromIndex(),
+                    Text::make('Codice OSM segnaletica', 'osmfeatures_data->properties->osm_tags->osmc:symbol')->hideFromIndex(),
+                    Text::make('Segnaletica descr. (EN)', 'osmfeatures_data->properties->osm_tags->symbol')->hideFromIndex(),
+                    Text::make('Segnaletica descr. (IT)', 'osmfeatures_data->properties->osm_tags->symbol:it')->hideFromIndex(),
+                    Text::make('Percorso ad Anello', 'osmfeatures_data->properties->roundtrip')->hideFromIndex(),
+                    Text::make('Nome rete escursionistica', 'osmfeatures_data->properties->rwn_name')->hideFromIndex(),
+                ]),
+                Tab::make('Tech', [
+                    Text::make('Lunghezza in Km', 'osmfeatures_data->properties->dem_enrichment->distance')->hideFromIndex(),
+                    Text::make('Diff CAI', 'osmfeatures_data->properties->cai_scale')->hideFromIndex(),
+                    Text::make('Dislivello positivo in metri', 'osmfeatures_data->properties->dem_enrichment->ascent')->hideFromIndex(),
+                    Text::make('Dislivello negativo in metri', 'osmfeatures_data->properties->dem_enrichment->descent')->hideFromIndex(),
+                    Text::make('Durata (P->A) in minuti', 'osmfeatures_data->properties->dem_enrichment->duration_forward_hiking')->hideFromIndex(),
+                    Text::make('Durata (A->P) in minuti', 'osmfeatures_data->properties->dem_enrichment->duration_backward_hiking')->hideFromIndex(),
+                    Text::make('Quota Massima in metri', 'osmfeatures_data->properties->dem_enrichment->ele_max')->hideFromIndex(),
+                    Text::make('Quota Minima in metri', 'osmfeatures_data->properties->dem_enrichment->ele_min')->hideFromIndex(),
+                    Text::make('Quota punto di partenza in metri', 'osmfeatures_data->properties->dem_enrichment->ele_from')->hideFromIndex(),
+                    Text::make('Quota punto di arrivo in metri', 'osmfeatures_data->properties->dem_enrichment->ele_to')->hideFromIndex(),
+                ]),
+                Tab::make('Other', [
+                    Text::make('Descrizione (EN)', 'osmfeatures_data->properties->description')->hideFromIndex(),
+                    Text::make('Descrizione (IT)', 'osmfeatures_data->properties->description_it')->hideFromIndex(),
+                    Text::make('Manutenzione (EN)', 'osmfeatures_data->properties->maintenance')->hideFromIndex(),
+                    Text::make('MANUTENZIONE (IT)', 'osmfeatures_data->properties->maintenance_it')->hideFromIndex(),
+                    Text::make('Note (EN)', 'osmfeatures_data->properties->note')->hideFromIndex(),
+                    Text::make('Note (IT)', 'osmfeatures_data->properties->note_it')->hideFromIndex(),
+                    Text::make('Note di progetto', 'osmfeatures_data->properties->note_project_page')->hideFromIndex(),
+                    Text::make('Operatore', 'osmfeatures_data->properties->osm_tags->operator')->hideFromIndex(),
+                    Text::make('Stato del percorso', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Indirizzo web', 'osmfeatures_data->properties->website')->hideFromIndex()->displayUsing(fn($value) => '<a style="color:blue;" href="' . $value . '" target="_blank">' . $value . '</a>')->asHtml(),
+                    Text::make('Immagine su wikimedia', 'osmfeatures_data->properties->wikimedia_commons')->hideFromIndex()->displayUsing(fn($value) => '<a style="color:blue;" href="' . $value . '" target="_blank">' . $value . '</a>')->asHtml(),
+                ]),
+                Tab::make('Content', [
+                    Text::make('Automatic Name (computed for TDH)', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Automatic Abstract (computed for TDH)', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Feature Image', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Description CAI IT', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                ]),
+                Tab::make('Issues', [
+                    Text::make('Issue Status', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Issue Description', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Issue Date', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Issue Author', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                    Text::make('Cronologia Percorribilità', function () {
+                        return 'TBI';
+                    })->hideFromIndex(),
+                ]),
+                Tab::make('POI', [
+                    Text::make('POI in buffer (1km)', function () {
+                        return 'TBI';
+                    })->hideFromIndex()
+                ]),
+                Tab::make('Huts', [
+                    Text::make('Huts nelle vicinanze', function () {
+                        return 'TBI';
+                    })->hideFromIndex()
+                ]),
+                Tab::make('Natural Springs', [
+                    Text::make('Huts nelle vicinanze', function () {
+                        return 'TBI';
+                    })->hideFromIndex()
+                ]),
             ])
-        ])];
+        ];
 
         return $tabs;
     }

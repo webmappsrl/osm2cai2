@@ -27,36 +27,37 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
+        'osmfeatures_data' => 'array',
     ];
 
     // Metodo magico per ottenere valori dinamici
-    public function __get($key)
-    {
-        if (array_key_exists($key, $this->attributes)) {
-            return parent::__get($key);
-        }
+    // public function __get($key)
+    // {
+    //     if (array_key_exists($key, $this->attributes)) {
+    //         return parent::__get($key);
+    //     }
 
-        if (count($this->attributes) > 0) {
-            $osmfeaturesData = json_decode($this->osmfeatures_data, true);
-            if (isset($osmfeaturesData['properties'][$key])) {
-                return $osmfeaturesData['properties'][$key];
-            }
-        }
+    //     if (count($this->attributes) > 0) {
+    //         $osmfeaturesData = json_decode($this->osmfeatures_data, true);
+    //         if (isset($osmfeaturesData['properties'][$key])) {
+    //             return $osmfeaturesData['properties'][$key];
+    //         }
+    //     }
 
-        return parent::__get($key);
-    }
+    //     return parent::__get($key);
+    // }
 
-    // Metodo magico per impostare valori dinamici
-    public function __set($key, $value)
-    {
-        if (array_key_exists($key, $this->attributes)) {
-            parent::__set($key, $value);
-        } else {
-            $data = $this->osmfeatures_data;
-            $data['properties'][$key] = $value;
-            $this->attributes['osmfeatures_data'] = json_encode($data);
-        }
-    }
+    // // Metodo magico per impostare valori dinamici
+    // public function __set($key, $value)
+    // {
+    //     if (array_key_exists($key, $this->attributes)) {
+    //         parent::__set($key, $value);
+    //     } else {
+    //         $data = $this->osmfeatures_data;
+    //         $data['properties'][$key] = $value;
+    //         $this->attributes['osmfeatures_data'] = json_encode($data);
+    //     }
+    // }
 
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
@@ -117,7 +118,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
      */
     public function getDataForNovaLinksCard()
     {
-        $osmId = json_decode($this->osmfeatures_data, true)['properties']['osm_id'];
+        $osmId = $this->osmfeatures_data['properties']['osm_id'];
         $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
         $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
         $osmLink = 'https://www.openstreetmap.org/relation/' . $osmId;
