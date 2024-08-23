@@ -75,7 +75,7 @@ abstract class OsmfeaturesResource extends Resource
             DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
             Text::make('Osmfeatures ID', function () {
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
-            })->asHtml(),
+            })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
             Code::make('Osmfeatures Data', 'osmfeatures_data')
                 ->json()
