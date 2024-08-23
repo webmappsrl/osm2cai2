@@ -2,6 +2,9 @@
 
 namespace App\Nova;
 
+use App\Nova\Cards\LinksCard;
+use App\Nova\Cards\Osm2caiStatusCard;
+use App\Nova\Cards\RefCard;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -42,6 +45,8 @@ class HikingRoute extends OsmfeaturesResource
     public function fields(NovaRequest $request)
     {
         $osmfeaturesFields = parent::fields($request);
+        //remove name field
+        unset($osmfeaturesFields[1]);
         $indexFields = $this->getIndexFields();
         $detailFields = $this->getDetailFields();
 
@@ -57,6 +62,24 @@ class HikingRoute extends OsmfeaturesResource
      */
     public function cards(NovaRequest $request)
     {
+        // Verifica se l'ID della risorsa è presente nella richiesta
+        if ($request->resourceId) {
+            // Accedi al modello corrente tramite l'ID della risorsa
+            $hr = \App\Models\HikingRoute::find($request->resourceId);
+            $osmfeaturesData = json_decode($hr->osmfeatures_data, true);
+            $linksCardData = $hr->getDataForNovaLinksCard();
+            $refCardData = $osmfeaturesData['properties']['osm_tags'];
+            $osm2caiStatusCardData = $osmfeaturesData['properties']['osm2cai_status'];
+
+            return [
+                (new RefCard($refCardData))->onlyOnDetail(),
+                (new LinksCard($linksCardData))->onlyOnDetail(),
+                (new Osm2caiStatusCard($osm2caiStatusCardData))->onlyOnDetail(),
+            ];
+        }
+
+
+        // Restituisci un array vuoto se non sei nel dettaglio o non ci sono dati
         return [];
     }
 
@@ -104,31 +127,31 @@ class HikingRoute extends OsmfeaturesResource
         $specificFields = [
             Text::make('Regioni', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Province', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Aree', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Settori', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Ref', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Cod_rei_osm', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Cod_rei_comp', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Percorribilitá', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
             Text::make('Ultima Ricognizione', function () {
                 return 'TBI';
-            }),
+            })->hideFromDetail(),
 
         ];
 
@@ -139,8 +162,9 @@ class HikingRoute extends OsmfeaturesResource
                     return $this->{$key};
                 })
                 ->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($key) {
+                    $debug = true;
                     $model->{$key} = $request->get($requestAttribute);
-                });
+                })->hideFromDetail();
         }
 
         return $specificFields;

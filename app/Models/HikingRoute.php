@@ -35,10 +35,12 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         if (array_key_exists($key, $this->attributes)) {
             return parent::__get($key);
         }
-        $osmfeaturesData = json_decode($this->osmfeatures_data, true);
 
-        if (isset($osmfeaturesData['properties'][$key])) {
-            return $osmfeaturesData['properties'][$key];
+        if (count($this->attributes) > 0) {
+            $osmfeaturesData = json_decode($this->osmfeatures_data, true);
+            if (isset($osmfeaturesData['properties'][$key])) {
+                return $osmfeaturesData['properties'][$key];
+            }
         }
 
         return parent::__get($key);
@@ -106,5 +108,46 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         $model->update([
             'geometry' => $geometry,
         ]);
+    }
+
+    /**
+     * Get Data for nova Link Card
+     * 
+     * @return array
+     */
+    public function getDataForNovaLinksCard()
+    {
+        $osmId = json_decode($this->osmfeatures_data, true)['properties']['osm_id'];
+        $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
+        $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
+        $osmLink = 'https://www.openstreetmap.org/relation/' . $osmId;
+        $wmt = "https://hiking.waymarkedtrails.org/#route?id=" . $osmId;
+        $analyzer = "https://ra.osmsurround.org/analyzeRelation?relationId=" . $osmId . "&noCache=true&_noCache=on";
+        $endpoint = 'https://geohub.webmapp.it/api/osf/track/osm2cai/';
+        $api = $endpoint . $this->id;
+
+        $headers = get_headers($api);
+        $statusLine = $headers[0];
+
+        if (strpos($statusLine, '200 OK') !== false) {
+            // The API returned a success response
+            $data = json_decode(file_get_contents($api), true);
+            if (!empty($data)) {
+                if ($data['properties']['id'] !== null) {
+                    $infomontLink .= '?track=' . $data['properties']['id'];
+                    $osm2caiLink .= '?track=' . $data['properties']['id'];
+                }
+            }
+        }
+
+        return [
+            'id' => $this->id,
+            'osm_id' => $osmId,
+            'infomontLink' => $infomontLink,
+            'osm2caiLink' => $osm2caiLink,
+            'openstreetmapLink' => $osmLink,
+            'waymarkedtrailsLink' => $wmt,
+            'analyzerLink' => $analyzer
+        ];
     }
 }
