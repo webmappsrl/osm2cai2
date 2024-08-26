@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\OsmFeaturesIdProcessor;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -82,6 +81,7 @@ SQL,
             Log::channel('wm-osmfeatures')->info('No geometry found for HikingRoute ' . $osmfeaturesId);
             $geometry = null;
         }
+
 
         if (isset($osmfeaturesData['osm2cai_status']) && $osmfeaturesData['osm2cai_status'] !== null) {
             if ($model->osm2cai_status !== 4) {

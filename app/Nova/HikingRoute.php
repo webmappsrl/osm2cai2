@@ -122,6 +122,7 @@ class HikingRoute extends OsmfeaturesResource
             $osmfeaturesData = $hr->osmfeatures_data;
             $linksCardData = $hr->getDataForNovaLinksCard();
             if (is_string($osmfeaturesData)) $osmfeaturesData = json_decode($osmfeaturesData, true);
+
             $refCardData = $osmfeaturesData['properties']['osm_tags'];
             $osm2caiStatusCardData = $osmfeaturesData['properties']['osm2cai_status'];
 
@@ -391,5 +392,6 @@ class HikingRoute extends OsmfeaturesResource
         return [
             Text::make('Huts nelle vicinanze', fn() => 'TBI')->hideFromIndex(),
         ];
+
     }
 }
