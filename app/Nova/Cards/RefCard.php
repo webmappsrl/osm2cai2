@@ -36,11 +36,9 @@ class RefCard extends HtmlCard
    public function content(): string
    {
       if (empty($this->osmTags) || is_null($this->osmTags)) return 'No data';
-      $ref = $this->osmTags['ref'];
-      $refRei = $this->osmTags['ref:REI'];
+      $ref = $this->osmTags['ref'] ?? '/';
+      $refRei = $this->osmTags['ref:REI'] ?? '/';
 
-      if (empty($ref)) $ref = '/';
-      if (empty($refRei)) $refRei = '/';
       return <<<HTML
        <h1 class='text-4xl'>REF:$ref (CODICE REI: $refRei)</h1><p class='text-lg text-gray-400 text-center'>Settori: TBI</p> 
        HTML;

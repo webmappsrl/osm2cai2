@@ -103,7 +103,11 @@ SQL,
      */
     public function getDataForNovaLinksCard()
     {
-        $osmId = $this->osmfeatures_data['properties']['osm_id'];
+        if (is_string($this->osmfeatures_data)) {
+            $osmId = json_decode($this->osmfeatures_data, true)['properties']['osm_id'];
+        } else {
+            $osmId = $this->osmfeatures_data['properties']['osm_id'];
+        }
         $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
         $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
         $osmLink = 'https://www.openstreetmap.org/relation/' . $osmId;
