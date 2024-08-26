@@ -109,7 +109,7 @@ class Osm2caiSync extends Command
             case 'cai_huts':
                 return 'huts';
                 break;
-            case 'hiking_routes':
+            case 'HikingRoute':
                 return 'hiking-routes';
                 break;
         }
