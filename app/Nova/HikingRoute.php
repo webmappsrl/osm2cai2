@@ -177,9 +177,9 @@ class HikingRoute extends OsmfeaturesResource
 
     private function getIndexFields()
     {
-        $jsonKeys = ['osm2cai_status'];
-
         $specificFields = [
+            Text::make('Osm2cai Status', 'osm2cai_status')
+                ->hideFromDetail(),
             Text::make('Regioni', function () {
                 return 'TBI';
             })->hideFromDetail(),
@@ -209,25 +209,8 @@ class HikingRoute extends OsmfeaturesResource
             })->hideFromDetail(),
         ];
 
-        // Generate fields using dot notation for JSON data
-        $osmfeaturesFields = [];
-        foreach ($jsonKeys as $key) {
-            $osmfeaturesFields[] = Text::make(
-                ucfirst(str_replace('_', ' ', $key)), // Label
-                "osmfeatures_data->properties->$key" // Use the `->` notation for JSON access
-            )
-                ->sortable()
-                ->resolveUsing(function ($value) {
-                    return $value;
-                })
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    $model->{$attribute} = $request->get($requestAttribute);
-                })
-                ->hideFromDetail();
-        }
 
-        // Merge and return all fields
-        return array_merge($osmfeaturesFields, $specificFields);
+        return $specificFields;
     }
 
 
@@ -392,6 +375,5 @@ class HikingRoute extends OsmfeaturesResource
         return [
             Text::make('Huts nelle vicinanze', fn() => 'TBI')->hideFromIndex(),
         ];
-
     }
 }
