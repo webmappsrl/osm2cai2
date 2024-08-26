@@ -83,6 +83,14 @@ SQL,
             $geometry = null;
         }
 
+        if (isset($osmfeaturesData['osm2cai_status']) && $osmfeaturesData['osm2cai_status'] !== null) {
+            if ($model->osm2cai_status !== 4) {
+                $model->update([
+                    'osm2cai_status' => $osmfeaturesData['osm2cai_status'],
+                ]);
+            }
+        }
+
         $model->update([
             'geometry' => $geometry,
         ]);
