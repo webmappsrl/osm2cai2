@@ -20,7 +20,7 @@ class Osm2caiHelper
         };
         $osmid = substr($id, 1);
 
-        return 'https://www.openstreetmap.org/'.$finalType.'/'.$osmid;
+        return 'https://www.openstreetmap.org/' . $finalType . '/' . $osmid;
     }
 
     /**
@@ -30,9 +30,12 @@ class Osm2caiHelper
      */
     public static function getOpenstreetmapUrlAsHtml(string $id): string
     {
-        return '<a style="color:darkgreen;" target="_blank" href="'.self::getOpenstreetmapUrl($id).'" target="_blank">'.$id.'</a>';
-    }
+        $openstreetmapUrl = self::getOpenstreetmapUrl($id);
 
+        return <<<HTML
+        <a style="color:darkgreen;" target="_blank" href="{$openstreetmapUrl}" target="_blank">{$id}</a>
+        HTML;
+    }
     /**
      * Display the score as stars
      * @param int $score
@@ -64,10 +67,14 @@ class Osm2caiHelper
             $data = json_decode($data, true);
         }
 
-        unset($data['type']);
-        unset($data['geometry']);
+        //now is type, geometry and properties, i want properties before geometry
+        $dataOrdered = [
+            'type' => $data['type'],
+            'properties' => $data['properties'],
+            'geometry' => $data['geometry'],
+        ];
 
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return json_encode($dataOrdered, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     /**

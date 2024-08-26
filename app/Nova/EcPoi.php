@@ -2,8 +2,9 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Text;
+use App\Helpers\Osm2caiHelper;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class EcPoi extends OsmfeaturesResource
@@ -28,7 +29,10 @@ class EcPoi extends OsmfeaturesResource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'type', 'osmfeatures_id',
+        'id',
+        'name',
+        'type',
+        'osmfeatures_id',
     ];
 
     /**
@@ -42,6 +46,9 @@ class EcPoi extends OsmfeaturesResource
         return array_merge(parent::fields($request), [
             Text::make('Type', 'type')->sortable(),
             BelongsTo::make('User')->sortable()->filterable()->searchable(),
+            Text::make('Score', 'score')->displayUsing(function ($value) {
+                return Osm2caiHelper::getScoreAsStars($value);
+            })->sortable(),
         ]);
     }
 }

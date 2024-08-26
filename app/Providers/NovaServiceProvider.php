@@ -7,6 +7,7 @@ use App\Nova\CaiHut;
 use App\Nova\Club;
 use App\Nova\Dashboards\Main;
 use App\Nova\EcPoi;
+use App\Nova\HikingRoute;
 use App\Nova\MountainGroups;
 use App\Nova\Municipality;
 use App\Nova\NaturalSpring;
@@ -56,6 +57,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Region::class),
                     MenuItem::resource(EcPoi::class),
                     MenuItem::resource(Poles::class),
+                    MenuItem::resource(HikingRoute::class),
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab(),
