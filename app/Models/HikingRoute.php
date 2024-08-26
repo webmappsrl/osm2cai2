@@ -30,35 +30,6 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_data' => 'array',
     ];
 
-    // Metodo magico per ottenere valori dinamici
-    // public function __get($key)
-    // {
-    //     if (array_key_exists($key, $this->attributes)) {
-    //         return parent::__get($key);
-    //     }
-
-    //     if (count($this->attributes) > 0) {
-    //         $osmfeaturesData = json_decode($this->osmfeatures_data, true);
-    //         if (isset($osmfeaturesData['properties'][$key])) {
-    //             return $osmfeaturesData['properties'][$key];
-    //         }
-    //     }
-
-    //     return parent::__get($key);
-    // }
-
-    // // Metodo magico per impostare valori dinamici
-    // public function __set($key, $value)
-    // {
-    //     if (array_key_exists($key, $this->attributes)) {
-    //         parent::__set($key, $value);
-    //     } else {
-    //         $data = $this->osmfeatures_data;
-    //         $data['properties'][$key] = $value;
-    //         $this->attributes['osmfeatures_data'] = json_encode($data);
-    //     }
-    // }
-
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
@@ -100,7 +71,12 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
+            $geometry = DB::select(
+                <<<SQL
+                    SELECT ST_AsText(ST_GeomFromGeoJSON(:geojson))
+SQL,
+                ['geojson' => json_encode($osmfeaturesData['geometry'])]
+            )[0]->st_astext;
         } else {
             Log::channel('wm-osmfeatures')->info('No geometry found for HikingRoute ' . $osmfeaturesId);
             $geometry = null;

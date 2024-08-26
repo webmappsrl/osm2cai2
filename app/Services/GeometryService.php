@@ -129,24 +129,24 @@ class GeometryService
     {
         // Costruire la query per determinare il tipo di geometria
         if ($table == 'hiking_routes') {
-            $query = "
-            SELECT 
-                ST_GeometryType(
-                    CASE 
-                        WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}::geometry
-                        ELSE {$geometryColumn}::geometry
-                    END
-                ) AS geom_type
-            FROM {$table}
-            LIMIT 1;
-        ";
+            $query = <<<SQL
+        SELECT 
+            ST_GeometryType(
+                CASE 
+                    WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}::geometry
+                    ELSE {$geometryColumn}::geometry
+                END
+            ) AS geom_type
+        FROM {$table}
+        LIMIT 1;
+        SQL;
         } else {
-            $query = "
-            SELECT 
-                ST_GeometryType({$geometryColumn}::geometry) AS geom_type
-            FROM {$table}
-            LIMIT 1;
-        ";
+            $query = <<<SQL
+        SELECT 
+            ST_GeometryType({$geometryColumn}::geometry) AS geom_type
+        FROM {$table}
+        LIMIT 1;
+        SQL;
         }
 
         // Eseguire la query e ottenere il tipo di geometria

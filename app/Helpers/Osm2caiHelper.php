@@ -30,9 +30,12 @@ class Osm2caiHelper
      */
     public static function getOpenstreetmapUrlAsHtml(string $id): string
     {
-        return '<a style="color:darkgreen;" target="_blank" href="' . self::getOpenstreetmapUrl($id) . '" target="_blank">' . $id . '</a>';
-    }
+        $openstreetmapUrl = self::getOpenstreetmapUrl($id);
 
+        return <<<HTML
+        <a style="color:darkgreen;" target="_blank" href="{$openstreetmapUrl}" target="_blank">{$id}</a>
+        HTML;
+    }
     /**
      * Display the score as stars
      * @param int $score

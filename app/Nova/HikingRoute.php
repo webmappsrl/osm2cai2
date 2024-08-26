@@ -253,8 +253,14 @@ class HikingRoute extends OsmfeaturesResource
         }
         $fields = [
             Text::make('Legenda', function () {
-                return "<ul><li>Linea blu: percorso OSM2CAI/OSM</li><li>Linea rossa: percorso caricato dall'utente</li></ul>";
+                return <<<HTML
+    <ul>
+        <li>Linea blu: percorso OSM2CAI/OSM</li>
+        <li>Linea rossa: percorso caricato dall'utente</li>
+    </ul>
+    HTML;
             })->asHtml()->onlyOnDetail(),
+
         ];
 
         return array_merge($osmfeaturesFields, $fields);

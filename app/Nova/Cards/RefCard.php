@@ -41,6 +41,8 @@ class RefCard extends HtmlCard
 
       if (empty($ref)) $ref = '/';
       if (empty($refRei)) $refRei = '/';
-      return "<h1 class='text-4xl'>REF:$ref (CODICE REI: $refRei)</h1><p class='text-lg text-gray-400 text-center'>Settori: TBI</p>";
+      return <<<HTML
+       <h1 class='text-4xl'>REF:$ref (CODICE REI: $refRei)</h1><p class='text-lg text-gray-400 text-center'>Settori: TBI</p> 
+       HTML;
    }
 }

@@ -33,17 +33,19 @@ class UpdateHikingRoutesCommand extends Command
         $logger = Log::channel('hiking-routes-update');
 
         // Recupera il valore updated_at più recente dalla tabella hiking_routes
-        $latestUpdatedAt = '2024-08-14 09:30:52';
+        $latestUpdatedAt = HikingRoute::max('updated_at');
 
         if (!$latestUpdatedAt) {
-            $this->error('No hiking routes found in the database.');
-            $logger->error('No hiking routes found in the database.');
+            $errormsg = 'No hiking routes found in the database.';
+            $this->error($errormsg);
+            $logger->error($errormsg);
             return;
         }
 
         // Converte la data nel formato richiesto dall'API
         $formattedUpdatedAt = Carbon::parse($latestUpdatedAt)->toIso8601String();
-        $apiUrl = 'https://osmfeatures.maphub.it/api/v1/features/hiking-routes/list';
+        $endpoint = HikingRoute::getOsmfeaturesEndpoint();
+        $apiUrl = $endpoint . 'list';
 
         // Effettua la chiamata all'API con paginazione
         $page = 1;
@@ -55,8 +57,9 @@ class UpdateHikingRoutesCommand extends Command
             ]);
 
             if ($response->failed()) {
-                $this->error('API request failed: ' . $response->body());
-                $logger->error('API request failed: ' . $response->body());
+                $errormsg = 'API request failed: ' . $response->body();
+                $this->error($errormsg);
+                $logger->error($errormsg);
                 return;
             }
 
@@ -74,16 +77,18 @@ class UpdateHikingRoutesCommand extends Command
         // Processa ogni hiking route ritornata dall'API
         foreach ($routes as $route) {
             $osmfeaturesId = $route['id'];
-            $this->info("Processing hiking route with ID: $osmfeaturesId");
-            $logger->info("Processing hiking route with ID: $osmfeaturesId");
+            $logmsg = "Processing hiking route with ID: $osmfeaturesId";
+            $this->info($logmsg);
+            $logger->info($logmsg);
 
             // Effettua la chiamata all'API per ottenere i dati dettagliati del singolo hiking route
-            $detailApiUrl = "https://osmfeatures.maphub.it/api/v1/features/hiking-routes/{$osmfeaturesId}";
+            $detailApiUrl = $endpoint . $osmfeaturesId;
             $detailResponse = Http::get($detailApiUrl);
 
             if ($detailResponse->failed()) {
-                $this->error("Failed to fetch details for hiking route ID: $osmfeaturesId");
-                $logger->error("Failed to fetch details for hiking route ID: $osmfeaturesId");
+                $errormsg = "Failed to fetch details for hiking route ID: $osmfeaturesId";
+                $this->error($errormsg);
+                $logger->error($errormsg);
                 continue;
             }
 
@@ -98,12 +103,13 @@ class UpdateHikingRoutesCommand extends Command
                     'osmfeatures_data' => json_encode($hikingRouteData),
                     'geometry' => DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($hikingRouteData['geometry']) . "'))")[0]->st_astext
                 ]);
-
-                $this->info("Hiking route with ID: $osmfeaturesId updated successfully.");
-                $logger->info("Hiking route with ID: $osmfeaturesId updated successfully.");
+                $logMessage = "Hiking route with ID: $osmfeaturesId updated successfully.";
+                $this->info($logMessage);
+                $logger->info($logMessage);
             } else {
-                $this->error("Hiking route with ID: $osmfeaturesId not found in the database.");
-                $logger->error("Hiking route with ID: $osmfeaturesId not found in the database.");
+                $failMessage = "Hiking route with ID: $osmfeaturesId not found in the database.";
+                $this->error($failMessage);
+                $logger->error($failMessage);
             }
         }
 

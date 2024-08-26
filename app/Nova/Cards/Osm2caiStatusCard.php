@@ -34,6 +34,8 @@ class Osm2caiStatusCard extends HtmlCard
     */
    public function content(): string
    {
-      return "<h1 class='text-4xl'>$this->osm2caiStatus</h1><h3 class='text-lg text-gray-400'>Stato di Accatastamento</h3> <p text-gray-200>Data di validazione : TBI </p><p text-gray-200>Validatore : TBI </p>";
+      return <<<HTML
+      <h1 class='text-4xl'>$this->osm2caiStatus</h1><h3 class='text-lg text-gray-400'>Stato di Accatastamento</h3> <p text-gray-200>Data di validazione : TBI </p><p text-gray-200>Validatore : TBI </p>
+      HTML;
    }
 }
