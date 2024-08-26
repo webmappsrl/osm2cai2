@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('region_favorite')->default(false);
             $table->date('region_favorite_publication_date')->nullable();
             $table->string('issues_status')->default(IssuesStatusEnum::Unknown);
+            $table->date('issues_last_update')->nullable();
             $table->unsignedBigInteger('issues_user_id')->nullable();
             $table->jsonb('issues_chronology')->nullable();
             $table->text('issues_description')->nullable();
@@ -37,6 +38,7 @@ return new class extends Migration
             $table->dropColumn('geometry_raw_data');
             $table->dropColumn('region_favorite');
             $table->dropColumn('region_favorite_publication_date');
+            $table->dropColumn('issues_status');
             $table->dropColumn('issues_last_update');
             $table->dropColumn('issues_user_id');
             $table->dropColumn('issues_chronology');
