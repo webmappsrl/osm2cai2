@@ -52,24 +52,24 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
-        $osmfeaturesData = json_decode($model->osmfeatures_data, true);
+        $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Municipality '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Municipality ' . $osmfeaturesId);
 
             return;
         }
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Municipality '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Municipality ' . $osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Municipality '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No name found for Municipality ' . $osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];

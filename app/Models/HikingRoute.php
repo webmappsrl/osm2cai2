@@ -61,7 +61,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
-        $osmfeaturesData = json_decode($model->osmfeatures_data, true);
+        $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
             Log::channel('wm-osmfeatures')->info('No data found for HikingRoute ' . $osmfeaturesId);

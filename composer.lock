@@ -4675,76 +4675,6 @@
             "time": "2024-03-06T16:03:49+00:00"
         },
         {
-            "name": "romanzipp/laravel-queue-monitor",
-            "version": "5.2.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/romanzipp/Laravel-Queue-Monitor.git",
-                "reference": "0082a50c85d80d2fe467bbc4406c70ea7b71bc89"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/romanzipp/Laravel-Queue-Monitor/zipball/0082a50c85d80d2fe467bbc4406c70ea7b71bc89",
-                "reference": "0082a50c85d80d2fe467bbc4406c70ea7b71bc89",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "illuminate/database": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
-                "illuminate/queue": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
-                "illuminate/support": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
-                "nesbot/carbon": "^2.0|^3.0",
-                "php": "^8.0"
-            },
-            "require-dev": {
-                "doctrine/dbal": "^3.1",
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "laravel/framework": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
-                "mockery/mockery": "^1.3.2",
-                "orchestra/testbench": ">=3.8",
-                "phpstan/phpstan": "^0.12.99|^1.0",
-                "phpunit/phpunit": "^8.5.23|^9.0|^10.5",
-                "romanzipp/php-cs-fixer-config": "^3.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "romanzipp\\QueueMonitor\\Providers\\QueueMonitorProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "romanzipp\\QueueMonitor\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "romanzipp",
-                    "email": "ich@ich.wtf",
-                    "homepage": "https://ich.wtf"
-                }
-            ],
-            "description": "Queue Monitoring for Laravel Database Job Queue",
-            "support": {
-                "issues": "https://github.com/romanzipp/Laravel-Queue-Monitor/issues",
-                "source": "https://github.com/romanzipp/Laravel-Queue-Monitor/tree/5.2.1"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/romanzipp",
-                    "type": "github"
-                }
-            ],
-            "time": "2024-05-02T06:35:26+00:00"
-        },
-        {
             "name": "spatie/db-dumper",
             "version": "3.6.0",
             "source": {
@@ -7544,22 +7474,21 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "1.3.0",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmappsrl/wm-osmfeatures.git",
-                "reference": "b81ceaccf37b97e312b707542f0bb5cfebb8eb8c"
+                "reference": "e7885371a461a87165ae2ef240b0f834fb3d2672"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/b81ceaccf37b97e312b707542f0bb5cfebb8eb8c",
-                "reference": "b81ceaccf37b97e312b707542f0bb5cfebb8eb8c",
+                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/e7885371a461a87165ae2ef240b0f834fb3d2672",
+                "reference": "e7885371a461a87165ae2ef240b0f834fb3d2672",
                 "shasum": ""
             },
             "require": {
                 "illuminate/contracts": "^10.0||^11.0",
                 "php": "^8.2",
-                "romanzipp/laravel-queue-monitor": "^5.2",
                 "spatie/laravel-package-tools": "^1.16"
             },
             "require-dev": {
@@ -7612,7 +7541,7 @@
             ],
             "support": {
                 "issues": "https://github.com/webmappsrl/wm-osmfeatures/issues",
-                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.3.0"
+                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.4.0"
             },
             "funding": [
                 {
@@ -7620,7 +7549,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-05-08T07:30:52+00:00"
+            "time": "2024-08-27T09:10:50+00:00"
         },
         {
             "name": "webmozart/assert",

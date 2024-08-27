@@ -68,29 +68,29 @@ class Poles extends Model implements OsmfeaturesSyncableInterface
         }
 
         if (! $model->osmfeatures_data) {
-            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole ' . $osmfeaturesId);
 
             return;
         }
-        $osmfeaturesData = json_decode($model->osmfeatures_data, true);
+        $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Pole ' . $osmfeaturesId);
             $geometry = null;
         }
         $properties = $osmfeaturesData['properties'];
         if (! $properties) {
-            Log::channel('wm-osmfeatures')->info('No properties found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No properties found for Pole ' . $osmfeaturesId);
 
             return;
         }
 
         if ($properties['ref'] === null || $properties['ref'] === '') {
-            Log::channel('wm-osmfeatures')->info('No ref found for Pole '.$osmfeaturesId);
-            $ref = 'noname('.$osmfeaturesId.')';
+            Log::channel('wm-osmfeatures')->info('No ref found for Pole ' . $osmfeaturesId);
+            $ref = 'noname(' . $osmfeaturesId . ')';
         } else {
             $ref = $properties['ref'];
         }
