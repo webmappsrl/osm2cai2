@@ -287,12 +287,7 @@ class HikingRoute extends OsmfeaturesResource
     private function getTechTabFields()
     {
         return [
-            Text::make('Lunghezza in Km')
-                ->resolveUsing(function ($value, $model) {
-                    $data = data_get($model->osmfeatures_data, 'properties.dem_enrichment.distance');
-
-                    return $data;
-                }),
+            Text::make('Lunghezza in Km', 'osmfeatures_data->properties->distance')->hideFromIndex(),
             Text::make('Diff CAI', 'osmfeatures_data->properties->cai_scale')->hideFromIndex(),
             Text::make('Dislivello positivo in metri', 'osmfeatures_data->properties->dem_enrichment->ascent')->hideFromIndex(),
             Text::make('Dislivello negativo in metri', 'osmfeatures_data->properties->dem_enrichment->descent')->hideFromIndex(),
