@@ -15,7 +15,7 @@ trait TagsMappingTrait
 
         //if the table has not the tags column search in the osmfeatures_data column for the tags
         if (! $this->tags && $this->osmfeatures_data) {
-            $tags = json_decode($this->osmfeatures_data, true)['properties']['osm_tags'];
+            $tags = is_string($this->osmfeatures_data) ? json_decode($this->osmfeatures_data, true)['properties']['osm_tags'] : $this->osmfeatures_data['properties']['osm_tags'];
         } else {
             $tags = json_decode($this->tags, true);
         }
@@ -23,7 +23,7 @@ trait TagsMappingTrait
         foreach ($tags as $key => $value) {
             if (array_key_exists($key, $mapping)) {
                 if (array_key_exists($value, $mapping[$key])) {
-                    $result .= $mapping[$key][$value].';';
+                    $result .= $mapping[$key][$value] . ';';
                 }
             }
         }
