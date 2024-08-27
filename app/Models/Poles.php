@@ -13,7 +13,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Poles extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesImportableTrait, OsmfeaturesSyncableTrait;
+    use HasFactory,  OsmfeaturesSyncableTrait;
 
     protected $fillable = [
         'name',
