@@ -35,7 +35,6 @@ class ImportElementFromOsm2cai implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->queueProgress(0);
 
         $response = Http::get($this->apiUrl);
 
@@ -46,7 +45,6 @@ class ImportElementFromOsm2cai implements ShouldQueue
         }
 
         $data = $response->json();
-        $this->queueProgress(50);
 
         $modelInstance = new $this->modelClass();
 
@@ -58,7 +56,6 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
         $this->performImport($modelInstance, $data);
 
-        $this->queueProgress(100);
     }
 
     private function performImport($modelInstance, $data)
