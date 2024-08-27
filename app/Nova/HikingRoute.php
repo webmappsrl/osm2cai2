@@ -217,23 +217,9 @@ class HikingRoute extends OsmfeaturesResource
     private function getDetailFields()
     {
 
-        $jsonKeys = ['osm_id'];
-        $osmfeaturesFields = [];
 
-        foreach ($jsonKeys as $key) {
-            $osmfeaturesFields[] = Text::make(
-                ucfirst(str_replace('_', ' ', $key)), // Label
-                "osmfeatures_data->properties->$key" // Use the `->` notation for JSON access
-            )
-                ->sortable()
-                ->resolveUsing(function ($value) {
-                    return $value;
-                })
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    $model->{$attribute} = $request->get($requestAttribute);
-                });
-        }
         $fields = [
+            Text::make('OSM ID', 'osmfeatures_data->properties->osm_id'),
             Text::make('Legenda', function () {
                 return <<<HTML
     <ul>
@@ -245,7 +231,8 @@ class HikingRoute extends OsmfeaturesResource
 
         ];
 
-        return array_merge($osmfeaturesFields, $fields);
+
+        return $fields;
     }
 
     private function getTabs()
@@ -300,7 +287,12 @@ class HikingRoute extends OsmfeaturesResource
     private function getTechTabFields()
     {
         return [
-            Text::make('Lunghezza in Km', 'osmfeatures_data->properties->dem_enrichment->distance')->hideFromIndex(),
+            Text::make('Lunghezza in Km')
+                ->resolveUsing(function ($value, $model) {
+                    $data = data_get($model->osmfeatures_data, 'properties.dem_enrichment.distance');
+
+                    return $data;
+                }),
             Text::make('Diff CAI', 'osmfeatures_data->properties->cai_scale')->hideFromIndex(),
             Text::make('Dislivello positivo in metri', 'osmfeatures_data->properties->dem_enrichment->ascent')->hideFromIndex(),
             Text::make('Dislivello negativo in metri', 'osmfeatures_data->properties->dem_enrichment->descent')->hideFromIndex(),

@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\ImportElementFromOsm2cai;
 use Illuminate\Console\Command;
 use Illuminate\Support\DomParser;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use App\Jobs\ImportElementFromOsm2cai;
 
 class Osm2caiSync extends Command
 {
@@ -63,15 +64,25 @@ class Osm2caiSync extends Command
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
+        $batchSize = 1000;
+        $batch = [];
+
         foreach ($data as $id => $udpated_at) {
             $modelInstance = new $modelClass();
             //if the model already exists in the database skip the import
-            if ($modelInstance->where('id', $id)->exists()) {
+            if ($modelInstance->where('id', $id)->exists() && !$modelInstance instanceof \App\Models\HikingRoute) {
                 $progressBar->advance();
                 continue;
             }
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
-            dispatch(new ImportElementFromOsm2cai($modelClass, $singleFeatureApi,));
+            $batch[] = new ImportElementFromOsm2cai($modelClass, $singleFeatureApi);
+
+            // When the batch size is reached, dispatch all jobs in the batch
+            if (count($batch) >= $batchSize) {
+                Bus::batch($batch)->dispatch();
+                $batch = []; // Reset the batch
+                usleep(500000); // Sleep for 500 milliseconds to reduce load
+            }
             $progressBar->advance();
         }
         $progressBar->finish();

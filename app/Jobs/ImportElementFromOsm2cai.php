@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\HikingRoute;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +16,7 @@ use romanzipp\QueueMonitor\Traits\IsMonitored;
 
 class ImportElementFromOsm2cai implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, IsMonitored;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, IsMonitored, Batchable;
 
     protected $apiUrl;
 
