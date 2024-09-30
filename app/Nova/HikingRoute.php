@@ -3,22 +3,23 @@
 namespace App\Nova;
 
 use App\Models\User;
+use App\Nova\Cards\LinksCard;
+use App\Nova\Cards\Osm2caiStatusCard;
+use App\Nova\Cards\RefCard;
 use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
-use App\Nova\Cards\RefCard;
-use Laravel\Nova\Fields\ID;
-use App\Nova\Cards\LinksCard;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Textarea;
 use Eminiarts\Tabs\Traits\HasTabs;
-use App\Nova\Cards\Osm2caiStatusCard;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class HikingRoute extends OsmfeaturesResource
 {
     use HasTabs;
+
     /**
      * The model the resource corresponds to.
      *
@@ -40,7 +41,7 @@ class HikingRoute extends OsmfeaturesResource
      */
     public static $search = [
         'id',
-        'osmfeatures_id'
+        'osmfeatures_id',
     ];
 
     /**
@@ -56,7 +57,7 @@ class HikingRoute extends OsmfeaturesResource
 
         // Filtra i campi indesiderati
         $filteredFields = array_filter($osmfeaturesFields, function ($field) {
-            return !in_array($field->attribute, ['id', 'name', 'osmfeatures_data', 'created_at', 'updated_at', 'osmfeatures_updated_at']);
+            return ! in_array($field->attribute, ['id', 'name', 'osmfeatures_data', 'created_at', 'updated_at', 'osmfeatures_updated_at']);
         });
 
         // Definisci l'ordine desiderato dei campi
@@ -67,7 +68,7 @@ class HikingRoute extends OsmfeaturesResource
             'geometry' => 'Geometry',
             'correttezza_geometria' => 'Correttezza Geometria',
             'coerenza_ref_rei' => 'Coerenza ref REI',
-            'geometry_sync' => 'Geometry Sync'
+            'geometry_sync' => 'Geometry Sync',
         ];
 
         $specificFields = array_merge($this->getIndexFields(), $this->getDetailFields());
@@ -85,6 +86,7 @@ class HikingRoute extends OsmfeaturesResource
             $bKey = $b->name ?? $b->attribute;
             $aIndex = array_search($aKey, array_keys($order));
             $bIndex = array_search($bKey, array_keys($order));
+
             return $aIndex <=> $bIndex;
         });
 
@@ -104,13 +106,10 @@ class HikingRoute extends OsmfeaturesResource
         ], $this->getTabs());
     }
 
-
-
-
     /**
      * Get the cards available for the request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -121,7 +120,9 @@ class HikingRoute extends OsmfeaturesResource
             $hr = \App\Models\HikingRoute::find($request->resourceId);
             $osmfeaturesData = $hr->osmfeatures_data;
             $linksCardData = $hr->getDataForNovaLinksCard();
-            if (is_string($osmfeaturesData)) $osmfeaturesData = json_decode($osmfeaturesData, true);
+            if (is_string($osmfeaturesData)) {
+                $osmfeaturesData = json_decode($osmfeaturesData, true);
+            }
 
             $refCardData = $osmfeaturesData['properties']['osm_tags'];
             $osm2caiStatusCardData = $osmfeaturesData['properties']['osm2cai_status'];
@@ -133,7 +134,6 @@ class HikingRoute extends OsmfeaturesResource
             ];
         }
 
-
         // Restituisci un array vuoto se non sei nel dettaglio o non ci sono dati
         return [];
     }
@@ -141,7 +141,7 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -156,7 +156,7 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -167,7 +167,7 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)
@@ -209,19 +209,15 @@ class HikingRoute extends OsmfeaturesResource
             })->hideFromDetail(),
         ];
 
-
         return $specificFields;
     }
 
-
     private function getDetailFields()
     {
-
-
         $fields = [
             Text::make('OSM ID', 'osmfeatures_data->properties->osm_id'),
             Text::make('Legenda', function () {
-                return <<<HTML
+                return <<<'HTML'
     <ul>
         <li>Linea blu: percorso OSM2CAI/OSM</li>
         <li>Linea rossa: percorso caricato dall'utente</li>
@@ -230,7 +226,6 @@ class HikingRoute extends OsmfeaturesResource
             })->asHtml()->onlyOnDetail(),
 
         ];
-
 
         return $fields;
     }
@@ -260,12 +255,12 @@ class HikingRoute extends OsmfeaturesResource
     private function getMainTabFields()
     {
         return [
-            Text::make('Source', "osmfeatures_data->properties->source")->hideFromIndex(),
-            Text::make('Data ricognizione', fn() => 'TBI')->hideFromIndex(),
-            Text::make('Codice Sezione CAI', fn() => 'TBI')->hideFromIndex(),
-            Text::make('REF precedente', fn() => 'TBI')->hideFromIndex(),
+            Text::make('Source', 'osmfeatures_data->properties->source')->hideFromIndex(),
+            Text::make('Data ricognizione', fn () => 'TBI')->hideFromIndex(),
+            Text::make('Codice Sezione CAI', fn () => 'TBI')->hideFromIndex(),
+            Text::make('REF precedente', fn () => 'TBI')->hideFromIndex(),
             Text::make('REF rei', 'osmfeatures_data->properties->ref_REI')->hideFromIndex(),
-            Text::make('REF regionale', fn() => 'TBI')->hideFromIndex(),
+            Text::make('REF regionale', fn () => 'TBI')->hideFromIndex(),
         ];
     }
 
@@ -311,19 +306,19 @@ class HikingRoute extends OsmfeaturesResource
             Text::make('Note (IT)', 'osmfeatures_data->properties->note_it')->hideFromIndex(),
             Text::make('Note di progetto', 'osmfeatures_data->properties->note_project_page')->hideFromIndex(),
             Text::make('Operatore', 'osmfeatures_data->properties->osm_tags->operator')->hideFromIndex(),
-            Text::make('Stato del percorso', fn() => 'TBI')->hideFromIndex(),
-            Text::make('Indirizzo web', 'osmfeatures_data->properties->website')->hideFromIndex()->displayUsing(fn($value) => '<a style="color:blue;" href="' . $value . '" target="_blank">' . $value . '</a>')->asHtml(),
-            Text::make('Immagine su wikimedia', 'osmfeatures_data->properties->wikimedia_commons')->hideFromIndex()->displayUsing(fn($value) => '<a style="color:blue;" href="' . $value . '" target="_blank">' . $value . '</a>')->asHtml(),
+            Text::make('Stato del percorso', fn () => 'TBI')->hideFromIndex(),
+            Text::make('Indirizzo web', 'osmfeatures_data->properties->website')->hideFromIndex()->displayUsing(fn ($value) => '<a style="color:blue;" href="'.$value.'" target="_blank">'.$value.'</a>')->asHtml(),
+            Text::make('Immagine su wikimedia', 'osmfeatures_data->properties->wikimedia_commons')->hideFromIndex()->displayUsing(fn ($value) => '<a style="color:blue;" href="'.$value.'" target="_blank">'.$value.'</a>')->asHtml(),
         ];
     }
 
     private function getContentTabFields()
     {
         return [
-            Text::make('Automatic Name (computed for TDH)', fn() => 'TBI')->hideFromIndex(),
-            Text::make('Automatic Abstract (computed for TDH)', fn() => 'TBI')->hideFromIndex(),
-            Text::make('Feature Image', fn() => 'TBI')->hideFromIndex(),
-            Text::make('Description CAI IT', fn() => 'TBI')->hideFromIndex(),
+            Text::make('Automatic Name (computed for TDH)', fn () => 'TBI')->hideFromIndex(),
+            Text::make('Automatic Abstract (computed for TDH)', fn () => 'TBI')->hideFromIndex(),
+            Text::make('Feature Image', fn () => 'TBI')->hideFromIndex(),
+            Text::make('Description CAI IT', fn () => 'TBI')->hideFromIndex(),
         ];
     }
 
@@ -335,8 +330,9 @@ class HikingRoute extends OsmfeaturesResource
             Date::make('Issue Date', 'issues_last_update')->hideFromIndex(),
             Text::make('Issue Author', function () {
                 $user = User::find($this->model()->issues_user_id);
+
                 return $user
-                    ? '<a style="color:blue;" href="' . url('/resources/users/' . $user->id) . '" target="_blank">' . $user->name . '</a>'
+                    ? '<a style="color:blue;" href="'.url('/resources/users/'.$user->id).'" target="_blank">'.$user->name.'</a>'
                     : 'No user';
             })->hideFromIndex()->asHtml(),
             Text::make('Cronologia Percorribilità', 'issues_chronology')->hideFromIndex(),
@@ -346,21 +342,21 @@ class HikingRoute extends OsmfeaturesResource
     private function getPOITabFields()
     {
         return [
-            Text::make('POI in buffer (1km)', fn() => 'TBI')->hideFromIndex(),
+            Text::make('POI in buffer (1km)', fn () => 'TBI')->hideFromIndex(),
         ];
     }
 
     private function getHutsTabFields()
     {
         return [
-            Text::make('Huts nelle vicinanze', fn() => 'TBI')->hideFromIndex(),
+            Text::make('Huts nelle vicinanze', fn () => 'TBI')->hideFromIndex(),
         ];
     }
 
     private function getNaturalSpringsTabFields()
     {
         return [
-            Text::make('Huts nelle vicinanze', fn() => 'TBI')->hideFromIndex(),
+            Text::make('Huts nelle vicinanze', fn () => 'TBI')->hideFromIndex(),
         ];
     }
 }

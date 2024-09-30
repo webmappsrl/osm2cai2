@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::hasTable('poles')) {
+        if (! Schema::hasTable('poles')) {
             Schema::create('poles', function (Blueprint $table) {
                 $table->char('osm_type', 1)->nullable(); // bpchar(1)
                 $table->bigInteger('osm_id')->nullable(); // int8

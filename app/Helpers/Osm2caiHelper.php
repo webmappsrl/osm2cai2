@@ -20,7 +20,7 @@ class Osm2caiHelper
         };
         $osmid = substr($id, 1);
 
-        return 'https://www.openstreetmap.org/' . $finalType . '/' . $osmid;
+        return 'https://www.openstreetmap.org/'.$finalType.'/'.$osmid;
     }
 
     /**
@@ -36,6 +36,7 @@ class Osm2caiHelper
         <a style="color:darkgreen;" target="_blank" href="{$openstreetmapUrl}" target="_blank">{$id}</a>
         HTML;
     }
+
     /**
      * Display the score as stars
      * @param int $score

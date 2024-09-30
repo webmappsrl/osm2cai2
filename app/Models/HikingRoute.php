@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Traits\TagsMappingTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 {
@@ -28,7 +28,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'array',
-        'issues_last_update' => 'date'
+        'issues_last_update' => 'date',
     ];
 
     /**
@@ -65,7 +65,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for HikingRoute ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for HikingRoute '.$osmfeaturesId);
 
             return;
         }
@@ -73,16 +73,15 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         //format the geometry
         if ($osmfeaturesData['geometry']) {
             $geometry = DB::select(
-                <<<SQL
+                <<<'SQL'
                     SELECT ST_AsText(ST_GeomFromGeoJSON(:geojson))
 SQL,
                 ['geojson' => json_encode($osmfeaturesData['geometry'])]
             )[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for HikingRoute ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for HikingRoute '.$osmfeaturesId);
             $geometry = null;
         }
-
 
         if (isset($osmfeaturesData['osm2cai_status']) && $osmfeaturesData['osm2cai_status'] !== null) {
             if ($model->osm2cai_status !== 4) {
@@ -99,7 +98,7 @@ SQL,
 
     /**
      * Get Data for nova Link Card
-     * 
+     *
      * @return array
      */
     public function getDataForNovaLinksCard()
@@ -111,11 +110,11 @@ SQL,
         }
         $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
         $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
-        $osmLink = 'https://www.openstreetmap.org/relation/' . $osmId;
-        $wmt = "https://hiking.waymarkedtrails.org/#route?id=" . $osmId;
-        $analyzer = "https://ra.osmsurround.org/analyzeRelation?relationId=" . $osmId . "&noCache=true&_noCache=on";
+        $osmLink = 'https://www.openstreetmap.org/relation/'.$osmId;
+        $wmt = 'https://hiking.waymarkedtrails.org/#route?id='.$osmId;
+        $analyzer = 'https://ra.osmsurround.org/analyzeRelation?relationId='.$osmId.'&noCache=true&_noCache=on';
         $endpoint = 'https://geohub.webmapp.it/api/osf/track/osm2cai/';
-        $api = $endpoint . $this->id;
+        $api = $endpoint.$this->id;
 
         $headers = get_headers($api);
         $statusLine = $headers[0];
@@ -123,10 +122,10 @@ SQL,
         if (strpos($statusLine, '200 OK') !== false) {
             // The API returned a success response
             $data = json_decode(file_get_contents($api), true);
-            if (!empty($data)) {
+            if (! empty($data)) {
                 if ($data['properties']['id'] !== null) {
-                    $infomontLink .= '?track=' . $data['properties']['id'];
-                    $osm2caiLink .= '?track=' . $data['properties']['id'];
+                    $infomontLink .= '?track='.$data['properties']['id'];
+                    $osm2caiLink .= '?track='.$data['properties']['id'];
                 }
             }
         }
@@ -138,7 +137,7 @@ SQL,
             'osm2caiLink' => $osm2caiLink,
             'openstreetmapLink' => $osmLink,
             'waymarkedtrailsLink' => $wmt,
-            'analyzerLink' => $analyzer
+            'analyzerLink' => $analyzer,
         ];
     }
 }

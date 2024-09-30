@@ -61,11 +61,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ]),
                 MenuSection::make('Tools', [
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab(),
-                    MenuItem::externalLink('logs', url('logs'))->openInNewTab()
+                    MenuItem::externalLink('logs', url('logs'))->openInNewTab(),
 
                 ])->icon('briefcase')->canSee(function (Request $request) {
                     return $request->user()->email === 'team@webmapp.it';
-                })
+                }),
             ];
         });
     }
