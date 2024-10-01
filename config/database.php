@@ -78,6 +78,20 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'legacyosm2cai' =>
+        [
+            'driver' => 'pgsql',
+            'host' => env('OSM2CAI1_DB_HOST'),
+            'port' => env('OSM2CAI1_DB_PORT', '5432'),
+            'database' => env('OSM2CAI1_DB_DATABASE'),
+            'username' => env('OSM2CAI1_DB_USERNAME'),
+            'password' => env('OSM2CAI1_DB_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
@@ -125,7 +139,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [
