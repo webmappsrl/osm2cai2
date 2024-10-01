@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Traits\GeojsonableTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Sector extends Model
 {
@@ -20,4 +21,9 @@ class Sector extends Model
         'human_name',
         'manager',
     ];
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
 }

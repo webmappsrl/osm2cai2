@@ -3,14 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Notifications\Notifiable;
+use App\Models\Area;
+use App\Models\Club;
+use App\Models\Region;
+use App\Models\Sector;
+use App\Models\Province;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
 use Wm\WmPackage\Model\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -45,5 +51,35 @@ class User extends Authenticatable
     public function EcPois()
     {
         return $this->hasMany(EcPoi::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class, 'region_name', 'name');
+    }
+
+    public function section()
+    {
+        return $this->belongsTo(Club::class);
+    }
+
+    public function provinces()
+    {
+        return $this->belongsToMany(Province::class, 'province_user', 'user_id', 'province_name', 'id', 'name');
+    }
+
+    public function areas()
+    {
+        return $this->belongsToMany(Area::class, 'area_user', 'user_id', 'area_name', 'id', 'name');
+    }
+
+    public function sectors()
+    {
+        return $this->belongsToMany(Sector::class, 'sector_user', 'user_id', 'sector_name', 'id', 'name');
+    }
+
+    public function club()
+    {
+        return $this->belongsTo(Club::class, 'cai_code', 'cai_code');
     }
 }

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
@@ -20,6 +21,11 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
     ];
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
