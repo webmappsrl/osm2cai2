@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('region_name')->nullable();
-            $table->string('club_cai_code')->nullable();
+            $table->string('phone')->nullable();
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('region_name');
-            $table->dropColumn('cai_code');
+            $table->dropColumn('phone');
         });
     }
 };

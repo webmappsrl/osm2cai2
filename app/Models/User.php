@@ -27,6 +27,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'region_name',
+        'club_cai_code',
+        'phone'
     ];
 
     /**
@@ -80,6 +83,6 @@ class User extends Authenticatable
 
     public function club()
     {
-        return $this->belongsTo(Club::class, 'cai_code', 'cai_code');
+        return $this->belongsTo(Club::class, 'club_cai_code', 'cai_code');
     }
 }
