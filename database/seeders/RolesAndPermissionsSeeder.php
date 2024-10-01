@@ -17,6 +17,7 @@ class RolesAndPermissionsSeeder extends Seeder
     public function run()
     {
         Role::firstOrCreate(['name' => 'Administrator']);
+        Role::firstOrCreate(['name' => 'Itinerary Manager']);
         Role::firstOrCreate(['name' => 'National Referent']);
         Role::firstOrCreate(['name' => 'Regional Referent']);
         Role::firstOrCreate(['name' => 'Local Referent']);
@@ -43,7 +44,9 @@ class RolesAndPermissionsSeeder extends Seeder
         //get all users except team@webmapp.it and assign to them the guest role
         $users = User::whereDoesntHave('roles')->where('email', '!=', 'team@webmapp.it')->get();
         foreach ($users as $user) {
-            $user->assignRole('Guest');
+            //if user has not roles
+            if (!$user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Sectional Referent', 'Validator']))
+                $user->assignRole('Guest');
         }
         User::where('email', 'team@webmapp.it')->first()->assignRole('Administrator');
     }
