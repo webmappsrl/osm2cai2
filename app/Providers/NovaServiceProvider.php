@@ -2,29 +2,29 @@
 
 namespace App\Providers;
 
+use DB;
 use App\Nova\Area;
-use App\Nova\CaiHut;
 use App\Nova\Club;
-use App\Nova\Dashboards\Main;
+use App\Nova\User;
 use App\Nova\EcPoi;
-use App\Nova\HikingRoute;
-use App\Nova\MountainGroups;
-use App\Nova\Municipality;
-use App\Nova\NaturalSpring;
 use App\Nova\Poles;
-use App\Nova\Province;
+use App\Nova\CaiHut;
 use App\Nova\Region;
 use App\Nova\Sector;
-use App\Nova\User;
-use DB;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\DB as FacadesDB;
-use Illuminate\Support\Facades\Gate;
+use App\Nova\Province;
+use Laravel\Nova\Nova;
 use Laravel\Nova\Badge;
+use App\Nova\HikingRoute;
+use App\Nova\Municipality;
+use App\Nova\NaturalSpring;
+use App\Nova\MountainGroups;
+use Illuminate\Http\Request;
+use App\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
-use Laravel\Nova\Nova;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB as FacadesDB;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -63,7 +63,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(Poles::class, 'Poles'),
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Unità Territoriali', [
-                        MenuItem::resource(Sector::class, 'Sezioni'),
+                        MenuItem::resource(Club::class),
                         MenuItem::resource(Municipality::class, 'Comuni'),
                         MenuItem::resource(Sector::class, 'Settori'),
                         MenuItem::resource(Area::class, 'Aree'),
@@ -112,7 +112,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(User::class, 'User'), // Usa User Nova resource
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab(),
                     MenuItem::externalLink('Logs', url('/logs'))->openInNewTab(),
-                ])->icon('settings'),
+                ])->icon('user'),
             ];
         });
     }
@@ -168,7 +168,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function tools()
     {
         return [
-            //
+            \Vyuldashev\NovaPermission\NovaPermissionTool::make()
         ];
     }
 
