@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Traits\GeojsonableTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Area extends Model
 {
@@ -17,4 +18,9 @@ class Area extends Model
         'full_code',
         'num_expected',
     ];
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
 }

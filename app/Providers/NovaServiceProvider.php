@@ -2,29 +2,29 @@
 
 namespace App\Providers;
 
+use DB;
 use App\Nova\Area;
-use App\Nova\CaiHut;
 use App\Nova\Club;
-use App\Nova\Dashboards\Main;
+use App\Nova\User;
 use App\Nova\EcPoi;
-use App\Nova\HikingRoute;
-use App\Nova\MountainGroups;
-use App\Nova\Municipality;
-use App\Nova\NaturalSpring;
 use App\Nova\Poles;
-use App\Nova\Province;
+use App\Nova\CaiHut;
 use App\Nova\Region;
 use App\Nova\Sector;
-use App\Nova\User;
-use DB;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\DB as FacadesDB;
-use Illuminate\Support\Facades\Gate;
+use App\Nova\Province;
+use Laravel\Nova\Nova;
 use Laravel\Nova\Badge;
+use App\Nova\HikingRoute;
+use App\Nova\Municipality;
+use App\Nova\NaturalSpring;
+use App\Nova\MountainGroups;
+use Illuminate\Http\Request;
+use App\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
-use Laravel\Nova\Nova;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB as FacadesDB;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -42,33 +42,82 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::mainMenu(function (Request $request) {
             return [
-                MenuSection::dashboard(Main::class)->icon('chart-bar'),
+                // Dashboard
+                MenuSection::make('Dashboard', [
+                    MenuItem::link('Riepilogo nazionale', '/dashboards/main'),
+                    MenuItem::link('Percorsi Favoriti', '/dashboards/main'),
+                    MenuItem::link('POIS', '/dashboards/main'),
+                    MenuItem::link('Riepilogo utenti', '/dashboards/main'),
+                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/main'),
+                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/main'),
+                    MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/main'),
+                ])->icon('chart-bar')->collapsable(),
 
-                MenuSection::make('Resources', [
-                    MenuItem::resource(User::class),
-                    MenuItem::resource(MountainGroups::class),
-                    MenuItem::resource(NaturalSpring::class),
-                    MenuItem::resource(CaiHut::class),
-                    MenuItem::resource(Club::class),
-                    MenuItem::resource(Sector::class),
-                    MenuItem::resource(Area::class),
-                    MenuItem::resource(Municipality::class),
-                    MenuItem::resource(Province::class),
-                    MenuItem::resource(Region::class),
-                    MenuItem::resource(EcPoi::class),
-                    MenuItem::resource(Poles::class),
-                    MenuItem::resource(HikingRoute::class),
-                ]),
+                // Rete Escursionistica
+                MenuSection::make('Rete Escursionistica', [
+                    MenuSection::make('Sentieri', [
+                        MenuItem::resource(HikingRoute::class, 'Percorsi'),
+                        MenuItem::link('Itinerari', '/dashboards/main'),
+                    ])->icon('none')->collapsable(),
+                    MenuSection::make('Luoghi3', [
+                        MenuItem::resource(Poles::class, 'Poles'),
+                    ])->icon('none')->collapsable(),
+                    MenuSection::make('Unità Territoriali', [
+                        MenuItem::resource(Club::class),
+                        MenuItem::resource(Municipality::class, 'Comuni'),
+                        MenuItem::resource(Sector::class, 'Settori'),
+                        MenuItem::resource(Area::class, 'Aree'),
+                        MenuItem::resource(Province::class, 'Province'),
+                        MenuItem::resource(Region::class, 'Regioni'),
+                    ])->icon('none')->collapsable(),
+                ])->icon('globe')->collapsable(),
+
+                // Arricchimenti
+                MenuSection::make('Arricchimenti', [
+                    MenuItem::resource(EcPoi::class, 'Punti di interesse'),
+                    MenuItem::resource(MountainGroups::class, 'Gruppi Montuosi'),
+                    MenuItem::resource(CaiHut::class, 'Rifugi'),
+                    MenuItem::resource(NaturalSpring::class, 'Acqua Sorgente'),
+                ])->icon('database')->collapsable(),
+
+                // Rilievi
+                MenuSection::make('Rilievi', [
+                    MenuSection::make('Elementi rilevati', [
+                        MenuItem::link('Pois', '/dashboards/main'),
+                        MenuItem::link('Tracks', '/dashboards/main'),
+                        MenuItem::link('Media', '/dashboards/main'),
+                    ])->icon('none')->collapsable(),
+                    MenuSection::make('Validazioni', [
+                        MenuItem::link('Acqua Sorgente', '/dashboards/main'),
+                        MenuItem::link('Segni dell’uomo', '/dashboards/main'),
+                        MenuItem::link('Siti archeologici', '/dashboards/main'),
+                        MenuItem::link('Aree archeologiche', '/dashboards/main'),
+                        MenuItem::link('Siti archelogoche', '/dashboards/main'),
+                    ])->icon('none')->collapsable(),
+                    MenuSection::make('Export', [
+                        MenuItem::link('Esporta Rilievi', '/dashboards/main'),
+                    ])->icon('download')->collapsable(),
+                ])->icon('eye')->collapsable(),
+
+                // Tools
                 MenuSection::make('Tools', [
-                    MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab(),
-                    MenuItem::externalLink('logs', url('logs'))->openInNewTab()
+                    MenuItem::link('Mappa Percorsi', '/dashboards/main'),
+                    MenuItem::link('INFOMONT', '/dashboards/main'),
+                    MenuItem::link('API', '/dashboards/main'),
+                    MenuItem::link('Documentazione OSM2CAI', '/dashboards/main'),
+                ])->icon('color-swatch')->collapsable(),
 
-                ])->icon('briefcase')->canSee(function (Request $request) {
-                    return $request->user()->email === 'team@webmapp.it';
-                })
+                // Admin
+                MenuSection::make('Admin', [
+                    MenuItem::resource(User::class, 'User'), // Usa User Nova resource
+                    MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab(),
+                    MenuItem::externalLink('Logs', url('/logs'))->openInNewTab(),
+                ])->icon('user'),
             ];
         });
     }
+
+
 
     /**
      * Register the Nova routes.
@@ -119,7 +168,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function tools()
     {
         return [
-            //
+            \Vyuldashev\NovaPermission\NovaPermissionTool::make()
         ];
     }
 

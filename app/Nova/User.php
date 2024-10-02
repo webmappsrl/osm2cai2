@@ -2,13 +2,17 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
+use App\Nova\Club;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
 use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\Gravatar;
-use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Password;
-use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Vyuldashev\NovaPermission\RoleBooleanGroup;
+use Vyuldashev\NovaPermission\PermissionBooleanGroup;
 
 class User extends Resource
 {
@@ -32,7 +36,9 @@ class User extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'email',
+        'id',
+        'name',
+        'email',
     ];
 
     /**
@@ -62,6 +68,35 @@ class User extends Resource
                 ->onlyOnForms()
                 ->creationRules('required', Rules\Password::defaults())
                 ->updateRules('nullable', Rules\Password::defaults()),
+
+            BelongsToMany::make('Provinces', 'provinces', Province::class)
+                ->searchable()
+                ->sortable(),
+
+            BelongsToMany::make('Areas', 'areas', Area::class)
+                ->searchable()
+                ->sortable(),
+
+            BelongsToMany::make('Sectors', 'sectors', Sector::class)
+                ->searchable()
+                ->sortable(),
+
+            BelongsTo::make('Region', 'region', Region::class)
+                ->searchable()
+                ->nullable()
+                ->sortable(),
+
+            BelongsTo::make('Club', 'club', Club::class)
+                ->searchable()
+                ->nullable()
+                ->sortable(),
+
+            RoleBooleanGroup::make('Roles', 'roles')->canSee(function () {
+                return auth()->user()->hasRole('Administrator') || auth()->user()->hasPermissionTo('manage roles and permissions');
+            }),
+            PermissionBooleanGroup::make('Permissions', 'permissions')->canSee(function () {
+                return auth()->user()->hasRole('Administrator') || auth()->user()->hasPermissionTo('manage roles and permissions');
+            }),
         ];
     }
 

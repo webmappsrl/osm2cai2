@@ -21,7 +21,7 @@ class Club extends Resource
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'name';
 
     /**
      * The columns that should be searched.
@@ -29,7 +29,9 @@ class Club extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'cai_code',
+        'id',
+        'name',
+        'cai_code',
     ];
 
     /**
@@ -43,7 +45,7 @@ class Club extends Resource
         return [
             ID::make()->sortable()
                 ->hideFromIndex(),
-            Text::make('Nome', 'name', )
+            Text::make('Nome', 'name',)
                 ->sortable()
                 ->rules('required', 'max:255')
                 ->displayUsing(function ($name, $a, $b) {
