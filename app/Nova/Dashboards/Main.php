@@ -2,15 +2,18 @@
 
 namespace App\Nova\Dashboards;
 
-use App\Helpers\Osm2caiHelper;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use App\Models\Region;
+use App\Models\Sector;
+use App\Models\HikingRoute;
 use Laravel\Nova\Cards\Help;
-use Laravel\Nova\Dashboards\Main as Dashboard;
-use Mako\CustomTableCard\CustomTableCard;
-use Mako\CustomTableCard\Table\Cell;
+use App\Helpers\Osm2caiHelper;
+use Illuminate\Support\Facades\DB;
 use Mako\CustomTableCard\Table\Row;
+use Illuminate\Support\Facades\Auth;
+use Mako\CustomTableCard\Table\Cell;
+use Mako\CustomTableCard\CustomTableCard;
+use Laravel\Nova\Dashboards\Main as Dashboard;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
 
 class Main extends Dashboard
 {
@@ -26,11 +29,22 @@ class Main extends Dashboard
      */
     public function cards()
     {
+        $user = Auth::user();
+        $userName = $user->name;
+        $roles = $user->getRoleNames();
+
+        $sal = (HikingRoute::where('osm2cai_status', 1)->count() * 0.25 +
+            HikingRoute::where('osm2cai_status', 2)->count() * 0.50 +
+            HikingRoute::where('osm2cai_status', 3)->count() * 0.75 +
+            HikingRoute::where('osm2cai_status', 4)->count()
+        ) / Sector::sum('num_expected');
+
+
         $cards = [
-            (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => Auth::user()->name])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card')->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.last-login-card')->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale')->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $userName])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles->toArray()])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.last-login-card', ['lastLogin' => $user->last_login_at])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2) . ' %'])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda-1', ['backgroundColor' => Osm2caiHelper::getSdaColor(1)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda-2', ['backgroundColor' => Osm2caiHelper::getSdaColor(2)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda-3', ['backgroundColor' => Osm2caiHelper::getSdaColor(3)])->center(true)->withBasicStyles(),
@@ -82,7 +96,7 @@ class Main extends Dashboard
                 new Cell($tot),
                 new Cell($tot),
                 new Cell($tot),
-                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
+                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
             );
             $data[] = $row;
         }
