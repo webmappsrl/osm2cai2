@@ -52,47 +52,6 @@
             }
         }
     },
-    "components": {
-        "schemas": {
-            "HikingRoute": {
-                "required": [
-                    "id",
-                    "nome",
-                    "updated_at"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "nome": {
-                        "type": "string"
-                    },
-                    "descrizione": {
-                        "type": "string"
-                    },
-                    "lunghezza": {
-                        "type": "number",
-                        "format": "float"
-                    },
-                    "difficolta": {
-                        "type": "string"
-                    },
-                    "tempo_stimato": {
-                        "type": "string"
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "type": "object"
-            }
-        }
-    },
     "tags": [
         {
             "name": "V2",
