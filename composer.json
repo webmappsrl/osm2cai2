@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2.0",
         "abordage/nova-html-card": "^0.3.1",
+        "darkaonline/l5-swagger": "*",
         "eminiarts/nova-tabs": "^2.2",
         "guzzlehttp/guzzle": "^7.2",
         "imumz/nova-4-field-map": "^1.0",
