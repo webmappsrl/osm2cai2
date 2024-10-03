@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Municipality extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name'];
 
@@ -60,24 +61,15 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
             return;
         }
 
-        //format the geometry
-        if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
-        } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Municipality ' . $osmfeaturesId);
-            $geometry = null;
-        }
+        // Update the geometry if necessary
+        $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
 
-        if ($osmfeaturesData['properties']['name'] === null) {
+        if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
+            $updateData['name'] = $osmfeaturesData['properties']['name'];
+        } else if ($osmfeaturesData['properties']['name'] === null) {
             Log::channel('wm-osmfeatures')->info('No name found for Municipality ' . $osmfeaturesId);
-            $name = null;
-        } else {
-            $name = $osmfeaturesData['properties']['name'];
         }
 
-        $model->update([
-            'name' => $name,
-            'geometry' => $geometry,
-        ]);
+        $model->update($updateData);
     }
 }
