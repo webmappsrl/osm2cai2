@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\RecalculateIntersections;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
@@ -13,18 +15,35 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait;
 
-    protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name'];
+    protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting'];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
+        'hiking_routes_intersecting' => 'array',
     ];
+
+    protected static function booted()
+    {
+        static::updated(function ($region) {
+            if ($region->isDirty('geometry')) {
+                RecalculateIntersections::dispatch($region);
+            }
+        });
+    }
 
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function hikingRoutesIntersecting()
+    {
+        $geometry = $this->geometry;
+        return HikingRoute::select('osmfeatures_id', 'osm2cai_status', 'validation_date', 'issues_status', 'issues_last_update', 'issues_user_id', 'issues_chronology', 'issues_description', 'description_cai_it')
+            ->whereRaw('ST_Intersects(geometry, ?)', [$geometry]);
     }
 
     /**
@@ -61,29 +80,23 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Province ' . $osmfeaturesId);
-
+            Log::channel('wm-osmfeatures')->info('No data found for Region ' . $osmfeaturesId);
             return;
         }
 
-        //format the geometry
-        if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
-        } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Province ' . $osmfeaturesId);
-            $geometry = null;
+        // Update the geometry if necessary
+        $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
+
+        // Update the name if necessary
+        $newName = $osmfeaturesData['properties']['name'] ?? null;
+        if ($newName !== $model->name) {
+            $updateData['name'] = $newName;
+            Log::channel('wm-osmfeatures')->info('Name updated for Region ' . $osmfeaturesId);
         }
 
-        if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Province ' . $osmfeaturesId);
-            $name = null;
-        } else {
-            $name = $osmfeaturesData['properties']['name'];
+        // Execute the update only if there are data to update
+        if (!empty($updateData)) {
+            $model->update($updateData);
         }
-
-        $model->update([
-            'name' => $name,
-            'geometry' => $geometry,
-        ]);
     }
 }
