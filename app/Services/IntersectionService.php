@@ -19,32 +19,22 @@ class IntersectionService
         }
     }
 
-    protected function calculateForRegion(Region $region)
+    public function calculateForRegion(Region $region)
     {
-        $intersectingRoutes = HikingRoute::select(
-            'osmfeatures_id',
-            'osm2cai_status',
-            'validation_date',
-            'issues_status',
-            'issues_last_update',
-            'issues_user_id',
-            'issues_chronology',
-            'issues_description',
-            'description_cai_it'
-        )
-            ->whereRaw("ST_Intersects(ST_GeomFromGeoJSON(osmfeatures_data->>'geometry'), ?::geography)", [$region->geometry])
+        $intersectingRoutes = HikingRoute::whereRaw("ST_Intersects(ST_GeomFromGeoJSON(osmfeatures_data->>'geometry'), ?::geography)", [$region->geometry])
             ->get();
 
         $hikingRoutesData = $intersectingRoutes->mapWithKeys(function ($route) {
+            $osmfeaturesData = json_decode($route->osmfeatures_data, true);
             return [$route->osmfeatures_id => [
-                'osm2cai_status' => $route->osm2cai_status,
-                'validation_date' => $route->validation_date,
-                'issues_status' => $route->issues_status,
-                'issues_last_update' => $route->issues_last_update,
-                'issues_user_id' => $route->issues_user_id,
-                'issues_chronology' => $route->issues_chronology,
-                'issues_description' => $route->issues_description,
-                'description_cai_it' => $route->description_cai_it,
+                'osm2cai_status' => $route['osm2cai_status'] ?? null,
+                'validation_date' => $route['validation_date'] ?? null,
+                'issues_status' => $route['issues_status'] ?? null,
+                'issues_last_update' => $route['issues_last_update'] ?? null,
+                'issues_user_id' => $route['issues_user_id'] ?? null,
+                'issues_chronology' => $route['issues_chronology'] ?? null,
+                'issues_description' => $route['issues_description'] ?? null,
+                'description_cai_it' => $route['description_cai_it'] ?? null,
             ]];
         })->toArray();
 
@@ -53,7 +43,7 @@ class IntersectionService
         return $hikingRoutesData;
     }
 
-    protected function calculateForHikingRoute(HikingRoute $hikingRoute)
+    public function calculateForHikingRoute(HikingRoute $hikingRoute)
     {
         $intersectingRegions = Region::whereRaw("ST_Intersects(geometry, ST_GeomFromGeoJSON(?))", [$hikingRoute->osmfeatures_data['geometry']])
             ->get();
@@ -63,7 +53,7 @@ class IntersectionService
         }
     }
 
-    protected function calculateForAllRegions()
+    public function calculateForAllRegions()
     {
         $regions = Region::all();
         foreach ($regions as $region) {
