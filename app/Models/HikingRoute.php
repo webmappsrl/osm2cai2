@@ -12,6 +12,8 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
+
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 {

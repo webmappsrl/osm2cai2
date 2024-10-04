@@ -25,7 +25,6 @@ class IntersectionService
             ->get();
 
         $hikingRoutesData = $intersectingRoutes->mapWithKeys(function ($route) {
-            $osmfeaturesData = json_decode($route->osmfeatures_data, true);
             return [$route->osmfeatures_id => [
                 'osm2cai_status' => $route['osm2cai_status'] ?? null,
                 'validation_date' => $route['validation_date'] ?? null,
@@ -45,11 +44,27 @@ class IntersectionService
 
     public function calculateForHikingRoute(HikingRoute $hikingRoute)
     {
-        $intersectingRegions = Region::whereRaw("ST_Intersects(geometry, ST_GeomFromGeoJSON(?))", [$hikingRoute->osmfeatures_data['geometry']])
+        $geometryJson = json_encode($hikingRoute->osmfeatures_data['geometry']);
+
+        $intersectingRegions = Region::whereRaw("ST_Intersects(geometry, ST_GeomFromGeoJSON(?))", [$geometryJson])
             ->get();
 
         foreach ($intersectingRegions as $region) {
-            $this->calculateForRegion($region);
+            $hikingRoutesIntersecting = $region->hiking_routes_intersecting ?? [];
+            if (!in_array($hikingRoute->osmfeatures_id, $hikingRoutesIntersecting)) {
+                $hikingRouteData = [$hikingRoute->osmfeatures_id => [
+                    'osm2cai_status' => $hikingRoute['osm2cai_status'] ?? null,
+                    'validation_date' => $hikingRoute['validation_date'] ?? null,
+                    'issues_status' => $hikingRoute['issues_status'] ?? null,
+                    'issues_last_update' => $hikingRoute['issues_last_update'] ?? null,
+                    'issues_user_id' => $hikingRoute['issues_user_id'] ?? null,
+                    'issues_chronology' => $hikingRoute['issues_chronology'] ?? null,
+                    'issues_description' => $hikingRoute['issues_description'] ?? null,
+                    'description_cai_it' => $hikingRoute['description_cai_it'] ?? null,
+                ]];
+                $hikingRoutesIntersecting = array_merge($hikingRoutesIntersecting, $hikingRouteData);
+                $region->update(['hiking_routes_intersecting' => $hikingRoutesIntersecting]);
+            }
         }
     }
 
