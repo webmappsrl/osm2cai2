@@ -30,7 +30,7 @@
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-permission": "^6.9",
         "spatie/laravel-translatable": "^6.3",
-        "webmapp/wm-osmfeatures": "^1.4.0",
+        "webmapp/wm-osmfeatures": "^1.5.0",
         "wm/map-multi-linestring": "^0.0.10",
         "wm/map-multi-polygon": "^0.0.3",
         "wm/map-point": "^0.0.9",
