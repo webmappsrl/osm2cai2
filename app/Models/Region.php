@@ -39,13 +39,6 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         return $this->hasMany(User::class);
     }
 
-    public function hikingRoutesIntersecting()
-    {
-        $geometry = $this->geometry;
-        return HikingRoute::select('osmfeatures_id', 'osm2cai_status', 'validation_date', 'issues_status', 'issues_last_update', 'issues_user_id', 'issues_chronology', 'issues_description', 'description_cai_it')
-            ->whereRaw('ST_Intersects(geometry, ?)', [$geometry]);
-    }
-
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
