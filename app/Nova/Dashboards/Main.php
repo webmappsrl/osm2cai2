@@ -50,12 +50,13 @@ class Main extends Dashboard
             }
         }
 
-        $sal = (HikingRoute::where('osm2cai_status', 1)->count() * 0.25 +
+        $totalExpected = Region::sum('num_expected');
+        $sal = $totalExpected > 0 ? (
+            HikingRoute::where('osm2cai_status', 1)->count() * 0.25 +
             HikingRoute::where('osm2cai_status', 2)->count() * 0.50 +
             HikingRoute::where('osm2cai_status', 3)->count() * 0.75 +
             HikingRoute::where('osm2cai_status', 4)->count()
-        ) / Region::sum('num_expected');
-
+        ) / $totalExpected : 0;
 
         $cards = [
             (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $userName])->center(true)->withBasicStyles(),
