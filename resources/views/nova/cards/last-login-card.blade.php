@@ -1,2 +1,4 @@
-<h3>{{ $lastLogin }}</h3>
-<h6>Last Login</h6>
+<div class="last-login-card">
+    <h5>{{ $lastLogin }}</h5>
+    <h6>Last Login</h6>
+</div>
