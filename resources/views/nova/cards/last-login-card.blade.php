@@ -1,2 +1,2 @@
-<h2>TBI</h2>
-<h6>LastLogin</h6>
+<h3>{{ $lastLogin }}</h3>
+<h6>Last Login</h6>

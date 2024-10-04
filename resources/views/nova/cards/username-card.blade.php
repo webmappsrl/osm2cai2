@@ -1,2 +1,2 @@
-<h2>{{ $userName }}</h2>
-<h6>Username</h6>
+<h3>{{ $userName }}</h3>
+<h6>User name</h6>

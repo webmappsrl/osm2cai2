@@ -4,6 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+
     "content-hash": "2da94ccb6c71e053a61508ddb58f0735",
     "packages": [
         {
@@ -7958,16 +7959,16 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "1.4.0",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmappsrl/wm-osmfeatures.git",
-                "reference": "e7885371a461a87165ae2ef240b0f834fb3d2672"
+                "reference": "78c007abd0073b086308323b277cae85f1ab866e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/e7885371a461a87165ae2ef240b0f834fb3d2672",
-                "reference": "e7885371a461a87165ae2ef240b0f834fb3d2672",
+                "url": "https://api.github.com/repos/webmappsrl/wm-osmfeatures/zipball/78c007abd0073b086308323b277cae85f1ab866e",
+                "reference": "78c007abd0073b086308323b277cae85f1ab866e",
                 "shasum": ""
             },
             "require": {
@@ -8025,7 +8026,7 @@
             ],
             "support": {
                 "issues": "https://github.com/webmappsrl/wm-osmfeatures/issues",
-                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.4.0"
+                "source": "https://github.com/webmappsrl/wm-osmfeatures/tree/1.5.0"
             },
             "funding": [
                 {
@@ -8033,7 +8034,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-08-27T09:10:50+00:00"
+            "time": "2024-10-04T09:26:49+00:00"
         },
         {
             "name": "webmozart/assert",

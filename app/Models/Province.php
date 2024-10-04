@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
@@ -13,7 +14,7 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class Province extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'name', 'geometry'];
 
@@ -54,36 +55,29 @@ class Province extends Model implements OsmfeaturesSyncableInterface
     public static function osmfeaturesUpdateLocalAfterSync(string $osmfeaturesId): void
     {
         $model = self::where('osmfeatures_id', $osmfeaturesId)->first();
-        if (! $model) {
+        if (!$model) {
             throw WmOsmfeaturesException::modelNotFound($osmfeaturesId);
         }
 
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
-        if (! $osmfeaturesData) {
+        if (!$osmfeaturesData) {
             Log::channel('wm-osmfeatures')->info('No data found for Province ' . $osmfeaturesId);
-
             return;
         }
 
-        //format the geometry
-        if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
-        } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Province ' . $osmfeaturesId);
-            $geometry = null;
+        $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
+
+        // Update the name if necessary
+        $newName = $osmfeaturesData['properties']['name'] ?? null;
+        if ($newName !== $model->name) {
+            $updateData['name'] = $newName;
+            Log::channel('wm-osmfeatures')->info('Name updated for Province ' . $osmfeaturesId);
         }
 
-        if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Province ' . $osmfeaturesId);
-            $name = null;
-        } else {
-            $name = $osmfeaturesData['properties']['name'];
+        // Execute the update only if there are data to update
+        if (!empty($updateData)) {
+            $model->update($updateData);
         }
-
-        $model->update([
-            'name' => $name,
-            'geometry' => $geometry,
-        ]);
     }
 }

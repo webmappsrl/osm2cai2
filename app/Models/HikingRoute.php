@@ -5,11 +5,15 @@ namespace App\Models;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\RecalculateIntersections;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Illuminate\Database\Eloquent\Model;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
+
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 {
@@ -17,6 +21,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     use OsmfeaturesImportableTrait;
     use OsmfeaturesSyncableTrait;
     use TagsMappingTrait;
+    use OsmfeaturesGeometryUpdateTrait;
 
     protected $fillable = [
         'geometry',
@@ -30,6 +35,15 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_data' => 'array',
         'issues_last_update' => 'date'
     ];
+
+    protected static function booted()
+    {
+        static::updated(function ($hikingRoute) {
+            if ($hikingRoute->isDirty('geometry')) {
+                RecalculateIntersections::dispatch($hikingRoute);
+            }
+        });
+    }
 
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
@@ -66,35 +80,24 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
         if (! $osmfeaturesData) {
             Log::channel('wm-osmfeatures')->info('No data found for HikingRoute ' . $osmfeaturesId);
-
             return;
         }
 
-        //format the geometry
-        if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select(
-                <<<SQL
-                    SELECT ST_AsText(ST_GeomFromGeoJSON(:geojson))
-SQL,
-                ['geojson' => json_encode($osmfeaturesData['geometry'])]
-            )[0]->st_astext;
-        } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for HikingRoute ' . $osmfeaturesId);
-            $geometry = null;
-        }
+        // Update the geometry if necessary
+        $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
 
-
+        // Update osm2cai_status if necessary
         if (isset($osmfeaturesData['osm2cai_status']) && $osmfeaturesData['osm2cai_status'] !== null) {
-            if ($model->osm2cai_status !== 4) {
-                $model->update([
-                    'osm2cai_status' => $osmfeaturesData['osm2cai_status'],
-                ]);
+            if ($model->osm2cai_status !== 4 && $model->osm2cai_status !== $osmfeaturesData['osm2cai_status']) {
+                $updateData['osm2cai_status'] = $osmfeaturesData['osm2cai_status'];
+                Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute ' . $osmfeaturesId);
             }
         }
 
-        $model->update([
-            'geometry' => $geometry,
-        ]);
+        // Execute the update only if there are data to update
+        if (!empty($updateData)) {
+            $model->update($updateData);
+        }
     }
 
     /**

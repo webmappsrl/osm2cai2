@@ -53,15 +53,15 @@ return [
     'channels' => [
         'wm-osmfeatures' => [
             'driver' => 'stack',
+            'channels' => ['single'],
             'path' => storage_path('logs/wm-osmfeatures.log'),
             'level' => env('LOG_LEVEL', 'debug'),
-            'ignore_exceptions' => false,
         ],
         'hiking-routes-update' => [
             'driver' => 'stack',
+            'channels' => ['single'],
             'path' => storage_path('logs/hiking-routes-update.log'),
             'level' => env('LOG_LEVEL', 'debug'),
-            'ignore_exceptions' => false,
         ],
         'stack' => [
             'driver' => 'stack',
