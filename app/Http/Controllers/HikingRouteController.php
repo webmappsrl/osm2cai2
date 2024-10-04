@@ -2,18 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreHikingRouteRequest;
-use App\Http\Requests\UpdateHikingRouteRequest;
 use App\Models\HikingRoute;
+use OpenApi\Annotations as OA;
+use Illuminate\Support\Facades\DB;
+use App\Http\Resources\HikingRouteResource;
 
 class HikingRouteController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * @OA\Get(
+     *     path="/api/v2/hiking-routes/list",
+     *     summary="Ottieni la lista dei percorsi escursionistici",
+     *     tags={"V2"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista dei percorsi escursionistici",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="1",
+     *                 type="string",
+     *                 format="date-time"
+     *             ),
+     *             @OA\Property(
+     *                 property="2",
+     *                 type="string",
+     *                 format="date-time"
+     *             ),
+     *             @OA\Property(
+     *                 property="3",
+     *                 type="string",
+     *                 format="date-time"
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function index()
     {
-        //
+        $hikingRoutes = HikingRoute::orderBy('updated_at', 'desc')->get(['id', 'updated_at']);
+        return response()->json($hikingRoutes);
     }
 
     /**
