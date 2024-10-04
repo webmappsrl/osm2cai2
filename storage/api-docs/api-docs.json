@@ -1,0 +1,61 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "OSM2CAI",
+        "description": "API documentation",
+        "contact": {
+            "name": "Contact the developers",
+            "email": "catastorei@cai.it"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8008",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/api/v2/hiking-routes/list": {
+            "get": {
+                "tags": [
+                    "V2"
+                ],
+                "summary": "Ottieni la lista dei percorsi escursionistici",
+                "operationId": "c286e45a4d8a009e56474d4068658f8c",
+                "responses": {
+                    "200": {
+                        "description": "Lista dei percorsi escursionistici",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "1": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "2": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "3": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "V2",
+            "description": "API V2"
+        }
+    ]
+}
