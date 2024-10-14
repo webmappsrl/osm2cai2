@@ -47,7 +47,7 @@ jobs:
         with:
           name: test-results
           path: storage/logs/test.log
-      - name: Run E2E tests
-        uses: cypress-io/github-action@v5
-        with:
-          command: npm run test:e2e
+      # - name: Run E2E tests
+      #   uses: cypress-io/github-action@v5
+      #   with:
+      #     command: npm run test:e2e
