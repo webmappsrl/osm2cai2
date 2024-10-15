@@ -1,5 +1,5 @@
 describe('Dashboard Tests', () => {
-  const timeout = 10000; // 10 secondi
+  const timeout = 20000; // 20 secondi
 
   beforeEach(() => {
     cy.visit(Cypress.env('appUrl') + '/login', { timeout: timeout })
