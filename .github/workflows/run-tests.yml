@@ -48,6 +48,8 @@ jobs:
         run: php artisan test --log-events-verbose-text storage/logs/test.log
       - name: Run Database Seeder
         run: php artisan db:seed
+      - name: Create Roles and Permissions
+        run: php artisan db:seed --class=RolesAndPermissionsSeeder
       - name: Run E2E Tests
         uses: cypress-io/github-action@v5
         env:
