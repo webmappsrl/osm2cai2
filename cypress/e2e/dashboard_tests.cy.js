@@ -1,6 +1,6 @@
 describe('Dashboard Tests', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:8008/login')
+    cy.visit(Cypress.env('appUrl') + '/login')
   })
 
   it('Admin user login and dashboard verification', () => {
