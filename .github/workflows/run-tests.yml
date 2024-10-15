@@ -1,4 +1,4 @@
-name: Laravel & Cypress E2E Tests
+name: Run Tests
 
 on: [push, pull_request, workflow_call, workflow_dispatch]
 
@@ -15,94 +15,59 @@ jobs:
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
         with:
-          php-version: '8.2'
-      
+          php-version: "8.2"
+      - uses: actions/checkout@v3
       - name: Copy .env
         run: cp .env-example .env
-
-      - name: Install Composer Dependencies
+      - name: Install Dependencies
         run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-      - name: Generate Laravel Application Key
+      - name: Generate key
         run: php artisan key:generate
-
       - name: Add hosts to /etc/hosts
         run: sudo echo "127.0.0.1 db" | sudo tee -a /etc/hosts
-
-      - name: Run Migrations
+      - name: Migrate
         run: php artisan migrate
         env:
           PGPASSWORD: osm2cai2
-
-      - name: Clear Cache & Optimize
-        run: |
-          php artisan config:clear
-          php artisan optimize
-
+      - name: Clear the config cache
+        run: php artisan config:clear
+      - name: Optimize
+        run: php artisan optimize
       - name: Prepare Log File
         run: mkdir -p storage/logs && touch storage/logs/test.log
-
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: Install NPM Dependencies
+      - name: Install NPM Packages
         run: npm install
-
-      - name: Run Laravel Tests
+      - name: Laravel Tests
         run: php artisan test --log-events-verbose-text storage/logs/test.log
-
-  cypress-tests:
-    runs-on: ubuntu-latest
-    needs: laravel-tests
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install NPM Dependencies
-        run: npm install
-
-      - name: Set up Cypress Environment Variables
-        run: |
-          echo "CYPRESS_adminEmail=${{ secrets.E2E_ADMIN_EMAIL }}" >> $GITHUB_ENV
-          echo "CYPRESS_adminPassword=${{ secrets.E2E_ADMIN_PASSWORD }}" >> $GITHUB_ENV
-          echo "CYPRESS_referentEmail=${{ secrets.E2E_REFERENTE_EMAIL }}" >> $GITHUB_ENV
-          echo "CYPRESS_referentPassword=${{ secrets.E2E_REFERENTE_PASSWORD }}" >> $GITHUB_ENV
-
-      - name: Run E2E Tests with Cypress
-        uses: cypress-io/github-action@v6
+      - name: Run E2E Tests
+        uses: cypress-io/github-action@v5
+        env:
+          CYPRESS_adminEmail: ${{ secrets.E2E_ADMIN_EMAIL }}
+          CYPRESS_adminPassword: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          CYPRESS_referentEmail: ${{ secrets.E2E_REFERENTE_EMAIL }}
+          CYPRESS_referentPassword: ${{ secrets.E2E_REFERENTE_PASSWORD }}
         with:
           browser: chrome
           start: php artisan serve --host 0.0.0.0 --port 8008
           wait-on: http://localhost:8008
-          wait-on-timeout: 600
+          wait-on-timeout: 280
           headed: false
-          config: defaultCommandTimeout=5000,pageLoadTimeout=10000,viewportWidth=1280,viewportHeight=720,testIsolation=false
-
-      - name: Upload Cypress Screenshots on Failure
-        if: failure()
+      - name: Upload Cypress screenshots
         uses: actions/upload-artifact@v3
+        if: failure()
         with:
           name: cypress-screenshots
           path: cypress/screenshots
-
-      - name: Upload Cypress Logs
+      - name: Upload Test Results
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: cypress-logs
-          path: cypress/logs
+          name: test-results
+          path: storage/logs/test.log
