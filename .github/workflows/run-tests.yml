@@ -45,7 +45,7 @@ jobs:
       - name: Install NPM Packages
         run: npm install
       - name: Start Laravel Server
-        run: php artisan serve --host 0.0.0.0 --port 8000
+        run: php artisan serve --host 0.0.0.0 --port 8080 &
       - name: Laravel Tests
         run: php artisan test --log-events-verbose-text storage/logs/test.log
       - name: Run E2E Tests
@@ -54,7 +54,7 @@ jobs:
           browser: chrome
           build: npm run build
           start: npm run start
-          wait-on: http://localhost:8000
+          wait-on: http://localhost:8080
       - name: Upload Cypress screenshots
         uses: actions/upload-artifact@v3
         if: failure()
