@@ -53,8 +53,8 @@ jobs:
         env:
           CYPRESS_adminEmail: ${{ secrets.E2E_ADMIN_EMAIL }}
           CYPRESS_adminPassword: ${{ secrets.E2E_ADMIN_PASSWORD }}
-          CYPRESS_referentEmail: ${{ secrets.E2E_REFERENT_EMAIL }}
-          CYPRESS_referentPassword: ${{ secrets.E2E_REFERENT_PASSWORD }}
+          CYPRESS_referentEmail: ${{ secrets.E2E_REFERENTE_EMAIL }}
+          CYPRESS_referentPassword: ${{ secrets.E2E_REFERENTE_PASSWORD }}
         with:
           browser: chrome
           build: npm run build
