@@ -53,10 +53,10 @@ jobs:
           CYPRESS_adminPassword: ${{ secrets.E2E_ADMIN_PASSWORD }}
           CYPRESS_referentEmail: ${{ secrets.E2E_REFERENTE_EMAIL }}
           CYPRESS_referentPassword: ${{ secrets.E2E_REFERENTE_PASSWORD }}
-          CYPRESS_appUrl: ${{ secrets.APP_URL }}
         with:
           browser: chrome
-          wait-on: ${{ secrets.APP_URL }}
+          start: php artisan serve --host 0.0.0.0 --port 8008
+          wait-on: http://localhost:8008
           wait-on-timeout: 280
           headed: false
       - name: Upload Cypress screenshots
