@@ -27,8 +27,8 @@ class E2ETestDbSeeder extends Seeder
             return;
         }
 
-        $this->call(DatabaseSeeder::class);
         $this->call(RolesAndPermissionsSeeder::class);
+        $this->call(DatabaseSeeder::class);
         $this->call(RegionSeeder::class);
     }
 }
