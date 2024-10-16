@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             $user->roles()->attach(Role::where('name', 'Administrator')->first());
         }
         if (!$nationalReferent) {
-            $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt(env('REFERENT_PASSWORD')), 'name' => 'Referente Nazionale']);
+            $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Referente Nazionale']);
             $user->roles()->attach(Role::where('name', 'National Referent')->first());
         }
     }
