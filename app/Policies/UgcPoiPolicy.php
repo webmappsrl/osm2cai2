@@ -54,12 +54,13 @@ class UgcPoiPolicy
      */
     public function update(User $user, UgcPoi $ugcPoi)
     {
-        if ($user->is_administrator || ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated')) {
+        if ($user->hasRole('Administrator') || ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated')) {
             return true;
         }
 
-        $validatorKey = $ugcPoi->form_id === 'water' ? 'is_source_validator' : 'is_' . $ugcPoi->form_id . '_validator';
-        return !empty($user->resources_validator[$validatorKey] ?? null);
+        $permission = $ugcPoi->form_id === 'water' ? 'source surveys' : str_replace('_', ' ', $ugcPoi->form_id);
+        $permission = 'validate ' . $permission;
+        return $user->hasPermissionTo($permission);
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Nova\Poles;
 use App\Nova\CaiHut;
 use App\Nova\Region;
 use App\Nova\Sector;
+use App\Nova\UgcPoi;
 use App\Nova\Province;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Badge;
@@ -83,7 +84,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Rilievi
                 MenuSection::make('Rilievi', [
                     MenuSection::make('Elementi rilevati', [
-                        MenuItem::link('Pois', '/dashboards/main'),
+                        MenuItem::resource(UgcPoi::class),
                         MenuItem::link('Tracks', '/dashboards/main'),
                         MenuItem::link('Media', '/dashboards/main'),
                     ])->icon('none')->collapsable(),
