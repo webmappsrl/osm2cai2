@@ -85,4 +85,13 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Club::class, 'club_cai_code', 'cai_code');
     }
+
+    public function isValidatorForFormId($formId)
+    {
+        $formId = str_replace('_', ' ', $formId);
+        if ($formId === 'water') {
+            return $this->can('validate source surveys');
+        }
+        return $this->can('validate ' . $formId . 's');
+    }
 }
