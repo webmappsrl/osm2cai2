@@ -14,7 +14,6 @@ describe('Dashboard Tests', () => {
     // 1.1 Verifica nome utente
     cy.get('.username-card', { timeout: timeout }).should('contain', 'Webmapp')
 
-    // 1.2 Verifica permessi
     cy.get('.permessi-card', { timeout: timeout }).should('contain', 'Administrator')
 
     // 1.3 Verifica data ultimo login
