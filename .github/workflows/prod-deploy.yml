@@ -8,6 +8,7 @@ on:
 jobs:
   tests:
     uses: ./.github/workflows/run-tests.yml
+    secrets: inherit
   deploy:
     name: Deploy
     needs: [tests]
