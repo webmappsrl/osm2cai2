@@ -161,17 +161,30 @@ class UgcPoi extends AbstractUgc
     {
         $parentActions = parent::actions($request);
         $specificActions = [
-            (new DownloadUgcCsv()),
+            (new DownloadUgcCsv($this)),
         ];
 
         return array_merge($parentActions, $specificActions);
     }
 
+    /**
+     * Determines if the user is authorized to create a new resource.
+     *
+     * @param \Illuminate\Http\Request $request The current HTTP request
+     * @return bool Always returns true, allowing all users to create new resources
+     */
     public static function authorizedToCreate(Request $request)
     {
         return true;
     }
 
+    /**
+     * Redirects the user after creating a new resource.
+     *
+     * @param \Illuminate\Http\Request $request The current HTTP request
+     * @param \Laravel\Nova\Resource $resource The newly created resource
+     * @return string The URL to redirect the user to after resource creation
+     */
     public static function redirectAfterCreate(Request $request, $resource)
     {
         return '/resources/ugc-pois/' . $resource->id . '/edit';
