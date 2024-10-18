@@ -5,6 +5,7 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,9 +18,15 @@ class DatabaseSeeder extends Seeder
     {
         //create admin user
         $admin = User::where('email', 'team@webmapp.it')->first();
+        $nationalReferent = User::where('email', 'referenteNazionale@webmapp.it')->first();
 
         if (! $admin) {
-            User::factory()->create();
+            $user = User::factory()->create();
+            $user->roles()->attach(Role::where('name', 'Administrator')->first());
+        }
+        if (!$nationalReferent) {
+            $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Referente Nazionale']);
+            $user->roles()->attach(Role::where('name', 'National Referent')->first());
         }
     }
 }

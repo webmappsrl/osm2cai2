@@ -42,12 +42,14 @@ class RolesAndPermissionsSeeder extends Seeder
         $adminRole->givePermissionTo('manage roles and permissions');
 
         //get all users except team@webmapp.it and assign to them the guest role
-        $users = User::whereDoesntHave('roles')->where('email', '!=', 'team@webmapp.it')->get();
-        foreach ($users as $user) {
-            //if user has not roles
-            if (!$user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Sectional Referent', 'Validator']))
-                $user->assignRole('Guest');
+        $users = User::whereDoesntHave('roles')->where('email', '!=', ['team@webmapp.it', 'referenteNazionale@webmapp.it'])->get();
+        if ($users->count() > 0) {
+            foreach ($users as $user) {
+                //if user has not roles
+                if (!$user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Sectional Referent', 'Validator']))
+                    $user->assignRole('Guest');
+            }
+            User::where('email', 'team@webmapp.it')->first()->assignRole('Administrator');
         }
-        User::where('email', 'team@webmapp.it')->first()->assignRole('Administrator');
     }
 }

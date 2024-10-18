@@ -18,7 +18,6 @@ jobs:
     steps:
       - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
         with:
-          ##php version
           php-version: "8.2"
       - uses: actions/checkout@v3
       - name: Copy .env
@@ -39,10 +38,37 @@ jobs:
         run: php artisan optimize
       - name: Prepare Log File
         run: mkdir -p storage/logs && touch storage/logs/test.log
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install NPM Packages
+        run: npm install
       - name: Laravel Tests
         run: php artisan test --log-events-verbose-text storage/logs/test.log
+      - name: Run Test Database Seeder
+        run: php artisan db:seed --class=E2ETestDbSeeder
+      - name: Run E2E Tests
+        uses: cypress-io/github-action@v5
+        env:
+          CYPRESS_adminEmail: ${{ secrets.E2E_ADMIN_EMAIL }}
+          CYPRESS_adminPassword: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          CYPRESS_referentEmail: ${{ secrets.E2E_REFERENTE_EMAIL }}
+          CYPRESS_referentPassword: ${{ secrets.E2E_REFERENTE_PASSWORD }}
+        with:
+          browser: chrome
+          start: php artisan serve --host 0.0.0.0 --port 8008
+          wait-on: http://localhost:8008
+          wait-on-timeout: 280
+          headed: false
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
       - name: Upload Test Results
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: test-results
