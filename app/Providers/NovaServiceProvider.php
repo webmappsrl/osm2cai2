@@ -17,6 +17,7 @@ use Laravel\Nova\Nova;
 use Laravel\Nova\Badge;
 use App\Nova\HikingRoute;
 use App\Nova\Municipality;
+use App\Nova\SourceSurvey;
 use App\Nova\NaturalSpring;
 use App\Nova\MountainGroups;
 use Illuminate\Http\Request;
@@ -89,7 +90,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::link('Media', '/dashboards/main'),
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Validazioni', [
-                        MenuItem::link('Acqua Sorgente', '/dashboards/main'),
+                        MenuItem::resource(SourceSurvey::class),
                         MenuItem::link('Segni dell’uomo', '/dashboards/main'),
                         MenuItem::link('Siti archeologici', '/dashboards/main'),
                         MenuItem::link('Aree archeologiche', '/dashboards/main'),
