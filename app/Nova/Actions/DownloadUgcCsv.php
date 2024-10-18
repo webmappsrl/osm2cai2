@@ -10,17 +10,20 @@ use Maatwebsite\Excel\Facades\Excel;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Laravel\Nova\Http\Requests\NovaRequest;
 
 class DownloadUgcCsv extends Action
 {
     use InteractsWithQueue, Queueable;
 
     public $name = "Download CSV";
-
     public $showOnIndex = true;
     public $withoutConfirmation = true;
+    public $resourceClass;
+
+    public function __construct($resourceClass)
+    {
+        $this->resourceClass = $resourceClass;
+    }
 
     /**
      * Perform the action on the given models.
@@ -31,22 +34,15 @@ class DownloadUgcCsv extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        $fileName = 'ugcPois-' . now()->format('Y-m-d') . '.csv';
+        $resourceName = class_basename($this->resourceClass);
+        $fileName = strtolower($resourceName) . '-export-' . now()->format('Y-m-d') . '.csv';
 
-        Excel::store(new UgcPoisExport($models), $fileName, 'public');
+        $exportFields = $this->resourceClass::getExportFields();
+
+        Excel::store(new UgcPoisExport($models, $exportFields), $fileName, 'public');
 
         $url = Storage::disk('public')->url($fileName);
 
         return Action::download($url, $fileName);
-    }
-
-    /**
-     * Get the fields available on the action.
-     *
-     * @return array
-     */
-    public function fields(NovaRequest $request)
-    {
-        return [];
     }
 }

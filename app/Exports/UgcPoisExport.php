@@ -14,75 +14,48 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class UgcPoisExport implements FromCollection, WithHeadings, WithStyles
 {
     protected $models;
+    protected $fields;
 
-    public function __construct($models)
+    public function __construct(Collection $models, array $fields)
     {
         $this->models = $models;
+        $this->fields = $fields;
     }
 
-    /**
-     * Restituisce una collezione di dati da esportare.
-     *
-     * @return \Illuminate\Support\Collection
-     */
     public function collection(): Collection
     {
-        // Recupera i POI in base al form_id e calcola latitudine e longitudine usando PostGIS
-        $pois = UgcPoi::whereIn('id', $this->models->pluck('id'));
-        $pois->select('*');
-        $pois->addSelect(DB::raw('ST_Y(ST_GeometryN(geometry::geometry, 1)) AS latitude'));
-        $pois->addSelect(DB::raw('ST_X(ST_GeometryN(geometry::geometry, 1)) AS longitude'));
-        $pois = $pois->get();
-
-        // Mappa i POI per estrarre i campi necessari
-        return $pois->map(function ($poi) {
-            // Calcola la latitudine e la longitudine
-            $lat = $poi->latitude ?? 'N/A';
-            $lon = $poi->longitude ?? 'N/A';
-
-            // Estrarre i campi comuni
-            $commonFields = [
-                'name' => $poi->user->name ?? 'N/A',
-                'email' => $poi->user->email ?? 'N/A',
-                'registered_at' => $poi->registered_at ?? 'N/A',
-                'latitude' => $lat ?? 'N/A',
-                'longitude' => $lon ?? 'N/A',
-            ];
-
-            return $commonFields;
+        return $this->models->map(function ($model) {
+            $data = [];
+            foreach ($this->fields as $field => $label) {
+                $data[$field] = $this->getFieldValue($model, $field);
+            }
+            return $data;
         });
     }
 
-    /**
-     * Definisce le intestazioni delle colonne.
-     *
-     * @return array
-     */
     public function headings(): array
     {
-        return [
-            'Nome utente',
-            'Email utente',
-            'Data di acquisizione',
-            'Latitudine',
-            'Longitudine',
-        ];
+        return array_values($this->fields);
     }
 
-
-    /**
-     * Applica stili al foglio di lavoro.
-     *
-     * @param Worksheet $sheet
-     * @return array
-     */
     public function styles(Worksheet $sheet)
     {
-        // Applica l'allineamento a sinistra per tutte le celle
         $sheet->getStyle($sheet->calculateWorksheetDimension())
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-
         return [];
+    }
+
+    protected function getFieldValue($model, $field)
+    {
+        if (strpos($field, '->') !== false) {
+            $parts = explode('->', $field);
+            $value = $model;
+            foreach ($parts as $part) {
+                $value = $value[$part] ?? $value->$part ?? null;
+            }
+            return $value ?? 'N/A';
+        }
+        return $model->$field ?? 'N/A';
     }
 }

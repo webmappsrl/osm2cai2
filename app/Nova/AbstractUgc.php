@@ -161,7 +161,8 @@ abstract class AbstractUgc extends Resource
 
     public function actions(Request $request)
     {
-        return [
+        return [ //TODO: handle media with spatie media library (??)
+
             // (new UploadAndAssociateUgcMedia())->canSee(function ($request) {
             //     if ($this->user_id)
             //         return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatu::NotValidated;
@@ -185,4 +186,25 @@ abstract class AbstractUgc extends Resource
     }
 
     abstract public function additionalFields(Request $request);
+
+
+    /**
+     * Get the fields available for CSV export.
+     *
+     * @return array
+     */
+    public static function getExportFields(): array
+    {
+        return [
+            'id' => 'ID',
+            'user->name' => 'Nome utente',
+            'user->email' => 'Email utente',
+            'registered_at' => 'Data di acquisizione',
+            'raw_data->latitude' => 'Latitudine',
+            'raw_data->longitude' => 'Longitudine',
+            'validated' => 'Stato di validazione',
+            'validation_date' => 'Data di validazione',
+            'app_id' => 'App ID',
+        ];
+    }
 }
