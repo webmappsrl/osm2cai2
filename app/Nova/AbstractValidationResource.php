@@ -14,7 +14,6 @@ abstract class AbstractValidationResource extends UgcPoi
 
     abstract public static function getFormId(): string;
     abstract public static function getLabel(): string;
-    abstract public static function getAuthorizationMethod(): string;
 
     public static function label()
     {

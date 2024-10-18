@@ -33,10 +33,6 @@ class SourceSurvey extends AbstractValidationResource
         return 'Acqua Sorgente';
     }
 
-    public static function getAuthorizationMethod(): string
-    {
-        return 'is_source_validator';
-    }
 
     // /**
     //  * Array of fields to show.

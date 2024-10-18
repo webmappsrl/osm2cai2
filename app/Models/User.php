@@ -89,9 +89,17 @@ class User extends Authenticatable
     public function isValidatorForFormId($formId)
     {
         $formId = str_replace('_', ' ', $formId);
-        if ($formId === 'water') {
-            return $this->can('validate source surveys');
+        //if form id is empty, return false
+        if (empty($formId)) {
+            return true;
         }
-        return $this->can('validate ' . $formId . 's');
+        if ($formId === 'water') {
+            return $this->hasPermissionTo('validate source surveys');
+        }
+        $permissionName = 'validate ' . $formId;
+        if (!str_ends_with($formId, 's')) {
+            $permissionName .= 's';
+        }
+        return $this->hasPermissionTo($permissionName);
     }
 }

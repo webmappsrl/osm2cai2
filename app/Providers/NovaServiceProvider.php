@@ -5,6 +5,7 @@ namespace App\Providers;
 use DB;
 use App\Nova\Area;
 use App\Nova\Club;
+use App\Nova\Sign;
 use App\Nova\User;
 use App\Nova\EcPoi;
 use App\Nova\Poles;
@@ -19,10 +20,13 @@ use App\Nova\HikingRoute;
 use App\Nova\Municipality;
 use App\Nova\SourceSurvey;
 use App\Nova\NaturalSpring;
+use App\Nova\GeologicalSite;
 use App\Nova\MountainGroups;
 use Illuminate\Http\Request;
 use App\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuItem;
+use App\Nova\ArchaeologicalArea;
+use App\Nova\ArchaeologicalSite;
 use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
@@ -91,10 +95,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Validazioni', [
                         MenuItem::resource(SourceSurvey::class),
-                        MenuItem::link('Segni dell’uomo', '/dashboards/main'),
-                        MenuItem::link('Siti archeologici', '/dashboards/main'),
-                        MenuItem::link('Aree archeologiche', '/dashboards/main'),
-                        MenuItem::link('Siti archelogoche', '/dashboards/main'),
+                        MenuItem::resource(Sign::class),
+                        MenuItem::resource(ArchaeologicalSite::class),
+                        MenuItem::resource(ArchaeologicalArea::class),
+                        MenuItem::resource(GeologicalSite::class),
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Export', [
                         MenuItem::link('Esporta Rilievi', '/dashboards/main'),
