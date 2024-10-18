@@ -2,39 +2,23 @@
 
 namespace App\Nova\Filters;
 
+use App\Enums\UgcValidatedStatus;
+use Illuminate\Http\Request;
 use Laravel\Nova\Filters\Filter;
-use Laravel\Nova\Http\Requests\NovaRequest;
 
-class WaterFlowValidatedFilter extends Filter
+class WaterFlowValidatedFilter extends ValidatedFilter
 {
-    /**
-     * The filter's component.
-     *
-     * @var string
-     */
-    public $component = 'select-filter';
 
     /**
      * Apply the filter to the given query.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Http\Request  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function apply(NovaRequest $request, $query, $value)
+    public function apply(Request $request, $query, $value)
     {
-        return $query;
-    }
-
-    /**
-     * Get the filter's available options.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
-    public function options(NovaRequest $request)
-    {
-        return [];
+        return $query->where('water_flow_rate_validated', $value);
     }
 }

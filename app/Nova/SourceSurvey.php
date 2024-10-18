@@ -38,90 +38,35 @@ class SourceSurvey extends AbstractValidationResource
         return 'is_source_validator';
     }
 
-    /**
-     * Array of fields to show.
-     *
-     * @var array
-     */
-    protected static $activeFields = ['ID', 'User', 'Validated', 'Validation Date', 'Validator', 'geometry', 'Gallery'];
+    // /**
+    //  * Array of fields to show.
+    //  *
+    //  * @var array
+    //  */
+    // protected static $activeFields = ['ID', 'User', 'Validated', 'Validation Date', 'Validator', 'geometry', 'Gallery'];
 
     public function fields(Request $request)
     {
         $fields = parent::fields($request);
 
-        $dedicatedFields = [
-            Date::make('Monitoring Date', function () {
-                return $this->getRegisteredAtAttribute();
-            })->sortable(),
-            Text::make('Flow Rate L/s', 'raw_data->flow_rate')->resolveUsing(function ($value) {
-                return $this->calculateFlowRate();
-            }),
-            Text::make('Flow Rate/Volume', 'raw_data->range_volume')->hideFromIndex(),
-            Text::make('Flow Rate/Fill Time', 'raw_data->range_time')->hideFromIndex(),
-            Text::make('Conductivity microS/cm', 'raw_data->conductivity'),
-            Text::make('Temperature °C', 'raw_data->temperature'),
-            // Boolean::make('Photos', function () {
-            //     return count($this->ugc_media) > 0;
-            // })->hideFromDetail(), TODO WITH SPATIE MEDIA LIBRARY (??)
-            Select::make('Water Flow Rate Validated', 'water_flow_rate_validated')
-                ->options(ValidatedStatusEnum::cases()),
-            Textarea::make('Notes', 'note')->hideFromIndex(),
-        ];
+        $flowRateField = Text::make('Portata L/s', 'raw_data->flow_rate')->resolveUsing(function ($value) {
+            return $this->calculateFlowRate();
+        })->readonly()->help('Questo dato viene calcolato automaticamente in base ai dati inseriti');
+        $waterFlowRateValidatedField = Select::make('Validazione portata', 'water_flow_rate_validated')->options($this->validatedStatusOptions());
 
-        return array_merge($fields, $dedicatedFields);
+        $flowRateField->panel = 'ACQUA SORGENTE';
+        $waterFlowRateValidatedField->panel = 'ACQUA SORGENTE';
+
+        $tabIndex = array_search(\DKulyk\Nova\Tabs::class, array_map('get_class', $fields));
+        if ($tabIndex !== false) {
+            $tab = $fields[$tabIndex];
+            array_push($tab->data, $flowRateField);
+            array_push($tab->data, $waterFlowRateValidatedField);
+        }
+
+        return $fields;
     }
 
-    public function fieldsForUpdate()
-    {
-        $readonlyFields = $this->readonlyFields();
-        $modifiablesFields = $this->modifiablesFields();
-        return array_merge($readonlyFields, $modifiablesFields);
-    }
-
-    public function readonlyFields()
-    {
-        $rawData = $this->raw_data;
-        return [
-            Text::make('ID', 'id')->hideFromIndex()->readonly(),
-            Text::make('User', 'user')->resolveUsing(function ($user) {
-                return $user->name ?? $this->user_no_match;
-            })->readonly(),
-            Date::make('Monitoring Date', function () use ($rawData) {
-                return $this->getRegisteredAtAttribute();
-            })
-                ->sortable()->readonly(),
-        ];
-    }
-    public function modifiablesFields()
-    {
-        return [
-            Text::make('Flow Rate/Volume', 'raw_data->range_volume'),
-            Text::make('Flow Rate/Fill Time', 'raw_data->range_time'),
-            Text::make('Conductivity microS/cm', 'raw_data->conductivity'),
-            Text::make('Temperature °C', 'raw_data->temperature'),
-            Select::make('Validated', 'validated')
-                ->options(ValidatedStatusEnum::cases())
-                ->canSee(function ($request) {
-                    return $request->user()->isValidatorForFormId($this->form_id) ?? false;
-                })->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    $isValidated = $request->$requestAttribute;
-                    $model->$attribute = $isValidated;
-
-                    if ($isValidated == ValidatedStatusEnum::VALID) {
-                        $model->validator_id = $request->user()->id;
-                        $model->validation_date = now();
-                    } else {
-                        $model->validator_id = null;
-                        $model->validation_date = null;
-                    }
-                })->default(ValidatedStatusEnum::NOT_VALIDATED),
-            Select::make('Water Flow Rate Validated', 'water_flow_rate_validated')
-                ->options(ValidatedStatusEnum::cases())
-                ->default(ValidatedStatusEnum::NOT_VALIDATED),
-            Textarea::make('Notes', 'note'),
-
-        ];
-    }
 
     public function filters(Request $request)
     {
@@ -145,15 +90,20 @@ class SourceSurvey extends AbstractValidationResource
         ];
     }
 
+    /**
+     * Calculate the flow rate based on the raw data.
+     *
+     * @return string
+     */
     protected function calculateFlowRate()
     {
-        if ($this->water_flow_rate_validated === ValidatedStatusEnum::VALID) {
+        if ($this->water_flow_rate_validated == ValidatedStatusEnum::VALID->value) {
 
             $rawData = $this->raw_data;
 
 
-            $volume = $this->formatNumericValue($rawData['flow_rate_volume'] ?? '');
-            $time = $this->formatNumericValue($rawData['flow_rate_fill_time'] ?? '');
+            $volume = $this->formatNumericValue($rawData['range_volume'] ?? '');
+            $time = $this->formatNumericValue($rawData['range_time'] ?? '');
 
             if (is_numeric($volume) && is_numeric($time) && $time != 0) {
                 $flowRate = round($volume / $time, 3);

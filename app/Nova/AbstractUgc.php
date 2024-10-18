@@ -20,6 +20,7 @@ use App\Traits\Nova\WmNovaFieldsTrait;
 use Idez\DateRangeFilter\Enums\Config;
 use App\Traits\Nova\RawDataFieldsTrait;
 use Idez\DateRangeFilter\DateRangeFilter;
+use Illuminate\Support\Arr;
 
 abstract class AbstractUgc extends Resource
 {
@@ -33,6 +34,16 @@ abstract class AbstractUgc extends Resource
     public static $searchRelations = [
         'user' => ['name', 'email'],
     ];
+
+    /**
+     * Get the options for the validated status field.
+     *
+     * @return array
+     */
+    public function validatedStatusOptions()
+    {
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -58,8 +69,8 @@ abstract class AbstractUgc extends Resource
                 ->hideFromIndex()
                 ->hideFromDetail(),
             Select::make('Validated', 'validated')
-                ->options(ValidatedStatusEnum::cases())
-                ->default(ValidatedStatusEnum::NOT_VALIDATED)
+                ->options($this->validatedStatusOptions())
+                ->default(ValidatedStatusEnum::NOT_VALIDATED->value)
                 ->canSee(function ($request) {
                     //if is an ugcTrack instance return $user->ugc_track_validator
                     if ($this instanceof UgcTrack) {

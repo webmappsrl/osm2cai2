@@ -45,12 +45,6 @@ class UgcPoi extends AbstractUgc
         return __($label);
     }
 
-    /**
-     * Array of fields to activate.
-     *
-     * @var array
-     */
-    protected static $activeFields = [];
 
     /**
      * Get the fields displayed by the resource.
@@ -76,15 +70,7 @@ class UgcPoi extends AbstractUgc
             array_splice($parentFields, array_search('user', array_column($parentFields, 'name')), 0, [Text::make('Poi Type', 'raw_data->waypointtype')->onlyOnDetail()]);
         }
 
-        if (empty(static::$activeFields)) {
-            return array_merge($parentFields, $this->additionalFields($request));
-        }
-
-        $fields = array_filter($parentFields, function ($field) {
-            return in_array($field->name, static::$activeFields);
-        });
-
-        return array_merge($fields, $this->additionalFields($request));
+        return array_merge($parentFields, $this->additionalFields($request));
     }
 
     public function additionalFields(Request $request)
