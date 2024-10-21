@@ -13,6 +13,7 @@ use App\Models\UgcTrack;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Models\Permission;
 use Wm\WmPackage\Model\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -103,6 +104,10 @@ class User extends Authenticatable
         $formId = str_replace('_', ' ', $formId);
         //if form id is empty, return false
         if (empty($formId)) {
+            return true;
+        }
+        //if permission does not exist, return true
+        if (!Permission::where('name', 'validate ' . $formId . 's')->exists()) {
             return true;
         }
         if ($formId === 'water') {
