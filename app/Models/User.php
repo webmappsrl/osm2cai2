@@ -7,7 +7,9 @@ use App\Models\Area;
 use App\Models\Club;
 use App\Models\Region;
 use App\Models\Sector;
+use App\Models\UgcPoi;
 use App\Models\Province;
+use App\Models\UgcTrack;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
@@ -84,6 +86,16 @@ class User extends Authenticatable
     public function club()
     {
         return $this->belongsTo(Club::class, 'club_cai_code', 'cai_code');
+    }
+
+    public function ugcTracks()
+    {
+        return $this->hasMany(UgcTrack::class);
+    }
+
+    public function ugcPois()
+    {
+        return $this->hasMany(UgcPoi::class);
     }
 
     public function isValidatorForFormId($formId)
