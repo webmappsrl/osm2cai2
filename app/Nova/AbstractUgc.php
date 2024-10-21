@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Models\UgcTrack;
+use App\Nova\UgcTrack as UgcTrackResource;
 use Laravel\Nova\Resource;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -72,11 +73,9 @@ abstract class AbstractUgc extends Resource
                 ->options($this->validatedStatusOptions())
                 ->default(ValidatedStatusEnum::NOT_VALIDATED->value)
                 ->canSee(function ($request) {
-                    //if is an ugcTrack instance return $user->ugc_track_validator
-                    if ($this instanceof UgcTrack) {
-                        return $request->user()->ugc_track_validator ?? false;
+                    if ($this instanceof UgcTrackResource) {
+                        return $request->user()->hasPermissionTo('validate tracks') ?? false;
                     } else
-                        //handle different form_id for ugcPoi
                         return $request->user()->isValidatorForFormId($this->form_id) ?? false;
                 })->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
                     $isValidated = $request->$requestAttribute;
