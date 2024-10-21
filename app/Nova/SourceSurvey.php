@@ -34,13 +34,6 @@ class SourceSurvey extends AbstractValidationResource
     }
 
 
-    // /**
-    //  * Array of fields to show.
-    //  *
-    //  * @var array
-    //  */
-    // protected static $activeFields = ['ID', 'User', 'Validated', 'Validation Date', 'Validator', 'geometry', 'Gallery'];
-
     public function fields(Request $request)
     {
         $fields = parent::fields($request);
