@@ -107,10 +107,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Tools
                 MenuSection::make('Tools', [
-                    MenuItem::link('Mappa Percorsi', '/dashboards/main'),
-                    MenuItem::link('INFOMONT', '/dashboards/main'),
+                    MenuItem::link('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521'),
+                    MenuItem::link('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map'),
+                    MenuItem::link('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map'),
                     MenuItem::link('API', '/dashboards/main'),
-                    MenuItem::link('Documentazione OSM2CAI', '/dashboards/main'),
+                    MenuItem::link('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai'),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
