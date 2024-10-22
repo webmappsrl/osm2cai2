@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use Wm\MapPoint\MapPoint;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -74,14 +75,21 @@ class UgcMedia extends Resource
             Textarea::make('Descrizione', 'description'),
             BelongsTo::make('User', 'user')
                 ->searchable()
-                ->sortable(),
+                ->sortable()
+                ->nullable(),
             Text::make('Media', function () {
                 if ($this->model() instanceof \App\Models\UgcMedia) {
                     return "<a href='{$this->getUrl()}' target='_blank'><img src='{$this->getUrl()}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'></a>";
                 }
             })->asHtml(),
-            BelongsTo::make('Ugc Poi', 'ugc_poi'),
-            // BelongsTo::make('Ugc Track'),
+            BelongsTo::make('Ugc Poi', 'ugc_poi')
+                ->searchable()
+                ->sortable()
+                ->nullable(),
+            BelongsTo::make('Ugc Track', 'ugc_track')
+                ->searchable()
+                ->sortable()
+                ->nullable(),
             Textarea::make('Tassonomie Where', 'taxonomy_wheres')
                 ->sortable(),
             Text::make('Relative URL', 'relative_url')
@@ -89,13 +97,17 @@ class UgcMedia extends Resource
                 ->displayUsing(function ($value) {
                     return "<a href='" . url('storage/' . $value) . "' target='_blank'>" . url($value) . "</a>";
                 })
-                ->asHtml(),
-            // WmEmbedmapsField::make(__('Map'), function ($model) {
-            //     return [
-            //         'feature' => $model->getGeojson(),
-            //         'related' => $model->getRelatedUgcGeojson()
-            //     ];
-            // })->onlyOnDetail(),
+                ->asHtml()
+                ->required(),
+            MapPoint::make('geometry')->withMeta([
+                'center' => [43.7125, 10.4013],
+                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+                'minZoom' => 8,
+                'maxZoom' => 14,
+                'defaultZoom' => 10,
+                'defaultCenter' => [43.7125, 10.4013],
+            ])->hideFromIndex()
         ];
     }
 

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UgcPoi;
 use App\Traits\GeojsonableTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
