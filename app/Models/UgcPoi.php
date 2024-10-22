@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Models\User;
+use App\Models\UgcMedia;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -54,5 +56,10 @@ class UgcPoi extends Model
     public function validator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validator_id');
+    }
+
+    public function ugc_medias(): HasMany
+    {
+        return $this->hasMany(UgcMedia::class);
     }
 }

@@ -15,8 +15,8 @@ use App\Nova\Sector;
 use App\Nova\UgcPoi;
 use App\Nova\Province;
 use App\Nova\UgcTrack;
+use App\Nova\UgcMedia;
 use Laravel\Nova\Nova;
-use Laravel\Nova\Badge;
 use App\Nova\HikingRoute;
 use App\Nova\Municipality;
 use App\Nova\SourceSurvey;
@@ -31,7 +31,6 @@ use App\Nova\ArchaeologicalSite;
 use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\DB as FacadesDB;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -92,7 +91,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuSection::make('Elementi rilevati', [
                         MenuItem::resource(UgcPoi::class),
                         MenuItem::resource(UgcTrack::class),
-                        MenuItem::link('Media', '/dashboards/main'),
+                        MenuItem::resource(UgcMedia::class),
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Validazioni', [
                         MenuItem::resource(SourceSurvey::class),
