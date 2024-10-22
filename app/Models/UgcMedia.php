@@ -40,7 +40,7 @@ class UgcMedia extends Model
      *
      * @return array
      */
-    public function getJson(): array
+    public function getJsonProperties(): array
     {
         $array = $this->toArray();
 
@@ -64,7 +64,7 @@ class UgcMedia extends Model
     }
 
     /**
-     * Create a geojson from the ec track
+     * Create a geojson from the ugc media
      *
      * @return array
      */
@@ -72,7 +72,7 @@ class UgcMedia extends Model
     {
         $feature = $this->getEmptyGeojson();
         if (isset($feature["properties"])) {
-            $feature["properties"] = $this->getJson();
+            $feature["properties"] = $this->getJsonProperties();
 
             return $feature;
         } else return null;

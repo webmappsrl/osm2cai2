@@ -57,7 +57,7 @@ class UgcTrack extends Model
     }
 
     /**
-     * Create a geojson from the ec track
+     * Create a geojson from the ugc track
      *
      * @return array
      */
@@ -65,17 +65,17 @@ class UgcTrack extends Model
     {
         $feature = $this->getEmptyGeojson();
         if (isset($feature["properties"])) {
-            $feature["properties"] = $this->getJson();
+            $feature["properties"] = $this->getJsonProperties();
             return $feature;
         } else return null;
     }
 
     /**
-     * Return the json version of the track, avoiding the geometry
+     * Return the json version of the ugctrack, avoiding the geometry
      *
      * @return array
      */
-    public function getJson(): array
+    public function getJsonProperties(): array
     {
         $array = $this->toArray();
 

@@ -62,4 +62,41 @@ class UgcPoi extends Model
     {
         return $this->hasMany(UgcMedia::class);
     }
+
+    /**
+     * Return the json version of the ugc poi, avoiding the geometry
+     *
+     * @return array
+     */
+    public function getJsonProperties(): array
+    {
+        $array = $this->toArray();
+
+        $propertiesToClear = ['geometry'];
+        foreach ($array as $property => $value) {
+            if (is_null($value) || in_array($property, $propertiesToClear))
+                unset($array[$property]);
+        }
+
+        if (isset($array['raw_data'])) {
+            $array['raw_data']  = json_encode($array['raw_data']);
+        }
+
+        return $array;
+    }
+
+    /**
+     * Create a geojson from the ugc poi
+     *
+     * @return array
+     */
+    public function getGeojson(): ?array
+    {
+        $feature = $this->getEmptyGeojson();
+        if (isset($feature["properties"])) {
+            $feature["properties"] = $this->getJsonProperties();
+
+            return $feature;
+        } else return null;
+    }
 }
