@@ -79,7 +79,11 @@ class UgcMedia extends Resource
                 ->nullable(),
             Text::make('Media', function () {
                 if ($this->model() instanceof \App\Models\UgcMedia) {
-                    return "<a href='{$this->getUrl()}' target='_blank'><img src='{$this->getUrl()}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'></a>";
+                    return <<<HTML
+                    <a href='{$this->getUrl()}' target='_blank'>
+                        <img src='{$this->getUrl()}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'>
+                    </a>
+                    HTML;
                 }
             })->asHtml(),
             BelongsTo::make('Ugc Poi', 'ugc_poi')
@@ -95,7 +99,9 @@ class UgcMedia extends Resource
             Text::make('Relative URL', 'relative_url')
                 ->hideFromIndex()
                 ->displayUsing(function ($value) {
-                    return "<a href='" . url('storage/' . $value) . "' target='_blank'>" . url($value) . "</a>";
+                    return <<<HTML
+                    <a href='{$this->getUrl()}' target='_blank'>{$this->getUrl()}</a>
+                    HTML;
                 })
                 ->asHtml()
                 ->required(),
