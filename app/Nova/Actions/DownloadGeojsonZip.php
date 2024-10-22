@@ -40,7 +40,7 @@ class DownloadGeojsonZip extends Action
 
             return Action::download(Storage::disk('public')->url($zipFileName), $zipFileName);
         } else {
-            return Action::danger('Impossibile creare il file zip.');
+            return Action::danger(__('Error while creating zip file.'));
         }
     }
 
