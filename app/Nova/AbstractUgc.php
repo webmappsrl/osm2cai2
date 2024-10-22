@@ -22,6 +22,7 @@ use Idez\DateRangeFilter\Enums\Config;
 use App\Traits\Nova\RawDataFieldsTrait;
 use Idez\DateRangeFilter\DateRangeFilter;
 use Illuminate\Support\Arr;
+use Laravel\Nova\Fields\HasMany;
 
 abstract class AbstractUgc extends Resource
 {
@@ -69,6 +70,7 @@ abstract class AbstractUgc extends Resource
                 ->hideWhenCreating()
                 ->hideFromIndex()
                 ->hideFromDetail(),
+            HasMany::make('Ugc Medias', 'ugc_medias'),
             Select::make('Validated', 'validated')
                 ->options($this->validatedStatusOptions())
                 ->default(ValidatedStatusEnum::NOT_VALIDATED->value)
