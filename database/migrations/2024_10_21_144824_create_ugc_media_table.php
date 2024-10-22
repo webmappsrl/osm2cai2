@@ -22,8 +22,8 @@ return new class extends Migration
             $table->unsignedBigInteger('ugc_poi_id')->nullable();
             $table->unsignedBigInteger('ugc_track_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('ugc_poi_id')->references('id')->on('ugc_poi')->onDelete('set null');
-            $table->foreign('ugc_track_id')->references('id')->on('ugc_track')->onDelete('set null');
+            $table->foreign('ugc_poi_id')->references('id')->on('ugc_pois')->onDelete('set null');
+            $table->foreign('ugc_track_id')->references('id')->on('ugc_tracks')->onDelete('set null');
             $table->jsonb('raw_data')->nullable();
             $table->string('taxonomy_wheres')->nullable();
             $table->string('relative_url')->nullable();
