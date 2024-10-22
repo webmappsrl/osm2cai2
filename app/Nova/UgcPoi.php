@@ -188,7 +188,6 @@ class UgcPoi extends AbstractUgc
      */
     protected function getFormIdOptions()
     {
-        Cache::forget('form_id_options');
         return Cache::remember('form_id_options', 3600, function () {
             $configs = config('geohub.configs');
             $formIdOptions = [];

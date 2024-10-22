@@ -34,8 +34,8 @@ trait WmNovaFieldsTrait
 
                 return $config;
             });
-
-            $modelType = $this instanceof \App\Models\UgcTrack ? 'track' : 'poi';
+            //get the model type searching in the request path
+            $modelType = str_contains(request()->path(), 'ugc-tracks') ? 'track' : 'poi';
 
             if ($modelType === 'track') {
                 $formConfig = $config['track'][0] ?? null; // Take the first element of the track array 

@@ -2,14 +2,13 @@
 
 namespace App\Policies;
 
-use App\Models\UgcPoi;
+use App\Models\UgcTrack;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class UgcPoiPolicy
+class UgcTrackPolicy
 {
     use HandlesAuthorization;
-
 
     /**
      * Determine whether the user can view any models.
@@ -26,10 +25,10 @@ class UgcPoiPolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\UgcPoi  $ugcPoi
+     * @param  \App\Models\UgcTrack  $ugcTrack
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, UgcPoi $ugcPoi)
+    public function view(User $user, UgcTrack $ugcTrack)
     {
         return true;
     }
@@ -49,38 +48,34 @@ class UgcPoiPolicy
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\UgcPoi  $ugcPoi
+     * @param  \App\Models\UgcTrack  $ugcTrack
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, UgcPoi $ugcPoi)
+    public function update(User $user, UgcTrack $ugcTrack)
     {
-        return $user->hasRole('Administrator') || ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated');
-
-        $permission = $ugcPoi->form_id === 'water' ? 'source surveys' : str_replace('_', ' ', $ugcPoi->form_id);
-        $permission = 'validate ' . $permission;
-        return $user->hasPermissionTo($permission);
+        return $user->hasRole('Administrator') || ($ugcTrack->user_id === $user->id && $ugcTrack->validated === 'not_validated');
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\UgcPoi  $ugcPoi
+     * @param  \App\Models\UgcTrack  $ugcTrack
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, UgcPoi $ugcPoi)
+    public function delete(User $user, UgcTrack $ugcTrack)
     {
-        return $user->hasRole('Administrator') || ($user->id === $ugcPoi->user_id && $ugcPoi->validated !== 'valid');
+        return $user->hasRole('Administrator') || ($user->id === $ugcTrack->user_id && $ugcTrack->validated !== 'valid');
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\UgcPoi  $ugcPoi
+     * @param  \App\Models\UgcTrack  $ugcTrack
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, UgcPoi $ugcPoi)
+    public function restore(User $user, UgcTrack $ugcTrack)
     {
         return true;
     }
@@ -89,10 +84,10 @@ class UgcPoiPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\UgcPoi  $ugcPoi
+     * @param  \App\Models\UgcTrack  $ugcTrack
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, UgcPoi $ugcPoi)
+    public function forceDelete(User $user, UgcTrack $ugcTrack)
     {
         return true;
     }

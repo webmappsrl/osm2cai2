@@ -14,6 +14,7 @@ use App\Nova\Region;
 use App\Nova\Sector;
 use App\Nova\UgcPoi;
 use App\Nova\Province;
+use App\Nova\UgcTrack;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Badge;
 use App\Nova\HikingRoute;
@@ -90,7 +91,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('Rilievi', [
                     MenuSection::make('Elementi rilevati', [
                         MenuItem::resource(UgcPoi::class),
-                        MenuItem::link('Tracks', '/dashboards/main'),
+                        MenuItem::resource(UgcTrack::class),
                         MenuItem::link('Media', '/dashboards/main'),
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Validazioni', [
