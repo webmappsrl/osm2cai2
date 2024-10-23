@@ -31,6 +31,8 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'validate geological sites']);
         Permission::firstOrCreate(['name' => 'validate archaeological areas']);
         Permission::firstOrCreate(['name' => 'validate signs']);
+        Permission::firstOrCreate(['name' => 'validate pois']);
+        Permission::firstOrCreate(['name' => 'validate tracks']);
         Permission::firstOrCreate(['name' => 'manage roles and permissions']);
 
         $adminRole = Role::where('name', 'Administrator')->first();
@@ -39,6 +41,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $adminRole->givePermissionTo('validate geological sites');
         $adminRole->givePermissionTo('validate archaeological areas');
         $adminRole->givePermissionTo('validate signs');
+        $adminRole->givePermissionTo('validate pois');
+        $adminRole->givePermissionTo('validate tracks');
         $adminRole->givePermissionTo('manage roles and permissions');
 
         //get all users except team@webmapp.it and assign to them the guest role

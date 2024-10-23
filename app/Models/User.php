@@ -7,10 +7,13 @@ use App\Models\Area;
 use App\Models\Club;
 use App\Models\Region;
 use App\Models\Sector;
+use App\Models\UgcPoi;
 use App\Models\Province;
+use App\Models\UgcTrack;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Models\Permission;
 use Wm\WmPackage\Model\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -84,5 +87,36 @@ class User extends Authenticatable
     public function club()
     {
         return $this->belongsTo(Club::class, 'club_cai_code', 'cai_code');
+    }
+
+    public function ugcTracks()
+    {
+        return $this->hasMany(UgcTrack::class);
+    }
+
+    public function ugcPois()
+    {
+        return $this->hasMany(UgcPoi::class);
+    }
+
+    public function isValidatorForFormId($formId)
+    {
+        $formId = str_replace('_', ' ', $formId);
+        //if form id is empty, return false
+        if (empty($formId)) {
+            return true;
+        }
+        //if permission does not exist, return true
+        if (!Permission::where('name', 'validate ' . $formId . 's')->exists()) {
+            return true;
+        }
+        if ($formId === 'water') {
+            return $this->hasPermissionTo('validate source surveys');
+        }
+        $permissionName = 'validate ' . $formId;
+        if (!str_ends_with($formId, 's')) {
+            $permissionName .= 's';
+        }
+        return $this->hasPermissionTo($permissionName);
     }
 }

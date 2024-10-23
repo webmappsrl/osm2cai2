@@ -10,7 +10,9 @@ use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\Password;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Spatie\Permission\Models\Permission;
 use Vyuldashev\NovaPermission\RoleBooleanGroup;
 use Vyuldashev\NovaPermission\PermissionBooleanGroup;
 
@@ -94,9 +96,28 @@ class User extends Resource
             RoleBooleanGroup::make('Roles', 'roles')->canSee(function () {
                 return auth()->user()->hasRole('Administrator') || auth()->user()->hasPermissionTo('manage roles and permissions');
             }),
-            PermissionBooleanGroup::make('Permissions', 'permissions')->canSee(function () {
-                return auth()->user()->hasRole('Administrator') || auth()->user()->hasPermissionTo('manage roles and permissions');
-            }),
+            PermissionBooleanGroup::make('Permissions', 'permissions')
+                ->canSee(function () {
+                    return auth()->user()->hasRole('Administrator') || auth()->user()->hasPermissionTo('manage roles and permissions');
+                })
+                ->dependsOn('roles', function (PermissionBooleanGroup $field, NovaRequest $request, FormData $formData) {
+                    $roles = $formData->get('roles');
+                    $rolesArray = json_decode($roles, true);
+
+                    $permissions = collect();
+
+                    if (isset($rolesArray['Administrator']) && $rolesArray['Administrator'] === true) {
+                        $permissions = $permissions->merge(Permission::where('name', 'manage roles and permissions')->pluck('name', 'name'));
+                    }
+
+                    if (isset($rolesArray['Validator']) && $rolesArray['Validator'] === true) {
+                        $permissions = $permissions->merge(Permission::where('name', 'like', 'validate %')->pluck('name', 'name'));
+                    }
+
+                    $field->options(function () use ($permissions) {
+                        return $permissions->toArray();
+                    });
+                }),
         ];
     }
 

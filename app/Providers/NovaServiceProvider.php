@@ -5,26 +5,32 @@ namespace App\Providers;
 use DB;
 use App\Nova\Area;
 use App\Nova\Club;
+use App\Nova\Sign;
 use App\Nova\User;
 use App\Nova\EcPoi;
 use App\Nova\Poles;
 use App\Nova\CaiHut;
 use App\Nova\Region;
 use App\Nova\Sector;
+use App\Nova\UgcPoi;
 use App\Nova\Province;
+use App\Nova\UgcTrack;
+use App\Nova\UgcMedia;
 use Laravel\Nova\Nova;
-use Laravel\Nova\Badge;
 use App\Nova\HikingRoute;
 use App\Nova\Municipality;
+use App\Nova\SourceSurvey;
 use App\Nova\NaturalSpring;
+use App\Nova\GeologicalSite;
 use App\Nova\MountainGroups;
 use Illuminate\Http\Request;
 use App\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuItem;
+use App\Nova\ArchaeologicalArea;
+use App\Nova\ArchaeologicalSite;
 use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\DB as FacadesDB;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -83,16 +89,16 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Rilievi
                 MenuSection::make('Rilievi', [
                     MenuSection::make('Elementi rilevati', [
-                        MenuItem::link('Pois', '/dashboards/main'),
-                        MenuItem::link('Tracks', '/dashboards/main'),
-                        MenuItem::link('Media', '/dashboards/main'),
+                        MenuItem::resource(UgcPoi::class),
+                        MenuItem::resource(UgcTrack::class),
+                        MenuItem::resource(UgcMedia::class),
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Validazioni', [
-                        MenuItem::link('Acqua Sorgente', '/dashboards/main'),
-                        MenuItem::link('Segni dell’uomo', '/dashboards/main'),
-                        MenuItem::link('Siti archeologici', '/dashboards/main'),
-                        MenuItem::link('Aree archeologiche', '/dashboards/main'),
-                        MenuItem::link('Siti archelogoche', '/dashboards/main'),
+                        MenuItem::resource(SourceSurvey::class),
+                        MenuItem::resource(Sign::class),
+                        MenuItem::resource(ArchaeologicalSite::class),
+                        MenuItem::resource(ArchaeologicalArea::class),
+                        MenuItem::resource(GeologicalSite::class),
                     ])->icon('none')->collapsable(),
                     MenuSection::make('Export', [
                         MenuItem::link('Esporta Rilievi', '/dashboards/main'),
@@ -101,10 +107,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Tools
                 MenuSection::make('Tools', [
-                    MenuItem::link('Mappa Percorsi', '/dashboards/main'),
-                    MenuItem::link('INFOMONT', '/dashboards/main'),
+                    MenuItem::link('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521'),
+                    MenuItem::link('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map'),
+                    MenuItem::link('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map'),
                     MenuItem::link('API', '/dashboards/main'),
-                    MenuItem::link('Documentazione OSM2CAI', '/dashboards/main'),
+                    MenuItem::link('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai'),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
