@@ -33,12 +33,12 @@
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-permission": "^6.9",
         "spatie/laravel-translatable": "^6.3",
-        "webmapp/wm-osmfeatures": "^1.5.0",
         "wm/map-multi-linestring": "^0.0.10",
         "wm/map-multi-polygon": "^0.0.3",
         "wm/map-point": "^0.0.9",
         "wm/wm-internal": "*",
-        "wm/wm-package": "*"
+        "wm/wm-package": "*",
+        "webmapp/wm-osmfeatures": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -99,6 +99,14 @@
         {
             "type": "path",
             "url": "./wm-internal"
+        },
+        {
+            "type": "path",
+            "url": "./wm-package"
+        },
+        {
+            "type": "path",
+            "url": "./wm-osmfeatures"
         }
     ]
 }
