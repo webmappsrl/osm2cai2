@@ -1,4 +1,6 @@
 [submodule "wm-osmfeatures"]
+	path = wm-osmfeatures
 	url = https://github.com/webmappsrl/wm-osmfeatures.git
 [submodule "wm-package"]
+	path = wm-package
 	url = https://github.com/webmappsrl/wm-package.git
