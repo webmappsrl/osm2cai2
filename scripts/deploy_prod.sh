@@ -5,7 +5,7 @@ echo "Production deployment started ..."
 
 php artisan down
 
-composer install
+composer install --no-interaction --prefer-dist --optimize-autoloader
 composer dump-autoload
 
 # Clear and cache config
