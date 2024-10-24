@@ -8,10 +8,16 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Wm\WmPackage\Jobs\Abstracts\BaseJob;
 
-class RecalculateIntersections implements ShouldQueue
+class RecalculateIntersections extends BaseJob
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected function getRedisLockKey(): string
+    {
+        return $this->region ? $this->region->id : $this->hikingRoute->id;
+    }
 
     protected $region;
     protected $hikingRoute;
