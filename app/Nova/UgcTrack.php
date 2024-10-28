@@ -15,6 +15,7 @@ use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Filters\RelatedUGCFilter;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Actions\DownloadGeojsonZip;
+use Wm\WmPackage\Nova\Actions\EditFields;
 use Wm\MapMultiLinestring\MapMultiLinestring;
 use Webmapp\WmEmbedmapsField\WmEmbedmapsField;
 use App\Nova\Actions\DownloadFeatureCollection;
@@ -143,6 +144,9 @@ class UgcTrack extends AbstractUgc
                 })->canRun(function ($request) {
                     return true;
                 }),
+            (new EditFields('Validate Resource', ['validated'], $this))->canSee(function () {
+                return auth()->user()->hasPermissionTo('validate tracks');
+            }),
         ];
 
         return array_merge($parentActions, $specificActions);
