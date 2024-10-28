@@ -14,7 +14,7 @@ class UgcMedia extends Model
 {
     use HasFactory, GeojsonableTrait;
 
-    protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'relative_url', 'app_id'];
+    protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'relative_url', 'app_id', 'ugc_poi_id', 'ugc_track_id'];
 
     protected $casts = [
         'raw_data' => 'array',
