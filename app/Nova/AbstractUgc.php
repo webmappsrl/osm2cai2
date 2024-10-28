@@ -70,7 +70,7 @@ abstract class AbstractUgc extends Resource
                 ->hideWhenCreating()
                 ->hideFromIndex()
                 ->hideFromDetail(),
-            HasMany::make('Ugc Medias', 'ugc_medias'),
+            HasMany::make('Ugc Media', 'ugc_media', UgcMedia::class),
             Select::make('Validated', 'validated')
                 ->options($this->validatedStatusOptions())
                 ->default(ValidatedStatusEnum::NOT_VALIDATED->value)
