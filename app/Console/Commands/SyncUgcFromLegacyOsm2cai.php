@@ -205,7 +205,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                             CASE 
                                 WHEN ST_IsValid(geometry::geometry) 
                                     AND ST_GeometryType(geometry::geometry) IN ('ST_MultiLineString', 'ST_LineString')
-                                    THEN ST_Force2D(geometry::geometry)
+                                    THEN ST_Force3D(geometry::geometry)
                                 ELSE NULL
                             END
                         ) as geometry 
