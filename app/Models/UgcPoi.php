@@ -58,7 +58,7 @@ class UgcPoi extends Model
         return $this->belongsTo(User::class, 'validator_id');
     }
 
-    public function ugc_medias(): HasMany
+    public function ugc_media(): HasMany
     {
         return $this->hasMany(UgcMedia::class);
     }

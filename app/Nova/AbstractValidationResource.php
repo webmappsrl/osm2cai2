@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Nova\Filters\UgcFormIdFilter;
 use App\Nova\Filters\UgcUserNoMatchFilter;
 use App\Nova\Filters\ValidatedFilter;
+use Wm\WmPackage\Nova\Actions\EditFields;
 
 abstract class AbstractValidationResource extends UgcPoi
 {
@@ -69,5 +70,15 @@ abstract class AbstractValidationResource extends UgcPoi
     public static function authorizedToCreate(Request $request)
     {
         return false;
+    }
+
+    public function actions(Request $request)
+    {
+        $parentActions = parent::actions($request);
+        return array_merge($parentActions, [
+            (new EditFields('Validate Resource', ['validated'], $this))->canSee(function () {
+                return auth()->user()->hasPermissionTo('validate tracks');
+            }),
+        ]);
     }
 }
