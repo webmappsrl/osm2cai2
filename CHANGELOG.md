@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.17.0](https://github.com/webmappsrl/osm2cai2/compare/v1.16.0...v1.17.0) (2024-10-30)
+
+
+### Features
+
+* add_poles OC: 3699 ([#55](https://github.com/webmappsrl/osm2cai2/issues/55)) ([b09cd96](https://github.com/webmappsrl/osm2cai2/commit/b09cd96bc01167cef0d0000381cf863531058a2c))
+* added horizon authorizations ([38c5d87](https://github.com/webmappsrl/osm2cai2/commit/38c5d87aa34b7ec95de59feb49f211cd1054576b))
+* added horizon link to nova side menu ([cf2e880](https://github.com/webmappsrl/osm2cai2/commit/cf2e880b4d1f1332d467fd69702501a11850bbbc))
+* added launch_horizon script to prod deploy workflos ([9e5860f](https://github.com/webmappsrl/osm2cai2/commit/9e5860f50147be974b1c999c1b8987cd141acfb7))
+* added metric snapshot scheduled command to horizon ([3371986](https://github.com/webmappsrl/osm2cai2/commit/3371986761e1e39d31469990c08210eaee67cfb4))
+* configured log viewer ([a1d089c](https://github.com/webmappsrl/osm2cai2/commit/a1d089cc64071572d261ef59f66b10f36e7da57d))
+* e2e tests setup OC:4057 ([#65](https://github.com/webmappsrl/osm2cai2/issues/65)) ([f3e8b61](https://github.com/webmappsrl/osm2cai2/commit/f3e8b615f0ebfc4705757b7c297cc9b74c14c7b7))
+* hiking route osmfeatures sync OC:3812 ([#57](https://github.com/webmappsrl/osm2cai2/issues/57)) ([a5ff026](https://github.com/webmappsrl/osm2cai2/commit/a5ff0269d600c1ee4e01c7e698982c1eb452c97b))
+* hiking route sync from osm2cai OC:3816 ([#59](https://github.com/webmappsrl/osm2cai2/issues/59)) ([f9323ef](https://github.com/webmappsrl/osm2cai2/commit/f9323efd62a7737de34cd15313ffbc7c893dfc3b))
+* sync ugc from legacy osm2cai OC: 3470 ([#71](https://github.com/webmappsrl/osm2cai2/issues/71)) ([8dc5b63](https://github.com/webmappsrl/osm2cai2/commit/8dc5b633afccacb5a63cdae95c93e543eff5292f))
+
+
+### Bug Fixes
+
+* deploy prod workflow ([b0512d9](https://github.com/webmappsrl/osm2cai2/commit/b0512d9947b41820d7b35001da203009f236ae8d))
+* fixed json properties retrievals and casts ([b9c398c](https://github.com/webmappsrl/osm2cai2/commit/b9c398c3ec91889b3b6d797e7388b78689f6aab8))
+* gitmodules file ([e5875a0](https://github.com/webmappsrl/osm2cai2/commit/e5875a04c3ea67786d45b9c90cd01b34047daba6))
+* removed romanzipp queue monitor ([198decc](https://github.com/webmappsrl/osm2cai2/commit/198decc596004e3d830b7a312f644d4b5745091f))
+* removed unused trait from poles ([c42ac8e](https://github.com/webmappsrl/osm2cai2/commit/c42ac8e5c5d8b8999c1093988259b6e508493f1e))
+* submodules dependencies in tests workflow ([3ef7036](https://github.com/webmappsrl/osm2cai2/commit/3ef7036928f9ff2311644f46fc738cfb52168b17))
+
+
+### Miscellaneous Chores
+
+* Add submodules for wm-osmfeatures and wm-package ([8a517db](https://github.com/webmappsrl/osm2cai2/commit/8a517db8b687990fe151b6b183bd4bc04c394e41))
+* added batching to osm2cai sync jobs ([eaa7cef](https://github.com/webmappsrl/osm2cai2/commit/eaa7cef516ec3b790cc46fb72fb5ba8dd05a47cc))
+* created testjob ([fd28db0](https://github.com/webmappsrl/osm2cai2/commit/fd28db046f8ee8a791885f3250937ecaf595ed37))
+* installed log viewer package ([2b23ffc](https://github.com/webmappsrl/osm2cai2/commit/2b23ffc76f8f4cbafa326bbf96a6a054bdc5fab3))
+* recalculate intersections job now extends basejob class from wm-package ([425493c](https://github.com/webmappsrl/osm2cai2/commit/425493cdf6257bab95c62fd9f255c0ce29514ba0))
+* removed romanzipp laravel-queue-monitor package ([3e98d56](https://github.com/webmappsrl/osm2cai2/commit/3e98d565e0a2bf7a9338ee417ca9e2d19f483d92))
+* updated docker config for horizon and redis ([35bdbe6](https://github.com/webmappsrl/osm2cai2/commit/35bdbe6ec0d06018036f6961141896356e15ebd0))
+* updated packages as submodules ([81cc03e](https://github.com/webmappsrl/osm2cai2/commit/81cc03e701ddb9ef7d4c037370c77613388657b6))
+* updated wm-osmfeatures package and refactored update method in models ([2205dd3](https://github.com/webmappsrl/osm2cai2/commit/2205dd30611d30a0509583e9fc45c143be4d38b3))
+* updating wm-osmfeatures package ([5bac106](https://github.com/webmappsrl/osm2cai2/commit/5bac1065669ee0464b87b9644d742baf707dbf9c))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
