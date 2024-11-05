@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -16,6 +15,33 @@ class AuthTest extends TestCase
         'email' => 'test@example.com',
         'password' => 'password123'
     ];
+    private ?string $authToken = null;
+
+    /**
+     * Helper method to create and authenticate a user
+     */
+    private function createAndAuthenticateUser()
+    {
+        if (!$this->authToken) {
+            $this->postJson($this->baseUrl . 'signup', $this->userData);
+            $loginResponse = $this->postJson($this->baseUrl . 'login', [
+                'email' => $this->userData['email'],
+                'password' => $this->userData['password']
+            ]);
+            $this->authToken = $loginResponse->json('access_token');
+        }
+        return $this->authToken;
+    }
+
+    /**
+     * Helper method to make authenticated requests
+     */
+    private function makeAuthenticatedRequest($method, $endpoint, $data = [])
+    {
+        return $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->createAndAuthenticateUser()
+        ])->postJson($this->baseUrl . $endpoint, $data);
+    }
 
     /**
      * @test that a user can successfully sign up with valid credentials
@@ -111,19 +137,7 @@ class AuthTest extends TestCase
      */
     public function test_authenticated_user_can_logout()
     {
-        // Create and authenticate a user
-        $this->postJson($this->baseUrl . 'signup', $this->userData);
-        $loginResponse = $this->postJson($this->baseUrl . 'login', [
-            'email' => $this->userData['email'],
-            'password' => $this->userData['password']
-        ]);
-
-        $token = $loginResponse->json('access_token');
-
-        // Try logout
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token
-        ])->postJson($this->baseUrl . 'logout');
+        $response = $this->makeAuthenticatedRequest('post', 'logout');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -136,19 +150,7 @@ class AuthTest extends TestCase
      */
     public function test_authenticated_user_can_get_own_info()
     {
-        // Create and authenticate a user
-        $this->postJson($this->baseUrl . 'signup', $this->userData);
-        $loginResponse = $this->postJson($this->baseUrl . 'login', [
-            'email' => $this->userData['email'],
-            'password' => $this->userData['password']
-        ]);
-
-        $token = $loginResponse->json('access_token');
-
-        // Request user info
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token
-        ])->postJson($this->baseUrl . 'me');
+        $response = $this->makeAuthenticatedRequest('post', 'me');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -164,19 +166,7 @@ class AuthTest extends TestCase
      */
     public function test_authenticated_user_can_delete_account()
     {
-        // Create and authenticate a user
-        $this->postJson($this->baseUrl . 'signup', $this->userData);
-        $loginResponse = $this->postJson($this->baseUrl . 'login', [
-            'email' => $this->userData['email'],
-            'password' => $this->userData['password']
-        ]);
-
-        $token = $loginResponse->json('access_token');
-
-        // Delete account
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token
-        ])->postJson($this->baseUrl . 'delete');
+        $response = $this->makeAuthenticatedRequest('post', 'delete');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -193,19 +183,8 @@ class AuthTest extends TestCase
      */
     public function test_user_can_refresh_token()
     {
-        // Create and authenticate a user
-        $this->postJson($this->baseUrl . 'signup', $this->userData);
-        $loginResponse = $this->postJson($this->baseUrl . 'login', [
-            'email' => $this->userData['email'],
-            'password' => $this->userData['password']
-        ]);
-
-        $token = $loginResponse->json('access_token');
-
-        // Refresh the token
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token
-        ])->postJson($this->baseUrl . 'refresh');
+        $oldToken = $this->createAndAuthenticateUser();
+        $response = $this->makeAuthenticatedRequest('post', 'refresh');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -214,6 +193,6 @@ class AuthTest extends TestCase
                 'expires_in'
             ]);
 
-        $this->assertNotEquals($token, $response->json('access_token'));
+        $this->assertNotEquals($oldToken, $response->json('access_token'));
     }
 }
