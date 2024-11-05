@@ -4,15 +4,15 @@ namespace Tests\Api;
 
 use Tests\TestCase;
 use App\Models\User;
-use App\Models\UgcPoi;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\UgcTrack;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class UgcPoiTest extends TestCase
+class UgcTrackTest extends TestCase
 {
     use RefreshDatabase;
 
-    private string $baseUrl = '/api/ugc/poi/';
+    private string $baseUrl = '/api/ugc/track/';
     private array $userData;
     private string $token;
     private User $user;
@@ -21,16 +21,9 @@ class UgcPoiTest extends TestCase
     {
         parent::setUp();
 
-        // Crea un utente e ottieni il token
         $this->userData = [
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'password' => 'password123'
-        ];
-
-        $this->otherUserData = [
-            'name' => 'Other Test User',
-            'email' => 'other@example.com',
             'password' => 'password123'
         ];
 
@@ -40,27 +33,34 @@ class UgcPoiTest extends TestCase
     }
 
     /**
-     * @test authenticated user can create poi
+     * @test authenticated user can create track
      */
-    public function test_authenticated_user_can_create_poi()
+    public function test_authenticated_user_can_create_track()
     {
-        $poiData = [
+        $trackData = [
             'type' => 'Feature',
             'geometry' => [
-                'type' => 'Point',
-                'coordinates' => [10.0, 45.0]
+                'type' => 'LineString',
+                'coordinates' => [
+                    [10.0, 45.0, 0],
+                    [10.1, 45.1, 0],
+                    [10.2, 45.2, 0]
+                ]
             ],
             'properties' => [
-                'name' => 'Test POI',
+                'name' => 'Test Track',
                 'description' => 'Test Description',
-                'id' => 'test_form',
-                'app_id' => 'test_app'
+                'app_id' => 'test_app',
+                'metadata' => [
+                    'distance' => 1000,
+                    'duration' => 3600
+                ]
             ]
         ];
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
-        ])->postJson($this->baseUrl . 'store', $poiData);
+        ])->postJson($this->baseUrl . 'store', $trackData);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -68,53 +68,52 @@ class UgcPoiTest extends TestCase
                 'message' => 'Created successfully'
             ]);
 
-        $this->assertDatabaseHas('ugc_pois', [
-            'name' => 'Test POI',
+        $this->assertDatabaseHas('ugc_tracks', [
+            'name' => 'Test Track',
             'description' => 'Test Description',
             'user_id' => $this->user->id,
-            'form_id' => 'test_form',
             'app_id' => 'geohub_test_app'
         ]);
     }
 
     /**
-     * @test unauthenticated user cannot create poi
+     * @test unauthenticated user cannot create track
      */
-    public function test_unauthenticated_user_cannot_create_poi()
+    public function test_unauthenticated_user_cannot_create_track()
     {
-        $poiData = [
+        $trackData = [
             'type' => 'Feature',
             'geometry' => [
-                'type' => 'Point',
-                'coordinates' => [10.0, 45.0]
+                'type' => 'LineString',
+                'coordinates' => [[10.0, 45.0], [10.1, 45.1]]
             ],
             'properties' => [
-                'name' => 'Test POI',
-                'id' => 'test_form'
+                'name' => 'Test Track',
+                'app_id' => 'test_app'
             ]
         ];
 
-        $response = $this->postJson($this->baseUrl . 'store', $poiData);
+        $response = $this->postJson($this->baseUrl . 'store', $trackData);
 
         $response->assertStatus(401);
     }
 
     /**
-     * @test authenticated user can list pois
+     * @test authenticated user can list tracks
      */
-    public function test_authenticated_user_can_list_pois()
+    public function test_authenticated_user_can_list_tracks()
     {
-        // Crea alcuni POI di test
-        UgcPoi::factory()->count(3)->create([
+        UgcTrack::factory()->count(3)->create([
             'user_id' => $this->user->id,
+            'name' => 'Test Track',
             'app_id' => 'geohub_123',
-            'form_id' => 'test_form',
             'description' => 'Test Description',
-            'raw_data' => 'Test Raw Data',
+            'raw_data' => ['test_key' => 'test_value'],
             'geometry' => DB::raw("ST_GeomFromGeoJSON('" . json_encode([
-                'type' => 'Point',
-                'coordinates' => [10.0, 45.0]
+                'type' => 'LineString',
+                'coordinates' => [[10.0, 45.0, 0], [10.1, 45.1, 0], [10.2, 45.2, 0]]
             ]) . "')"),
+            'metadata' => json_encode(['distance' => 1000, 'duration' => 3600])
         ]);
 
         $response = $this->withHeaders([
@@ -132,13 +131,13 @@ class UgcPoiTest extends TestCase
                             'id',
                             'created_at',
                             'updated_at',
+                            'name',
                             'description',
                             'user_id',
                             'raw_data',
-                            'form_id',
-                            'validated',
-                            'water_flow_rate_validated',
-                            'app_id'
+                            'metadata',
+                            'app_id',
+                            'validated'
                         ]
                     ]
                 ]
@@ -148,48 +147,55 @@ class UgcPoiTest extends TestCase
     }
 
     /**
-     * @test authenticated user can delete own poi
+     * @test authenticated user can delete own track
      */
-    public function test_authenticated_user_can_delete_own_poi()
+    public function test_authenticated_user_can_delete_own_track()
     {
-        // Crea un POI
-        $poi = UgcPoi::factory()->create([
-            'user_id' => $this->user->id
+        $track = UgcTrack::factory()->create([
+            'user_id' => $this->user->id,
+            'app_id' => 'geohub_123',
+            'name' => 'Test Track',
+            'description' => 'Test Description',
+            'raw_data' => ['test_key' => 'test_value'],
+            'geometry' => DB::raw("ST_GeomFromGeoJSON('" . json_encode([
+                'type' => 'LineString',
+                'coordinates' => [[10.0, 45.0, 0], [10.1, 45.1, 0], [10.2, 45.2, 0]]
+            ]) . "')"),
+            'metadata' => json_encode(['distance' => 1000, 'duration' => 3600])
         ]);
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
-        ])->deleteJson($this->baseUrl . 'delete/' . $poi->id);
+        ])->deleteJson($this->baseUrl . 'delete/' . $track->id);
 
         $response->assertStatus(200)
             ->assertJson([
-                'success' => true
+                'success' => 'track deleted'
             ]);
 
-        $this->assertDatabaseMissing('ugc_pois', [
-            'id' => $poi->id
+        $this->assertDatabaseMissing('ugc_tracks', [
+            'id' => $track->id
         ]);
     }
 
+
     /**
-     * @test poi creation requires name
+     * @test track creation requires name
      */
-    public function test_poi_creation_requires_name()
+    public function test_track_creation_requires_name()
     {
-        $poiData = [
+        $trackData = [
             'type' => 'Feature',
             'geometry' => [
-                'type' => 'Point',
-                'coordinates' => [10.0, 45.0]
+                'type' => 'LineString',
+                'coordinates' => [[10.0, 45.0, 0], [10.1, 45.1, 0], [10.2, 45.2, 0]]
             ],
-            'properties' => [
-                'id' => 'test_form'
-            ]
+            'properties' => []
         ];
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
-        ])->postJson($this->baseUrl . 'store', $poiData);
+        ])->postJson($this->baseUrl . 'store', $trackData);
 
         $response->assertStatus(400)
             ->assertJson([
@@ -202,24 +208,24 @@ class UgcPoiTest extends TestCase
     }
 
     /**
-     * @test poi creation requires app_id
+     * @test track creation requires app_id
      */
-    public function test_poi_creation_requires_app_id()
+    public function test_track_creation_requires_app_id()
     {
-        $poiData = [
+        $trackData = [
             'type' => 'Feature',
             'geometry' => [
-                'type' => 'Point',
-                'coordinates' => [10.0, 45.0]
+                'type' => 'LineString',
+                'coordinates' => [[10.0, 45.0, 0], [10.1, 45.1, 0], [10.2, 45.2, 0]]
             ],
             'properties' => [
-                'name' => 'Test POI',
+                'name' => 'Test Track'
             ]
         ];
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
-        ])->postJson($this->baseUrl . 'store', $poiData);
+        ])->postJson($this->baseUrl . 'store', $trackData);
 
         $response->assertStatus(400)
             ->assertJson([
@@ -231,23 +237,22 @@ class UgcPoiTest extends TestCase
     }
 
     /**
-     * @test poi creation requires valid geometry
+     * @test track creation requires geometry
      */
-    public function test_poi_creation_requires_geometry()
+    public function test_track_creation_requires_geometry()
     {
-        $poiData = [
+        $trackData = [
             'type' => 'Feature',
             'geometry' => [],
             'properties' => [
-                'name' => 'Test POI',
-                'id' => 'test_form',
+                'name' => 'Test Track',
                 'app_id' => 'test_app'
             ]
         ];
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
-        ])->postJson($this->baseUrl . 'store', $poiData);
+        ])->postJson($this->baseUrl . 'store', $trackData);
 
         $response->assertStatus(400)
             ->assertJson([
