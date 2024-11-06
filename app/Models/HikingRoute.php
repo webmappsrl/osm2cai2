@@ -280,4 +280,26 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
         return true;
     }
+
+    /**
+     * Get the main sector associated with this hiking route
+     * 
+     * Returns the sector with the highest percentage coverage of this route.
+     * Uses a raw SQL query to find the sector_id with maximum percentage,
+     * then looks up the corresponding Sector model.
+     *
+     * @return \App\Models\Sector|null The main sector if found, null otherwise
+     */
+    public function mainSector()
+    {
+        $q = "SELECT sector_id from hiking_route_sector where hiking_route_id={$this->id} order by percentage desc limit 1;";
+        $res = DB::select(DB::raw($q));
+        if (count($res) > 0) {
+            foreach ($res as $item) {
+                $sector_id = $item->sector_id;
+            }
+            return Sector::find($sector_id);
+        }
+        return null;
+    }
 }
