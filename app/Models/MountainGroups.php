@@ -19,4 +19,9 @@ class MountainGroups extends Model
         'aggregated_data',
         'intersectings',
     ];
+
+    public function regions()
+    {
+        return $this->belongsToMany(Region::class, 'mountain_groups_region', 'mountain_group_id', 'region_id');
+    }
 }

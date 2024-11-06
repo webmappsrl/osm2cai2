@@ -97,4 +97,9 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     {
         return $this->belongsTo(User::class);
     }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
 }

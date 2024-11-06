@@ -2,17 +2,24 @@
 
 namespace App\Models;
 
+use App\Models\Area;
+use App\Models\User;
+use App\Models\Region;
+use App\Models\Sector;
+use App\Models\Province;
+use App\Models\Itinerary;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\RecalculateIntersections;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Illuminate\Database\Eloquent\Model;
+use Symfony\Component\Stopwatch\Section;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
@@ -38,6 +45,35 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
+        // static::saved(function ($hikingRoute) {
+        //     if ($hikingRoute->is_syncing) {
+        //         $hikingRoute->is_syncing = false;
+        //         return;
+        //     }
+        //     Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+        //     Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+
+        //     if ($hikingRoute->osm2cai_status == 4) {
+        //         Artisan::call('osm2cai:tdh', ['id' => $hikingRoute->id]);
+        //         Artisan::call('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+        //     }
+        // });
+
+        // static::created(function ($hikingRoute) {
+        //     if ($hikingRoute->is_syncing) {
+        //         $hikingRoute->is_syncing = false;
+        //         return;
+        //     }
+
+        //     Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+        //     Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+
+        //     if ($hikingRoute->osm2cai_status == 4) {
+        //         Artisan::call('osm2cai:tdh', ['id' => $hikingRoute->id]);
+        //         Artisan::call('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+        //     }
+        // });
+
         static::updated(function ($hikingRoute) {
             if ($hikingRoute->isDirty('geometry')) {
                 RecalculateIntersections::dispatch($hikingRoute);
@@ -143,5 +179,105 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
             'waymarkedtrailsLink' => $wmt,
             'analyzerLink' => $analyzer
         ];
+    }
+
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validator_id');
+    }
+
+
+    public function regions()
+    {
+        return $this->belongsToMany(Region::class);
+    }
+
+    public function provinces()
+    {
+        return $this->belongsToMany(Province::class);
+    }
+
+    public function areas()
+    {
+        return $this->belongsToMany(Area::class);
+    }
+
+    public function sectors()
+    {
+        return $this->belongsToMany(Sector::class)->withPivot(['percentage']);
+    }
+
+    public function issueUser()
+    {
+        return $this->belongsTo(User::class, 'id', 'issues_user_id');
+    }
+
+    public function sections()
+    {
+        return $this->belongsToMany(Section::class, 'hiking_route_section');
+    }
+
+    public function itineraries()
+    {
+        return $this->belongsToMany(Itinerary::class);
+    }
+
+    /**
+     * Check if the hiking route has been validated
+     * 
+     * A route is considered validated if it has a validation date set
+     * 
+     * @return bool True if the route is validated, false otherwise
+     */
+    public function validated(): bool
+    {
+        if (!empty($this->validation_date)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /*
+     * 0: cai_scale null, source null
+     * 1: cai_scale not null, source null
+     * 2: cai_scale null, source contains "survey:CAI"
+     * 3: cai_scale not null, source contains "survey:CAI"
+     * 4: validation_date not_null
+     */
+    public function setOsm2CaiStatus(): void
+    {
+        $status = 0;
+        if ($this->validated()) {
+            $status = 4;
+        } else if (!is_null($this->cai_scale_osm) && !preg_match('/survey:CAI/', $this->source_osm)) {
+            $status = 1;
+        } else if (is_null($this->cai_scale_osm) && preg_match('/survey:CAI/', $this->source_osm)) {
+            $status = 2;
+        } else if (!is_null($this->cai_scale_osm) && preg_match('/survey:CAI/', $this->source_osm)) {
+            $status = 3;
+        }
+        $this->osm2cai_status = $status;
+    }
+
+    /**
+     * Check if the route geometry is valid
+     * 
+     * A route geometry is considered invalid if:
+     * - It has multiple segments (nseg > 1)
+     * - AND it is validated (osm2cai_status == 4)
+     * 
+     * @return bool True if geometry is valid, false otherwise
+     */
+    public function hasCorrectGeometry()
+    {
+        $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
+        $geom = json_decode($geojson, TRUE);
+        $type = $geom['type'];
+        $nseg = count($geom['coordinates']);
+        if ($nseg > 1 && $this->osm2cai_status == 4)
+            return false;
+
+        return true;
     }
 }
