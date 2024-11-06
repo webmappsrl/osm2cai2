@@ -21,6 +21,10 @@ class UgcTrackTest extends TestCase
     {
         parent::setUp();
 
+        //mock rate limiting (resolve error 429 in github actions tests)
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+
         $this->userData = [
             'name' => 'Test User',
             'email' => 'test@example.com',
