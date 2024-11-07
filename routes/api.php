@@ -6,6 +6,7 @@ use App\Http\Controllers\KmlController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\RegionController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\GeojsonController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\HikingRouteController;
@@ -24,14 +25,18 @@ Route::prefix('v2')->group(function () {
     Route::get('/hiking-routes/list', [HikingRouteController::class, 'index'])->name('hiking-routes-list');
 });
 
+
 Route::prefix('csv')->name('csv.')->group(function () {
-    Route::get('/{modelType}/{id}', [CsvController::class, 'download'])->name('download');
+    Route::get('/{modelType}/{id}', [CsvController::class, 'download']);
 });
 //TODO check compatibility with geography type geometry
 Route::prefix('shapefile')->name('shapefile.')->group(function () {
-    Route::get('/{modelType}/{id}', [ShapeFileController::class, 'download'])->name('download');
+    Route::get('/{modelType}/{id}', [ShapeFileController::class, 'download']);
 });
 //TODO check compatibility with geography type geometry
 Route::prefix('kml')->name('kml.')->group(function () {
-    Route::get('/{modelType}/{id}', [KmlController::class, 'download'])->name('download');
+    Route::get('/{modelType}/{id}', [KmlController::class, 'download']);
+});
+Route::prefix('geojson')->name('geojson.')->group(function () {
+    Route::get('/{modelType}/{id}', [GeojsonController::class, 'download']);
 });

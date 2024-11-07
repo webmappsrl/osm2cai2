@@ -43,7 +43,7 @@ class ShapefileController extends Controller
             abort(404, 'Model not found');
         }
 
-        $shapefileData = $model->getShapefile(); // Assume model has this method
+        $shapefileData = $model->getShapefile();
 
         $headers = [
             'Content-Type' => 'application/zip',
