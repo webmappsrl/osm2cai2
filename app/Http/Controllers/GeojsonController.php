@@ -6,7 +6,7 @@ use App\Models\HikingRoute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use App\Models\Region;  // Add other required models
+use App\Models\Region;
 
 class GeojsonController extends Controller
 {
