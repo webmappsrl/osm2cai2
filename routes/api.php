@@ -27,9 +27,11 @@ Route::prefix('v2')->group(function () {
 Route::prefix('csv')->name('csv.')->group(function () {
     Route::get('/{modelType}/{id}', [CsvController::class, 'download'])->name('download');
 });
+//TODO check compatibility with geography type geometry
 Route::prefix('shapefile')->name('shapefile.')->group(function () {
     Route::get('/{modelType}/{id}', [ShapeFileController::class, 'download'])->name('download');
 });
+//TODO check compatibility with geography type geometry
 Route::prefix('kml')->name('kml.')->group(function () {
     Route::get('/{modelType}/{id}', [KmlController::class, 'download'])->name('download');
 });
