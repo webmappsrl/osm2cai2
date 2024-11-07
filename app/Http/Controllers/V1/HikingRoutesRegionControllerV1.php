@@ -583,7 +583,7 @@ Regione code according to CAI convention: <br/>
                     "sda" => $item->osm2cai_status ?? $osmfeaturesDataProperties['osm2cai_status'] ?? null,
                     "issues_status" => $item->issues_status ?? "",
                     "issues_description" => $item->issues_description ?? "",
-                    "issues_last_update" => $item->issues_last_update ?? "",
+                    "issues_last_update" => $item->issues_last_update ?? ""
                 ],
                 "geometry" => json_decode($geom, true)
             ];
