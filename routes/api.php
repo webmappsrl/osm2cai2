@@ -8,7 +8,6 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\EcPoiController;
 use App\Http\Controllers\RegionController;
 use App\Http\Controllers\SectorController;
-use App\Http\Controllers\GeojsonController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\ShapeFileController;
