@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\RecalculateIntersections;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Stopwatch\Section;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
@@ -195,6 +196,10 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     public function provinces()
     {
         return $this->belongsToMany(Province::class);
+    }
+    public function clubs()
+    {
+        return $this->belongsToMany(Club::class, 'hiking_route_club');
     }
 
     public function areas()

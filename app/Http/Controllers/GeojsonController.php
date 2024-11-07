@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HikingRoute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -97,6 +98,26 @@ class GeojsonController extends Controller
                     'shapefile_url' => url("api/shapefile/{$modelType}/{$model->id}"),
                     'kml' => url("api/kml/{$modelType}/{$model->id}"),
                 ];
+            case 'sector':
+                return [
+                    'id' => $model->id,
+                    'name' => $model->name,
+                    'area' => $model->area->name ?? null,
+                    'province' => $model->area->province->name ?? null,
+                    'region' => $model->area->province->region->name ?? null,
+                    'geojson_url' => url("api/geojson/{$modelType}/{$model->id}"),
+                    'shapefile_url' => url("api/shapefile/{$modelType}/{$model->id}"),
+                    'kml' => url("api/kml/{$modelType}/{$model->id}"),
+                ];
+            case 'club':
+                return [
+                    'id' => $model->id,
+                    'name' => $model->name,
+                    'region' => $model->region->name ?? null,
+                    'geojson_url' => url("api/geojson/{$modelType}/{$model->id}"),
+                    'shapefile_url' => url("api/shapefile/{$modelType}/{$model->id}"),
+                    'kml' => url("api/kml/{$modelType}/{$model->id}"),
+                ];
             default:
                 return [];
         }
@@ -117,13 +138,25 @@ class GeojsonController extends Controller
                 // Get sectors related to the region
                 $sectors = $model->getSectorIds();
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
                     ->get();
             case 'province':
                 // Get sectors related to the province
                 $sectors = $model->getSectorIds();
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
+                    ->get();
+            case 'area':
+                // Get sectors related to the area
+                $sectors = $model->getSectorIds();
+                return Sector::whereIn('id', $sectors)
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
+                    ->get();
+            case 'club':
+                // Get hiking routes related to the club
+                $hikingRoutes = $model->hikingRoutes()->get();
+                return HikingRoute::whereIn('id', $hikingRoutes->pluck('id'))
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
                     ->get();
             default:
                 return [];
@@ -138,6 +171,42 @@ class GeojsonController extends Controller
      */
     private function getResourceProperties($resource)
     {
+        if ($resource instanceof HikingRoute) {
+            $geometry = DB::select('SELECT ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom FROM hiking_routes WHERE id = ?;', [$resource->id]);
+            $geometry = json_decode($geometry[0]->geom);
+            $osmfeaturesDataProperties = $resource->osmfeaturesData['properties'];
+
+            $name = $resource->name ? $resource->name . ' - ' . $resource->ref : $resource->ref;
+
+            $regions = $resource->regions->pluck('name')->implode(', ');
+            $provinces = $resource->provinces->pluck('name')->implode(', ');
+            $areas = $resource->areas->pluck('name')->implode(', ');
+            $clubs = $resource->clubs->pluck('name')->implode(', ');
+
+            $userName = $resource->user?->name ?? '';
+
+            return [
+                'type' => 'Feature',
+                'geometry' => $geometry,
+                'properties' => [
+                    'id' => $resource->id,
+                    'name' => $name,
+                    'user' => $userName,
+                    'relation_id' => $osmfeaturesDataProperties['osm_id'] ?? '',
+                    'ref' => $resource->ref ?? '',
+                    'source_ref' => $osmfeaturesDataProperties['source_ref'] ?? '',
+                    'difficulty' => $resource->cai_scale ?? '',
+                    'from' => $osmfeaturesDataProperties['from'] ?? '',
+                    'to' => $osmfeaturesDataProperties['to'] ?? '',
+                    'regions' => $regions,
+                    'provinces' => $provinces,
+                    'areas' => $areas,
+                    'sector' => $resource->mainSector()->full_code ?? '',
+                    'clubs' => $clubs,
+                    'last_updated' => $resource->updated_at->format('Y-m-d'),
+                ]
+            ];
+        }
         return [
             'id' => $resource->id,
             'name' => $resource->name,
