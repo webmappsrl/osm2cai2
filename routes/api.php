@@ -10,6 +10,7 @@ use App\Http\Controllers\GeojsonController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\HikingRouteController;
+use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 /*
 |--------------------------------------------------------------------------
 | API Routes

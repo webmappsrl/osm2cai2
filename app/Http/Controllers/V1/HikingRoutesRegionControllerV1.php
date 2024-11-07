@@ -176,7 +176,7 @@ Regione code according to CAI convention: <br/>
             $query->where('code', $region_code);
         })->whereIn('osm2cai_status', $sda)->get();
 
-        $list = $list->pluck('relation_id')->toArray();
+        $list = $list->pluck('osmfeatures_data.properties.osm_id')->toArray();
 
         // Return
         return response($list, 200, ['Content-type' => 'application/json']);
