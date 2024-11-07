@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Traits\GeoIntersectTrait;
-use App\Traits\GeojsonableTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class MountainGroups extends Model
 {
-    use HasFactory, GeojsonableTrait, GeoIntersectTrait;
+    use HasFactory, SpatialDataTrait, GeoIntersectTrait;
 
     protected $fillable = [
         'id',

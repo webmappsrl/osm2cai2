@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Models\UgcPoi;
-use App\Traits\GeojsonableTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UgcMedia extends Model
 {
-    use HasFactory, GeojsonableTrait;
+    use HasFactory, SpatialDataTrait;
 
     protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'relative_url', 'app_id', 'ugc_poi_id', 'ugc_track_id'];
 

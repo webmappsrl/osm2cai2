@@ -6,13 +6,13 @@ use App\Models\User;
 use App\Models\Sector;
 use App\Models\Province;
 use App\Models\HikingRoute;
-use App\Traits\GeojsonableTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Area extends Model
 {
-    use HasFactory, GeojsonableTrait;
+    use HasFactory, SpatialDataTrait;
 
     protected $fillable = [
         'code',
