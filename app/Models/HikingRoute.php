@@ -404,7 +404,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         municipalities as m, 
         hiking_routes as hr
     WHERE 
-        st_intersects(m.geometry, ST_Transform(ST_StartPoint(hr.geometry::geometry), 4326)) 
+        st_intersects(m.geometry, ST_Transform(ST_StartPoint(hr.geometry), 4326)) 
         AND hr.id = {$this->id};
 SQL;
 
@@ -462,7 +462,7 @@ SQL;
         municipalities as m, 
         hiking_routes as hr
     WHERE 
-        st_intersects(m.geometry, ST_Transform(ST_Endpoint(ST_LineMerge(hr.geometry::geometry)), 4326)) 
+        st_intersects(m.geometry, ST_Transform(ST_Endpoint(ST_LineMerge(hr.geometry)), 4326)) 
         AND hr.id = {$this->id};
 SQL;
 

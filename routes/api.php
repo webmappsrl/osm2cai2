@@ -9,6 +9,7 @@ use App\Http\Controllers\RegionController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\GeojsonController;
 use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\ShapeFileController;
 use App\Http\Resources\HikingRouteTDHResource;
 use App\Http\Controllers\HikingRouteController;
@@ -50,7 +51,6 @@ Route::prefix('v1')->name('v1')->group(function () {
 });
 
 
-
 Route::prefix('v2')->group(function () {
     Route::get('/hiking-routes/list', [HikingRouteController::class, 'index'])->name('hr-list');
     Route::get('/hiking-routes/region/{regione_code}/{sda}', [HikingRouteController::class, 'indexByRegion'])->name('hr-ids-by-region');
@@ -62,4 +62,11 @@ Route::prefix('v2')->group(function () {
     Route::get('/hiking-route-osm/{osm_id}', [HikingRouteController::class, 'showByOsmId'])->name('hr_by_osmid');
     Route::get('/hiking-routes/bb/{bounding_box}/{sda}', [HikingRouteController::class, 'indexByBoundingBox'])->name('hr-ids-by-bb');
     Route::get('/hiking-routes-osm/bb/{bounding_box}/{sda}', [HikingRouteController::class, 'OsmIndexByBoundingBox'])->name('hr-osmids-by-bb');
+    Route::get('/hiking-routes-collection/bb/{bounding_box}/{sda}', [HikingRouteController::class, 'collectionByBoundingBox'])->name('v2-hr-collection-by-bb');
+    Route::get('/itinerary/list', [ItineraryController::class, 'index'])->name('v2-itinerary-list');
+    Route::get('/itinerary/{id}', [ItineraryController::class, 'show'])->name('v2-itinerary-id');
+    Route::get('/ecpois/bb/{bounding_box}/{type}', [EcPoiController::class, 'ecPoisBBox'])->name('v2-ecpois-by-bb');
+    Route::get('/ecpois/{hr_osm2cai_id}/{type}', [EcPoiController::class, 'ecPoisByOsm2CaiId'])->name('v2-ecpois-by-osm2caiId');
+    Route::get('/ecpois/{hr_osm_id}/{type}', [EcPoiController::class, 'ecPoisByOsmId'])->name('v2-ecpois-by-OsmId');
+    Route::get('/source_survey/overlay.geojson', [SourceSurveyController::class, 'overlayGeoJson'])->name('v2-source-survey-overlay-geojson');
 });

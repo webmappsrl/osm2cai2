@@ -391,7 +391,7 @@ Regione code according to CAI convention: <br/>
 
             $list = DB::table('hiking_routes')
                 ->select('id')
-                ->whereRaw("ST_Intersects(geometry::geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
                     floatval($coordinates[0]),
                     floatval($coordinates[1]),
                     floatval($coordinates[2]),
@@ -458,7 +458,7 @@ Regione code according to CAI convention: <br/>
 
             $list = DB::table('hiking_routes')
                 ->selectRaw("(osmfeatures_data->'properties'->>'osm_id')::integer as osm_id")
-                ->whereRaw("ST_Intersects(geometry::geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
                     floatval($coordinates[0]),
                     floatval($coordinates[1]),
                     floatval($coordinates[2]),
@@ -593,11 +593,11 @@ Regione code according to CAI convention: <br/>
         return $response;
     }
 
-    public static function geojsonByBoundingBox($osm2cai_status, $lo0, $la0, $lo1, $la1): string
+    public function geojsonByBoundingBox($osm2cai_status, $lo0, $la0, $lo1, $la1): string
     {
         try {
             $features = DB::table('hiking_routes')
-                ->whereRaw("ST_Intersects(geometry::geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
                     floatval($lo0),
                     floatval($la0),
                     floatval($lo1),

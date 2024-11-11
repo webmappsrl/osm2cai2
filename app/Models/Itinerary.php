@@ -42,10 +42,10 @@ class Itinerary extends Model
 
             $geometry = $hikingRoute->geometry;
             //check if geometry is type linestring or multilinestring
-            $geometry = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_MakeLine(ARRAY(SELECT (ST_Dump(ST_Collect('" . $geometry . "'::geometry))).geom))), 4326)) As wkt")[0]->wkt;
-            $geometryType = DB::select("SELECT ST_GeometryType(ST_SetSRID(ST_Force2D(ST_MakeLine(ARRAY(SELECT (ST_Dump(ST_Collect('" . $geometry . "'::geometry))).geom))), 4326)) As type")[0]->type;
+            $geometry = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_MakeLine(ARRAY(SELECT (ST_Dump(ST_Collect($geometry))).geom))), 4326)) As wkt")[0]->wkt;
+            $geometryType = DB::select("SELECT ST_GeometryType(ST_SetSRID(ST_Force2D(ST_MakeLine(ARRAY(SELECT (ST_Dump(ST_Collect($geometry))).geom))), 4326)) As type")[0]->type;
             if ($geometryType == 'ST_MultiLineString') {
-                $geometry = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_LineMerge('" . $geometry . "')), 4326)) As wkt")[0]->wkt;
+                $geometry = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_LineMerge($geometry)), 4326)) As wkt")[0]->wkt;
             }
 
             $start_point = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_StartPoint('" . $geometry . "')), 4326)) As wkt")[0]->wkt;

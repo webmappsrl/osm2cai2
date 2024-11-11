@@ -39,9 +39,9 @@ class ComputeHikingRoutesTdh extends Command
     {
         $id = $this->argument('id') ?? null;
         if (!$id) {
-            $hikingRoutes = HikingRoute::where('osm2cai_status', 4)->get(['id', 'tdh', 'osmfeatures_data']);
+            $hikingRoutes = HikingRoute::where('osm2cai_status', 4)->get(['id', 'tdh', 'osmfeatures_data', 'geometry']);
         } else {
-            $hikingRoute = HikingRoute::find($id)->with('tdh', 'osmfeatures_data');
+            $hikingRoute = HikingRoute::find($id)->with('tdh', 'osmfeatures_data', 'geometry');
             if (!$hikingRoute) {
                 $this->error('Hiking route not found');
                 return;

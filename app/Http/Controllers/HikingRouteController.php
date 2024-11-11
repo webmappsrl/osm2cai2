@@ -183,7 +183,7 @@ class HikingRouteController extends Controller
     {
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw("ST_within(geometry::geometry,ST_MakeEnvelope(" . $bounding_box . ", 4326))")
+            ->whereRaw("ST_within(geometry,ST_MakeEnvelope(" . $bounding_box . ", 4326))")
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
         $data = [];
@@ -335,7 +335,7 @@ class HikingRouteController extends Controller
     {
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw("ST_within(geometry::geometry,ST_MakeEnvelope(" . $bounding_box . ", 4326))")
+            ->whereRaw("ST_within(geometry,ST_MakeEnvelope(" . $bounding_box . ", 4326))")
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
         $data = [];
@@ -348,6 +348,61 @@ class HikingRouteController extends Controller
             $data[$osmId] = Carbon::create($hr->updated_at)->format('Y-m-d H:i:s');
         }
         return response($data, 200, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/v2/hiking-routes-collection/bb/{bounding_box}/{sda}",
+     *      tags={"Api V2"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Returns all the feautures collection based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.",
+     *       @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="collection",
+     *                     description="Feature Collection",
+     *                     type="json"
+     *                 ),
+     *                 example={"type":"Feature","properties":{"id":2421,"relation_id":4179533,"source":
+     * "survey:CAI","cai_scale":"E","from":"Castellare","to":"Campo di Croce","ref":"117","public_page":"https://osm2cai.cai.it/hiking-route/id/2421","sda":4,"validation_date":"2022-07-29","updated_at":"2022-07-29 10:11:23"},"geometry":
+     * {"type":"MultiLineString","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}},
+     *             )
+     *         )
+     *      ),
+     *     @OA\Parameter(
+     *         name="bounding_box",
+     *         in="path",
+     *         description="List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="string",
+     *             format="varchar",
+     *         )
+     *     ),
+     *      @OA\Parameter(
+     *         name="sda",
+     *         in="path",
+     *         description="SDA (stato di accatastamento) (e.g. 0,1,2,3,4). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="string",
+     *             format="varchar"
+     *         )
+     *     ),
+     * )
+     *
+     */
+    public function collectionByBoundingBox(string $bounding_box, string $sda)
+    {
+        $boundingBox = explode(',', $bounding_box);
+        $area = DB::select('select ST_Area(ST_MakeEnvelope(' . $bounding_box . ', 4326)) as area')[0]->area;
+        if ($area > _BOUNDIG_BOX_LIMIT)
+            return response(['error' => "Bounding box is too large"], 500, ['Content-type' => 'application/json']);
+        else {
+            return $this->geojsonByBoundingBox($sda, floatval($boundingBox[0]), floatval($boundingBox[1]), floatval($boundingBox[2]), floatval($boundingBox[3]));
+        }
     }
 
     /**
@@ -660,5 +715,77 @@ class HikingRouteController extends Controller
         }
 
         return $itinerary_array;
+    }
+
+    /**
+     * Generate a GeoJSON collection of hiking routes by bounding box
+     * 
+     * @param string $osm2cai_status The status of the hiking routes to include
+     * @param string $lo0 The lower longitude of the bounding box
+     * @param string $la0 The lower latitude of the bounding box
+     * @param string $lo1 The upper longitude of the bounding box
+     * @param string $la1 The upper latitude of the bounding box
+     * @return string The GeoJSON collection as a string
+     */
+    public function geojsonByBoundingBox(string $osm2cai_status, string $lo0, string $la0, string $lo1, string $la1): string
+    {
+        try {
+            $features = DB::table('hiking_routes')
+                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                    floatval($lo0),
+                    floatval($la0),
+                    floatval($lo1),
+                    floatval($la1)
+                ])
+                ->whereIn('osm2cai_status', explode(',', $osm2cai_status))
+                ->get([
+                    'id',
+                    'osm2cai_status',
+                    'validation_date',
+                    'osmfeatures_data',
+                    DB::raw('ST_AsGeoJSON(geometry) as geom')
+                ]);
+
+            if ($features->isEmpty()) {
+                return json_encode([
+                    "type" => "FeatureCollection",
+                    "features" => []
+                ]);
+            }
+
+            $featureCollection = [
+                "type" => "FeatureCollection",
+                "features" => $features->map(function ($item) {
+                    $osmProperties = $item->osmfeatures_data['properties'] ?? [];
+
+                    return [
+                        "type" => "Feature",
+                        "properties" => [
+                            "id" => $item->id,
+                            "relation_id" => $osmProperties['osm_id'] ?? null,
+                            "source" => $osmProperties['source'] ?? null,
+                            "cai_scale" => $osmProperties['cai_scale'] ?? null,
+                            "from" => $osmProperties['from'] ?? null,
+                            "to" => $osmProperties['to'] ?? null,
+                            "ref" => $osmProperties['ref'] ?? null,
+                            "public_page" => url('/hiking-route/id/' . $item->id),
+                            "sda" => $item->osm2cai_status,
+                            "validation_date" => $item->validation_date,
+                            "network" => $osmProperties['network'] ?? null,
+                            "osmc_symbol" => $osmProperties['osmc_symbol'] ?? null,
+                            "roundtrip" => $item->tdh['roundtrip'] ?? null,
+                            "symbol" => $osmProperties['symbol'] ?? null,
+                            "description" => $osmProperties['description'] ?? null,
+                            "website" => $osmProperties['website'] ?? null
+                        ],
+                        "geometry" => json_decode($item->geom)
+                    ];
+                })->all()
+            ];
+
+            return json_encode($featureCollection);
+        } catch (Exception $e) {
+            throw new Exception('Error creating GeoJSON collection: ' . $e->getMessage());
+        }
     }
 }
