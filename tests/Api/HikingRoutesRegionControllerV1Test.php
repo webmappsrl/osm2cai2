@@ -1,19 +1,32 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Api;
 
 use Tests\TestCase;
 use App\Models\Region;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class HikingRoutesRegionControllerV1Test extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        //check if osmfeatures_data column exists
+        if (!Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
+            Schema::table('hiking_routes', function (Blueprint $table) {
+                $table->json('osmfeatures_data')->nullable();
+            });
+        }
+    }
+
     private function createTestHikingRoute($id, $osm_id, $status, $geometry = null)
     {
+
         return HikingRoute::create([
             'id' => $id,
             'osm2cai_status' => $status,
