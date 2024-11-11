@@ -7,6 +7,7 @@ use App\Models\Region;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class HikingRoutesRegionControllerV1Test extends TestCase
