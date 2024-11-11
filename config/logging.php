@@ -57,6 +57,12 @@ return [
             'path' => storage_path('logs/wm-osmfeatures.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
+        'calculate-intersections' => [
+            'driver' => 'stack',
+            'channels' => ['single'],
+            'path' => storage_path('logs/calculate-intersections.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
         'hiking-routes-update' => [
             'driver' => 'stack',
             'channels' => ['single'],

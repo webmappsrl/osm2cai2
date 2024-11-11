@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Wm\WmPackage\Jobs\Abstracts\BaseJob;
+use Wm\WmPackage\Jobs\Abstract\BaseJob;
 
 class RecalculateIntersections extends BaseJob
 {
@@ -17,6 +17,11 @@ class RecalculateIntersections extends BaseJob
     protected function getRedisLockKey(): string
     {
         return $this->region ? $this->region->id : $this->hikingRoute->id;
+    }
+
+    protected function getLogChannel(): string
+    {
+        return 'calculate-intersections';
     }
 
     protected $region;
@@ -28,8 +33,9 @@ class RecalculateIntersections extends BaseJob
         $this->hikingRoute = $hikingRoute;
     }
 
-    public function handle(IntersectionService $intersectionService)
+    public function handle()
     {
+        $intersectionService = new IntersectionService();
         $intersectionService->calculateIntersections($this->region, $this->hikingRoute);
     }
 }

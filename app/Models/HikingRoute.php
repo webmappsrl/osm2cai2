@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\RecalculateIntersections;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Stopwatch\Section;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
@@ -196,6 +197,10 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     {
         return $this->belongsToMany(Province::class);
     }
+    public function clubs()
+    {
+        return $this->belongsToMany(Club::class, 'hiking_route_club');
+    }
 
     public function areas()
     {
@@ -293,7 +298,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     public function mainSector()
     {
         $q = "SELECT sector_id from hiking_route_sector where hiking_route_id={$this->id} order by percentage desc limit 1;";
-        $res = DB::select(DB::raw($q));
+        $res = DB::select($q);
         if (count($res) > 0) {
             foreach ($res as $item) {
                 $sector_id = $item->sector_id;

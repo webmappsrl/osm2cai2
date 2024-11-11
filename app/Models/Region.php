@@ -7,6 +7,8 @@ use App\Models\EcPoi;
 use App\Models\Province;
 use App\Models\HikingRoute;
 use App\Models\MountainGroups;
+use App\Traits\SpatialDataTrait;
+use App\Traits\CsvableModelTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\RecalculateIntersections;
@@ -20,9 +22,9 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait;
 
-    protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting'];
+    protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting', 'code'];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
