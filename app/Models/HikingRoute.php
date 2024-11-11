@@ -37,6 +37,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
     protected $fillable = [
         'geometry',
+        'osm2cai_status',
         'osmfeatures_id',
         'osmfeatures_data',
         'osmfeatures_updated_at',
@@ -46,7 +47,8 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'array',
-        'issues_last_update' => 'date'
+        'issues_last_update' => 'date',
+        'tdh' => 'array'
     ];
 
     private HikingRouteDescriptionService $descriptionService;
