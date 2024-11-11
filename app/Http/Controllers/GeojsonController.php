@@ -138,25 +138,25 @@ class GeojsonController extends Controller
                 // Get sectors related to the region
                 $sectors = $model->getSectorIds();
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'province':
                 // Get sectors related to the province
                 $sectors = $model->getSectorIds();
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'area':
                 // Get sectors related to the area
                 $sectors = $model->getSectorIds();
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'club':
                 // Get hiking routes related to the club
                 $hikingRoutes = $model->hikingRoutes()->get();
                 return HikingRoute::whereIn('id', $hikingRoutes->pluck('id'))
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry::geometry)) as geom'))
+                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'area':
                 // Get sectors related to the area
