@@ -400,7 +400,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
      */
     public function getFromInfo(): array
     {
-        $from = $this->osmfeatures_data['properties']['from'];
+        $from = $this->osmfeatures_data['properties']['from'] ?? null;
         $info = [
             'from' => $from,
             'city_from' => 'Unknown',
@@ -458,7 +458,7 @@ SQL;
      */
     public function getToInfo(): array
     {
-        $to = $this->osmfeatures_data['properties']['to'];
+        $to = $this->osmfeatures_data['properties']['to'] ?? null;
         $info = [
             'to' => $to,
             'city_to' => 'Unknown',

@@ -659,6 +659,183 @@
                 }
             }
         },
+        "/api/v2/hiking-route-tdh/{id}": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "operationId": "9b7cb7a429a58c0eb11ea8a9e0534a1a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The OSM2CAI ID of a specific Hiking Route",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the TDH format geojson of a Hiking Route based on the given ID.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "type": {
+                                            "description": "Geojson type",
+                                            "type": "string"
+                                        },
+                                        "properties": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "OSM2CAI ID",
+                                                    "type": "integer"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "osm2cai_status": {
+                                                    "type": "string"
+                                                },
+                                                "validation_date": {
+                                                    "type": "string"
+                                                },
+                                                "relation_id": {
+                                                    "type": "string"
+                                                },
+                                                "ref": {
+                                                    "type": "string"
+                                                },
+                                                "ref_REI": {
+                                                    "type": "string"
+                                                },
+                                                "gpx_url": {
+                                                    "type": "string"
+                                                },
+                                                "cai_scale": {
+                                                    "type": "string"
+                                                },
+                                                "cai_scale_string": {
+                                                    "type": "string"
+                                                },
+                                                "cai_scale_description": {
+                                                    "type": "string"
+                                                },
+                                                "survey_date": {
+                                                    "type": "string"
+                                                },
+                                                "from": {
+                                                    "type": "string"
+                                                },
+                                                "city_from": {
+                                                    "type": "string"
+                                                },
+                                                "city_from_istat": {
+                                                    "type": "string"
+                                                },
+                                                "region_from": {
+                                                    "type": "string"
+                                                },
+                                                "region_from_istat": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "string"
+                                                },
+                                                "city_to": {
+                                                    "type": "string"
+                                                },
+                                                "city_to_istat": {
+                                                    "type": "string"
+                                                },
+                                                "region_to": {
+                                                    "type": "string"
+                                                },
+                                                "region_to_istat": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "roundtrip": {
+                                                    "type": "string"
+                                                },
+                                                "abstract": {
+                                                    "type": "string"
+                                                },
+                                                "distance": {
+                                                    "type": "string"
+                                                },
+                                                "ascent": {
+                                                    "type": "string"
+                                                },
+                                                "descent": {
+                                                    "type": "string"
+                                                },
+                                                "duration_forward": {
+                                                    "type": "string"
+                                                },
+                                                "duration_backward": {
+                                                    "type": "string"
+                                                },
+                                                "ele_from": {
+                                                    "type": "string"
+                                                },
+                                                "ele_to": {
+                                                    "type": "string"
+                                                },
+                                                "ele_max": {
+                                                    "type": "string"
+                                                },
+                                                "ele_min": {
+                                                    "type": "string"
+                                                },
+                                                "issues_status": {
+                                                    "type": "string"
+                                                },
+                                                "issues_last_update": {
+                                                    "type": "string"
+                                                },
+                                                "issues_description": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "geometry": {
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "coordinates": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "number"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v2/hiking-route-osm/{id}": {
             "get": {
                 "tags": [

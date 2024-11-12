@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Region;
 use App\Models\HikingRoute;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use OpenApi\Annotations as OA;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HikingRouteResource;
+use App\Http\Resources\HikingRouteTDHResource;
 
 class HikingRouteController extends Controller
 {
@@ -42,7 +44,12 @@ class HikingRouteController extends Controller
      */
     public function index()
     {
-        $hikingRoutes = HikingRoute::orderBy('updated_at', 'desc')->get(['id', 'updated_at']);
+        $hikingRoutes = HikingRoute::orderBy('updated_at', 'desc')
+            ->get(['id', 'updated_at'])
+            ->mapWithKeys(function ($route) {
+                return [$route->id => $route->updated_at->toISOString()];
+            });
+
         return response()->json($hikingRoutes);
     }
 
@@ -117,18 +124,28 @@ class HikingRouteController extends Controller
     public function indexByRegion(string $region_code, string $sda)
     {
         $region_code = strtoupper($region_code);
-        $statuses = explode(',', $sda);
 
-        $hikingRoutes = HikingRoute::whereHas('regions', function ($query) use ($region_code) {
+        $sda = explode(',', $sda);
+
+        // Check if region exists
+        $region = Region::where('code', $region_code)->first();
+        if (!$region) {
+            return response(['error' => 'Region not found with code ' . $region_code], 404);
+        }
+
+        // Get hiking routes for region and status
+        $list = HikingRoute::whereHas('regions', function ($query) use ($region_code) {
             $query->where('code', $region_code);
-        })
-            ->whereIn('osm2cai_status', $statuses)
-            ->get()
-            ->mapWithKeys(function ($route) {
-                return [$route->id => $route->updated_at->format('Y-m-d H:i:s')];
-            });
+        })->whereIn('osm2cai_status', $sda)->get();
 
-        return response()->json($hikingRoutes);
+        if ($list->isEmpty()) {
+            return response(['error' => 'No hiking routes found for region ' . $region_code . ' and SDA ' . implode(',', $sda)], 404);
+        }
+
+        $list = $list->pluck('id')->toArray();
+
+        // Return
+        return response($list, 200, ['Content-type' => 'application/json']);
     }
 
     /**
@@ -398,7 +415,7 @@ class HikingRouteController extends Controller
     {
         $boundingBox = explode(',', $bounding_box);
         $area = DB::select('select ST_Area(ST_MakeEnvelope(' . $bounding_box . ', 4326)) as area')[0]->area;
-        if ($area > _BOUNDIG_BOX_LIMIT)
+        if ($area > 0.1)
             return response(['error' => "Bounding box is too large"], 500, ['Content-type' => 'application/json']);
         else {
             return $this->geojsonByBoundingBox($sda, floatval($boundingBox[0]), floatval($boundingBox[1]), floatval($boundingBox[2]), floatval($boundingBox[3]));
@@ -507,7 +524,7 @@ class HikingRouteController extends Controller
                 return $this->notFoundResponse('No Hiking Route found with this id');
             }
 
-            $geom = DB::select(DB::raw("SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?"), [$id])[0]->geom;
+            $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?', [$id])[0]->geom;
 
             if (!isset($geom)) {
                 return $this->notFoundResponse('No geometry found for this Hiking Route');
@@ -519,6 +536,89 @@ class HikingRouteController extends Controller
         } catch (Exception $e) {
             return $this->errorResponse('Error processing Hiking Route');
         }
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/v2/hiking-route-tdh/{id}",
+     *      tags={"Api V2"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Returns the TDH format geojson of a Hiking Route based on the given ID.",
+     *          @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="type",
+     *                     description="Geojson type",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="properties",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", description="OSM2CAI ID"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(property="osm2cai_status", type="string"),
+     *                     @OA\Property(property="validation_date", type="string"),
+     *                     @OA\Property(property="relation_id", type="string"),
+     *                     @OA\Property(property="ref", type="string"),
+     *                     @OA\Property(property="ref_REI", type="string"),
+     *                     @OA\Property(property="gpx_url", type="string"),
+     *                     @OA\Property(property="cai_scale", type="string"),
+     *                     @OA\Property(property="cai_scale_string", type="string"),
+     *                     @OA\Property(property="cai_scale_description", type="string"),
+     *                     @OA\Property(property="survey_date", type="string"),
+     *                     @OA\Property(property="from", type="string"),
+     *                     @OA\Property(property="city_from", type="string"),
+     *                     @OA\Property(property="city_from_istat", type="string"),
+     *                     @OA\Property(property="region_from", type="string"),
+     *                     @OA\Property(property="region_from_istat", type="string"),
+     *                     @OA\Property(property="to", type="string"),
+     *                     @OA\Property(property="city_to", type="string"),
+     *                     @OA\Property(property="city_to_istat", type="string"),
+     *                     @OA\Property(property="region_to", type="string"),
+     *                     @OA\Property(property="region_to_istat", type="string"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="roundtrip", type="string"),
+     *                     @OA\Property(property="abstract", type="string"),
+     *                     @OA\Property(property="distance", type="string"),
+     *                     @OA\Property(property="ascent", type="string"),
+     *                     @OA\Property(property="descent", type="string"),
+     *                     @OA\Property(property="duration_forward", type="string"),
+     *                     @OA\Property(property="duration_backward", type="string"),
+     *                     @OA\Property(property="ele_from", type="string"),
+     *                     @OA\Property(property="ele_to", type="string"),
+     *                     @OA\Property(property="ele_max", type="string"),
+     *                     @OA\Property(property="ele_min", type="string"),
+     *                     @OA\Property(property="issues_status", type="string"),
+     *                     @OA\Property(property="issues_last_update", type="string"),
+     *                     @OA\Property(property="issues_description", type="string")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="geometry",
+     *                     type="object",
+     *                     @OA\Property(property="type", type="string"),
+     *                     @OA\Property(property="coordinates", type="array", @OA\Items(type="array", @OA\Items(type="number")))
+     *                 )
+     *             )
+     *         )
+     *      ),
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="The OSM2CAI ID of a specific Hiking Route",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64"
+     *         )
+     *     )
+     * )
+     */
+    public function showTdh(int $id)
+    {
+        return new HikingRouteTDHResource(HikingRoute::findOrFail($id));
     }
 
     /**
@@ -578,19 +678,17 @@ class HikingRouteController extends Controller
     public function showByOsmId(int $osm_id)
     {
         try {
-            $obj = HikingRoute::where('osmfeatures_data->properties->osm_id', '=', $osm_id)
-                ->select(DB::raw("ST_AsGeoJSON(geometry) as geom"))
-                ->first();
+            $hr = HikingRoute::where('osmfeatures_data->properties->osm_id', '=', $osm_id)->first();
 
-            if (is_null($obj)) {
+            if (is_null($hr)) {
                 return $this->notFoundResponse('No Hiking Route found with this id');
             }
 
-            if (!isset($obj->geom)) {
+            if (!isset($hr->geometry)) {
                 return $this->notFoundResponse('No geometry found for this Hiking Route');
             }
 
-            $response = $this->buildHikingRouteResponse($obj, $obj->geom);
+            $response = $this->buildHikingRouteResponse($hr, $hr->geometry);
 
             return response($response, 200, ['Content-type' => 'application/json']);
         } catch (Exception $e) {
@@ -666,12 +764,12 @@ class HikingRouteController extends Controller
             "type" => "Feature",
             "properties" => [
                 "id" => $hikingRoute->id,
-                "relation_id" => $osmfeaturesProperties['osm_id'],
-                "source" => $osmfeaturesProperties['source'],
-                "cai_scale" => $osmfeaturesProperties['cai_scale'],
-                "from" => $osmfeaturesProperties['from'],
-                "to" => $osmfeaturesProperties['to'],
-                "ref" => $osmfeaturesProperties['ref'],
+                "relation_id" => $osmfeaturesProperties['osm_id'] ?? null,
+                "source" => $osmfeaturesProperties['source'] ?? null,
+                "cai_scale" => $osmfeaturesProperties['cai_scale'] ?? null,
+                "from" => $osmfeaturesProperties['from'] ?? null,
+                "to" => $osmfeaturesProperties['to'] ?? null,
+                "ref" => $osmfeaturesProperties['ref'] ?? null,
                 "public_page" => url('/hiking-route/id/' . $hikingRoute->id),
                 "sda" => $hikingRoute->osm2cai_status,
                 "issues_status" => $hikingRoute->issues_status ?? "",

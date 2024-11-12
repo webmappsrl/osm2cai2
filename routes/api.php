@@ -58,9 +58,7 @@ Route::prefix('v2')->group(function () {
     Route::get('/hiking-routes/region/{regione_code}/{sda}', [HikingRouteController::class, 'indexByRegion'])->name('hr-ids-by-region');
     Route::get('/hiking-routes-osm/region/{regione_code}/{sda}', [HikingRouteController::class, 'OsmIndexByRegion'])->name('hr_osmids_by_region');
     Route::get('/hiking-route/{id}', [HikingRouteController::class, 'show'])->name('hr_by_id');
-    Route::get('/hiking-route-tdh/{id}', function (string $id) {
-        return new HikingRouteTDHResource(HikingRoute::findOrFail($id));
-    })->name('hr_thd_by_id');
+    Route::get('/hiking-route-tdh/{id}', [HikingRouteController::class, 'showTdh'])->name('hr_thd_by_id');
     Route::get('/hiking-route-osm/{osm_id}', [HikingRouteController::class, 'showByOsmId'])->name('hr_by_osmid');
     Route::get('/hiking-routes/bb/{bounding_box}/{sda}', [HikingRouteController::class, 'indexByBoundingBox'])->name('hr-ids-by-bb');
     Route::get('/hiking-routes-osm/bb/{bounding_box}/{sda}', [HikingRouteController::class, 'OsmIndexByBoundingBox'])->name('hr-osmids-by-bb');
@@ -70,6 +68,7 @@ Route::prefix('v2')->group(function () {
     Route::get('/ecpois/bb/{bounding_box}/{type}', [EcPoiController::class, 'indexByBoundingBox'])->name('v2-ecpois-by-bb');
     Route::get('/ecpois/{hr_osm2cai_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteId'])->name('v2-ecpois-by-osm2caiId');
     Route::get('/ecpois/{hr_osm_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteOsmId'])->name('v2-ecpois-by-OsmId');
+
 
     //ACQUA SORGENTE
     Route::prefix('source_survey')->name('source-survey.')->group(function () {

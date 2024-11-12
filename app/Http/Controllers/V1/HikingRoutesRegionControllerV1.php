@@ -12,8 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
-define('_BOUNDIG_BOX_LIMIT', 0.1);
-
 class HikingRoutesRegionControllerV1 extends Controller
 {
 
@@ -530,7 +528,7 @@ Regione code according to CAI convention: <br/>
                 floatval($boundingBox[3])
             );
 
-            if ($area > _BOUNDIG_BOX_LIMIT) {
+            if ($area > 0.1) {
                 return response(['error' => "Bounding box is too large"], 500, ['Content-type' => 'application/json']);
             }
 
