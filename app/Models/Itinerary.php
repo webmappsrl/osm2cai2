@@ -83,7 +83,7 @@ class Itinerary extends Model
             return null;
         }
         foreach ($hikingRoutes as $hikingRoute) {
-            $totalKm += $hikingRoute->distance_comp;
+            $totalKm += $hikingRoute->tdh['distance'] ?? 0;
         }
 
         $data = [];

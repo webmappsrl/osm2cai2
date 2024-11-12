@@ -302,6 +302,20 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     }
 
     /**
+     * Get a hiking route by its OpenStreetMap ID
+     * 
+     * Looks up a hiking route using the OSM ID stored in the osmfeatures_data properties.
+     * Returns the first matching route or null if not found.
+     *
+     * @param string $osmId The OpenStreetMap ID to search for
+     * @return \App\Models\HikingRoute|null The matching hiking route if found, null otherwise
+     */
+    public static function getHikingRouteByOsmId(string $osmId): ?HikingRoute
+    {
+        return self::where('osmfeatures_data->properties->osm_id', $osmId)->first();
+    }
+
+    /**
      * Get the main sector associated with this hiking route
      * 
      * Returns the sector with the highest percentage coverage of this route.
@@ -545,6 +559,10 @@ SQL;
      */
     public function getCaiScaleString(): array
     {
+        //if cai_scale is not set or is null, return an empty array
+        if (!isset($this->osmfeatures_data['properties']['cai_scale']) || is_null($this->osmfeatures_data['properties']['cai_scale'])) {
+            return [];
+        }
         switch ($this->cai_scale) {
             case 'T':
                 $v = [
@@ -601,6 +619,10 @@ SQL;
      */
     public function getCaiScaleDescription(): array
     {
+        //if cai_scale is not set or is null, return an empty array
+        if (!isset($this->osmfeatures_data['properties']['cai_scale']) || is_null($this->osmfeatures_data['properties']['cai_scale'])) {
+            return [];
+        }
         return $this->descriptionService->getCaiScaleDescription($this->osmfeatures_data['properties']['cai_scale']);
     }
 
@@ -623,11 +645,11 @@ SQL;
     public function getAbstract(array $from, array $to, array $tech): array
     {
         return $this->descriptionService->generateAbstract([
-            'ref' => $this->osmfeatures_data['properties']['osm_tags']['ref'],
+            'ref' => $this->osmfeatures_data['properties']['osm_tags']['ref'] ?? null,
             'from' => $from,
             'to' => $to,
             'tech' => $tech,
-            'roundtrip' => $this->osmfeatures_data['properties']['roundtrip'],
+            'roundtrip' => $this->osmfeatures_data['properties']['roundtrip'] ?? null,
             'cai_scale' => $this->getCaiScaleString(),
         ]);
     }

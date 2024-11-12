@@ -16,6 +16,144 @@
         }
     ],
     "paths": {
+        "/ecpois/bb/{bounding_box}/{type}": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "summary": "Get Ec POIs by Bounding Box and Type",
+                "description": "Returns a list of Eco POIs within the specified bounding box and of the specified type",
+                "operationId": "0d90ace60acc294d079c678ccf43489c",
+                "parameters": [
+                    {
+                        "name": "bounding_box",
+                        "in": "path",
+                        "description": "Bounding box in 'minLng,minLat,maxLng,maxLat' format",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "Type of the POIs to retrieve: R for relation, W for way, N for node",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ecpois/{hr_osm2cai_id}/{type}": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "summary": "Get EcPOIs in a 1km buffer from the HikingRoutes defined by ID",
+                "description": "Returns a list of Ec POIs around 1km from a specific OSM2CAI hiking route ID and of a specified type",
+                "operationId": "4168a84c05d6701970e5fa6447818f02",
+                "parameters": [
+                    {
+                        "name": "hr_osm2cai_id",
+                        "in": "path",
+                        "description": "OSM2CAI ID of the hiking route",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "Type of the POIs to retrieve",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ecpois/{hr_osm_id}/{type}": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "summary": "Get EcPOIs in a 1km buffer from the HikingRoutes defined by OSM ID",
+                "description": "Returns a list of Ec POIs around 1km from a specific OSM hiking route ID and of a specified type",
+                "operationId": "1f496e261a5d28925133a85415cd217a",
+                "parameters": [
+                    {
+                        "name": "hr_osm_id",
+                        "in": "path",
+                        "description": "OSM ID of the hiking route",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "Type of the POIs to retrieve",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v2/hiking-routes/list": {
             "get": {
                 "tags": [
@@ -275,6 +413,85 @@
                                         "7766787": "2022-12-03 12:34:25",
                                         "3151885": "2022-07-31 18:23:34",
                                         "2736729": "2022-09-12 23:12:11"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/hiking-routes-collection/bb/{bounding_box}/{sda}": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "operationId": "b38bd20568e67ebda5ba3ec4c6e981ce",
+                "parameters": [
+                    {
+                        "name": "bounding_box",
+                        "in": "path",
+                        "description": "List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "varchar"
+                        }
+                    },
+                    {
+                        "name": "sda",
+                        "in": "path",
+                        "description": "SDA (stato di accatastamento) (e.g. 0,1,2,3,4). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "varchar"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns all the feautures collection based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "collection": {
+                                            "description": "Feature Collection",
+                                            "type": "json"
+                                        }
+                                    },
+                                    "type": "object",
+                                    "example": {
+                                        "type": "Feature",
+                                        "properties": {
+                                            "id": 2421,
+                                            "relation_id": 4179533,
+                                            "source": "survey:CAI",
+                                            "cai_scale": "E",
+                                            "from": "Castellare",
+                                            "to": "Campo di Croce",
+                                            "ref": "117",
+                                            "public_page": "https://osm2cai.cai.it/hiking-route/id/2421",
+                                            "sda": 4,
+                                            "validation_date": "2022-07-29",
+                                            "updated_at": "2022-07-29 10:11:23"
+                                        },
+                                        "geometry": {
+                                            "type": "MultiLineString",
+                                            "coordinates": [
+                                                [
+                                                    [
+                                                        10.4495294,
+                                                        43.7615252
+                                                    ],
+                                                    [
+                                                        10.4495998,
+                                                        43.7615566
+                                                    ]
+                                                ]
+                                            ]
+                                        }
                                     }
                                 }
                             }
@@ -567,6 +784,42 @@
                                                 ]
                                             ]
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/itinerary/list": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "operationId": "fc031c899506af3d9b4dd0c41067a856",
+                "responses": {
+                    "200": {
+                        "description": "Returns all the itinerary IDs and updated_at date. These ids can be used in the json API to retrieve the itinerary data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "description": "Internal osm2cai Identifier",
+                                            "type": "integer"
+                                        },
+                                        "updated_at": {
+                                            "description": "last update of itinerary",
+                                            "type": "string",
+                                            "format": "date"
+                                        }
+                                    },
+                                    "type": "object",
+                                    "example": {
+                                        "1269": "2022-12-03 12:34:25",
+                                        "652": "2022-07-31 18:23:34",
+                                        "273": "2022-09-12 23:12:11"
                                     }
                                 }
                             }
