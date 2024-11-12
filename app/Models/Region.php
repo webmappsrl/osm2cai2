@@ -36,7 +36,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     {
         static::updated(function ($region) {
             if ($region->isDirty('geometry')) {
-                RecalculateIntersections::dispatch($region);
+                RecalculateIntersections::dispatch($region, null);
             }
         });
     }

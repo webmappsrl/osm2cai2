@@ -92,7 +92,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
         static::updated(function ($hikingRoute) {
             if ($hikingRoute->isDirty('geometry')) {
-                RecalculateIntersections::dispatch($hikingRoute);
+                RecalculateIntersections::dispatch(null, $hikingRoute);
             }
         });
     }
@@ -139,9 +139,9 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
 
         // Update osm2cai_status if necessary
-        if (isset($osmfeaturesData['osm2cai_status']) && $osmfeaturesData['osm2cai_status'] !== null) {
-            if ($model->osm2cai_status !== 4 && $model->osm2cai_status !== $osmfeaturesData['osm2cai_status']) {
-                $updateData['osm2cai_status'] = $osmfeaturesData['osm2cai_status'];
+        if (isset($osmfeaturesData['properties']['osm2cai_status']) && $osmfeaturesData['properties']['osm2cai_status'] !== null) {
+            if ($model->osm2cai_status !== 4 && $model->osm2cai_status !== $osmfeaturesData['properties']['osm2cai_status']) {
+                $updateData['osm2cai_status'] = $osmfeaturesData['properties']['osm2cai_status'];
                 Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute ' . $osmfeaturesId);
             }
         }
