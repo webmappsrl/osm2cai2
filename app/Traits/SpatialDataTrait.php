@@ -131,7 +131,7 @@ trait SpatialDataTrait
         // Procedi con la generazione dello shapefile solo se ci sono id di settori
         return $this->generateShapefile(
             'shape_files',
-            "SELECT ST_AsText(ST_Transform(geometry::geometry, 4326)) as geometry, id, name 
+            "SELECT ST_AsText(ST_Transform(geometry, 4326)) as geometry, id, name 
         FROM sectors WHERE id IN (" . implode(',', $sectorIds) . ")"
         );
     }

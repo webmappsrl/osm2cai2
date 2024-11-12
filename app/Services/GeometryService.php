@@ -133,8 +133,8 @@ class GeometryService
         SELECT 
             ST_GeometryType(
                 CASE 
-                    WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}::geometry
-                    ELSE {$geometryColumn}::geometry
+                    WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}
+                    ELSE {$geometryColumn}
                 END
             ) AS geom_type
         FROM {$table}
@@ -143,7 +143,7 @@ class GeometryService
         } else {
             $query = <<<SQL
         SELECT 
-            ST_GeometryType({$geometryColumn}::geometry) AS geom_type
+            ST_GeometryType({$geometryColumn}) AS geom_type
         FROM {$table}
         LIMIT 1;
         SQL;
