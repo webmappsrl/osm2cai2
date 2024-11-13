@@ -2,14 +2,13 @@
 
 namespace App\Traits;
 
-use App\Models\CaiHuts;
-use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
-use App\Models\Section;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Trait to get intersections with other models
+ */
 trait GeoIntersectTrait
 {
     /**

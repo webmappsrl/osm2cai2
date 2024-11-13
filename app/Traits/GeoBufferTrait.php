@@ -2,14 +2,12 @@
 
 namespace App\Traits;
 
-use App\Models\CaiHuts;
-use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
-use App\Models\Section;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Trait to get elements in a given buffer distance (m) from the given model
+ */
 trait GeoBufferTrait
 {
     /**

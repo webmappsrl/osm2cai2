@@ -217,6 +217,7 @@ class CacheMiturAbruzzoApiCommand extends Command
         $geojson['properties'] = $properties;
         $geojson['geometry'] = $geometry;
 
+        //TODO 
         $hut->cached_mitur_api_data = json_encode($geojson);
         $hut->save();
 
@@ -277,24 +278,16 @@ class CacheMiturAbruzzoApiCommand extends Command
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
 
         //get only hiking routes in a 1000m buffer with osm2cai status 4
-        $hikingRouteIds = DB::table('hiking_routes')
-            ->select('id', 'updated_at')
-            ->where('osm2cai_status', 4)
-            ->whereRaw("ST_DWithin(geometry, (SELECT geometry FROM " . $poi->getTable() . " WHERE id = ?), ?)", [$poi->id, 1000])
-            ->pluck('updated_at', 'id');
-        $hikingRoute = HikingRoute::whereIn('id', array_keys($hikingRouteIds->toArray()))->first();
+        $hikingRoutes = $poi->getElementsInBuffer(HikingRoute::class, 1000);
+        $hikingRoute = $hikingRoutes->first();
 
 
         //build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
 
-        $intersectingMunicipalitiesIds = DB::table('municipalities')
-            ->select('gid')
-            ->whereRaw("ST_Intersects(geom, (SELECT geometry FROM " . $poi->getTable() . " WHERE id = ?))", [$poi->id])
-            ->pluck('gid');
-
-        $municipalities = DB::table('municipalities')->whereIn('gid', $intersectingMunicipalitiesIds)->get();
+        $intersectingMunicipalities = $poi->getIntersections(Municipality::class);
+        $municipalities = $intersectingMunicipalities->pluck('comune')->implode(', ');
 
         $properties = [];
         $properties['id'] = $poi->id;
@@ -304,10 +297,10 @@ class CacheMiturAbruzzoApiCommand extends Command
         $properties['description'] = $enrichmentsData['description']['it'] ?? "";
         $properties['map'] = route('poi-map', ['id' => $poi->id]);
         $properties['images'] = $images ?? [];
-        $properties['comune'] = $municipalities->pluck('comune')->implode(', ');
+        $properties['comune'] = $municipalities;
         $properties['difficulty'] = $hikingRoute ? $hikingRoute->osmfeatures_data['properties']['cai_scale'] ?? '' : '';
         $properties['activity'] = 'Escursionismo';
-        $properties['has_hiking_routes'] = $hikingRouteIds ?? [];
+        $properties['has_hiking_routes'] = $hikingRoutes->pluck('updated_at', 'id')->toArray() ?? [];
 
         $geometry = $poi->getGeometryGeojson();
 
@@ -388,23 +381,12 @@ SQL;
 
     protected function cacheMountainGroupApiData($mountainGroup)
     {
-        $regions = DB::table('regions')
-            ->select('name')
-            ->whereRaw('ST_Intersects(geometry, ?)', [$mountainGroup->geometry])
-            ->pluck('name')
-            ->toArray();
+        $regions = $mountainGroup->getIntersections(Region::class)->pluck('name')->implode(', ');
 
-        $provinces = DB::table('provinces')
-            ->select('name')
-            ->whereRaw('ST_Intersects(geometry, ?)', [$mountainGroup->geometry])
-            ->pluck('name')
-            ->toArray();
+        $provinces = $mountainGroup->getIntersections(Province::class)->pluck('name')->implode(', ');
 
-        $municipalities = DB::table('municipalities')
-            ->select('name')
-            ->whereRaw('ST_Intersects(geom, ?)', [$mountainGroup->geometry])
-            ->pluck('name')
-            ->toArray();
+        $municipalities = $mountainGroup->getIntersections(Municipality::class)->pluck('comune')->implode(', ');
+
 
         //build the geojson
         $geojson = [];
@@ -418,9 +400,9 @@ SQL;
         $properties['hiking_routes_map'] = route('mountain-groups-hr-map', ['id' => $mountainGroup->id]);
         $properties['images'] = [];
         $properties['activity'] = 'Escursionismo';
-        $properties['region'] = implode(', ', $regions);
-        $properties['provinces'] = implode(', ', $provinces);
-        $properties['municipalities'] = implode(', ', $municipalities);
+        $properties['region'] = $regions;
+        $properties['provinces'] = $provinces;
+        $properties['municipalities'] = $municipalities;
         $properties['disclaimer'] = 'L’escursionismo e, più in generale, l’attività all’aria aperta, è una attività potenzialmente rischiosa: prima di avventurarti in una escursione assicurati di avere le conoscenze e le competenze per farlo. Se non sei sicuro rivolgiti agli esperti locali che ti possono aiutare, suggerire e supportare nella pianificazione e nello svolgimento delle tue attività. I dati non possono garantire completamente la percorribilità senza rischi dei percorsi: potrebbero essersi verificati cambiamenti, anche importanti, dall’ultima verifica effettuata del percorso stesso. E’ fondamentale quindi che chi si appresta a svolgere attività valuti attentamente l’opportunità di proseguire in base ai suggerimenti e ai consigli contenuti, in base alla propria esperienza, alle condizioni metereologiche (anche dei giorni precedenti) e di una valutazione effettuata sul campo all’inizio dello svolgimento della attività. Il Club Alpino Italiano non fornisce garanzie sulla sicurezza dei luoghi descritti, e non si assume alcuna responsabilità per eventuali danni causati dallo svolgimento delle attività descritte.';
 
         $properties['area'] = $mountainGroup->getArea();
@@ -458,12 +440,9 @@ SQL;
             return;
         }
         //get the pois intersecting with the hiking route
-        $intersectingPoisIds = DB::table('ec_pois')
-            ->select('id')
-            ->whereRaw("ST_Intersects(geometry, (SELECT geometry FROM " . $hikingRoute->getTable() . " WHERE id = ?))", [$hikingRoute->id])
-            ->pluck('id');
+        $intersectingPois = $hikingRoute->getIntersections(EcPoi::class);
 
-        $pois = EcPoi::whereIn('id', $intersectingPoisIds)->get();
+        $pois = $intersectingPois->pluck('updated_at', 'id')->toArray();
 
         $tdh = $hikingRoute->tdh;
 
@@ -484,8 +463,7 @@ SQL;
         }
 
         //get the sections associated with the hiking route
-        $clubs = $hikingRoute->clubs;
-        $clubsIds = $clubs->pluck('updated_at', 'id')->toArray();
+        $clubsIds = $hikingRoute->clubs->pluck('updated_at', 'id')->toArray();
 
         // get the abstract from the hiking route and get only it description
         $abstract = $hikingRoute->tdh['abstract']['it'] ?? '';

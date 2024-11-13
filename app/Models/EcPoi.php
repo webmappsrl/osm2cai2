@@ -3,17 +3,19 @@
 namespace App\Models;
 
 use App\Models\User;
+use App\Traits\GeoBufferTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\GeoIntersectTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait;
+    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait, GeoIntersectTrait, GeoBufferTrait;
 
     protected $fillable = [
         'name',
