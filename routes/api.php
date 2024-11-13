@@ -78,4 +78,15 @@ Route::prefix('v2')->group(function () {
         Route::get('/survey.shp', [SourceSurveyController::class, 'surveyShapefile'])->name('survey-shapefile');
         Route::get('/overlay.geojson', [SourceSurveyController::class, 'overlayGeoJson'])->name('overlay-geojson');
     });
+
+    //mitur_abruzzo
+    Route::prefix('mitur_abruzzo')->name('v2-mitur-abruzzo')->group(function () {
+        Route::get('/region_list', [MiturAbruzzoController::class, 'miturAbruzzoRegionList'])->name('region-list');
+        Route::get('/region/{id}', [MiturAbruzzoController::class, 'miturAbruzzoRegionById'])->name('region-by-id');
+        Route::get('/mountain_group/{id}', [MiturAbruzzoController::class, 'miturAbruzzoMountainGroupById'])->name('mountain-group-by-id');
+        Route::get('/hiking_route/{id}', [MiturAbruzzoController::class, 'miturAbruzzoHikingRouteById'])->name('hiking-route-by-id');
+        Route::get('/hut/{id}', [MiturAbruzzoController::class, 'miturAbruzzoHutById'])->name('hut-by-id');
+        Route::get('/poi/{id}', [MiturAbruzzoController::class, 'miturAbruzzoPoiById'])->name('poi-by-id');
+        Route::get('/section/{id}', [MiturAbruzzoController::class, 'miturAbruzzoSectionById'])->name('section-by-id');
+    });
 });
