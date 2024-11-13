@@ -69,7 +69,6 @@ class Osm2caiSync extends Command
 
         foreach ($data as $id => $udpated_at) {
             $modelInstance = new $modelClass();
-            //if the model already exists in the database skip the import
             if ($modelInstance->where('id', $id)->exists() && !$modelInstance instanceof \App\Models\HikingRoute) {
                 $progressBar->advance();
                 continue;
@@ -77,14 +76,18 @@ class Osm2caiSync extends Command
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
             $batch[] = new ImportElementFromOsm2cai($modelClass, $singleFeatureApi);
 
-            // When the batch size is reached, dispatch all jobs in the batch
             if (count($batch) >= $batchSize) {
                 Bus::batch($batch)->dispatch();
-                $batch = []; // Reset the batch
-                usleep(500000); // Sleep for 500 milliseconds to reduce load
+                $batch = [];
+                usleep(500000);
             }
             $progressBar->advance();
         }
+
+        if (!empty($batch)) {
+            Bus::batch($batch)->dispatch();
+        }
+
         $progressBar->finish();
 
         $this->info(''); // Add an empty line
@@ -117,12 +120,17 @@ class Osm2caiSync extends Command
     private function mapModelToendPoint($model)
     {
         switch ($model) {
-            case 'cai_huts':
+            case 'CaiHut':
                 return 'huts';
                 break;
             case 'HikingRoute':
                 return 'hiking-routes';
                 break;
+            case 'MountainGroups':
+                return 'mountain_groups';
+                break;
+            default:
+                return $model;
         }
     }
 }

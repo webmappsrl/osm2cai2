@@ -55,7 +55,6 @@ class ImportElementFromOsm2cai implements ShouldQueue
         }
 
         $this->performImport($modelInstance, $data);
-
     }
 
     private function performImport($modelInstance, $data)
@@ -117,7 +116,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
         $data['intersectings'] = [
             'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
-            'sections' => json_decode($data['sections_intersecting'], true),
+            'clubs' => json_decode($data['clubs_intersecting'], true),
             'huts' => json_decode($data['huts_intersecting']),
             'ec_pois' => json_decode($data['ec_pois_intersecting'], true),
         ];
@@ -162,7 +161,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
     private function importCaiHuts($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map'];
+        $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
 
         if ($data['geometry'] !== null) {
             $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");

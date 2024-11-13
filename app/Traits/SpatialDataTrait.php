@@ -29,6 +29,19 @@ trait SpatialDataTrait
     }
 
     /**
+     * Get the geometry of the given model as GeoJSON
+     * 
+     * @return array
+     */
+
+    public function getGeometryGeojson(): ?array
+    {
+        $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM ' . $this->getTable() . ' WHERE id = ' . $this->id)[0]->geom;
+
+        return json_decode($geom, true);
+    }
+
+    /**
      * Get a feature collection with the model's geometry.
      *
      * @return array|null
