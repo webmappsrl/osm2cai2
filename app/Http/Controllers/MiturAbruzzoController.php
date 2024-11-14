@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\V2;
+namespace App\Http\Controllers;
 
 use App\Models\EcPoi;
 use App\Models\Region;
@@ -155,7 +155,7 @@ class MiturAbruzzoController extends Controller
         if (!$region) {
             return response()->json(['message' => 'Region not found'], 404);
         }
-        $data = json_decode($region->cached_mitur_api_data, true);
+        $data = $region->getMiturCachedData();
 
         return response()->json($data);
     }

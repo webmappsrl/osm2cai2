@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Traits\GeoBufferTrait;
+use App\Traits\MiturCacheable;
 use App\Traits\TagsMappingTrait;
 use App\Traits\GeoIntersectTrait;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait, GeoIntersectTrait, GeoBufferTrait;
+    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait, GeoIntersectTrait, GeoBufferTrait, MiturCacheable;
 
     protected $fillable = [
         'name',

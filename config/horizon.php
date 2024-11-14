@@ -204,6 +204,13 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
+            'mitur-supervisor' => [
+                'connection' => 'redis',
+                'queue' => ['mitur-cache'],
+                'maxProcesses' => 5,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
         ],
 
         'local' => [
@@ -218,7 +225,14 @@ return [
                 'maxProcesses' => 10,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
-            ]
+            ],
+            'mitur-supervisor' => [
+                'connection' => 'redis',
+                'queue' => ['mitur-cache'],
+                'maxProcesses' => 5,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
         ],
     ],
 ];

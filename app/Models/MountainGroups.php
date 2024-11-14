@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use App\Traits\GeoIntersectTrait;
+use App\Traits\MiturCacheable;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\GeoIntersectTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MountainGroups extends Model
 {
-    use HasFactory, SpatialDataTrait, GeoIntersectTrait;
+    use HasFactory, SpatialDataTrait, GeoIntersectTrait, MiturCacheable;
 
     protected $fillable = [
         'id',
@@ -22,6 +23,6 @@ class MountainGroups extends Model
 
     public function regions()
     {
-        return $this->belongsToMany(Region::class, 'mountain_groups_region', 'mountain_group_id', 'region_id');
+        return $this->belongsToMany(Region::class, 'mountain_group_region', 'mountain_group_id', 'region_id');
     }
 }

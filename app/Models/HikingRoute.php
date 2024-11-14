@@ -8,6 +8,7 @@ use App\Models\Region;
 use App\Models\Sector;
 use App\Models\Province;
 use App\Models\Itinerary;
+use App\Traits\MiturCacheable;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     use TagsMappingTrait;
     use OsmfeaturesGeometryUpdateTrait;
     use SpatialDataTrait;
+    use MiturCacheable;
 
     protected $fillable = [
         'geometry',

@@ -69,6 +69,12 @@ return [
             'path' => storage_path('logs/hiking-routes-update.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
+        'mitur-cache' => [
+            'driver' => 'stack',
+            'channels' => ['single'],
+            'path' => storage_path('logs/mitur-cache.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
         'stack' => [
             'driver' => 'stack',
             'channels' => ['single'],
