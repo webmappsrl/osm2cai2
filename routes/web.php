@@ -1,7 +1,9 @@
 <?php
 
 use App\Jobs\TestJob;
+use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MiturAbruzzoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,3 +25,18 @@ Route::get('/test-horizon', function () {
 });
 
 Route::get('/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
+
+//Mitur Abruzzo Maps
+Route::get('/poi/map/{id}', [MiturAbruzzoController::class, 'poiMap'])->name('poi-map');
+Route::get('/mountain-groups/map/{id}', [MiturAbruzzoController::class, 'mountainGroupsMap'])->name('mountain-groups-map');
+Route::get('/cai-huts/map/{id}', [MiturAbruzzoController::class, 'caiHutsMap'])->name('cai-huts-map');
+Route::get('/mountain-groups-hr/map/{id}', [MiturAbruzzoController::class, 'mountainGroupsHrMap'])->name('mountain-groups-hr-map');
+Route::get('/hiking-route/id/{id}', function ($id) {
+    $hikingroute = HikingRoute::find($id);
+    if ($hikingroute == null) {
+        abort(404);
+    }
+    return view('hikingroute', [
+        'hikingroute' => $hikingroute
+    ]);
+})->name('hiking-route-public-page');
