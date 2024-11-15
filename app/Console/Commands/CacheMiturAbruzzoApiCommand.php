@@ -30,6 +30,13 @@ class CacheMiturAbruzzoApiCommand extends Command
         }
 
         $count = $query->count();
+
+        if ($count === 0 && $className === 'HikingRoute') {
+            $this->error("No hiking routes found with osm2cai_status 4");
+            Log::error("No hiking routes found with osm2cai_status 4");
+            return;
+        }
+
         $this->info("Processing {$count} {$className}");
         Log::info("Starting cache process for {$count} {$className}");
 
@@ -38,8 +45,7 @@ class CacheMiturAbruzzoApiCommand extends Command
 
         foreach ($query->cursor() as $model) {
             try {
-                $job = new CacheMiturAbruzzoData($className, $model->id);
-                dispatch($job->onQueue('mitur-cache'));
+                CacheMiturAbruzzoData::dispatch($className, $model->id);
             } catch (\Exception $e) {
                 Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
                 $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());

@@ -23,7 +23,7 @@ class Osm2caiSync extends Command
      *
      * @var string
      */
-    protected $description = 'Perform a data import from OSM2CAI API to the current database for the specified model (e.g. mountain_groups, natural_springs, etc)';
+    protected $description = 'Perform a data import from legacy OSM2CAI API to the current database for the specified model (e.g. mountain_groups, natural_springs, etc)';
 
     /**
      * Execute the console command.
@@ -106,7 +106,7 @@ class Osm2caiSync extends Command
             $modelClass = 'App\\Models\\' . $modelName;
             if (! class_exists($modelClass)) {
                 //rename section model to club
-                if ($modelName === 'Section') {
+                if ($model === 'Section') {
                     $modelClass = 'App\\Models\\Club';
                 } else {
                     return null;
@@ -122,13 +122,28 @@ class Osm2caiSync extends Command
         switch ($model) {
             case 'CaiHut':
                 return 'huts';
-                break;
             case 'HikingRoute':
                 return 'hiking-routes';
-                break;
             case 'MountainGroups':
                 return 'mountain_groups';
-                break;
+            case 'NaturalSpring':
+                return 'natural_springs';
+            case 'EcPoi':
+                return 'ec_pois';
+            case 'UgcPoi':
+                return 'ugc_pois';
+            case 'UgcTrack':
+                return 'ugc_tracks';
+            case 'UgcMedia':
+                return 'ugc_media';
+            case 'Area':
+                return 'areas';
+            case 'Sector':
+                return 'sectors';
+            case 'Section':
+                return 'sections';
+            case 'Itinerary':
+                return 'itineraries';
             default:
                 return $model;
         }

@@ -6,11 +6,12 @@ use App\Models\User;
 use App\Models\EcPoi;
 use App\Models\Province;
 use App\Models\HikingRoute;
+use App\Traits\AwsCacheable;
 use App\Models\MountainGroups;
-use App\Traits\MiturCacheable;
 use App\Traits\SpatialDataTrait;
 use App\Traits\CsvableModelTrait;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\CacheMiturAbruzzoData;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\RecalculateIntersections;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,7 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait, MiturCacheable;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait, AwsCacheable;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting', 'code'];
 
@@ -39,6 +40,10 @@ class Region extends Model implements OsmfeaturesSyncableInterface
             if ($region->isDirty('geometry')) {
                 RecalculateIntersections::dispatch($region, null);
             }
+        });
+
+        static::saved(function ($region) {
+            CacheMiturAbruzzoData::dispatch('Region', $region->id);
         });
     }
 
@@ -75,6 +80,16 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     public function caiHuts()
     {
         return $this->hasMany(CaiHuts::class);
+    }
+
+    /**
+     * Get the storage disk name to use for caching
+     * 
+     * @return string The disk name
+     */
+    protected function getStorageDisk(): string
+    {
+        return 'wmfemitur-region';
     }
 
     /**

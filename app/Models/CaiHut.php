@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use App\Models\Region;
-use App\Traits\GeoBufferTrait;
+use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
-use App\Traits\GeoIntersectTrait;
+use App\Jobs\CacheMiturAbruzzoData;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class CaiHut extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, GeoIntersectTrait, GeoBufferTrait, SpatialDataTrait, OsmfeaturesImportableTrait, OsmfeaturesGeometryUpdateTrait;
+    use HasFactory, SpatialDataTrait, OsmfeaturesImportableTrait, OsmfeaturesGeometryUpdateTrait, AwsCacheable;
 
     protected $fillable = [
         'osmfeatures_id',
@@ -30,9 +31,14 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
+        //TODO: review from legacy osm2cai
         // static::created(function ($caiHut) {
         //     Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'CaiHuts', 'id' => $caiHut->id]);
         // });
+
+        static::saved(function ($caiHut) {
+            CacheMiturAbruzzoData::dispatch('CaiHut', $caiHut->id);
+        });
     }
 
 
@@ -41,7 +47,15 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         return $this->belongsTo(Region::class);
     }
 
-
+    /**
+     * Get the storage disk name to use for caching
+     * 
+     * @return string The disk name
+     */
+    protected function getStorageDisk(): string
+    {
+        return 'wmfemitur-caihut';
+    }
 
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
@@ -76,7 +90,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
 
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
-        if (! $osmfeaturesData) {
+        if (!$osmfeaturesData || empty($osmfeaturesData)) {
             Log::channel('wm-osmfeatures')->info('No data found for CaiHut ' . $osmfeaturesId);
             return;
         }
@@ -84,10 +98,12 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         // Update the geometry if necessary
         $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
 
-        if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
-            $updateData['name'] = $osmfeaturesData['properties']['name'];
-        } else if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for CaiHut ' . $osmfeaturesId);
+        if (isset($osmfeaturesData['properties'])) {
+            if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
+                $updateData['name'] = $osmfeaturesData['properties']['name'];
+            } else if ($osmfeaturesData['properties']['name'] === null) {
+                Log::channel('wm-osmfeatures')->info('No name found for CaiHut ' . $osmfeaturesId);
+            }
         }
 
         $model->update($updateData);

@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Club;
 use App\Models\EcPoi;
+use App\Models\CaiHut;
 use App\Models\Region;
-use App\Models\CaiHuts;
+use App\Models\Section;
 use App\Models\HikingRoute;
-use Illuminate\Http\Request;
 use App\Models\MountainGroups;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Section;
-use Illuminate\Support\Facades\Cache;
 
 class MiturAbruzzoController extends Controller
 {
@@ -155,9 +154,7 @@ class MiturAbruzzoController extends Controller
         if (!$region) {
             return response()->json(['message' => 'Region not found'], 404);
         }
-        $data = $region->getMiturCachedData();
-
-        return response()->json($data);
+        return redirect($region->getPublicAwsUrl());
     }
 
 
@@ -655,9 +652,7 @@ class MiturAbruzzoController extends Controller
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
-        $data = json_decode($hikingRoute->cached_mitur_api_data, true);
-
-        return response()->json($data);
+        return redirect($hikingRoute->getPublicAwsUrl());
     }
 
 
@@ -951,14 +946,12 @@ class MiturAbruzzoController extends Controller
      */
     public function miturAbruzzoHutById($id)
     {
-        $hut = CaiHuts::find($id);
+        $hut = CaiHut::find($id);
         if (!$hut) {
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
-        $data = json_decode($hut->cached_mitur_api_data, true);
-
-        return response()->json($data);
+        return redirect($hut->getPublicAwsUrl());
     }
 
     /**
@@ -1081,9 +1074,8 @@ class MiturAbruzzoController extends Controller
         if (!$poi) {
             return response()->json(['message' => 'poi not found'], 404);
         }
-        $data = json_decode($poi->cached_mitur_api_data, true);
 
-        return response()->json($data);
+        return redirect($poi->getPublicAwsUrl());
     }
 
     /**
@@ -1237,14 +1229,96 @@ class MiturAbruzzoController extends Controller
      *     )
      * )
      */
-    public function miturAbruzzoSectionById($id)
+    public function miturAbruzzoClubById($id)
     {
-        $section = Section::find($id);
-        if (!$section) {
-            return response()->json(['message' => 'section not found'], 404);
+        $club = Club::find($id);
+        if (!$club) {
+            return response()->json(['message' => 'club not found'], 404);
         }
-        $data = json_decode($section->cached_mitur_api_data, true);
 
-        return response()->json($data);
+        return redirect($club->getPublicAwsUrl());
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Maps Methods
+    |--------------------------------------------------------------------------
+    |
+    | These methods handle the map views for different entities like POIs,
+    | mountain groups, CAI huts etc. The map link will be inside mitur api data.
+    |
+    */
+
+    public static function poiMap($id)
+    {
+        $poi = EcPoi::findOrFail($id);
+
+        $geometry = DB::select("SELECT ST_AsText(geometry) AS geometry FROM ec_pois WHERE id = ?", [$id]);
+        if (!$geometry) {
+            return redirect('https://26.app.geohub.webmapp.it/#/map');
+        }
+        $geometry = str_replace(['POINT(', ')'], '', $geometry[0]->geometry);
+        list($longitude, $latitude) = explode(' ', $geometry);
+
+        return view('maps.poi', ['poi' => $poi, 'latitude' => $latitude, 'longitude' => $longitude]);
+    }
+    public static function mountainGroupsMap($id)
+    {
+        $mountainGroup = MountainGroups::findOrFail($id);
+        // get the geometry in geojson format
+        $geometry = DB::select("SELECT ST_AsGeoJSON(geometry) as geom FROM mountain_groups WHERE id = ?", [$id]);
+        if (!$geometry) {
+            return redirect('https://26.app.geohub.webmapp.it/#/map');
+        }
+
+        $geometry = $geometry[0]->geom;
+
+        return view('maps.mountain-group', [
+            'mountainGroup' => $mountainGroup,
+            'geometry' => $geometry
+        ]);
+    }
+
+    public static function caiHutsMap($id)
+    {
+        $caiHut = CaiHuts::findOrFail($id);
+
+        $geometry = DB::select("SELECT ST_AsText(geometry) AS geometry FROM cai_huts WHERE id = ?", [$id]);
+        if (!$geometry) {
+            return redirect('https://26.app.geohub.webmapp.it/#/map');
+        }
+        $geometry = str_replace(['POINT(', ')'], '', $geometry[0]->geometry);
+        list($longitude, $latitude) = explode(' ', $geometry);
+
+        return view('maps.cai-hut', [
+            'caiHut' => $caiHut,
+            'latitude' => $latitude,
+            'longitude' => $longitude
+        ]);
+    }
+
+
+    public static function mountainGroupsHrMap($id)
+    {
+        $mountainGroup = MountainGroups::findOrFail($id);
+
+        $geometry = DB::select("SELECT ST_AsGeoJSON(geometry) as geom FROM mountain_groups WHERE id = ?", [$id]);
+        if (!$geometry) {
+            return redirect('https://26.app.geohub.webmapp.it/#/map');
+        }
+        $geometry = json_decode($geometry[0]->geom, true);
+
+        $hikingRoutesIntersectingIds = array_keys(json_decode($mountainGroup->intersectings, true)['hiking_routes']);
+
+        $hikingRoutesGeojson = array_map(function ($hikingRoute) {
+            $routeGeom = DB::select("SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?", [$hikingRoute]);
+            return json_decode($routeGeom[0]->geom, true);
+        }, $hikingRoutesIntersectingIds);
+
+        return view('maps.mountain-group-hr', [
+            'mountainGroup' => $mountainGroup,
+            'geometry' => json_encode($geometry),
+            'hikingRoutesGeojson' => json_encode($hikingRoutesGeojson)
+        ]);
     }
 }

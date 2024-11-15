@@ -2,7 +2,9 @@
 
 namespace App\Traits;
 
+use App\Traits\GeoBufferTrait;
 use App\Services\GeometryService;
+use App\Traits\GeoIntersectTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
  */
 trait SpatialDataTrait
 {
+    use GeoIntersectTrait;
+    use GeoBufferTrait;
     // ------------------------------
     // GeoJSON Utilities
     // ------------------------------
@@ -209,6 +213,24 @@ trait SpatialDataTrait
     // Helper Methods
     // ------------------------------
 
+
+    /**
+     * Get the area of the given model (only for polygons and multipolygons)
+     * 
+     * @return int
+     * 
+     */
+    public function getArea(): ?int
+    {
+        $model = $this;
+        $table = $model->getTable();
+        $id = $model->id;
+
+        $areaQuery = 'SELECT ST_Area(geometry) as area FROM ' . $table . ' WHERE id = :id';
+        $area = DB::select($areaQuery, ['id' => $id])[0]->area / 1000000;
+
+        return (int)round($area);
+    }
     private function fetchGeometry(string $column): ?string
     {
         //check if the column exists

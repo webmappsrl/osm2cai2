@@ -12,7 +12,7 @@ trait OsmfeaturesGeometryUpdateTrait
         $updateData = [];
 
 
-        if (!$osmfeaturesData['geometry']) {
+        if (!isset($osmfeaturesData['geometry'])) {
             Log::channel('wm-osmfeatures')->info('No geometry found for ' . class_basename($model) . ' ' . $osmfeaturesId);
             return $updateData;
         }

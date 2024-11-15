@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Club;
 use App\Models\EcPoi;
 use App\Models\CaiHut;
 use App\Models\Region;
@@ -14,6 +15,7 @@ use Illuminate\Bus\Queueable;
 use App\Models\MountainGroups;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\InteractsWithQueue;
@@ -32,7 +34,6 @@ class CacheMiturAbruzzoData implements ShouldQueue
     {
         $this->model = $model;
         $this->modelId = $modelId;
-        $this->queue = 'mitur-cache';
     }
 
     protected function logger(): Logger
@@ -61,7 +62,7 @@ class CacheMiturAbruzzoData implements ShouldQueue
         $geojson = $this->buildGeojsonForModel($model);
 
         if ($geojson) {
-            $model->cacheMiturData($geojson);
+            $model->cacheDataToAws($geojson);
             $this->logger()->info("Cached MITUR data for {$className} {$model->id}");
         }
     }
@@ -83,14 +84,14 @@ class CacheMiturAbruzzoData implements ShouldQueue
                 return $this->buildRegionGeojson($model);
             default:
                 $this->logger()->error("Unsupported model type: " . get_class($model));
-                return null;
+                throw new \Exception("Unsupported model type: " . get_class($model));
         }
     }
 
     protected function buildHikingRouteGeojson($hikingRoute): array
     {
-        //get the pois intersecting with the hiking route
-        $intersectingPois = $hikingRoute->getIntersections(EcPoi::class);
+        $ecPoiModel = new EcPoi();
+        $intersectingPois = $hikingRoute->getIntersections($ecPoiModel);
 
         $pois = $intersectingPois->pluck('updated_at', 'id')->toArray();
 
@@ -196,12 +197,13 @@ class CacheMiturAbruzzoData implements ShouldQueue
 
     protected function buildMountainGroupGeojson($mountainGroup): array
     {
-        $regions = $mountainGroup->getIntersections(Region::class)->pluck('name')->implode(', ');
+        $regionModel = new \App\Models\Region();
+        $provinceModel = new \App\Models\Province();
+        $municipalityModel = new \App\Models\Municipality();
 
-        $provinces = $mountainGroup->getIntersections(Province::class)->pluck('name')->implode(', ');
-
-        $municipalities = $mountainGroup->getIntersections(Municipality::class)->pluck('comune')->implode(', ');
-
+        $regions = $mountainGroup->getIntersections($regionModel)->pluck('name')->implode(', ');
+        $provinces = $mountainGroup->getIntersections($provinceModel)->pluck('name')->implode(', ');
+        $municipalities = $mountainGroup->getIntersections($municipalityModel)->pluck('comune')->implode(', ');
 
         //build the geojson
         $geojson = [];
@@ -231,10 +233,10 @@ class CacheMiturAbruzzoData implements ShouldQueue
         $properties['slope_stddev'] = $mountainGroup->slope_stddev ?? '';
 
         //TODO: check IDs are correct or recalculate the intersections
-        $properties['section_ids'] = json_decode($mountainGroup->intersectings['clubs'], true);
-        $properties['hiking_routes'] = json_decode($mountainGroup->intersectings['hiking_routes'], true);
-        $properties['ec_pois'] = json_decode($mountainGroup->intersectings['ec_pois'], true);
-        $properties['cai_huts'] = json_decode($mountainGroup->intersectings['cai_huts'], true);
+        $properties['section_ids'] = json_decode($mountainGroup->intersectings, true)['clubs'] ?? [];
+        $properties['hiking_routes'] = json_decode($mountainGroup->intersectings, true)['hiking_routes'] ?? [];
+        $properties['ec_pois'] = json_decode($mountainGroup->intersectings, true)['ec_pois'] ?? [];
+        $properties['cai_huts'] = json_decode($mountainGroup->intersectings, true)['cai_huts'] ?? [];
 
 
         $geojson['properties'] = $properties;
@@ -258,7 +260,7 @@ FROM
 JOIN 
     provinces p 
 ON 
-    ST_Intersects(ST_Transform(p.geometry, 4326), s.geometry)
+    ST_Intersects(ST_Transform(p.geometry, 4326), c.geometry)
 SQL;
 
 
@@ -322,15 +324,15 @@ SQL;
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
 
         //get only hiking routes in a 1000m buffer with osm2cai status 4
-        $hikingRoutes = $poi->getElementsInBuffer(HikingRoute::class, 1000);
-        $hikingRoute = $hikingRoutes->first();
+        $hikingRoutesInBuffer = $poi->getElementsInBuffer(new HikingRoute(), 1000);
+        $hikingRoute = $hikingRoutesInBuffer->where('osm2cai_status', 4)->first();
 
 
         //build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
 
-        $intersectingMunicipalities = $poi->getIntersections(Municipality::class);
+        $intersectingMunicipalities = $poi->getIntersections(new Municipality());
         $municipalities = $intersectingMunicipalities->pluck('comune')->implode(', ');
 
         $properties = [];
@@ -344,7 +346,7 @@ SQL;
         $properties['comune'] = $municipalities;
         $properties['difficulty'] = $hikingRoute ? $hikingRoute->osmfeatures_data['properties']['cai_scale'] ?? '' : '';
         $properties['activity'] = 'Escursionismo';
-        $properties['has_hiking_routes'] = $hikingRoutes->pluck('updated_at', 'id')->toArray() ?? [];
+        $properties['has_hiking_routes'] = $hikingRoutesInBuffer->pluck('updated_at', 'id')->toArray() ?? [];
 
         $geometry = $poi->getGeometryGeojson();
 
@@ -391,17 +393,17 @@ SQL;
 
         //get the mountain groups for the hut based on the geometry intersection
         $this->logger()->info("Getting mountain groups for hut $hut->id");
-        $mountainGroups = $hut->getIntersections(MountainGroup::class)->first();
+        $mountainGroups = $hut->getIntersections(new MountainGroups())->first();
         $this->logger()->info("Mountain groups for hut $hut->id: " . ($mountainGroups ? $mountainGroups->id : 'null'));
 
         //get the pois in a 1km buffer from the hut
         $this->logger()->info("Getting pois in buffer for hut $hut->id");
-        $pois = $hut->getElementsInBuffer(EcPoi::class, 1000);
+        $pois = $hut->getElementsInBuffer(new EcPoi(), 1000);
         $this->logger()->info("Pois for hut $hut->id: " . $pois->count());
 
         //get the hiking routes in a 1km buffer from the hut
         $this->logger()->info("Getting hiking routes in buffer for hut $hut->id");
-        $hikingRoutes = $hut->getElementsInBuffer(HikingRoute::class, 1000);
+        $hikingRoutes = $hut->getElementsInBuffer(new HikingRoute(), 1000);
         $this->logger()->info("Hiking routes for hut $hut->id: " . $hikingRoutes->count());
 
         //get osmfeatures data
@@ -526,7 +528,7 @@ SQL;
             $this->logger()->info("No osmfeatures data for $modelClass $model->name");
             $osmfeaturesData = [];
         } else {
-            $osmfeaturesData = json_decode($model->osmfeatures_data, true);
+            $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
         }
 
         return $osmfeaturesData;

@@ -66,6 +66,13 @@ class ImportElementFromOsm2cai implements ShouldQueue
                 Log::error('Failed to import Mountain Group with id: ' . $data['id'] . ' ' . $e->getMessage());
             }
         }
+        if ($modelInstance instanceof \App\Models\EcPoi) {
+            try {
+                $this->importEcPois($modelInstance, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Ec Poi with id: ' . $data['id'] . ' ' . $e->getMessage());
+            }
+        }
         if ($modelInstance instanceof \App\Models\NaturalSpring) {
             try {
                 $this->importNaturalSprings($modelInstance, $data);
@@ -136,6 +143,28 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save mountain group with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function importEcPois($modelInstance, $data)
+    {
+        $columnsToImport = ['id', 'name', 'geometry', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
+
+        if ($data['geometry'] !== null) {
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+        }
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        foreach ($intersect as $key => $value) {
+            $modelInstance->$key = $value;
+        }
+
+        try {
+            $modelInstance->save();
+        } catch (\Exception $e) {
+            Log::error('Failed to save Ec Poi with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -156,6 +185,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save natural spring with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -176,6 +206,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save huts with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -211,6 +242,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Club with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -231,6 +263,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Sector with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -251,6 +284,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Area with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 

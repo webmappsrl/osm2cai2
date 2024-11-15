@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Trait to get elements in a given buffer distance (m) from the given model

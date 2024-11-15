@@ -8,10 +8,12 @@ use App\Models\Region;
 use App\Models\Sector;
 use App\Models\Province;
 use App\Models\Itinerary;
-use App\Traits\MiturCacheable;
+use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\ComputeTdhJob;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Jobs\RecalculateIntersections;
@@ -35,7 +37,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     use TagsMappingTrait;
     use OsmfeaturesGeometryUpdateTrait;
     use SpatialDataTrait;
-    use MiturCacheable;
+    use AwsCacheable;
 
     protected $fillable = [
         'geometry',
@@ -64,20 +66,22 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
-        // static::saved(function ($hikingRoute) {
-        //     if ($hikingRoute->is_syncing) {
-        //         $hikingRoute->is_syncing = false;
-        //         return;
-        //     }
-        //     Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
-        //     Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+        static::saved(function ($hikingRoute) {
+            if ($hikingRoute->is_syncing) {
+                $hikingRoute->is_syncing = false;
+                return;
+            }
+            //TODO: review from legacy osm2cai
+            // Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+            // Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
 
-        //     if ($hikingRoute->osm2cai_status == 4) {
-        //         Artisan::call('osm2cai:tdh', ['id' => $hikingRoute->id]);
-        //         Artisan::call('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
-        //     }
-        // });
+            if ($hikingRoute->osm2cai_status == 4) {
+                ComputeTdhJob::dispatch($hikingRoute->id);
+                CacheMiturAbruzzoData::dispatch('HikingRoute', $hikingRoute->id);
+            }
+        });
 
+        //TODO: review from legacy osm2cai
         // static::created(function ($hikingRoute) {
         //     if ($hikingRoute->is_syncing) {
         //         $hikingRoute->is_syncing = false;
@@ -98,6 +102,16 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
                 RecalculateIntersections::dispatch(null, $hikingRoute);
             }
         });
+    }
+
+    /**
+     * Get the storage disk name to use for caching
+     * 
+     * @return string The disk name
+     */
+    protected function getStorageDisk(): string
+    {
+        return 'wmfemitur-hikingroute';
     }
 
     /**
