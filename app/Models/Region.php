@@ -7,6 +7,7 @@ use App\Models\EcPoi;
 use App\Models\Province;
 use App\Models\HikingRoute;
 use App\Models\MountainGroups;
+use App\Traits\MiturCacheable;
 use App\Traits\SpatialDataTrait;
 use App\Traits\CsvableModelTrait;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait, MiturCacheable;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting', 'code'];
 
@@ -68,7 +69,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     public function mountainGroups()
     {
-        return $this->belongsToMany(MountainGroups::class, 'mountain_groups_region', 'region_id', 'mountain_group_id');
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_region', 'region_id', 'mountain_group_id');
     }
 
     public function caiHuts()

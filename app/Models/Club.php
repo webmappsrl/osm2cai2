@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Region;
 use App\Models\HikingRoute;
 use App\Traits\GeoBufferTrait;
+use App\Traits\MiturCacheable;
 use App\Traits\CsvableModelTrait;
 use App\Traits\GeoIntersectTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Club extends Model
 {
-    use HasFactory, CsvableModelTrait, GeoIntersectTrait, GeoBufferTrait;
+    use HasFactory, CsvableModelTrait, GeoIntersectTrait, GeoBufferTrait, MiturCacheable;
 
     protected $table = 'clubs';
 
