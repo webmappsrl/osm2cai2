@@ -9,28 +9,16 @@ class NaturalSpring extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'code',
-        'loc_ref',
-        'source',
-        'source_ref',
-        'source_code',
-        'name',
-        'region',
-        'province',
-        'municipality',
-        'operator',
-        'type',
-        'volume',
-        'time',
-        'mass_flow_rate',
-        'temperature',
-        'conductivity',
-        'survey_date',
-        'lat',
-        'lon',
-        'elevation',
-        'note',
-        'geometry',
-    ];
+    protected $guarded = [];
+
+    // protected static function booted()
+    // {
+    //     static::saved(function ($spring) {
+    //         Artisan::call('osm2cai:add_cai_huts_to_hiking_routes NaturalSpring ' . $spring->id);
+    //     });
+
+    //     static::created(function ($spring) {
+    //         Artisan::call('osm2cai:add_cai_huts_to_hiking_routes NaturalSpring ' . $spring->id);
+    //     });
+    // }
 }

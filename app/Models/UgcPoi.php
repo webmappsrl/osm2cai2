@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\UgcMedia;
 use Illuminate\Support\Carbon;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UgcPoi extends Model
 {
-    use HasFactory;
+    use HasFactory, SpatialDataTrait;
 
     protected $table = 'ugc_pois';
 

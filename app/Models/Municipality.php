@@ -15,7 +15,12 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
 {
     use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait;
 
-    protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name'];
+    protected $fillable = [
+        'name',
+        'osmfeatures_id',
+        'osmfeatures_data',
+        'osmfeatures_updated_at',
+    ];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',

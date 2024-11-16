@@ -33,12 +33,14 @@
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-permission": "^6.9",
         "spatie/laravel-translatable": "^6.3",
+        "spatie/schema-org": "^3.23",
+        "tymon/jwt-auth": "^2.1",
+        "webmapp/wm-osmfeatures": "*",
         "wm/map-multi-linestring": "^0.0.10",
         "wm/map-multi-polygon": "^0.0.3",
         "wm/map-point": "^0.0.9",
         "wm/wm-internal": "*",
-        "wm/wm-package": "*",
-        "webmapp/wm-osmfeatures": "*"
+        "wm/wm-package": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

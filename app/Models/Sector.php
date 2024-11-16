@@ -3,27 +3,29 @@
 namespace App\Models;
 
 use App\Models\User;
-use App\Traits\GeojsonableTrait;
+use App\Traits\SpatialDataTrait;
+use App\Traits\CsvableModelTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Sector extends Model
 {
-    use HasFactory, GeojsonableTrait;
+    use HasFactory, SpatialDataTrait, CsvableModelTrait;
 
-    protected $fillable = [
-        'id',
-        'name',
-        'geometry',
-        'code',
-        'full_code',
-        'num_expected',
-        'human_name',
-        'manager',
-    ];
+    protected $guarded = [];
+
+    public function area()
+    {
+        return $this->belongsTo(Area::class);
+    }
 
     public function users()
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function hikingRoutes()
+    {
+        return $this->belongsToMany(HikingRoute::class);
     }
 }

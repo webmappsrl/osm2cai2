@@ -55,7 +55,6 @@ class ImportElementFromOsm2cai implements ShouldQueue
         }
 
         $this->performImport($modelInstance, $data);
-
     }
 
     private function performImport($modelInstance, $data)
@@ -65,6 +64,13 @@ class ImportElementFromOsm2cai implements ShouldQueue
                 $this->importMountainGroups($modelInstance, $data);
             } catch (\Exception $e) {
                 Log::error('Failed to import Mountain Group with id: ' . $data['id'] . ' ' . $e->getMessage());
+            }
+        }
+        if ($modelInstance instanceof \App\Models\EcPoi) {
+            try {
+                $this->importEcPois($modelInstance, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Ec Poi with id: ' . $data['id'] . ' ' . $e->getMessage());
             }
         }
         if ($modelInstance instanceof \App\Models\NaturalSpring) {
@@ -117,7 +123,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
 
         $data['intersectings'] = [
             'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
-            'sections' => json_decode($data['sections_intersecting'], true),
+            'clubs' => json_decode($data['clubs_intersecting'], true),
             'huts' => json_decode($data['huts_intersecting']),
             'ec_pois' => json_decode($data['ec_pois_intersecting'], true),
         ];
@@ -137,6 +143,28 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save mountain group with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function importEcPois($modelInstance, $data)
+    {
+        $columnsToImport = ['id', 'name', 'geometry', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
+
+        if ($data['geometry'] !== null) {
+            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+        }
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        foreach ($intersect as $key => $value) {
+            $modelInstance->$key = $value;
+        }
+
+        try {
+            $modelInstance->save();
+        } catch (\Exception $e) {
+            Log::error('Failed to save Ec Poi with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -157,12 +185,13 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save natural spring with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
     private function importCaiHuts($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map'];
+        $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
 
         if ($data['geometry'] !== null) {
             $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
@@ -177,6 +206,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save huts with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -212,6 +242,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Club with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -232,6 +263,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Sector with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -252,6 +284,7 @@ class ImportElementFromOsm2cai implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save Area with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 

@@ -203,9 +203,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
                         "
                         SELECT ST_AsEWKT(
                             CASE 
-                                WHEN ST_IsValid(geometry::geometry) 
-                                    AND ST_GeometryType(geometry::geometry) IN ('ST_MultiLineString', 'ST_LineString')
-                                    THEN ST_Force3D(geometry::geometry)
+                                WHEN ST_IsValid(geometry) 
+                                    AND ST_GeometryType(geometry) IN ('ST_MultiLineString', 'ST_LineString')
+                                    THEN ST_Force3D(geometry)
                                 ELSE NULL
                             END
                         ) as geometry 
@@ -269,9 +269,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
                         "
                         SELECT ST_AsEWKT(
                             CASE 
-                                WHEN ST_IsValid(geometry::geometry) 
-                                    AND ST_GeometryType(geometry::geometry) = 'ST_Point'
-                                    THEN ST_Force2D(geometry::geometry)
+                                WHEN ST_IsValid(geometry) 
+                                    AND ST_GeometryType(geometry) = 'ST_Point'
+                                    THEN ST_Force2D(geometry)
                                 ELSE NULL
                             END
                         ) as geometry 

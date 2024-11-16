@@ -3,17 +3,20 @@
 namespace App\Models;
 
 use App\Models\User;
+use App\Traits\AwsCacheable;
+use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\CacheMiturAbruzzoData;
 use Illuminate\Support\Facades\Log;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait;
+    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait, SpatialDataTrait, AwsCacheable;
 
     protected $fillable = [
         'name',
@@ -30,6 +33,13 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($ecPoi) {
+            CacheMiturAbruzzoData::dispatch('EcPoi', $ecPoi->id);
+        });
+    }
 
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
@@ -96,5 +106,20 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     public function User()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
+
+    /**
+     * Get the storage disk name to use for caching
+     * 
+     * @return string The disk name
+     */
+    protected function getStorageDisk(): string
+    {
+        return 'wmfemitur-poi';
     }
 }

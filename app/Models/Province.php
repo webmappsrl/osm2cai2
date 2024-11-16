@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Area;
 use App\Models\User;
+use App\Models\Region;
+use App\Models\HikingRoute;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
@@ -79,5 +82,20 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         if (!empty($updateData)) {
             $model->update($updateData);
         }
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
+
+    public function areas()
+    {
+        return $this->hasMany(Area::class);
+    }
+
+    public function hikingRoutes()
+    {
+        return $this->belongsToMany(HikingRoute::class);
     }
 }

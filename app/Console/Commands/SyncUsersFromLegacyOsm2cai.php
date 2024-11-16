@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Sector;
 use App\Models\Province;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class SyncUsersFromLegacyOsm2cai extends Command
@@ -32,6 +33,9 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     'updated_at' => now(),
                 ]
             );
+
+            //populate the roles and permissions table 
+            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
 
             $this->assignRolesAndPermissions($user, $legacyUser);
             $this->syncTerritorialRelations($user, $legacyUser);

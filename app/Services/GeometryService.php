@@ -20,7 +20,7 @@ class GeometryService
 
     public function geojsonToGeometry($geojson)
     {
-        return DB::select(DB::raw("select (ST_Force3D(ST_GeomFromGeoJSON('" . $geojson . "'))) as g "))[0]->g;
+        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('" . $geojson . "'))) as g ")[0]->g;
     }
 
     /**
@@ -133,8 +133,8 @@ class GeometryService
         SELECT 
             ST_GeometryType(
                 CASE 
-                    WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}::geometry
-                    ELSE {$geometryColumn}::geometry
+                    WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}
+                    ELSE {$geometryColumn}
                 END
             ) AS geom_type
         FROM {$table}
@@ -143,7 +143,7 @@ class GeometryService
         } else {
             $query = <<<SQL
         SELECT 
-            ST_GeometryType({$geometryColumn}::geometry) AS geom_type
+            ST_GeometryType({$geometryColumn}) AS geom_type
         FROM {$table}
         LIMIT 1;
         SQL;
@@ -154,5 +154,11 @@ class GeometryService
 
         // Restituire il tipo di geometria senza il prefisso "ST_"
         return $type ? str_replace('ST_', '', $type->geom_type) : 'Unknown';
+    }
+
+    public function getCentroid($geometry)
+    {
+        $geometry = $this->geojsonToGeometry($geometry);
+        return DB::select("select ST_AsGeoJSON(ST_Centroid('" . $geometry . "')) as g")[0]->g;
     }
 }

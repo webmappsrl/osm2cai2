@@ -29,6 +29,29 @@ return [
         '20' => 'Sardegna',
     ],
 
+    'regions_code' => [
+        "Friuli-Venezia Giulia" => "A",
+        "Veneto" => "B",
+        "Trentino-Alto Adige/Südtirol" => "C",
+        "Lombardia" => "D",
+        "Piemonte" => "E",
+        "Valle d'Aosta / Vallée d'Aoste" => "F",
+        "Liguria" => "G",
+        "Emilia-Romagna" => "H",
+        "Toscana" => "L",
+        "Umbria" => "N",
+        "Marche" => "M",
+        "Lazio" => "O",
+        "Abruzzo" => "P",
+        "Molise" => "Q",
+        "Campania" => "S",
+        "Puglia" => "R",
+        "Basilicata" => "T",
+        "Calabria" => "U",
+        "Sicilia" => "V",
+        "Sardigna/Sardegna" => "Z"
+    ],
+
     'hiking_route_buffer' => 250,
 
     'osmTagsMapping' => [
