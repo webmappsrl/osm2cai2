@@ -2,22 +2,25 @@
 
 namespace App\Nova\Actions;
 
-use Illuminate\Bus\Queueable;
 use App\Exports\UgcPoisExport;
-use Laravel\Nova\Actions\Action;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Facades\Excel;
-use Laravel\Nova\Fields\ActionFields;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DownloadUgcCsv extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = "Download CSV";
+    public $name = 'Download CSV';
+
     public $showOnIndex = true;
+
     public $withoutConfirmation = true;
+
     public $resourceClass;
 
     public function __construct($resourceClass)
@@ -28,14 +31,14 @@ class DownloadUgcCsv extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
     {
         $resourceName = class_basename($this->resourceClass);
-        $fileName = strtolower($resourceName) . '-export-' . now()->format('Y-m-d') . '.csv';
+        $fileName = strtolower($resourceName).'-export-'.now()->format('Y-m-d').'.csv';
 
         $exportFields = $this->resourceClass::getExportFields();
 

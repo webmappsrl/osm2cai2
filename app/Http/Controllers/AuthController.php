@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    /** * Signup and get a JWT 
+    /** * Signup and get a JWT
      *
-     *  @param Request $request 
-     *  @return JsonResponse 
+     *  @param Request $request
+     *  @return JsonResponse
      */
     public function signup(Request $request): JsonResponse
     {
@@ -36,19 +36,18 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'error' => $validator->errors()->first(),
-                'code' => 400
+                'code' => 400,
             ], 400);
         }
 
         $credentials = $request->only(['email', 'password', 'name']);
-
 
         try {
             $user = $this->createUser($credentials);
         } catch (Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
-                'code' => 400
+                'code' => 400,
             ], 400);
         }
 
@@ -83,28 +82,26 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'error' => $validator->errors()->first(),
-                'code' => 401
+                'code' => 401,
             ], 401);
         }
 
         $credentials = $request->only(['email', 'password']);
 
-
         //check if email exists
         $user = User::where('email', $credentials['email'])->first();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'error' => 'L\'email inserita non è corretta. Per favore, riprova.',
-                'code' => 401
+                'code' => 401,
             ], 401);
         }
 
-
         // Check if password is correct
-        if (!auth('api')->attempt($credentials)) {
+        if (! auth('api')->attempt($credentials)) {
             return response()->json([
                 'error' => 'La password inserita non è corretta. Per favore, riprova.',
-                'code' => 401
+                'code' => 401,
             ], 401);
         }
 
@@ -117,7 +114,6 @@ class AuthController extends Controller
 
         return $this->loginResponse($token);
     }
-
 
     /**
      * Delete the authenticated user.
@@ -140,7 +136,7 @@ class AuthController extends Controller
             // If an exception occurs, return a JSON response with the error message and code
             return response()->json([
                 'error' => $e->getMessage(),
-                'code' => 400
+                'code' => 400,
             ], 400);
         }
 
@@ -156,7 +152,7 @@ class AuthController extends Controller
     public function me(): JsonResponse
     {
         $user = auth('api')->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'Utente non autenticato.'], 401);
         }
 
@@ -204,7 +200,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 
@@ -217,6 +213,7 @@ class AuthController extends Controller
     protected function loginResponse(string $token): JsonResponse
     {
         $tokenArray = $this->respondWithToken($token);
+
         return response()->json(array_merge($this->me()->getData(true), $tokenArray->getData(true)));
     }
 

@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Carbon\Carbon;
 use App\Models\HikingRoute;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class UpdateHikingRoutesCommand extends Command
 {
@@ -35,17 +35,18 @@ class UpdateHikingRoutesCommand extends Command
         // Recupera il valore updated_at più recente dalla tabella hiking_routes
         $latestUpdatedAt = HikingRoute::max('updated_at');
 
-        if (!$latestUpdatedAt) {
+        if (! $latestUpdatedAt) {
             $errormsg = 'No hiking routes found in the database.';
             $this->error($errormsg);
             $logger->error($errormsg);
+
             return;
         }
 
         // Converte la data nel formato richiesto dall'API
         $formattedUpdatedAt = Carbon::parse($latestUpdatedAt)->toIso8601String();
         $endpoint = HikingRoute::getOsmfeaturesEndpoint();
-        $apiUrl = $endpoint . 'list';
+        $apiUrl = $endpoint.'list';
 
         // Effettua la chiamata all'API con paginazione
         $page = 1;
@@ -53,13 +54,14 @@ class UpdateHikingRoutesCommand extends Command
         do {
             $response = Http::get($apiUrl, [
                 'updated_at' => $formattedUpdatedAt,
-                'page' => $page
+                'page' => $page,
             ]);
 
             if ($response->failed()) {
-                $errormsg = 'API request failed: ' . $response->body();
+                $errormsg = 'API request failed: '.$response->body();
                 $this->error($errormsg);
                 $logger->error($errormsg);
+
                 return;
             }
 
@@ -71,6 +73,7 @@ class UpdateHikingRoutesCommand extends Command
         if (empty($routes)) {
             $this->info('No new hiking routes to update.');
             $logger->info('No new hiking routes to update.');
+
             return;
         }
 
@@ -82,7 +85,7 @@ class UpdateHikingRoutesCommand extends Command
             $logger->info($logmsg);
 
             // Effettua la chiamata all'API per ottenere i dati dettagliati del singolo hiking route
-            $detailApiUrl = $endpoint . $osmfeaturesId;
+            $detailApiUrl = $endpoint.$osmfeaturesId;
             $detailResponse = Http::get($detailApiUrl);
 
             if ($detailResponse->failed()) {
@@ -101,7 +104,7 @@ class UpdateHikingRoutesCommand extends Command
                 $hikingRoute->update([
                     'updated_at' => Carbon::parse($route['updated_at'])->toDateTimeString(),
                     'osmfeatures_data' => json_encode($hikingRouteData),
-                    'geometry' => DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($hikingRouteData['geometry']) . "'))")[0]->st_astext
+                    'geometry' => DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($hikingRouteData['geometry'])."'))")[0]->st_astext,
                 ]);
                 $logMessage = "Hiking route with ID: $osmfeaturesId updated successfully.";
                 $this->info($logMessage);

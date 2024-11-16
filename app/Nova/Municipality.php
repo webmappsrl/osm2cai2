@@ -2,16 +2,16 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Panel;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
 use App\Nova\OsmfeaturesResource;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
-use Wm\MapMultiPolygon\MapMultiPolygon;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Panel;
+use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class Municipality extends OsmfeaturesResource
 {
@@ -38,7 +38,6 @@ class Municipality extends OsmfeaturesResource
         'id',
         'name',
     ];
-
 
     /**
      * Get the cards available for the request.

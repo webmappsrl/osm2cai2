@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class MountainGroups extends Model
 {
@@ -34,7 +34,7 @@ class MountainGroups extends Model
 
     /**
      * Get the storage disk name to use for caching
-     * 
+     *
      * @return string The disk name
      */
     protected function getStorageDisk(): string

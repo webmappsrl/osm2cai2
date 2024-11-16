@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\ComputeTdhJob;
 use App\Models\HikingRoute;
 use Illuminate\Console\Command;
-use App\Jobs\ComputeTdhJob;
 
 class ComputeHikingRoutesTdh extends Command
 {
     protected $signature = 'osm2cai2:compute-hiking-routes-tdh {id?}';
+
     protected $description = 'Compute the TDH of a hiking route on SDA 4';
 
     public function __construct()
@@ -19,18 +20,21 @@ class ComputeHikingRoutesTdh extends Command
     public function handle()
     {
         $id = $this->argument('id') ?? null;
-        if (!$id) {
+        if (! $id) {
             $hikingRoutes = HikingRoute::where('osm2cai_status', 4)->get(['id']);
         } else {
             $hikingRoute = HikingRoute::find($id)->with('tdh', 'osmfeatures_data', 'geometry');
-            if (!$hikingRoute) {
+            if (! $hikingRoute) {
                 $this->error('Hiking route not found');
+
                 return;
-            } else if ($hikingRoute->osm2cai_status !== 4) {
+            } elseif ($hikingRoute->osm2cai_status !== 4) {
                 $this->error('Hiking route has not SDA 4 status');
+
                 return;
             }
             ComputeTdhJob::dispatch($hikingRoute->id);
+
             return;
         }
 

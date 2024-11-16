@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\App;
 use Database\Seeders\DatabaseSeeder;
-use Illuminate\Support\Facades\Artisan;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 /**
  * This seeder is used to seed the database for the e2e tests.

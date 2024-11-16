@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class ShapefileController extends Controller
+class ShapeFileController extends Controller
 {
     /**
      * Allowed models for Shapefile generation.
@@ -22,7 +22,7 @@ class ShapefileController extends Controller
     /**
      * Generate and download a Shapefile for a specific model.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param string $modelType The type of the model
      * @param int $id The ID of the model
      * @return \Illuminate\Http\Response
@@ -32,14 +32,14 @@ class ShapefileController extends Controller
         $modelType = Str::lower($modelType);
 
         // Validate model type
-        if (!isset($this->allowedModels[$modelType])) {
+        if (! isset($this->allowedModels[$modelType])) {
             abort(404, 'Invalid model type');
         }
 
         $modelClass = $this->allowedModels[$modelType];
         $model = $modelClass::find($id);
 
-        if (!$model) {
+        if (! $model) {
             abort(404, 'Model not found');
         }
 
@@ -47,7 +47,7 @@ class ShapefileController extends Controller
 
         $headers = [
             'Content-Type' => 'application/zip',
-            'Content-Disposition' => 'attachment; filename="' . $model->getTable() . '_' . date('Ymd') . '.zip"',
+            'Content-Disposition' => 'attachment; filename="'.$model->getTable().'_'.date('Ymd').'.zip"',
         ];
 
         return response($shapefileData, 200, $headers);

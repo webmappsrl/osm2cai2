@@ -3,25 +3,25 @@
 namespace App\Nova;
 
 use App\Nova\AbstractUgc;
-use Laravel\Nova\Fields\ID;
+use App\Nova\Actions\DownloadFeatureCollection;
+use App\Nova\Actions\DownloadGeojsonZip;
+use App\Nova\Actions\DownloadGeojsonZipUgcTracks;
+use App\Nova\Filters\RelatedUGCFilter;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\Textarea;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Fields\BelongsTo;
-use App\Nova\Filters\RelatedUGCFilter;
 use Laravel\Nova\Fields\BelongsToMany;
-use App\Nova\Actions\DownloadGeojsonZip;
-use Wm\WmPackage\Nova\Actions\EditFields;
-use Wm\MapMultiLinestring\MapMultiLinestring;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\File;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
 use Webmapp\WmEmbedmapsField\WmEmbedmapsField;
-use App\Nova\Actions\DownloadFeatureCollection;
-use App\Nova\Actions\DownloadGeojsonZipUgcTracks;
+use Wm\MapMultiLinestring\MapMultiLinestring;
 use Wm\MapMultiLinestringNova\MapMultiLinestringNova;
 use Wm\MapMultiLinestringNova3\MapMultiLinestringNova3;
+use Wm\WmPackage\Nova\Actions\EditFields;
 
 class UgcTrack extends AbstractUgc
 {
@@ -39,10 +39,11 @@ class UgcTrack extends AbstractUgc
      */
     public function title()
     {
-        if ($this->name)
+        if ($this->name) {
             return "{$this->name} ({$this->id})";
-        else
+        } else {
             return "{$this->id}";
+        }
     }
 
     /**
@@ -55,7 +56,6 @@ class UgcTrack extends AbstractUgc
         'name',
     ];
 
-
     public static function label()
     {
         $label = 'Track';
@@ -66,7 +66,7 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function fields(Request $request)
@@ -86,6 +86,7 @@ class UgcTrack extends AbstractUgc
                 $formattedWheres = implode('<br>', array_map(function ($line) {
                     return implode(' ', $line);
                 }, $lines));
+
                 return $formattedWheres;
             })->asHtml()
                 ->onlyOnDetail(),
@@ -99,7 +100,7 @@ class UgcTrack extends AbstractUgc
                 'maxZoom' => 17,
                 'defaultZoom' => 10,
                 'graphhopper_api' => 'https://graphhopper.webmapp.it/route',
-                'graphhopper_profile' => 'hike'
+                'graphhopper_profile' => 'hike',
             ])->hideFromIndex(),
         ];
 
@@ -109,7 +110,7 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the cards available for the request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function cards(Request $request)
@@ -120,7 +121,7 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function lenses(Request $request)
@@ -131,7 +132,7 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function actions(Request $request)

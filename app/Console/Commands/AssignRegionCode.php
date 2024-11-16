@@ -31,7 +31,7 @@ class AssignRegionCode extends Command
       Regions code according to CAI convention:
 
                 'A' => 'Friuli Venezia Giulia',
-                'B' => 'Veneto', 
+                'B' => 'Veneto',
                 'C' => 'Trentino Alto Adige',
                 'D' => 'Lombardia',
                 'E' => 'Piemonte',
@@ -40,7 +40,7 @@ class AssignRegionCode extends Command
                 'H' => 'Emilia Romagna',
                 'L' => 'Toscana',
                 'M' => 'Marche',
-                'N' => 'Umbria', 
+                'N' => 'Umbria',
                 'O' => 'Lazio',
                 'P' => 'Abruzzo',
                 'Q' => 'Molise',
@@ -72,11 +72,11 @@ class AssignRegionCode extends Command
             'T' => 'Basilicata',
             'U' => 'Calabria',
             'V' => 'Sicilia',
-            'Z' => 'Sardegna'
+            'Z' => 'Sardegna',
         ];
 
         foreach ($regionsCode as $code => $name) {
-            $region = Region::where('name', 'LIKE', '%' . $name . '%')->first();
+            $region = Region::where('name', 'LIKE', '%'.$name.'%')->first();
             if ($region) {
                 $region->code = $code;
                 $region->save();

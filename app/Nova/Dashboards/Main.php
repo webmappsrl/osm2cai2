@@ -2,18 +2,18 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Helpers\Osm2caiHelper;
+use App\Models\HikingRoute;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\HikingRoute;
-use Laravel\Nova\Cards\Help;
-use App\Helpers\Osm2caiHelper;
-use Illuminate\Support\Facades\DB;
-use Mako\CustomTableCard\Table\Row;
 use Illuminate\Support\Facades\Auth;
-use Mako\CustomTableCard\Table\Cell;
-use Mako\CustomTableCard\CustomTableCard;
-use Laravel\Nova\Dashboards\Main as Dashboard;
+use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Cards\Help;
+use Laravel\Nova\Dashboards\Main as Dashboard;
+use Mako\CustomTableCard\CustomTableCard;
+use Mako\CustomTableCard\Table\Cell;
+use Mako\CustomTableCard\Table\Row;
 
 class Main extends Dashboard
 {
@@ -62,7 +62,7 @@ class Main extends Dashboard
             (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $userName])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles->toArray()])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.last-login-card', ['lastLogin' => $user->last_login_at])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2) . ' %'])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2).' %'])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[1], 'sda' => 1, 'backgroundColor' => Osm2caiHelper::getSdaColor(1)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[2], 'sda' => 2, 'backgroundColor' => Osm2caiHelper::getSdaColor(2)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[3], 'sda' => 3, 'backgroundColor' => Osm2caiHelper::getSdaColor(3)])->center(true)->withBasicStyles(),
@@ -132,7 +132,7 @@ class Main extends Dashboard
             if ($att > 0) {
                 $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $att;
                 $sal = min($sal, 1); // Assicura che SAL non superi il 100%
-                $salDisplay = number_format($sal * 100, 2) . ' %';
+                $salDisplay = number_format($sal * 100, 2).' %';
             } else {
                 $sal = 0;
                 $salDisplay = 'N/A';
@@ -142,13 +142,13 @@ class Main extends Dashboard
 
             $row = new Row(
                 new Cell($region->name ?? 'Sconosciuto'),
-                new Cell((string)$tot1),
-                new Cell((string)$tot2),
-                new Cell((string)$tot3),
-                new Cell((string)$tot4),
-                new Cell((string)$tot),
-                new Cell((string)$att),
-                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . $salDisplay . '</div>'),
+                new Cell((string) $tot1),
+                new Cell((string) $tot2),
+                new Cell((string) $tot3),
+                new Cell((string) $tot4),
+                new Cell((string) $tot),
+                new Cell((string) $att),
+                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.$salDisplay.'</div>'),
             );
             $data[] = $row;
         }

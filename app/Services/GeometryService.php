@@ -20,7 +20,7 @@ class GeometryService
 
     public function geojsonToGeometry($geojson)
     {
-        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('" . $geojson . "'))) as g ")[0]->g;
+        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('".$geojson."'))) as g ")[0]->g;
     }
 
     /**
@@ -33,7 +33,7 @@ class GeometryService
     {
         return DB::select(DB::raw("select (
         ST_Multi(
-          ST_GeomFromGeoJSON('" . $geojson . "')
+          ST_GeomFromGeoJSON('".$geojson."')
         )
     ) as g "))[0]->g;
     }
@@ -48,7 +48,7 @@ class GeometryService
     {
         return DB::select(DB::raw("select (
         ST_Multi(
-          ST_Transform( ST_GeomFromGeoJSON('" . $geojson . "' ) , 3857 )
+          ST_Transform( ST_GeomFromGeoJSON('".$geojson."' ) , 3857 )
         )
     ) as g "))[0]->g;
     }
@@ -56,7 +56,7 @@ class GeometryService
     public function geometryTo4326Srid($geometry)
     {
         return DB::select(DB::raw("select (
-      ST_Transform('" . $geometry . "', 4326)
+      ST_Transform('".$geometry."', 4326)
     ) as g "))[0]->g;
     }
 
@@ -159,6 +159,7 @@ class GeometryService
     public function getCentroid($geometry)
     {
         $geometry = $this->geojsonToGeometry($geometry);
-        return DB::select("select ST_AsGeoJSON(ST_Centroid('" . $geometry . "')) as g")[0]->g;
+
+        return DB::select("select ST_AsGeoJSON(ST_Centroid('".$geometry."')) as g")[0]->g;
     }
 }

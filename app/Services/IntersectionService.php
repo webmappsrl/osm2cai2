@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Region;
 use App\Models\HikingRoute;
+use App\Models\Region;
 use Illuminate\Support\Facades\DB;
 
 class IntersectionService
@@ -46,12 +46,12 @@ class IntersectionService
     {
         $geometryJson = json_encode($hikingRoute->osmfeatures_data['geometry']);
 
-        $intersectingRegions = Region::whereRaw("ST_Intersects(geometry, ST_GeomFromGeoJSON(?))", [$geometryJson])
+        $intersectingRegions = Region::whereRaw('ST_Intersects(geometry, ST_GeomFromGeoJSON(?))', [$geometryJson])
             ->get();
 
         foreach ($intersectingRegions as $region) {
             $hikingRoutesIntersecting = $region->hiking_routes_intersecting ?? [];
-            if (!in_array($hikingRoute->osmfeatures_id, $hikingRoutesIntersecting)) {
+            if (! in_array($hikingRoute->osmfeatures_id, $hikingRoutesIntersecting)) {
                 $hikingRouteData = [$hikingRoute->osmfeatures_id => [
                     'osm2cai_status' => $hikingRoute['osm2cai_status'] ?? null,
                     'validation_date' => $hikingRoute['validation_date'] ?? null,

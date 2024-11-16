@@ -35,12 +35,13 @@ class CheckNearbyCaiHuts extends Command
 
     protected function checkNearbyHuts(HikingRoute $hikingRoute, $buffer)
     {
-        if (!$hikingRoute->geometry) {
+        if (! $hikingRoute->geometry) {
             Log::warning("Hiking route {$hikingRoute->id} has no geometry");
+
             return;
         }
         //geometry casted to geography because more accurate for distance calculations
-        $nearbyHutsIds = DB::select(<<<SQL
+        $nearbyHutsIds = DB::select(<<<'SQL'
             SELECT cai_huts.id 
             FROM cai_huts, hiking_routes 
             WHERE hiking_routes.id = :routeId 
@@ -51,7 +52,7 @@ class CheckNearbyCaiHuts extends Command
             )
         SQL, [
             'routeId' => $hikingRoute->id,
-            'buffer' => $buffer
+            'buffer' => $buffer,
         ]);
 
         $nearbyHutsIds = array_map(
@@ -60,7 +61,6 @@ class CheckNearbyCaiHuts extends Command
             },
             $nearbyHutsIds
         );
-
 
         $currentHuts = json_decode($hikingRoute->nearby_cai_huts, true) ?: [];
         sort($currentHuts);

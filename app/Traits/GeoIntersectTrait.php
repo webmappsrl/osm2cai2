@@ -2,9 +2,9 @@
 
 namespace App\Traits;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * Trait to get intersections with other models
@@ -22,7 +22,7 @@ trait GeoIntersectTrait
     {
         $intersectingIds = DB::table($model->getTable())
             ->select('id')
-            ->whereRaw('ST_Intersects(geometry::geography, (SELECT geometry::geography FROM ' . $this->getTable() . ' WHERE id = ?))', [$this->id])
+            ->whereRaw('ST_Intersects(geometry::geography, (SELECT geometry::geography FROM '.$this->getTable().' WHERE id = ?))', [$this->id])
             ->pluck('id');
 
         return $model::whereIn('id', $intersectingIds)->get();

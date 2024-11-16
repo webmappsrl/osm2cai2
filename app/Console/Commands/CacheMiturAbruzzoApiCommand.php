@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\CacheMiturAbruzzoData;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\CacheMiturAbruzzoData;
 
 class CacheMiturAbruzzoApiCommand extends Command
 {
@@ -32,8 +32,9 @@ class CacheMiturAbruzzoApiCommand extends Command
         $count = $query->count();
 
         if ($count === 0 && $className === 'HikingRoute') {
-            $this->error("No hiking routes found with osm2cai_status 4");
-            Log::error("No hiking routes found with osm2cai_status 4");
+            $this->error('No hiking routes found with osm2cai_status 4');
+            Log::error('No hiking routes found with osm2cai_status 4');
+
             return;
         }
 
@@ -47,8 +48,8 @@ class CacheMiturAbruzzoApiCommand extends Command
             try {
                 CacheMiturAbruzzoData::dispatch($className, $model->id);
             } catch (\Exception $e) {
-                Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
-                $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
+                Log::error("Failed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
+                $this->error("\nFailed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
             }
 
             $bar->advance();

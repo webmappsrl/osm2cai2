@@ -1,12 +1,11 @@
 <?php
 
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,15 +13,15 @@ return new class extends Migration
     {
         Schema::table('cai_huts', function (Blueprint $table) {
             if (! Schema::hasColumn('cai_huts', 'osmfeatures_id')) {
-                DB::statement("ALTER TABLE cai_huts ADD COLUMN osmfeatures_id varchar(255)");
+                DB::statement('ALTER TABLE cai_huts ADD COLUMN osmfeatures_id varchar(255)');
             }
 
             if (! Schema::hasColumn('cai_huts', 'osmfeatures_data')) {
-                DB::statement("ALTER TABLE cai_huts ADD COLUMN osmfeatures_data jsonb");
+                DB::statement('ALTER TABLE cai_huts ADD COLUMN osmfeatures_data jsonb');
             }
 
             if (! Schema::hasColumn('cai_huts', 'osmfeatures_updated_at')) {
-                DB::statement("ALTER TABLE cai_huts ADD COLUMN osmfeatures_updated_at timestamp");
+                DB::statement('ALTER TABLE cai_huts ADD COLUMN osmfeatures_updated_at timestamp');
             }
         });
     }

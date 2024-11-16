@@ -2,24 +2,24 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\Text;
-use Illuminate\Support\Carbon;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\Boolean;
 use App\Enums\UgcValidatedStatus;
-use Laravel\Nova\Fields\Textarea;
-use App\Enums\ValidatedStatusEnum;
-use Wm\MapPointNova3\MapPointNova3;
-use App\Nova\Actions\DownloadUgcCsv;
-use Illuminate\Support\Facades\Auth;
-use App\Nova\Filters\ValidatedFilter;
-use App\Nova\AbstractValidationResource;
 use App\Enums\UgcWaterFlowValidatedStatus;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Enums\ValidatedStatusEnum;
+use App\Nova\AbstractValidationResource;
+use App\Nova\Actions\DownloadUgcCsv;
+use App\Nova\Filters\ValidatedFilter;
 use App\Nova\Filters\WaterFlowValidatedFilter;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\MapPointNova3\MapPointNova3;
 
 class SourceSurvey extends AbstractValidationResource
 {
@@ -32,7 +32,6 @@ class SourceSurvey extends AbstractValidationResource
     {
         return 'Acqua Sorgente';
     }
-
 
     public function fields(Request $request)
     {
@@ -56,20 +55,18 @@ class SourceSurvey extends AbstractValidationResource
         return $fields;
     }
 
-
     public function filters(Request $request)
     {
         return [
             (new ValidatedFilter),
-            (new WaterFlowValidatedFilter)
+            (new WaterFlowValidatedFilter),
         ];
     }
-
 
     /**
      * Get the actions available for the resource.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function actions(Request $request)
@@ -87,9 +84,7 @@ class SourceSurvey extends AbstractValidationResource
     protected function calculateFlowRate()
     {
         if ($this->water_flow_rate_validated == ValidatedStatusEnum::VALID->value) {
-
             $rawData = $this->raw_data;
-
 
             $volume = $this->formatNumericValue($rawData['range_volume'] ?? '');
             $time = $this->formatNumericValue($rawData['range_time'] ?? '');
@@ -111,6 +106,7 @@ class SourceSurvey extends AbstractValidationResource
             $rawData['flow_rate'] = 'N/A';
             $this->raw_data = $rawData;
             $this->save();
+
             return 'N/A';
         }
     }
@@ -121,6 +117,7 @@ class SourceSurvey extends AbstractValidationResource
             return $value;
         } else {
             $value = preg_replace('/[^0-9,]/', '', $value);
+
             return str_replace(',', '.', $value);
         }
     }

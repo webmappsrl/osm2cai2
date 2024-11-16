@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
+use App\Jobs\CacheMiturAbruzzoData;
 use App\Models\User;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Support\Facades\DB;
-use App\Jobs\CacheMiturAbruzzoData;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
@@ -75,21 +75,21 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi '.$osmfeaturesId);
 
             return;
         }
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi '.$osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi '.$osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];
@@ -115,7 +115,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
 
     /**
      * Get the storage disk name to use for caching
-     * 
+     *
      * @return string The disk name
      */
     protected function getStorageDisk(): string

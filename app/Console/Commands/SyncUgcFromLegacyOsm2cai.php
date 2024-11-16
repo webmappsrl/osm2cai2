@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
-use App\Models\UgcPoi;
 use App\Models\UgcMedia;
+use App\Models\UgcPoi;
 use App\Models\UgcTrack;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -36,14 +36,15 @@ class SyncUgcFromLegacyOsm2cai extends Command
         $importMethods = [
             'pois' => 'importUgcPois',
             'tracks' => 'importUgcTracks',
-            'media' => 'importUgcMedia'
+            'media' => 'importUgcMedia',
         ];
 
-        if (!$model) {
+        if (! $model) {
             $this->importAll();
         }
-        if (!in_array($model, ['pois', 'tracks', 'media'])) {
-            $this->error('Invalid model: ' . $model);
+        if (! in_array($model, ['pois', 'tracks', 'media'])) {
+            $this->error('Invalid model: '.$model);
+
             return;
         }
 
@@ -72,7 +73,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private function ensureUserExists(?int $userId): ?User
     {
-        if (!$userId) {
+        if (! $userId) {
             return null;
         }
 
@@ -81,14 +82,15 @@ class SyncUgcFromLegacyOsm2cai extends Command
             return $user;
         }
 
-        $this->info("Importing user: " . $userId);
+        $this->info('Importing user: '.$userId);
         $legacyUser = DB::connection('legacyosm2cai')
             ->table('users')
             ->where('id', $userId)
             ->first();
 
-        if (!$legacyUser) {
-            $this->error("User not found: " . $userId ?? 'empty user_id');
+        if (! $legacyUser) {
+            $this->error('User not found: '.$userId ?? 'empty user_id');
+
             return null;
         }
 
@@ -131,7 +133,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
             $userId = $media->user_id;
             $ugcPoiId = null;
             $ugcTrackId = null;
-            if (!$this->ensureUserExists($userId)) {
+            if (! $this->ensureUserExists($userId)) {
                 $userId = null;
             }
 
@@ -177,7 +179,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 'app_id' => $media->app_id,
             ]);
 
-            $this->info("Imported media: " . $media->id);
+            $this->info('Imported media: '.$media->id);
         }
     }
 
@@ -193,7 +195,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
         foreach ($legacyTracks as $track) {
             try {
                 $userId = $track->user_id;
-                if (!$this->ensureUserExists($track->user_id)) {
+                if (! $this->ensureUserExists($track->user_id)) {
                     $userId = null;
                 }
 
@@ -214,7 +216,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                         [$track->id]
                     );
 
-                if (!$geometryCheck || !$geometryCheck->geometry) {
+                if (! $geometryCheck || ! $geometryCheck->geometry) {
                     $this->warn("Invalid or unsupported geometry for track ID: {$track->id}. Skipping...");
                     continue;
                 }
@@ -239,9 +241,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
 
-                $this->info("Imported track: " . $track->id);
+                $this->info('Imported track: '.$track->id);
             } catch (\Exception $e) {
-                $this->error("Error importing track ID {$track->id}: " . $e->getMessage());
+                $this->error("Error importing track ID {$track->id}: ".$e->getMessage());
                 continue;
             }
         }
@@ -259,7 +261,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
         foreach ($legacyUgc as $ugc) {
             try {
                 $userId = $ugc->user_id;
-                if (!$this->ensureUserExists($ugc->user_id)) {
+                if (! $this->ensureUserExists($ugc->user_id)) {
                     $userId = null;
                 }
 
@@ -280,12 +282,12 @@ class SyncUgcFromLegacyOsm2cai extends Command
                         [$ugc->id]
                     );
 
-                if (!$geometryCheck || !$geometryCheck->geometry) {
+                if (! $geometryCheck || ! $geometryCheck->geometry) {
                     $this->warn("Invalid or unsupported geometry for POI ID: {$ugc->id}. Skipping...");
                     continue;
                 }
 
-                $this->info("Importing UGC: " . $ugc->id);
+                $this->info('Importing UGC: '.$ugc->id);
 
                 UgcPoi::updateOrCreate(
                     ['geohub_id' => $ugc->geohub_id],
@@ -309,7 +311,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
             } catch (\Exception $e) {
-                $this->error("Error importing POI ID {$ugc->id}: " . $e->getMessage());
+                $this->error("Error importing POI ID {$ugc->id}: ".$e->getMessage());
                 continue;
             }
         }

@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Municipality extends Model implements OsmfeaturesSyncableInterface
 {
@@ -61,7 +61,7 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Municipality ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Municipality '.$osmfeaturesId);
 
             return;
         }
@@ -71,8 +71,8 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
 
         if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
             $updateData['name'] = $osmfeaturesData['properties']['name'];
-        } else if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Municipality ' . $osmfeaturesId);
+        } elseif ($osmfeaturesData['properties']['name'] === null) {
+            Log::channel('wm-osmfeatures')->info('No name found for Municipality '.$osmfeaturesId);
         }
 
         $model->update($updateData);

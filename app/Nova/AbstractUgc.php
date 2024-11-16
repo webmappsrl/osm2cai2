@@ -2,27 +2,27 @@
 
 namespace App\Nova;
 
-use App\Models\UgcTrack;
-use App\Nova\UgcTrack as UgcTrackResource;
-use Laravel\Nova\Resource;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Select;
-use App\Nova\Filters\DateFilter;
-use Laravel\Nova\Fields\DateTime;
 use App\Enums\ValidatedStatusEnum;
-use Laravel\Nova\Fields\BelongsTo;
+use App\Models\UgcTrack;
+use App\Nova\Filters\DateFilter;
+use App\Nova\Filters\RelatedUGCFilter;
 use App\Nova\Filters\UgcAppIdFilter;
 use App\Nova\Filters\ValidatedFilter;
-use App\Nova\Filters\RelatedUGCFilter;
-use App\Traits\Nova\WmNovaFieldsTrait;
-use Idez\DateRangeFilter\Enums\Config;
+use App\Nova\UgcTrack as UgcTrackResource;
 use App\Traits\Nova\RawDataFieldsTrait;
+use App\Traits\Nova\WmNovaFieldsTrait;
 use Idez\DateRangeFilter\DateRangeFilter;
+use Idez\DateRangeFilter\Enums\Config;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Resource;
 
 abstract class AbstractUgc extends Resource
 {
@@ -44,13 +44,13 @@ abstract class AbstractUgc extends Resource
      */
     public function validatedStatusOptions()
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
     }
 
     /**
      * Get the fields displayed by the resource.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function fields(Request $request)
@@ -59,7 +59,7 @@ abstract class AbstractUgc extends Resource
             ID::make(__('ID'), 'id')->sortable()->readonly(),
             Text::make('User', function () {
                 if ($this->user_id) {
-                    return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/' . $this->user_id . '">' . $this->user->name . '</a>';
+                    return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.'</a>';
                 } else {
                     return $this->user_no_match ?? 'N/A';
                 }
@@ -77,8 +77,9 @@ abstract class AbstractUgc extends Resource
                 ->canSee(function ($request) {
                     if ($this instanceof UgcTrackResource) {
                         return $request->user()->hasPermissionTo('validate tracks') ?? false;
-                    } else
+                    } else {
                         return $request->user()->isValidatorForFormId($this->form_id) ?? false;
+                    }
                 })->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
                     $isValidated = $request->$requestAttribute;
                     $model->$attribute = $isValidated;
@@ -123,20 +124,21 @@ abstract class AbstractUgc extends Resource
                 foreach ($images as $image) {
                     $url = $image->getUrl();
                     $html .= '<div style="margin: 5px; text-align: center;">';
-                    $html .= '<a href="' . $url . '" target="_blank">';
-                    $html .= '<img src="' . $url . '" width="100" height="100" style="object-fit: cover;">';
+                    $html .= '<a href="'.$url.'" target="_blank">';
+                    $html .= '<img src="'.$url.'" width="100" height="100" style="object-fit: cover;">';
                     $html .= '</a>';
-                    $html .= '<p style="color: lightgray;">ID: ' . $image->id . '</p>';
+                    $html .= '<p style="color: lightgray;">ID: '.$image->id.'</p>';
                     $html .= '</div>';
                 }
                 $html .= '</div>';
+
                 return $html;
             })->asHtml()->onlyOnDetail(),
         ];
 
         $formFields = $this->jsonForm('raw_data');
 
-        if (!empty($formFields)) {
+        if (! empty($formFields)) {
             array_push(
                 $novaFields,
                 $formFields,
@@ -198,7 +200,6 @@ abstract class AbstractUgc extends Resource
     }
 
     abstract public function additionalFields(Request $request);
-
 
     /**
      * Get the fields available for CSV export.

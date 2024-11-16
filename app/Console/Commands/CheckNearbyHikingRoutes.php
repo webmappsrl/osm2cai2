@@ -37,17 +37,17 @@ class CheckNearbyHikingRoutes extends Command
     protected function checkNearbyHikingRoutes(CaiHut $caiHut, $buffer)
     {
         $nearbyRoutes = HikingRoute::select('id', 'geometry', 'cai_huts') //geometry casted to geography because more accurate for distance calculations
-            ->whereRaw("ST_DWithin(
+            ->whereRaw('ST_DWithin(
                 hiking_routes.geometry::geography,
                 cai_huts.geometry::geography, 
                 ?
-            )", [$buffer])
+            )', [$buffer])
             ->get();
 
         foreach ($nearbyRoutes as $route) {
             $hr = HikingRoute::find($route->id);
             $currentHuts = json_decode($hr->cai_huts, true) ?: [];
-            if (!in_array($caiHut->id, $currentHuts)) {
+            if (! in_array($caiHut->id, $currentHuts)) {
                 array_push($currentHuts, $caiHut->id);
                 $hr->update([
                     'cai_huts' => json_encode($currentHuts),

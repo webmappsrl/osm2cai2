@@ -45,7 +45,7 @@ class Club extends Resource
         return [
             ID::make()->sortable()
                 ->hideFromIndex(),
-            Text::make('Nome', 'name',)
+            Text::make('Nome', 'name', )
                 ->sortable()
                 ->rules('required', 'max:255')
                 ->displayUsing(function ($name, $a, $b) {

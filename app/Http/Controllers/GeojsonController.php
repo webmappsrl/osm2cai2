@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\HikingRoute;
+use App\Models\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use App\Models\Region;
 
 class GeojsonController extends Controller
 {
@@ -20,17 +20,17 @@ class GeojsonController extends Controller
     public function download(string $modelType, string $id)
     {
         // Dynamically load the model based on type
-        $modelClass = 'App\\Models\\' . ucfirst($modelType);
+        $modelClass = 'App\\Models\\'.ucfirst($modelType);
 
         // Verify that the model exists
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             return response()->json(['error' => 'Model not found'], 404);
         }
 
         // Find the resource by ID
         $model = $modelClass::find($id);
-        if (!$model) {
-            return response()->json(['error' => ucfirst($modelType) . ' ' . $id . ' not found'], 404);
+        if (! $model) {
+            return response()->json(['error' => ucfirst($modelType).' '.$id.' not found'], 404);
         }
 
         // Initialize GeoJSON structure
@@ -54,7 +54,7 @@ class GeojsonController extends Controller
         // Settings for GeoJSON file download
         $headers = [
             'Content-type' => 'application/json',
-            'Content-Disposition' => 'attachment; filename="' . $id . '.geojson"',
+            'Content-Disposition' => 'attachment; filename="'.$id.'.geojson"',
         ];
 
         return response(json_encode($geojson), 200, $headers);
@@ -137,36 +137,42 @@ class GeojsonController extends Controller
             case 'region':
                 // Get sectors related to the region
                 $sectors = $model->getSectorIds();
+
                 return Sector::whereIn('id', $sectors)
                     ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'province':
                 // Get sectors related to the province
                 $sectors = $model->getSectorIds();
+
                 return Sector::whereIn('id', $sectors)
                     ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'area':
                 // Get sectors related to the area
                 $sectors = $model->getSectorIds();
+
                 return Sector::whereIn('id', $sectors)
                     ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'club':
                 // Get hiking routes related to the club
                 $hikingRoutes = $model->hikingRoutes()->get();
+
                 return HikingRoute::whereIn('id', $hikingRoutes->pluck('id'))
                     ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'area':
                 // Get sectors related to the area
                 $sectors = $model->getSectorIds();
+
                 return Sector::whereIn('id', $sectors)
                     ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'club':
                 // Get hiking routes related to the club
                 $hikingRoutes = $model->hikingRoutes()->get();
+
                 return HikingRoute::whereIn('id', $hikingRoutes->pluck('id'))
                     ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
@@ -188,7 +194,7 @@ class GeojsonController extends Controller
             $geometry = json_decode($geometry[0]->geom);
             $osmfeaturesDataProperties = $resource->osmfeaturesData['properties'];
 
-            $name = $resource->name ? $resource->name . ' - ' . $resource->ref : $resource->ref;
+            $name = $resource->name ? $resource->name.' - '.$resource->ref : $resource->ref;
 
             $regions = $resource->regions->pluck('name')->implode(', ');
             $provinces = $resource->provinces->pluck('name')->implode(', ');
@@ -216,9 +222,10 @@ class GeojsonController extends Controller
                     'sector' => $resource->mainSector()->full_code ?? '',
                     'clubs' => $clubs,
                     'last_updated' => $resource->updated_at->format('Y-m-d'),
-                ]
+                ],
             ];
         }
+
         return [
             'id' => $resource->id,
             'name' => $resource->name,

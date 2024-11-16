@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Itinerary;
-use Illuminate\Support\Facades\DB;
 use App\Http\Requests\StoreItineraryRequest;
 use App\Http\Requests\UpdateItineraryRequest;
+use App\Models\Itinerary;
+use Illuminate\Support\Facades\DB;
 
 class ItineraryController extends Controller
 {
@@ -34,7 +34,6 @@ class ItineraryController extends Controller
      *         )
      *      ),
      *     )
-     *
      */
     public function index()
     {

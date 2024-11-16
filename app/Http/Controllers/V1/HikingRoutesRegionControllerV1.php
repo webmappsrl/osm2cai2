@@ -14,16 +14,13 @@ use Illuminate\Support\Facades\DB;
 
 class HikingRoutesRegionControllerV1 extends Controller
 {
-
-
     /**
-     * 
      * @OA\Get(
      *      path="/api/v1/hiking-routes/region/{region_code}/{sda}",
      *      tags={"Api V1"},
      *      @OA\Response(
      *          response=200,
-     *          description="Returns all the hiking routes OSM2CAI IDs based on the given region code and SDA number. 
+     *          description="Returns all the hiking routes OSM2CAI IDs based on the given region code and SDA number.
      *                       These ids can be used in the geojson API hiking-route",
      *       @OA\MediaType(
      *             mediaType="application/json",
@@ -35,7 +32,7 @@ class HikingRoutesRegionControllerV1 extends Controller
      *                 ),
      *                 example={1269,652,273,}
      *             )
-     *         )     
+     *         )
      *      ),
      *     @OA\Parameter(
      *         name="region_code",
@@ -79,7 +76,6 @@ Regione code according to CAI convention: <br/>
      *         )
      *     ),
      * )
-     * 
      */
     public function hikingroutelist(string $region_code, string $sda)
     {
@@ -89,8 +85,8 @@ Regione code according to CAI convention: <br/>
 
         // Check if region exists
         $region = Region::where('code', $region_code)->first();
-        if (!$region) {
-            return response(['error' => 'Region not found with code ' . $region_code], 404);
+        if (! $region) {
+            return response(['error' => 'Region not found with code '.$region_code], 404);
         }
 
         // Get hiking routes for region and status
@@ -99,7 +95,7 @@ Regione code according to CAI convention: <br/>
         })->whereIn('osm2cai_status', $sda)->get();
 
         if ($list->isEmpty()) {
-            return response(['error' => 'No hiking routes found for region ' . $region_code . ' and SDA ' . implode(',', $sda)], 404);
+            return response(['error' => 'No hiking routes found for region '.$region_code.' and SDA '.implode(',', $sda)], 404);
         }
 
         $list = $list->pluck('id')->toArray();
@@ -109,7 +105,6 @@ Regione code according to CAI convention: <br/>
     }
 
     /**
-     * 
      * @OA\Get(
      *      path="/api/v1/hiking-routes-osm/region/{region_code}/{sda}",
      *      tags={"Api V1"},
@@ -117,7 +112,7 @@ Regione code according to CAI convention: <br/>
      *          response=200,
      *          description="Returns all the hiking routes OSM IDs based on the given region code and SDA number.
      *                       OSMID can be used in hiking-route-osm API or directly in OpenStreetMap relation by the following URL:
-     *                       https://openstreetmap.org/relation/{OSMID}. Remember that the data on OSM can be differente from data in 
+     *                       https://openstreetmap.org/relation/{OSMID}. Remember that the data on OSM can be differente from data in
      *                       OSM2CAI after validation.",
      *      @OA\MediaType(
      *             mediaType="application/json",
@@ -129,7 +124,7 @@ Regione code according to CAI convention: <br/>
      *                 ),
      *                 example={7766787,3151885,2736729}
      *             )
-     *         )     
+     *         )
      *      ),
      *     @OA\Parameter(
      *         name="region_code",
@@ -173,7 +168,6 @@ Regione code according to CAI convention: <br/>
      *         )
      *     ),
      * )
-     * 
      */
     public function hikingrouteosmlist(string $region_code, string $sda)
     {
@@ -192,7 +186,6 @@ Regione code according to CAI convention: <br/>
     }
 
     /**
-     * 
      * @OA\Get(
      *      path="/api/v1/hiking-route/{id}",
      *      tags={"Api V1"},
@@ -229,7 +222,7 @@ Regione code according to CAI convention: <br/>
      * "survey:CAI","cai_scale":"E","from":"Castellare","to":"Campo di Croce","ref":"117","public_page":"https://osm2cai.cai.it/hiking-route/id/2421","sda":4,"validation_date":"2022-07-29T00:00:00.000000Z"},"geometry":
      * {"type":"MultiLineString","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}}
      *             )
-     *         )   
+     *         )
      *      ),
      *      @OA\Parameter(
      *         name="id",
@@ -242,14 +235,12 @@ Regione code according to CAI convention: <br/>
      *         )
      *     ),
      * )
-     * 
      */
     public function hikingroutebyid(int $id)
     {
-
         try {
             $item = HikingRoute::find($id);
-            if (!$item) {
+            if (! $item) {
                 return response('No Hiking Route found with this id', 404, ['Content-type' => 'application/json']);
             }
             $HR = $this->createGeoJSONFromModel($item);
@@ -257,13 +248,11 @@ Regione code according to CAI convention: <br/>
             return response('No Hiking Route found with this id', 404, ['Content-type' => 'application/json']);
         }
 
-
         // Return
         return response($HR, 200, ['Content-type' => 'application/json']);
     }
 
     /**
-     * 
      * @OA\Get(
      *      path="/api/v1/hiking-route-osm/{id}",
      *      tags={"Api V1"},
@@ -301,7 +290,7 @@ Regione code according to CAI convention: <br/>
      * "survey:CAI","cai_scale":"E","from":"Castellare","to":"Campo di Croce","ref":"117","public_page":"https://osm2cai.cai.it/hiking-route/id/2421","sda":4,"validation_date":"2022-07-29T00:00:00.000000Z"},"geometry":
      * {"type":"MultiLineString","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}}
      *             )
-     *         )   
+     *         )
      *      ),
      *      @OA\Parameter(
      *         name="id",
@@ -314,20 +303,19 @@ Regione code according to CAI convention: <br/>
      *         )
      *     ),
      * )
-     * 
      */
     public function hikingroutebyosmid(int $id)
     {
         try {
             $item = HikingRoute::whereRaw("(osmfeatures_data->'properties'->>'osm_id')::integer = ?", [$id])->first();
 
-            if (!$item) {
+            if (! $item) {
                 return response('No Hiking Route found with this OSMid', 404, ['Content-type' => 'application/json']);
             }
 
             $HR = $this->createGeoJSONFromModel($item);
 
-            if (!$HR) {
+            if (! $HR) {
                 return response('Error creating GeoJSON', 500, ['Content-type' => 'application/json']);
             }
 
@@ -337,9 +325,7 @@ Regione code according to CAI convention: <br/>
         }
     }
 
-
     /**
-     *
      * @OA\Get(
      *      path="/api/v1/hiking-routes/bb/{bounding_box}/{sda}",
      *      tags={"Api V1"},
@@ -380,7 +366,6 @@ Regione code according to CAI convention: <br/>
      *         )
      *     ),
      * )
-     *
      */
     public function hikingroutelist_bb(string $bb, string $sda)
     {
@@ -389,11 +374,11 @@ Regione code according to CAI convention: <br/>
 
             $list = DB::table('hiking_routes')
                 ->select('id')
-                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                ->whereRaw('ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))', [
                     floatval($coordinates[0]),
                     floatval($coordinates[1]),
                     floatval($coordinates[2]),
-                    floatval($coordinates[3])
+                    floatval($coordinates[3]),
                 ])
                 ->whereIn('osm2cai_status', explode(',', $sda))
                 ->pluck('id')
@@ -401,12 +386,11 @@ Regione code according to CAI convention: <br/>
 
             return response($list, 200, ['Content-type' => 'application/json']);
         } catch (Exception $e) {
-            return response(['error' => 'Error processing bounding box query: ' . $e->getMessage()], 500, ['Content-type' => 'application/json']);
+            return response(['error' => 'Error processing bounding box query: '.$e->getMessage()], 500, ['Content-type' => 'application/json']);
         }
     }
 
     /**
-     *
      * @OA\Get(
      *      path="/api/v1/hiking-routes-osm/bb/{bounding_box}/{sda}",
      *      tags={"Api V1"},
@@ -447,7 +431,6 @@ Regione code according to CAI convention: <br/>
      *         )
      *     ),
      * )
-     *
      */
     public function hikingrouteosmlist_bb(string $bb, string $sda)
     {
@@ -456,11 +439,11 @@ Regione code according to CAI convention: <br/>
 
             $list = DB::table('hiking_routes')
                 ->selectRaw("(osmfeatures_data->'properties'->>'osm_id')::integer as osm_id")
-                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                ->whereRaw('ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))', [
                     floatval($coordinates[0]),
                     floatval($coordinates[1]),
                     floatval($coordinates[2]),
-                    floatval($coordinates[3])
+                    floatval($coordinates[3]),
                 ])
                 ->whereIn('osm2cai_status', explode(',', $sda))
                 ->pluck('osm_id')
@@ -468,12 +451,11 @@ Regione code according to CAI convention: <br/>
 
             return response($list, 200, ['Content-type' => 'application/json']);
         } catch (Exception $e) {
-            return response(['error' => 'Error processing bounding box query: ' . $e->getMessage()], 500, ['Content-type' => 'application/json']);
+            return response(['error' => 'Error processing bounding box query: '.$e->getMessage()], 500, ['Content-type' => 'application/json']);
         }
     }
 
     /**
-     *
      * @OA\Get(
      *      path="/api/v1/hiking-routes-collection/bb/{bounding_box}/{sda}",
      *      tags={"Api V1"},
@@ -515,7 +497,6 @@ Regione code according to CAI convention: <br/>
      *         )
      *     ),
      * )
-     *
      */
     public function hikingroutelist_collection(string $bb, string $sda)
     {
@@ -529,7 +510,7 @@ Regione code according to CAI convention: <br/>
             );
 
             if ($area > 0.1) {
-                return response(['error' => "Bounding box is too large"], 500, ['Content-type' => 'application/json']);
+                return response(['error' => 'Bounding box is too large'], 500, ['Content-type' => 'application/json']);
             }
 
             return $this->geojsonByBoundingBox(
@@ -540,24 +521,22 @@ Regione code according to CAI convention: <br/>
                 floatval($boundingBox[3])
             );
         } catch (Exception $e) {
-            return response(['error' => 'Error processing bounding box query: ' . $e->getMessage()], 500, ['Content-type' => 'application/json']);
+            return response(['error' => 'Error processing bounding box query: '.$e->getMessage()], 500, ['Content-type' => 'application/json']);
         }
     }
 
-
-
     public function getAreaBoundingBox($la0, $lo0, $la1, $lo1)
     {
-        $res = DB::select("SELECT ST_area(ST_makeenvelope(?, ?, ?, ?, 4326))", [$la0, $lo0, $la1, $lo1]);
+        $res = DB::select('SELECT ST_area(ST_makeenvelope(?, ?, ?, ?, 4326))', [$la0, $lo0, $la1, $lo1]);
+
         return floatval($res[0]->st_area);
     }
-
 
     public function createGeoJSONFromModel($item)
     {
         $obj = HikingRoute::where('id', '=', $item->id)
             ->select(
-                DB::raw("ST_AsGeoJSON(geometry) as geom")
+                DB::raw('ST_AsGeoJSON(geometry) as geom')
             )
             ->first();
 
@@ -570,24 +549,25 @@ Regione code according to CAI convention: <br/>
 
         if (isset($geom)) {
             $response = [
-                "type" => "Feature",
-                "properties" => [
-                    "id" => $item->id,
-                    "relation_id" => $osmfeaturesDataProperties['osm_id'] ?? null,
-                    "source" => $osmfeaturesDataProperties['source'] ?? null,
-                    "cai_scale" => $osmfeaturesDataProperties['cai_scale'] ?? null,
-                    "from" => $osmfeaturesDataProperties['from'] ?? null,
-                    "to" => $osmfeaturesDataProperties['to'] ?? null,
-                    "ref" => $osmfeaturesDataProperties['ref'] ?? null,
-                    "public_page" => url('/hiking-route/id/' . $item->id),
-                    "sda" => $item->osm2cai_status ?? $osmfeaturesDataProperties['osm2cai_status'] ?? null,
-                    "issues_status" => $item->issues_status ?? "",
-                    "issues_description" => $item->issues_description ?? "",
-                    "issues_last_update" => $item->issues_last_update ?? ""
+                'type' => 'Feature',
+                'properties' => [
+                    'id' => $item->id,
+                    'relation_id' => $osmfeaturesDataProperties['osm_id'] ?? null,
+                    'source' => $osmfeaturesDataProperties['source'] ?? null,
+                    'cai_scale' => $osmfeaturesDataProperties['cai_scale'] ?? null,
+                    'from' => $osmfeaturesDataProperties['from'] ?? null,
+                    'to' => $osmfeaturesDataProperties['to'] ?? null,
+                    'ref' => $osmfeaturesDataProperties['ref'] ?? null,
+                    'public_page' => url('/hiking-route/id/'.$item->id),
+                    'sda' => $item->osm2cai_status ?? $osmfeaturesDataProperties['osm2cai_status'] ?? null,
+                    'issues_status' => $item->issues_status ?? '',
+                    'issues_description' => $item->issues_description ?? '',
+                    'issues_last_update' => $item->issues_last_update ?? '',
                 ],
-                "geometry" => json_decode($geom, true)
+                'geometry' => json_decode($geom, true),
             ];
         }
+
         return $response;
     }
 
@@ -595,11 +575,11 @@ Regione code according to CAI convention: <br/>
     {
         try {
             $features = DB::table('hiking_routes')
-                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                ->whereRaw('ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))', [
                     floatval($lo0),
                     floatval($la0),
                     floatval($lo1),
-                    floatval($la1)
+                    floatval($la1),
                 ])
                 ->whereIn('osm2cai_status', explode(',', $osm2cai_status))
                 ->get([
@@ -607,49 +587,49 @@ Regione code according to CAI convention: <br/>
                     'osm2cai_status',
                     'validation_date',
                     'osmfeatures_data',
-                    DB::raw('ST_AsGeoJSON(geometry) as geom')
+                    DB::raw('ST_AsGeoJSON(geometry) as geom'),
                 ]);
 
             if ($features->isEmpty()) {
                 return json_encode([
-                    "type" => "FeatureCollection",
-                    "features" => []
+                    'type' => 'FeatureCollection',
+                    'features' => [],
                 ]);
             }
 
             $featureCollection = [
-                "type" => "FeatureCollection",
-                "features" => $features->map(function ($item) {
+                'type' => 'FeatureCollection',
+                'features' => $features->map(function ($item) {
                     $osmProperties = $item->osmfeatures_data['properties'] ?? [];
 
                     return [
-                        "type" => "Feature",
-                        "properties" => [
-                            "id" => $item->id,
-                            "relation_id" => $osmProperties['osm_id'] ?? null,
-                            "source" => $osmProperties['source'] ?? null,
-                            "cai_scale" => $osmProperties['cai_scale'] ?? null,
-                            "from" => $osmProperties['from'] ?? null,
-                            "to" => $osmProperties['to'] ?? null,
-                            "ref" => $osmProperties['ref'] ?? null,
-                            "public_page" => url('/hiking-route/id/' . $item->id),
-                            "sda" => $item->osm2cai_status,
-                            "validation_date" => $item->validation_date,
-                            "network" => $osmProperties['network'] ?? null,
-                            "osmc_symbol" => $osmProperties['osmc_symbol'] ?? null,
-                            "roundtrip" => $item->tdh['roundtrip'] ?? null,
-                            "symbol" => $osmProperties['symbol'] ?? null,
-                            "description" => $osmProperties['description'] ?? null,
-                            "website" => $osmProperties['website'] ?? null
+                        'type' => 'Feature',
+                        'properties' => [
+                            'id' => $item->id,
+                            'relation_id' => $osmProperties['osm_id'] ?? null,
+                            'source' => $osmProperties['source'] ?? null,
+                            'cai_scale' => $osmProperties['cai_scale'] ?? null,
+                            'from' => $osmProperties['from'] ?? null,
+                            'to' => $osmProperties['to'] ?? null,
+                            'ref' => $osmProperties['ref'] ?? null,
+                            'public_page' => url('/hiking-route/id/'.$item->id),
+                            'sda' => $item->osm2cai_status,
+                            'validation_date' => $item->validation_date,
+                            'network' => $osmProperties['network'] ?? null,
+                            'osmc_symbol' => $osmProperties['osmc_symbol'] ?? null,
+                            'roundtrip' => $item->tdh['roundtrip'] ?? null,
+                            'symbol' => $osmProperties['symbol'] ?? null,
+                            'description' => $osmProperties['description'] ?? null,
+                            'website' => $osmProperties['website'] ?? null,
                         ],
-                        "geometry" => json_decode($item->geom)
+                        'geometry' => json_decode($item->geom),
                     ];
-                })->all()
+                })->all(),
             ];
 
             return json_encode($featureCollection);
         } catch (Exception $e) {
-            throw new Exception('Error creating GeoJSON collection: ' . $e->getMessage());
+            throw new Exception('Error creating GeoJSON collection: '.$e->getMessage());
         }
     }
 }

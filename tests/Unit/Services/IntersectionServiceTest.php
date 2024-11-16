@@ -2,13 +2,13 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Models\Region;
 use App\Models\HikingRoute;
-use Illuminate\Support\Facades\DB;
+use App\Models\Region;
 use App\Services\IntersectionService;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
 
 class IntersectionServiceTest extends TestCase
 {
@@ -25,7 +25,7 @@ class IntersectionServiceTest extends TestCase
 
     private function createRegion($name, $wkt)
     {
-        return DB::statement("INSERT INTO regions (name, geometry) VALUES (?, ST_GeomFromText(?))", [$name, $wkt]);
+        return DB::statement('INSERT INTO regions (name, geometry) VALUES (?, ST_GeomFromText(?))', [$name, $wkt]);
     }
 
     private function createHikingRoute($osmfeaturesId, $geometry)
@@ -41,8 +41,8 @@ class IntersectionServiceTest extends TestCase
                 'issues_user_id' => 1,
                 'issues_chronology' => [],
                 'issues_description' => '',
-                'description_cai_it' => 'Test route'
-            ]
+                'description_cai_it' => 'Test route',
+            ],
         ]);
     }
 
@@ -55,12 +55,12 @@ class IntersectionServiceTest extends TestCase
         // Crea alcuni percorsi escursionistici che intersecano la regione
         $intersectingRoute = $this->createHikingRoute('test_intersecting', [
             'type' => 'LineString',
-            'coordinates' => [[0.0, 0.0], [1.0, 1.0]]
+            'coordinates' => [[0.0, 0.0], [1.0, 1.0]],
         ]);
 
         $nonIntersectingRoute = $this->createHikingRoute('test_non_intersecting', [
             'type' => 'LineString',
-            'coordinates' => [[2, 2], [3, 3]]
+            'coordinates' => [[2, 2], [3, 3]],
         ]);
 
         $result = $this->intersectionService->calculateForRegion($region);
@@ -74,7 +74,7 @@ class IntersectionServiceTest extends TestCase
         // Crea un percorso escursionistico di test
         $hikingRoute = $this->createHikingRoute('test_route', [
             'type' => 'LineString',
-            'coordinates' => [[0.5, 0.5], [1.5, 1.5]]
+            'coordinates' => [[0.5, 0.5], [1.5, 1.5]],
         ]);
 
         // Crea alcune regioni che intersecano il percorso
@@ -99,7 +99,7 @@ class IntersectionServiceTest extends TestCase
         // Crea alcuni percorsi escursionistici
         $this->createHikingRoute('test_route', [
             'type' => 'LineString',
-            'coordinates' => [[0.5, 0.5], [1.5, 1.5]]
+            'coordinates' => [[0.5, 0.5], [1.5, 1.5]],
         ]);
 
         $this->intersectionService->calculateForAllRegions();

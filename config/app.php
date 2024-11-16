@@ -212,8 +212,6 @@ return [
         Rap2hpoutre\LaravelLogViewer\LaravelLogViewerServiceProvider::class,
         Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
 
-
-
         /*
          * Package Service Providers...
          */
@@ -228,7 +226,6 @@ return [
         App\Providers\HorizonServiceProvider::class,
         App\Providers\NovaServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-
 
     ],
 

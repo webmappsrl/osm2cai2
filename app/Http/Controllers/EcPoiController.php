@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EcPoi;
-use App\Models\HikingRoute;
 use App\Http\Requests\StoreEcPoisRequest;
 use App\Http\Requests\UpdateEcPoisRequest;
+use App\Models\EcPoi;
+use App\Models\HikingRoute;
 
 class EcPoiController extends Controller
 {
@@ -38,7 +38,7 @@ class EcPoiController extends Controller
      *                 type="string",
      *                 format="date-time"
      *             )
-     *      
+     *
      *         )
      *     )
      * )
@@ -49,11 +49,10 @@ class EcPoiController extends Controller
         [$minLng, $minLat, $maxLng, $maxLat] = explode(',', $boundingBox);
         $type = strtoupper($type);
 
-
         $pois = EcPoi::whereRaw(
-            "
+            '
         ST_Within(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326)) 
-        AND type = ?",
+        AND type = ?',
             [$minLng, $minLat, $maxLng, $maxLat, $type]
         )->where('type', $type)->get();
 
@@ -63,7 +62,6 @@ class EcPoiController extends Controller
 
         return response()->json($pois);
     }
-
 
     /**
      * @OA\Get(
@@ -102,8 +100,8 @@ class EcPoiController extends Controller
     {
         $hr = HikingRoute::find($id);
 
-        $pois = \App\Models\EcPoi::whereRaw(
-            "ST_DWithin(geometry, ST_GeomFromEWKB(?), 1000)",
+        $pois = EcPoi::whereRaw(
+            'ST_DWithin(geometry, ST_GeomFromEWKB(?), 1000)',
             [$hr->geometry]
         )->where('type', $type)->get();
 
@@ -147,14 +145,13 @@ class EcPoiController extends Controller
     {
         $hr = HikingRoute::getHikingRouteByOsmId($osmId);
 
-        $pois = \App\Models\EcPoi::whereRaw(
-            "ST_DWithin(geometry, ST_GeomFromEWKB(?), 1000)",
+        $pois = EcPoi::whereRaw(
+            'ST_DWithin(geometry, ST_GeomFromEWKB(?), 1000)',
             [$hr->geometry]
         )->where('type', $type)->get();
 
         return response()->json($pois);
     }
-
 
     /**
      * Show the form for creating a new resource.

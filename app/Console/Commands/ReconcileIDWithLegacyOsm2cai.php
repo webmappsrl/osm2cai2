@@ -8,16 +8,18 @@ use Illuminate\Support\Facades\DB;
 class ReconcileIDWithLegacyOsm2cai extends Command
 {
     protected $signature = 'osm2cai2:reconcile-id-with-legacy-osm2cai {--model=}';
+
     protected $description = 'Reconcile the IDs of the models with the legacy osm2cai database for consistency in the API';
 
     public function handle()
     {
         $model = $this->option('model');
-        if (!$model) {
+        if (! $model) {
             $this->error('The model option is required');
+
             return;
         }
-        $class = 'App\\Models\\' . $model;
+        $class = 'App\\Models\\'.$model;
 
         // Get model table in database
         $modelTable = (new $class)->getTable();
@@ -25,8 +27,9 @@ class ReconcileIDWithLegacyOsm2cai extends Command
         $legacyOsm2caiDb = DB::connection('legacyosm2cai');
 
         // Check if the table exists in the legacy database
-        if (!$legacyOsm2caiDb->getSchemaBuilder()->hasTable($modelTable)) {
-            $this->error('The table ' . $modelTable . ' does not exist in the legacy osm2cai database');
+        if (! $legacyOsm2caiDb->getSchemaBuilder()->hasTable($modelTable)) {
+            $this->error('The table '.$modelTable.' does not exist in the legacy osm2cai database');
+
             return;
         }
 

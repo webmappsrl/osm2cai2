@@ -2,13 +2,13 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
-use App\Models\Region;
 use App\Models\HikingRoute;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use App\Models\Region;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 class HikingRoutesRegionControllerV1Test extends TestCase
 {
@@ -18,7 +18,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
     {
         parent::setUp();
         //check if osmfeatures_data column exists
-        if (!Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
+        if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
             Schema::table('hiking_routes', function (Blueprint $table) {
                 $table->json('osmfeatures_data')->nullable();
             });
@@ -27,7 +27,6 @@ class HikingRoutesRegionControllerV1Test extends TestCase
 
     private function createTestHikingRoute($id, $osm_id, $status, $geometry = null)
     {
-
         return HikingRoute::create([
             'id' => $id,
             'osm2cai_status' => $status,
@@ -43,9 +42,9 @@ class HikingRoutesRegionControllerV1Test extends TestCase
             'issues_last_update' => now(),
             'osmfeatures_data' => [
                 'properties' => [
-                    'osm_id' => $osm_id
-                ]
-            ]
+                    'osm_id' => $osm_id,
+                ],
+            ],
         ]);
     }
 
@@ -54,7 +53,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         return Region::create([
             'code' => $code,
             'name' => 'Test Region',
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 30, 30 30, 30 0, 0 0))', 4326)")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 30, 30 30, 30 0, 0 0))', 4326)"),
         ]);
     }
 
@@ -67,7 +66,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         // Crea la relazione nella tabella pivot
         DB::table('hiking_route_region')->insert([
             'hiking_route_id' => $hikingRoute->id,
-            'region_id' => $region->id
+            'region_id' => $region->id,
         ]);
 
         // Esegui la richiesta
@@ -105,14 +104,14 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         // Crea la relazione nella tabella pivot
         DB::table('hiking_route_region')->insert([
             'hiking_route_id' => $hikingRoute->id,
-            'region_id' => $region->id
+            'region_id' => $region->id,
         ]);
 
         // Aggiungi osmfeatures_data
         $hikingRoute->osmfeatures_data = [
             'properties' => [
-                'osm_id' => 12345
-            ]
+                'osm_id' => 12345,
+            ],
         ];
         $hikingRoute->save();
 
@@ -130,7 +129,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
 
         // Esegui la richiesta
-        $response = $this->get('/api/v1/hiking-route/' . $hikingRoute->id);
+        $response = $this->get('/api/v1/hiking-route/'.$hikingRoute->id);
 
         // Verifica la risposta
         $response->assertStatus(200)
@@ -147,7 +146,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
                     'public_page',
                     'sda',
                 ],
-                'geometry'
+                'geometry',
             ]);
     }
 
@@ -165,14 +164,14 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
 
         // Esegui la richiesta
-        $response = $this->get('/api/v1/hiking-route-osm/' . $hikingRoute->osmfeatures_data['properties']['osm_id']);
+        $response = $this->get('/api/v1/hiking-route-osm/'.$hikingRoute->osmfeatures_data['properties']['osm_id']);
 
         // Verifica la risposta
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'type',
                 'properties',
-                'geometry'
+                'geometry',
             ]);
     }
 

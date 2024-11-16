@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Region;
-use App\Models\HikingRoute;
-use Illuminate\Http\Response;
-use Illuminate\Support\Carbon;
-use OpenApi\Annotations as OA;
-use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HikingRouteResource;
 use App\Http\Resources\HikingRouteTDHResource;
+use App\Models\HikingRoute;
+use App\Models\Region;
+use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use OpenApi\Annotations as OA;
 
 class HikingRouteController extends Controller
 {
@@ -52,7 +52,6 @@ class HikingRouteController extends Controller
 
         return response()->json($hikingRoutes);
     }
-
 
     /**
      * @OA\Get(
@@ -129,8 +128,8 @@ class HikingRouteController extends Controller
 
         // Check if region exists
         $region = Region::where('code', $region_code)->first();
-        if (!$region) {
-            return response(['error' => 'Region not found with code ' . $region_code], 404);
+        if (! $region) {
+            return response(['error' => 'Region not found with code '.$region_code], 404);
         }
 
         // Get hiking routes for region and status
@@ -139,7 +138,7 @@ class HikingRouteController extends Controller
         })->whereIn('osm2cai_status', $sda)->get();
 
         if ($list->isEmpty()) {
-            return response(['error' => 'No hiking routes found for region ' . $region_code . ' and SDA ' . implode(',', $sda)], 404);
+            return response(['error' => 'No hiking routes found for region '.$region_code.' and SDA '.implode(',', $sda)], 404);
         }
 
         $list = $list->pluck('id')->toArray();
@@ -194,19 +193,19 @@ class HikingRouteController extends Controller
      *         )
      *     ),
      * )
-     *
      */
     public function indexByBoundingBox(string $bounding_box, string $sda)
     {
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw("ST_within(geometry,ST_MakeEnvelope(" . $bounding_box . ", 4326))")
+            ->whereRaw('ST_within(geometry,ST_MakeEnvelope('.$bounding_box.', 4326))')
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
         $data = [];
         foreach ($list as $hr) {
             $data[$hr->id] = Carbon::create($hr->updated_at)->format('Y-m-d H:i:s');
         }
+
         return response($data, 200, ['Content-type' => 'application/json']);
     }
 
@@ -279,7 +278,6 @@ class HikingRouteController extends Controller
      *         )
      *     ),
      * )
-     *
      */
     public function OsmIndexByRegion(string $region_code, string $sda)
     {
@@ -346,24 +344,24 @@ class HikingRouteController extends Controller
      *         )
      *     ),
      * )
-     *
      */
     public function OsmIndexByBoundingBox(string $bounding_box, string $sda)
     {
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw("ST_within(geometry,ST_MakeEnvelope(" . $bounding_box . ", 4326))")
+            ->whereRaw('ST_within(geometry,ST_MakeEnvelope('.$bounding_box.', 4326))')
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
         $data = [];
         foreach ($list as $hr) {
             $osmfeaturesData = is_array($hr->osmfeatures_data) ? $hr->osmfeatures_data : json_decode($hr->osmfeatures_data, true);
-            if (!is_array($osmfeaturesData)) {
+            if (! is_array($osmfeaturesData)) {
                 $osmfeaturesData = json_decode($osmfeaturesData, true);
             }
             $osmId = $osmfeaturesData['properties']['osm_id'];
             $data[$osmId] = Carbon::create($hr->updated_at)->format('Y-m-d H:i:s');
         }
+
         return response($data, 200, ['Content-type' => 'application/json']);
     }
 
@@ -409,15 +407,14 @@ class HikingRouteController extends Controller
      *         )
      *     ),
      * )
-     *
      */
     public function collectionByBoundingBox(string $bounding_box, string $sda)
     {
         $boundingBox = explode(',', $bounding_box);
-        $area = DB::select('select ST_Area(ST_MakeEnvelope(' . $bounding_box . ', 4326)) as area')[0]->area;
-        if ($area > 0.1)
-            return response(['error' => "Bounding box is too large"], 500, ['Content-type' => 'application/json']);
-        else {
+        $area = DB::select('select ST_Area(ST_MakeEnvelope('.$bounding_box.', 4326)) as area')[0]->area;
+        if ($area > 0.1) {
+            return response(['error' => 'Bounding box is too large'], 500, ['Content-type' => 'application/json']);
+        } else {
             return $this->geojsonByBoundingBox($sda, floatval($boundingBox[0]), floatval($boundingBox[1]), floatval($boundingBox[2]), floatval($boundingBox[3]));
         }
     }
@@ -513,7 +510,6 @@ class HikingRouteController extends Controller
      *         )
      *     ),
      * )
-     *
      */
     public function show(int $id)
     {
@@ -526,7 +522,7 @@ class HikingRouteController extends Controller
 
             $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?', [$id])[0]->geom;
 
-            if (!isset($geom)) {
+            if (! isset($geom)) {
                 return $this->notFoundResponse('No geometry found for this Hiking Route');
             }
 
@@ -673,7 +669,6 @@ class HikingRouteController extends Controller
      *         )
      *     ),
      * )
-     *
      */
     public function showByOsmId(int $osm_id)
     {
@@ -684,7 +679,7 @@ class HikingRouteController extends Controller
                 return $this->notFoundResponse('No Hiking Route found with this id');
             }
 
-            if (!isset($hr->geometry)) {
+            if (! isset($hr->geometry)) {
                 return $this->notFoundResponse('No geometry found for this Hiking Route');
             }
 
@@ -695,7 +690,6 @@ class HikingRouteController extends Controller
             return $this->errorResponse('Error processing Hiking Route');
         }
     }
-
 
     /**
      * Show the form for editing the specified resource.
@@ -721,18 +715,15 @@ class HikingRouteController extends Controller
         //
     }
 
-
-
     // ------------------------------
     // Helper Methods
     // ------------------------------
 
-
     /**
      * Generate a 404 Not Found response with JSON content type
-     * 
+     *
      * @param string $message The error message to return
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     private function notFoundResponse(string $message): Response
     {
@@ -741,9 +732,9 @@ class HikingRouteController extends Controller
 
     /**
      * Generate a 500 Internal Server Error response with JSON content type
-     * 
+     *
      * @param string $message The error message to return
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     private function errorResponse(string $message): Response
     {
@@ -752,7 +743,7 @@ class HikingRouteController extends Controller
 
     /**
      * Build the GeoJSON response for a hiking route
-     * 
+     *
      * @param HikingRoute $hikingRoute The hiking route model
      * @param string $geom The geometry data as GeoJSON string
      * @return array The formatted response array
@@ -761,24 +752,24 @@ class HikingRouteController extends Controller
     {
         $osmfeaturesProperties = $hikingRoute->osmfeatures_data['properties'];
         $response = [
-            "type" => "Feature",
-            "properties" => [
-                "id" => $hikingRoute->id,
-                "relation_id" => $osmfeaturesProperties['osm_id'] ?? null,
-                "source" => $osmfeaturesProperties['source'] ?? null,
-                "cai_scale" => $osmfeaturesProperties['cai_scale'] ?? null,
-                "from" => $osmfeaturesProperties['from'] ?? null,
-                "to" => $osmfeaturesProperties['to'] ?? null,
-                "ref" => $osmfeaturesProperties['ref'] ?? null,
-                "public_page" => url('/hiking-route/id/' . $hikingRoute->id),
-                "sda" => $hikingRoute->osm2cai_status,
-                "issues_status" => $hikingRoute->issues_status ?? "",
-                "issues_description" => $hikingRoute->issues_description ?? "",
-                "issues_last_update" => $hikingRoute->issues_last_update ?? "",
-                "updated_at" => $hikingRoute->updated_at->format('Y-m-d H:i:s'),
+            'type' => 'Feature',
+            'properties' => [
+                'id' => $hikingRoute->id,
+                'relation_id' => $osmfeaturesProperties['osm_id'] ?? null,
+                'source' => $osmfeaturesProperties['source'] ?? null,
+                'cai_scale' => $osmfeaturesProperties['cai_scale'] ?? null,
+                'from' => $osmfeaturesProperties['from'] ?? null,
+                'to' => $osmfeaturesProperties['to'] ?? null,
+                'ref' => $osmfeaturesProperties['ref'] ?? null,
+                'public_page' => url('/hiking-route/id/'.$hikingRoute->id),
+                'sda' => $hikingRoute->osm2cai_status,
+                'issues_status' => $hikingRoute->issues_status ?? '',
+                'issues_description' => $hikingRoute->issues_description ?? '',
+                'issues_last_update' => $hikingRoute->issues_last_update ?? '',
+                'updated_at' => $hikingRoute->updated_at->format('Y-m-d H:i:s'),
                 'itinerary' => $this->getItineraryArray($hikingRoute),
             ],
-            "geometry" => json_decode($geom, true)
+            'geometry' => json_decode($geom, true),
         ];
 
         if ($hikingRoute->osm2cai_status == 4) {
@@ -790,7 +781,7 @@ class HikingRouteController extends Controller
 
     /**
      * Generate array of itinerary data for a hiking route
-     * 
+     *
      * @param HikingRoute $hikingRoute The hiking route model
      * @return array Array of itinerary data with previous and next route info
      */
@@ -817,7 +808,7 @@ class HikingRouteController extends Controller
 
     /**
      * Generate a GeoJSON collection of hiking routes by bounding box
-     * 
+     *
      * @param string $osm2cai_status The status of the hiking routes to include
      * @param string $lo0 The lower longitude of the bounding box
      * @param string $la0 The lower latitude of the bounding box
@@ -829,11 +820,11 @@ class HikingRouteController extends Controller
     {
         try {
             $features = DB::table('hiking_routes')
-                ->whereRaw("ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))", [
+                ->whereRaw('ST_Intersects(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))', [
                     floatval($lo0),
                     floatval($la0),
                     floatval($lo1),
-                    floatval($la1)
+                    floatval($la1),
                 ])
                 ->whereIn('osm2cai_status', explode(',', $osm2cai_status))
                 ->get([
@@ -841,49 +832,49 @@ class HikingRouteController extends Controller
                     'osm2cai_status',
                     'validation_date',
                     'osmfeatures_data',
-                    DB::raw('ST_AsGeoJSON(geometry) as geom')
+                    DB::raw('ST_AsGeoJSON(geometry) as geom'),
                 ]);
 
             if ($features->isEmpty()) {
                 return json_encode([
-                    "type" => "FeatureCollection",
-                    "features" => []
+                    'type' => 'FeatureCollection',
+                    'features' => [],
                 ]);
             }
 
             $featureCollection = [
-                "type" => "FeatureCollection",
-                "features" => $features->map(function ($item) {
+                'type' => 'FeatureCollection',
+                'features' => $features->map(function ($item) {
                     $osmProperties = $item->osmfeatures_data['properties'] ?? [];
 
                     return [
-                        "type" => "Feature",
-                        "properties" => [
-                            "id" => $item->id,
-                            "relation_id" => $osmProperties['osm_id'] ?? null,
-                            "source" => $osmProperties['source'] ?? null,
-                            "cai_scale" => $osmProperties['cai_scale'] ?? null,
-                            "from" => $osmProperties['from'] ?? null,
-                            "to" => $osmProperties['to'] ?? null,
-                            "ref" => $osmProperties['ref'] ?? null,
-                            "public_page" => url('/hiking-route/id/' . $item->id),
-                            "sda" => $item->osm2cai_status,
-                            "validation_date" => $item->validation_date,
-                            "network" => $osmProperties['network'] ?? null,
-                            "osmc_symbol" => $osmProperties['osmc_symbol'] ?? null,
-                            "roundtrip" => $item->tdh['roundtrip'] ?? null,
-                            "symbol" => $osmProperties['symbol'] ?? null,
-                            "description" => $osmProperties['description'] ?? null,
-                            "website" => $osmProperties['website'] ?? null
+                        'type' => 'Feature',
+                        'properties' => [
+                            'id' => $item->id,
+                            'relation_id' => $osmProperties['osm_id'] ?? null,
+                            'source' => $osmProperties['source'] ?? null,
+                            'cai_scale' => $osmProperties['cai_scale'] ?? null,
+                            'from' => $osmProperties['from'] ?? null,
+                            'to' => $osmProperties['to'] ?? null,
+                            'ref' => $osmProperties['ref'] ?? null,
+                            'public_page' => url('/hiking-route/id/'.$item->id),
+                            'sda' => $item->osm2cai_status,
+                            'validation_date' => $item->validation_date,
+                            'network' => $osmProperties['network'] ?? null,
+                            'osmc_symbol' => $osmProperties['osmc_symbol'] ?? null,
+                            'roundtrip' => $item->tdh['roundtrip'] ?? null,
+                            'symbol' => $osmProperties['symbol'] ?? null,
+                            'description' => $osmProperties['description'] ?? null,
+                            'website' => $osmProperties['website'] ?? null,
                         ],
-                        "geometry" => json_decode($item->geom)
+                        'geometry' => json_decode($item->geom),
                     ];
-                })->all()
+                })->all(),
             ];
 
             return json_encode($featureCollection);
         } catch (Exception $e) {
-            throw new Exception('Error creating GeoJSON collection: ' . $e->getMessage());
+            throw new Exception('Error creating GeoJSON collection: '.$e->getMessage());
         }
     }
 }

@@ -1,17 +1,18 @@
 <?php
 
-use App\Models\HikingRoute;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CsvController;
-use App\Http\Controllers\KmlController;
 use App\Http\Controllers\EcPoiController;
 use App\Http\Controllers\GeojsonController;
-use App\Http\Controllers\ItineraryController;
-use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\HikingRouteController;
-use App\Http\Controllers\SourceSurveyController;
+use App\Http\Controllers\ItineraryController;
+use App\Http\Controllers\KmlController;
 use App\Http\Controllers\MiturAbruzzoController;
+use App\Http\Controllers\ShapeFileController;
+use App\Http\Controllers\SourceSurveyController;
 use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
+use App\Models\HikingRoute;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,7 +49,6 @@ Route::prefix('v1')->name('v1')->group(function () {
     Route::get('/hiking-routes-collection/bb/{bounding_box}/{sda}', [HikingRoutesRegionControllerV1::class, 'hikingroutelist_collection'])->name('hr-collection-by-bb');
 });
 
-
 Route::prefix('v2')->group(function () {
     Route::get('/hiking-routes/list', [HikingRouteController::class, 'index'])->name('hr-list');
     Route::get('/hiking-routes/region/{regione_code}/{sda}', [HikingRouteController::class, 'indexByRegion'])->name('hr-ids-by-region');
@@ -64,7 +64,6 @@ Route::prefix('v2')->group(function () {
     Route::get('/ecpois/bb/{bounding_box}/{type}', [EcPoiController::class, 'indexByBoundingBox'])->name('v2-ecpois-by-bb');
     Route::get('/ecpois/{hr_osm2cai_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteId'])->name('v2-ecpois-by-osm2caiId');
     Route::get('/ecpois/{hr_osm_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteOsmId'])->name('v2-ecpois-by-OsmId');
-
 
     //ACQUA SORGENTE
     Route::prefix('source_survey')->name('source-survey.')->group(function () {

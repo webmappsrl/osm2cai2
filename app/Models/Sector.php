@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\Models\User;
-use App\Traits\SpatialDataTrait;
 use App\Traits\CsvableModelTrait;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Sector extends Model
 {

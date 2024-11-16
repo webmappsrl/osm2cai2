@@ -2,15 +2,15 @@
 
 namespace App\Traits;
 
-use App\Traits\GeoBufferTrait;
 use App\Services\GeometryService;
+use App\Traits\GeoBufferTrait;
 use App\Traits\GeoIntersectTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Trait for spatial data utilities. 
+ * Trait for spatial data utilities.
  * Includes methods for GeoJSON, Shapefile, and KML generation.
  */
 trait SpatialDataTrait
@@ -29,18 +29,18 @@ trait SpatialDataTrait
     public function getEmptyGeojson(): ?array
     {
         $geom = $this->fetchGeometry('geometry');
+
         return $geom ? $this->formatFeature([], $geom) : null;
     }
 
     /**
      * Get the geometry of the given model as GeoJSON
-     * 
+     *
      * @return array
      */
-
     public function getGeometryGeojson(): ?array
     {
-        $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM ' . $this->getTable() . ' WHERE id = ' . $this->id)[0]->geom;
+        $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM '.$this->getTable().' WHERE id = '.$this->id)[0]->geom;
 
         return json_decode($geom, true);
     }
@@ -53,9 +53,10 @@ trait SpatialDataTrait
     public function getFeatureCollection(): ?array
     {
         $geom = $this->fetchGeometry('geometry');
+
         return $geom
             ? $this->formatFeatureCollection([
-                $this->formatFeature(['popup' => 'I am a Popup'], $geom)
+                $this->formatFeature(['popup' => 'I am a Popup'], $geom),
             ])
             : null;
     }
@@ -73,7 +74,7 @@ trait SpatialDataTrait
         if ($geom && $geomRaw) {
             return $this->formatFeatureCollection([
                 $this->formatFeature([], $geom),
-                $this->formatFeature([], $geomRaw)
+                $this->formatFeature([], $geomRaw),
             ]);
         }
 
@@ -88,6 +89,7 @@ trait SpatialDataTrait
     public function getCentroidGeojson(): ?array
     {
         $centroid = $this->getCentroid();
+
         return $centroid ? $this->formatFeature([], json_encode($centroid)) : null;
     }
 
@@ -99,6 +101,7 @@ trait SpatialDataTrait
     public function getCentroid(): ?array
     {
         $geom = $this->fetchGeometry('geometry');
+
         return json_decode(GeometryService::getService()->getCentroid($geom), true)['coordinates'] ?? null;
     }
 
@@ -142,18 +145,16 @@ trait SpatialDataTrait
 
         // Se non ci sono settori, ritorna un messaggio o una risposta appropriata
         if (empty($sectorIds)) {
-            return "No sectors found.";
+            return 'No sectors found.';
         }
 
         // Procedi con la generazione dello shapefile solo se ci sono id di settori
         return $this->generateShapefile(
             'shape_files',
-            "SELECT ST_AsText(ST_Transform(geometry, 4326)) as geometry, id, name 
-        FROM sectors WHERE id IN (" . implode(',', $sectorIds) . ")"
+            'SELECT ST_AsText(ST_Transform(geometry, 4326)) as geometry, id, name 
+        FROM sectors WHERE id IN ('.implode(',', $sectorIds).')'
         );
     }
-
-
 
     /**
      * Generate a shapefile for hiking routes in the model's region.
@@ -183,10 +184,10 @@ trait SpatialDataTrait
                 ->where('id', $sectorId)
                 ->select(DB::raw('ST_AsKML(geometry) as kml'))
                 ->value('kml');
-            $kml .= '<Placemark>' . $geometry . '</Placemark>';
+            $kml .= '<Placemark>'.$geometry.'</Placemark>';
         }
 
-        return $kml . '</Document></kml>';
+        return $kml.'</Document></kml>';
     }
 
     // ------------------------------
@@ -206,6 +207,7 @@ trait SpatialDataTrait
     public function fileToGeometry(string $fileContent): ?string
     {
         $geojson = $this->textToGeojson($fileContent);
+
         return $geojson ? $this->geojsonToGeometry($geojson) : null;
     }
 
@@ -213,12 +215,10 @@ trait SpatialDataTrait
     // Helper Methods
     // ------------------------------
 
-
     /**
      * Get the area of the given model (only for polygons and multipolygons)
-     * 
+     *
      * @return int
-     * 
      */
     public function getArea(): ?int
     {
@@ -226,15 +226,16 @@ trait SpatialDataTrait
         $table = $model->getTable();
         $id = $model->id;
 
-        $areaQuery = 'SELECT ST_Area(geometry) as area FROM ' . $table . ' WHERE id = :id';
+        $areaQuery = 'SELECT ST_Area(geometry) as area FROM '.$table.' WHERE id = :id';
         $area = DB::select($areaQuery, ['id' => $id])[0]->area / 1000000;
 
-        return (int)round($area);
+        return (int) round($area);
     }
+
     private function fetchGeometry(string $column): ?string
     {
         //check if the column exists
-        if (!Schema::hasColumn($this->getTable(), $column)) {
+        if (! Schema::hasColumn($this->getTable(), $column)) {
             return null;
         }
 
@@ -297,7 +298,7 @@ trait SpatialDataTrait
         chdir($path);
 
         $this->clearPreviousShapefile($name, $directory);
-        exec("ogr2ogr -f 'ESRI Shapefile' {$name}.shp PG:'" . $this->buildPgConnectionString() . "' -sql \"{$sql}\"");
+        exec("ogr2ogr -f 'ESRI Shapefile' {$name}.shp PG:'".$this->buildPgConnectionString()."' -sql \"{$sql}\"");
         exec("zip {$name}.zip {$name}.* && mv {$name}.zip zip/ && rm {$name}.*");
 
         return "{$directory}/zip/{$name}.zip";
@@ -305,11 +306,11 @@ trait SpatialDataTrait
 
     private function buildPgConnectionString(): string
     {
-        return "dbname='" . config('database.connections.pgsql.database') .
-            "' host='" . config('database.connections.pgsql.host') .
-            "' port='" . config('database.connections.pgsql.port') .
-            "' user='" . config('database.connections.pgsql.username') .
-            "' password='" . config('database.connections.pgsql.password') . "'";
+        return "dbname='".config('database.connections.pgsql.database').
+            "' host='".config('database.connections.pgsql.host').
+            "' port='".config('database.connections.pgsql.port').
+            "' user='".config('database.connections.pgsql.username').
+            "' password='".config('database.connections.pgsql.password')."'";
     }
 
     private function clearPreviousShapefile(string $name, string $directory): void

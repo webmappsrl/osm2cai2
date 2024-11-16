@@ -1,12 +1,11 @@
 <?php
 
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -26,15 +25,15 @@ return new class extends Migration
                 [$table->table_name]
             );
 
-            if (!empty($hasGeometryColumn)) {
+            if (! empty($hasGeometryColumn)) {
                 foreach ($hasGeometryColumn as $column) {
                     // Get the geometry type
                     $geometryType = DB::select(
-                        "
+                        '
                         SELECT type 
                         FROM geography_columns 
                         WHERE f_table_name = ? 
-                        AND f_geography_column = ?",
+                        AND f_geography_column = ?',
                         [$table->table_name, $column->column_name]
                     )[0]->type;
 
@@ -69,15 +68,15 @@ return new class extends Migration
                 [$table->table_name]
             );
 
-            if (!empty($hasGeometryColumn)) {
+            if (! empty($hasGeometryColumn)) {
                 foreach ($hasGeometryColumn as $column) {
                     // Get the geometry type
                     $geometryType = DB::select(
-                        "
+                        '
                         SELECT type 
                         FROM geometry_columns 
                         WHERE f_table_name = ? 
-                        AND f_geometry_column = ?",
+                        AND f_geometry_column = ?',
                         [$table->table_name, $column->column_name]
                     )[0]->type;
 

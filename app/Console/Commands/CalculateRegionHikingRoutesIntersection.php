@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class CalculateRegionHikingRoutesIntersection extends Command
 {
     protected $signature = 'osm2cai:calculate-region-hiking-routes-intersection';
+
     protected $description = 'Calcola le hiking routes che intersecano ogni regione';
 
     protected $intersectionService;

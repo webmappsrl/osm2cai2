@@ -14,6 +14,7 @@ class RecalculateIntersections implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $region;
+
     protected $hikingRoute;
 
     public function __construct($region = null, $hikingRoute = null)

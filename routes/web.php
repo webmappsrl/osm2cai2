@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Controllers\MiturAbruzzoController;
 use App\Jobs\TestJob;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MiturAbruzzoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +24,7 @@ Route::get('/test-horizon', function () {
     return 'Dispatched 1000 jobs';
 });
 
-Route::get('/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
+Route::get('/logs', [Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
 
 //Mitur Abruzzo Maps
 Route::get('/poi/map/{id}', [MiturAbruzzoController::class, 'poiMap'])->name('poi-map');
@@ -36,7 +36,8 @@ Route::get('/hiking-route/id/{id}', function ($id) {
     if ($hikingroute == null) {
         abort(404);
     }
+
     return view('hikingroute', [
-        'hikingroute' => $hikingroute
+        'hikingroute' => $hikingroute,
     ]);
 })->name('hiking-route-public-page');

@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -50,8 +50,9 @@ class RolesAndPermissionsSeeder extends Seeder
         if ($users->count() > 0) {
             foreach ($users as $user) {
                 //if user has not roles
-                if (!$user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Sectional Referent', 'Validator']))
+                if (! $user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Sectional Referent', 'Validator'])) {
                     $user->assignRole('Guest');
+                }
             }
             User::where('email', 'team@webmapp.it')->first()->assignRole('Administrator');
         }

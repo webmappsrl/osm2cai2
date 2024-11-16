@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use App\Models\CaiHut;
 use App\Models\Club;
 use App\Models\EcPoi;
-use App\Models\CaiHut;
-use App\Models\Region;
-use App\Models\Section;
 use App\Models\HikingRoute;
 use App\Models\MountainGroups;
+use App\Models\Region;
+use App\Models\Section;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 
 class MiturAbruzzoController extends Controller
 {
@@ -58,7 +58,6 @@ class MiturAbruzzoController extends Controller
         $regions = Region::all();
 
         $formattedRegions = $regions->mapWithKeys(function ($region) {
-
             $formattedDate = $region->updated_at->toIso8601String();
 
             return [$region->id => $formattedDate];
@@ -66,7 +65,6 @@ class MiturAbruzzoController extends Controller
 
         return response()->json($formattedRegions);
     }
-
 
     /**
      * @OA\Get(
@@ -132,7 +130,7 @@ class MiturAbruzzoController extends Controller
      *                        description="The images url of the section"
      *                     ),
      *                 ),
-     * 
+     *
      *             ),
      *               @OA\Property(property="geometry", type="object",
      *                      @OA\Property( property="type", type="string",  description="Postgis geometry type: MultiPolygon, etc."),
@@ -149,14 +147,13 @@ class MiturAbruzzoController extends Controller
      */
     public function miturAbruzzoRegionById($id)
     {
-
         $region = Region::find($id);
-        if (!$region) {
+        if (! $region) {
             return response()->json(['message' => 'Region not found'], 404);
         }
+
         return redirect($region->getPublicAwsUrl());
     }
-
 
     /**
      * @OA\Get(
@@ -367,13 +364,13 @@ class MiturAbruzzoController extends Controller
      *                        description="The images url of the section"
      *                     ),
      *                 ),
-     * 
+     *
      * ),
      * @OA\Property(property="geometry", type="object",
      * @OA\Property( property="type", type="string",  description="Postgis geometry type: MultiPolygon, etc."),
      * @OA\Property( property="coordinates", type="object",  description="mountain group coordinates (WGS84)")
      * ),
-     * example={"type":"Feature","properties":{"id":1,"name":"Mountain Group Name","sections":{1},"area":"123","region":"Lazio","provinces":"Roma","municipalities":"Roma","map":"url_mappa","description":"Description of the mountain group","aggregated_data":"aggregated data","protected_area":"Parchi Aree protette Natura 2000","activity":"Escursionismo, Alpinismo", "hiking_routes": { "2806": "2024-02-24T03:48:14.000000Z" },"ec_pois":{1},"cai_huts":{1},"map":"mappa gruppo montuoso","hiking_routes_map":"mappa percorsi","disclaimer":"testo disclaimer","ec_pois_count":1,"cai_huts_count":1, "images":{"http://example.com/image.jpg"}},"geometry":{"type":"MultiPolygon","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}}       
+     * example={"type":"Feature","properties":{"id":1,"name":"Mountain Group Name","sections":{1},"area":"123","region":"Lazio","provinces":"Roma","municipalities":"Roma","map":"url_mappa","description":"Description of the mountain group","aggregated_data":"aggregated data","protected_area":"Parchi Aree protette Natura 2000","activity":"Escursionismo, Alpinismo", "hiking_routes": { "2806": "2024-02-24T03:48:14.000000Z" },"ec_pois":{1},"cai_huts":{1},"map":"mappa gruppo montuoso","hiking_routes_map":"mappa percorsi","disclaimer":"testo disclaimer","ec_pois_count":1,"cai_huts_count":1, "images":{"http://example.com/image.jpg"}},"geometry":{"type":"MultiPolygon","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}}
      * )
      * ),
      * @OA\Response(
@@ -384,9 +381,8 @@ class MiturAbruzzoController extends Controller
      */
     public function miturAbruzzoMountainGroupById($id)
     {
-
         $mountainGroup = MountainGroups::find($id);
-        if (!$mountainGroup) {
+        if (! $mountainGroup) {
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
@@ -394,7 +390,6 @@ class MiturAbruzzoController extends Controller
 
         return response()->json($data);
     }
-
 
     /**
      * @OA\Get(
@@ -648,15 +643,12 @@ class MiturAbruzzoController extends Controller
     public function miturAbruzzoHikingRouteById($id)
     {
         $hikingRoute = HikingRoute::find($id);
-        if (!$hikingRoute) {
+        if (! $hikingRoute) {
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
         return redirect($hikingRoute->getPublicAwsUrl());
     }
-
-
-
 
     /**
      * @OA\Get(
@@ -947,7 +939,7 @@ class MiturAbruzzoController extends Controller
     public function miturAbruzzoHutById($id)
     {
         $hut = CaiHut::find($id);
-        if (!$hut) {
+        if (! $hut) {
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
@@ -1032,7 +1024,7 @@ class MiturAbruzzoController extends Controller
      *        example="Activity",
      *     description="The activity of the POI"
      *   ),
-     * 
+     *
      * @OA\Property(
      * property="has_hiking_routes",
      * type="array",
@@ -1071,7 +1063,7 @@ class MiturAbruzzoController extends Controller
     public function miturAbruzzoPoiById($id)
     {
         $poi = EcPoi::find($id);
-        if (!$poi) {
+        if (! $poi) {
             return response()->json(['message' => 'poi not found'], 404);
         }
 
@@ -1232,7 +1224,7 @@ class MiturAbruzzoController extends Controller
     public function miturAbruzzoClubById($id)
     {
         $club = Club::find($id);
-        if (!$club) {
+        if (! $club) {
             return response()->json(['message' => 'club not found'], 404);
         }
 
@@ -1253,8 +1245,8 @@ class MiturAbruzzoController extends Controller
     {
         $poi = EcPoi::findOrFail($id);
 
-        $geometry = DB::select("SELECT ST_AsText(geometry) AS geometry FROM ec_pois WHERE id = ?", [$id]);
-        if (!$geometry) {
+        $geometry = DB::select('SELECT ST_AsText(geometry) AS geometry FROM ec_pois WHERE id = ?', [$id]);
+        if (! $geometry) {
             return redirect('https://26.app.geohub.webmapp.it/#/map');
         }
         $geometry = str_replace(['POINT(', ')'], '', $geometry[0]->geometry);
@@ -1262,12 +1254,13 @@ class MiturAbruzzoController extends Controller
 
         return view('maps.poi', ['poi' => $poi, 'latitude' => $latitude, 'longitude' => $longitude]);
     }
+
     public static function mountainGroupsMap($id)
     {
         $mountainGroup = MountainGroups::findOrFail($id);
         // get the geometry in geojson format
-        $geometry = DB::select("SELECT ST_AsGeoJSON(geometry) as geom FROM mountain_groups WHERE id = ?", [$id]);
-        if (!$geometry) {
+        $geometry = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM mountain_groups WHERE id = ?', [$id]);
+        if (! $geometry) {
             return redirect('https://26.app.geohub.webmapp.it/#/map');
         }
 
@@ -1275,7 +1268,7 @@ class MiturAbruzzoController extends Controller
 
         return view('maps.mountain-group', [
             'mountainGroup' => $mountainGroup,
-            'geometry' => $geometry
+            'geometry' => $geometry,
         ]);
     }
 
@@ -1283,8 +1276,8 @@ class MiturAbruzzoController extends Controller
     {
         $caiHut = CaiHuts::findOrFail($id);
 
-        $geometry = DB::select("SELECT ST_AsText(geometry) AS geometry FROM cai_huts WHERE id = ?", [$id]);
-        if (!$geometry) {
+        $geometry = DB::select('SELECT ST_AsText(geometry) AS geometry FROM cai_huts WHERE id = ?', [$id]);
+        if (! $geometry) {
             return redirect('https://26.app.geohub.webmapp.it/#/map');
         }
         $geometry = str_replace(['POINT(', ')'], '', $geometry[0]->geometry);
@@ -1293,17 +1286,16 @@ class MiturAbruzzoController extends Controller
         return view('maps.cai-hut', [
             'caiHut' => $caiHut,
             'latitude' => $latitude,
-            'longitude' => $longitude
+            'longitude' => $longitude,
         ]);
     }
-
 
     public static function mountainGroupsHrMap($id)
     {
         $mountainGroup = MountainGroups::findOrFail($id);
 
-        $geometry = DB::select("SELECT ST_AsGeoJSON(geometry) as geom FROM mountain_groups WHERE id = ?", [$id]);
-        if (!$geometry) {
+        $geometry = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM mountain_groups WHERE id = ?', [$id]);
+        if (! $geometry) {
             return redirect('https://26.app.geohub.webmapp.it/#/map');
         }
         $geometry = json_decode($geometry[0]->geom, true);
@@ -1311,14 +1303,15 @@ class MiturAbruzzoController extends Controller
         $hikingRoutesIntersectingIds = array_keys(json_decode($mountainGroup->intersectings, true)['hiking_routes']);
 
         $hikingRoutesGeojson = array_map(function ($hikingRoute) {
-            $routeGeom = DB::select("SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?", [$hikingRoute]);
+            $routeGeom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?', [$hikingRoute]);
+
             return json_decode($routeGeom[0]->geom, true);
         }, $hikingRoutesIntersectingIds);
 
         return view('maps.mountain-group-hr', [
             'mountainGroup' => $mountainGroup,
             'geometry' => json_encode($geometry),
-            'hikingRoutesGeojson' => json_encode($hikingRoutesGeojson)
+            'hikingRoutesGeojson' => json_encode($hikingRoutesGeojson),
         ]);
     }
 }

@@ -13,7 +13,6 @@ class HikingRoutePolicy
      */
     public function viewAny(User $user): bool
     {
-
         return true;
     }
 
@@ -22,7 +21,6 @@ class HikingRoutePolicy
      */
     public function view(User $user, HikingRoute $hikingRoute): bool
     {
-
         return true;
     }
 
@@ -31,7 +29,6 @@ class HikingRoutePolicy
      */
     public function create(User $user): bool
     {
-
         return false;
     }
 

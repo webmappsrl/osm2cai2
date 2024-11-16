@@ -2,22 +2,21 @@
 
 namespace App\Nova;
 
-
-use App\Nova\AbstractUgc;
-use Wm\MapPoint\MapPoint;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Select;
 use App\Enums\UgcValidatedStatus;
-use Wm\MapPointNova3\MapPointNova3;
-use App\Nova\Actions\DeleteUgcMedia;
-use App\Nova\Actions\DownloadUgcCsv;
-use Illuminate\Support\Facades\Http;
-use App\Nova\Filters\UgcFormIdFilter;
-use Illuminate\Support\Facades\Cache;
+use App\Nova\AbstractUgc;
 use App\Nova\Actions\CheckUserNoMatchAction;
+use App\Nova\Actions\DeleteUgcMedia;
 use App\Nova\Actions\DownloadFeatureCollection;
+use App\Nova\Actions\DownloadUgcCsv;
 use App\Nova\Actions\UploadAndAssociateUgcMedia;
+use App\Nova\Filters\UgcFormIdFilter;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Text;
+use Wm\MapPoint\MapPoint;
+use Wm\MapPointNova3\MapPointNova3;
 
 class UgcPoi extends AbstractUgc
 {
@@ -45,17 +44,17 @@ class UgcPoi extends AbstractUgc
         return __($label);
     }
 
-
     /**
      * Get the fields displayed by the resource.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function fields(Request $request)
     {
         if ($request->isCreateOrAttachRequest()) {
             $formIdOptions = $this->getFormIdOptions();
+
             return [
                 Select::make('Form ID', 'form_id')
                     ->options($formIdOptions)
@@ -104,7 +103,7 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the cards available for the request.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function cards(Request $request)
@@ -115,12 +114,13 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the filters available for the resource.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function filters(Request $request)
     {
         $parentFilters = parent::filters($request);
+
         return array_merge($parentFilters, [
             (new UgcFormIdFilter()),
         ]);
@@ -129,7 +129,7 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the lenses available for the resource.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function lenses(Request $request)
@@ -140,7 +140,7 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the actions available for the resource.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function actions(Request $request)
@@ -156,7 +156,7 @@ class UgcPoi extends AbstractUgc
     /**
      * Determines if the user is authorized to create a new resource.
      *
-     * @param \Illuminate\Http\Request $request The current HTTP request
+     * @param Request $request The current HTTP request
      * @return bool Always returns true, allowing all users to create new resources
      */
     public static function authorizedToCreate(Request $request)
@@ -167,13 +167,13 @@ class UgcPoi extends AbstractUgc
     /**
      * Redirects the user after creating a new resource.
      *
-     * @param \Illuminate\Http\Request $request The current HTTP request
+     * @param Request $request The current HTTP request
      * @param \Laravel\Nova\Resource $resource The newly created resource
      * @return string The URL to redirect the user to after resource creation
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/' . $resource->id . '/edit';
+        return '/resources/ugc-pois/'.$resource->id.'/edit';
     }
 
     /**

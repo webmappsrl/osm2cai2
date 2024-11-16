@@ -2,25 +2,25 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use App\Models\EcPoi;
-use App\Models\Province;
-use App\Models\HikingRoute;
-use App\Traits\AwsCacheable;
-use App\Models\MountainGroups;
-use App\Traits\SpatialDataTrait;
-use App\Traits\CsvableModelTrait;
-use Illuminate\Support\Facades\DB;
 use App\Jobs\CacheMiturAbruzzoData;
-use Illuminate\Support\Facades\Log;
 use App\Jobs\RecalculateIntersections;
-use Illuminate\Database\Eloquent\Model;
-use Symfony\Component\Stopwatch\Section;
+use App\Models\EcPoi;
+use App\Models\HikingRoute;
+use App\Models\MountainGroups;
+use App\Models\Province;
+use App\Models\User;
+use App\Traits\AwsCacheable;
+use App\Traits\CsvableModelTrait;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Stopwatch\Section;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
@@ -84,7 +84,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     /**
      * Get the storage disk name to use for caching
-     * 
+     *
      * @return string The disk name
      */
     protected function getStorageDisk(): string
@@ -126,7 +126,8 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Region ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Region '.$osmfeaturesId);
+
             return;
         }
 
@@ -137,11 +138,11 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Region ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Region '.$osmfeaturesId);
         }
 
         // Execute the update only if there are data to update
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $model->update($updateData);
         }
     }
@@ -149,7 +150,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     /**
      * Generates a complete GeoJSON representation of all hiking routes in the region
      * that have a valid osm2cai_status (1-4).
-     * 
+     *
      * The GeoJSON includes detailed properties for each hiking route including:
      * - Basic info (id, name, ref, etc)
      * - Status and metadata
@@ -164,7 +165,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         // Initialize GeoJSON structure
         $geojson = [
             'type' => 'FeatureCollection',
-            'features' => []
+            'features' => [],
         ];
 
         // Get hiking routes with valid status
@@ -190,7 +191,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 
@@ -214,7 +215,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
                 // Get geometry as GeoJSON
                 $geometry = HikingRoute::where('id', '=', $hikingRoute->id)
-                    ->select(DB::raw("ST_AsGeoJSON(geometry) as geom"))
+                    ->select(DB::raw('ST_AsGeoJSON(geometry) as geom'))
                     ->first()
                     ->geom;
                 $geometry = json_decode($geometry, true);
@@ -223,7 +224,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                 $feature = [
                     'type' => 'Feature',
                     'properties' => $properties,
-                    'geometry' => $geometry
+                    'geometry' => $geometry,
                 ];
 
                 $geojson['features'][] = $feature;

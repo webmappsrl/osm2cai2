@@ -23,7 +23,7 @@ trait TagsMappingTrait
         foreach ($tags as $key => $value) {
             if (array_key_exists($key, $mapping)) {
                 if (array_key_exists($value, $mapping[$key])) {
-                    $result .= $mapping[$key][$value] . ';';
+                    $result .= $mapping[$key][$value].';';
                 }
             }
         }

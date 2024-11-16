@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Models\HikingRoute;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Itinerary extends Model
 {
@@ -39,7 +39,6 @@ class Itinerary extends Model
         $edges = [];
 
         foreach ($hikingRoutes as $hikingRoute) {
-
             $geometry = $hikingRoute->geometry;
             //check if geometry is type linestring or multilinestring
             $geometry = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_MakeLine(ARRAY(SELECT (ST_Dump(ST_Collect($geometry))).geom))), 4326)) As wkt")[0]->wkt;
@@ -48,8 +47,8 @@ class Itinerary extends Model
                 $geometry = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_LineMerge($geometry)), 4326)) As wkt")[0]->wkt;
             }
 
-            $start_point = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_StartPoint('" . $geometry . "')), 4326)) As wkt")[0]->wkt;
-            $end_point = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_EndPoint('" . $geometry . "')), 4326)) As wkt")[0]->wkt;
+            $start_point = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_StartPoint('".$geometry."')), 4326)) As wkt")[0]->wkt;
+            $end_point = DB::select("SELECT ST_AsText(ST_SetSRID(ST_Force2D(ST_EndPoint('".$geometry."')), 4326)) As wkt")[0]->wkt;
 
             $nextHikingRoute = HikingRoute::whereIn('id', $hikingRoutesIds)
                 ->where('id', '<>', $hikingRoute->id)
@@ -64,6 +63,7 @@ class Itinerary extends Model
             $edges[$hikingRoute->id]['prev'] = $previousHikingRoute->pluck('id')->toArray();
             $edges[$hikingRoute->id]['next'] = $nextHikingRoute->pluck('id')->toArray();
         }
+
         return $edges;
     }
 

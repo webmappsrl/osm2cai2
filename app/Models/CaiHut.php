@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use App\Jobs\CacheMiturAbruzzoData;
 use App\Models\Region;
 use App\Traits\AwsCacheable;
-use App\Traits\SpatialDataTrait;
-use App\Jobs\CacheMiturAbruzzoData;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 
 class CaiHut extends Model implements OsmfeaturesSyncableInterface
 {
@@ -41,7 +41,6 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         });
     }
 
-
     public function region()
     {
         return $this->belongsTo(Region::class);
@@ -49,7 +48,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
 
     /**
      * Get the storage disk name to use for caching
-     * 
+     *
      * @return string The disk name
      */
     protected function getStorageDisk(): string
@@ -90,8 +89,9 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
 
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
-        if (!$osmfeaturesData || empty($osmfeaturesData)) {
-            Log::channel('wm-osmfeatures')->info('No data found for CaiHut ' . $osmfeaturesId);
+        if (! $osmfeaturesData || empty($osmfeaturesData)) {
+            Log::channel('wm-osmfeatures')->info('No data found for CaiHut '.$osmfeaturesId);
+
             return;
         }
 
@@ -101,8 +101,8 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         if (isset($osmfeaturesData['properties'])) {
             if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
                 $updateData['name'] = $osmfeaturesData['properties']['name'];
-            } else if ($osmfeaturesData['properties']['name'] === null) {
-                Log::channel('wm-osmfeatures')->info('No name found for CaiHut ' . $osmfeaturesId);
+            } elseif ($osmfeaturesData['properties']['name'] === null) {
+                Log::channel('wm-osmfeatures')->info('No name found for CaiHut '.$osmfeaturesId);
             }
         }
 

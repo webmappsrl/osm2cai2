@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Area;
-use App\Models\User;
-use App\Models\Sector;
 use App\Models\Province;
+use App\Models\Sector;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 class SyncUsersFromLegacyOsm2cai extends Command
 {
     protected $signature = 'osm2cai2:sync-users';
+
     protected $description = 'Sync users from legacy OSM2CAI and handle roles and permissions';
 
     public function handle()
@@ -20,7 +21,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         $legacyUsers = DB::connection('legacyosm2cai')->table('users')->get();
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info("Importing user: " . $legacyUser->email);
+            $this->info('Importing user: '.$legacyUser->email);
 
             $user = User::updateOrCreate(
                 ['email' => $legacyUser->email],
@@ -34,7 +35,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 ]
             );
 
-            //populate the roles and permissions table 
+            //populate the roles and permissions table
             Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
 
             $this->assignRolesAndPermissions($user, $legacyUser);
@@ -148,7 +149,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ? json_decode($legacyUser->resources_validator, true)
             : $legacyUser->resources_validator;
 
-        if (!$legacyResourceValidation) {
+        if (! $legacyResourceValidation) {
             return;
         }
 
