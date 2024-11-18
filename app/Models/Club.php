@@ -38,7 +38,9 @@ class Club extends Model
     protected static function booted()
     {
         static::saved(function ($club) {
-            CacheMiturAbruzzoData::dispatch('Club', $club->id);
+            if (app()->environment('production')) {
+                CacheMiturAbruzzoData::dispatch('Club', $club->id);
+            }
         });
     }
 

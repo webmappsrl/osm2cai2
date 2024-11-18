@@ -23,7 +23,9 @@ class MountainGroups extends Model
     protected static function booted()
     {
         static::saved(function ($mountainGroup) {
-            CacheMiturAbruzzoData::dispatch('MountainGroups', $mountainGroup->id);
+            if (app()->environment('production')) {
+                CacheMiturAbruzzoData::dispatch('MountainGroups', $mountainGroup->id);
+            }
         });
     }
 

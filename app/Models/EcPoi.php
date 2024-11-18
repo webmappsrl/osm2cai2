@@ -37,7 +37,9 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     protected static function booted()
     {
         static::saved(function ($ecPoi) {
-            CacheMiturAbruzzoData::dispatch('EcPoi', $ecPoi->id);
+            if (app()->environment('production')) {
+                CacheMiturAbruzzoData::dispatch('EcPoi', $ecPoi->id);
+            }
         });
     }
 
@@ -75,21 +77,21 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi ' . $osmfeaturesId);
 
             return;
         }
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi ' . $osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi ' . $osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];
