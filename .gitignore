@@ -14,3 +14,4 @@ yarn-error.log
 /.idea
 /docker/volumes/*
 docker-compose.yml
+/tests/stubs

@@ -2,25 +2,27 @@
 
 namespace App\Jobs;
 
-use App\Enums\WikiImageType;
-use App\Models\CaiHut;
 use App\Models\Club;
 use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
-use App\Models\Municipality;
-use App\Models\Province;
+use App\Models\CaiHut;
 use App\Models\Region;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Bus\Dispatchable;
+use App\Models\Province;
 use Illuminate\Log\Logger;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
+use App\Models\HikingRoute;
+use App\Enums\WikiImageType;
+use App\Models\Municipality;
+use Illuminate\Bus\Queueable;
+use App\Models\MountainGroups;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 
 class CacheMiturAbruzzoData implements ShouldQueue
 {
@@ -30,15 +32,16 @@ class CacheMiturAbruzzoData implements ShouldQueue
 
     protected $modelId;
 
-    protected $logger;
+    protected $isTestEnvironment;
 
-    public function __construct($model, $modelId)
+    public function __construct($model, $modelId, $isTestEnvironment = false)
     {
         $this->model = $model;
         $this->modelId = $modelId;
+        $this->isTestEnvironment = $isTestEnvironment;
     }
 
-    protected function logger(): Logger
+    protected function logger()
     {
         return Log::channel('mitur-cache');
     }
@@ -65,9 +68,23 @@ class CacheMiturAbruzzoData implements ShouldQueue
         $geojson = $this->buildGeojsonForModel($model);
 
         if ($geojson) {
-            $model->cacheDataToAws($geojson, 'wmfemitur');
-            $this->logger()->info("Cached MITUR data for {$className} {$model->id}");
+            if ($this->isTestEnvironment) {
+                $this->saveLocally($geojson, $className, $model->id);
+            } else {
+                $model->cacheDataToAws($geojson, 'wmfemitur');
+                $this->logger()->info("Cached MITUR data for {$className} {$model->id}");
+            }
         }
+    }
+
+    protected function saveLocally($geojson, $className, $modelId)
+    {
+        $path = "tests/stubs/mitur/aws/{$className}_{$modelId}.json";
+
+        Storage::makeDirectory(dirname($path));
+        Storage::put($path, json_encode($geojson));
+
+        $this->logger()->info("Saved MITUR data locally for {$className} {$modelId} at {$path}");
     }
 
     protected function buildGeojsonForModel($model): ?array
@@ -124,7 +141,7 @@ class CacheMiturAbruzzoData implements ShouldQueue
 
         //get the difficulty based on cai_scale value
 
-        switch ($hikingRoute->osmfeatures_data['properties']['cai_scale']) {
+        switch ($hikingRoute->osmfeatures_data['properties']['cai_scale'] ?? '') {
             case 'T':
                 $difficulty = 'Turistico';
                 break;
