@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Console\Commands\CheckNearbyHikingRoutes;
 use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CheckNearbyHikingRoutesJob;
 use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
@@ -32,9 +34,9 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
     protected static function booted()
     {
         //TODO: review from legacy osm2cai
-        // static::created(function ($caiHut) {
-        //     Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'CaiHuts', 'id' => $caiHut->id]);
-        // });
+        static::created(function ($caiHut) {
+            CheckNearbyHikingRoutesJob::dispatch($caiHut, config(config('osm2cai.hiking_route_buffer')));
+        });
 
         static::saved(function ($caiHut) {
             if (app()->environment('production')) {

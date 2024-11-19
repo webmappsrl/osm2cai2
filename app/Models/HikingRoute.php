@@ -2,31 +2,32 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoData;
-use App\Jobs\ComputeTdhJob;
-use App\Jobs\RecalculateIntersections;
 use App\Models\Area;
-use App\Models\Itinerary;
-use App\Models\Province;
+use App\Models\User;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\User;
-use App\Services\HikingRouteDescriptionService;
+use App\Models\Province;
+use App\Models\Itinerary;
+use App\Jobs\ComputeTdhJob;
 use App\Traits\AwsCacheable;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Jobs\CheckNearbyHutsJob;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
+use App\Jobs\CacheMiturAbruzzoData;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use App\Jobs\RecalculateIntersections;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\Stopwatch\Section;
-use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Services\HikingRouteDescriptionService;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 {
@@ -72,7 +73,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
                 return;
             }
             //TODO: review from legacy osm2cai
-            // Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+            CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
             // Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
 
             if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
@@ -90,11 +91,6 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
         //     Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
         //     Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
-
-        //     if ($hikingRoute->osm2cai_status == 4) {
-        //         Artisan::call('osm2cai:tdh', ['id' => $hikingRoute->id]);
-        //         Artisan::call('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
-        //     }
         // });
 
         static::updated(function ($hikingRoute) {
