@@ -85,16 +85,6 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     }
 
     /**
-     * Get the storage disk name to use for caching
-     *
-     * @return string The disk name
-     */
-    protected function getStorageDisk(): string
-    {
-        return 'wmfemitur-region';
-    }
-
-    /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
     public static function getOsmfeaturesEndpoint(): string

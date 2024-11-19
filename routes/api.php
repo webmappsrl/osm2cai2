@@ -82,6 +82,6 @@ Route::prefix('v2')->group(function () {
         Route::get('/hiking_route/{id}', [MiturAbruzzoController::class, 'miturAbruzzoHikingRouteById'])->name('hiking-route-by-id');
         Route::get('/hut/{id}', [MiturAbruzzoController::class, 'miturAbruzzoHutById'])->name('hut-by-id');
         Route::get('/poi/{id}', [MiturAbruzzoController::class, 'miturAbruzzoPoiById'])->name('poi-by-id');
-        Route::get('/section/{id}', [MiturAbruzzoController::class, 'miturAbruzzoSectionById'])->name('section-by-id');
+        Route::get('/section/{id}', [MiturAbruzzoController::class, 'miturAbruzzoClubById'])->name('section-by-id');
     });
 });

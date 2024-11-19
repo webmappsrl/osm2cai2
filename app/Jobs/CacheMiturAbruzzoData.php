@@ -65,7 +65,7 @@ class CacheMiturAbruzzoData implements ShouldQueue
         $geojson = $this->buildGeojsonForModel($model);
 
         if ($geojson) {
-            $model->cacheDataToAws($geojson);
+            $model->cacheDataToAws($geojson, 'wmfemitur');
             $this->logger()->info("Cached MITUR data for {$className} {$model->id}");
         }
     }
@@ -86,8 +86,8 @@ class CacheMiturAbruzzoData implements ShouldQueue
             case Region::class:
                 return $this->buildRegionGeojson($model);
             default:
-                $this->logger()->error('Unsupported model type: '.get_class($model));
-                throw new \Exception('Unsupported model type: '.get_class($model));
+                $this->logger()->error('Unsupported model type: ' . get_class($model));
+                throw new \Exception('Unsupported model type: ' . get_class($model));
         }
     }
 
@@ -198,13 +198,9 @@ class CacheMiturAbruzzoData implements ShouldQueue
 
     protected function buildMountainGroupGeojson($mountainGroup): array
     {
-        $regionModel = new Region();
-        $provinceModel = new Province();
-        $municipalityModel = new Municipality();
-
-        $regions = $mountainGroup->getIntersections($regionModel)->pluck('name')->implode(', ');
-        $provinces = $mountainGroup->getIntersections($provinceModel)->pluck('name')->implode(', ');
-        $municipalities = $mountainGroup->getIntersections($municipalityModel)->pluck('comune')->implode(', ');
+        $regions = $mountainGroup->getIntersections(new Region())->pluck('name')->implode(', ');
+        $provinces = $mountainGroup->getIntersections(new Province())->pluck('name')->implode(', ');
+        $municipalities = $mountainGroup->getIntersections(new Municipality())->pluck('comune')->implode(', ');
 
         //build the geojson
         $geojson = [];
@@ -234,10 +230,10 @@ class CacheMiturAbruzzoData implements ShouldQueue
         $properties['slope_stddev'] = $mountainGroup->slope_stddev ?? '';
 
         //TODO: check IDs are correct or recalculate the intersections
-        $properties['section_ids'] = json_decode($mountainGroup->intersectings, true)['clubs'] ?? [];
-        $properties['hiking_routes'] = json_decode($mountainGroup->intersectings, true)['hiking_routes'] ?? [];
-        $properties['ec_pois'] = json_decode($mountainGroup->intersectings, true)['ec_pois'] ?? [];
-        $properties['cai_huts'] = json_decode($mountainGroup->intersectings, true)['cai_huts'] ?? [];
+        $properties['section_ids'] = $mountainGroup->getIntersections(new Club())->pluck('updated_at', 'id')->toArray();
+        $properties['hiking_routes'] = $mountainGroup->getIntersections(new HikingRoute())->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray();
+        $properties['ec_pois'] = $mountainGroup->getIntersections(new EcPoi())->pluck('updated_at', 'id')->toArray();
+        $properties['cai_huts'] = $mountainGroup->getIntersections(new CaiHut())->pluck('updated_at', 'id')->toArray();
 
         $geojson['properties'] = $properties;
         $geojson['geometry'] = $mountainGroup->getGeometryGeojson();
@@ -318,14 +314,13 @@ SQL;
             $type = $osmfeaturesData['class'];
         }
         if (isset($osmfeaturesData['subclass'])) {
-            $type .= '/'.$osmfeaturesData['subclass'];
+            $type .= '/' . $osmfeaturesData['subclass'];
         }
 
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
 
         //get only hiking routes in a 1000m buffer with osm2cai status 4
-        $hikingRoutesInBuffer = $poi->getElementsInBuffer(new HikingRoute(), 1000);
-        $hikingRoute = $hikingRoutesInBuffer->where('osm2cai_status', 4)->first();
+        $hikingRoutesInBuffer = $poi->getElementsInBuffer(new HikingRoute(), 1000)->where('osm2cai_status', 4);
 
         //build the geojson
         $geojson = [];
@@ -343,7 +338,7 @@ SQL;
         $properties['map'] = route('poi-map', ['id' => $poi->id]);
         $properties['images'] = $images ?? [];
         $properties['comune'] = $municipalities;
-        $properties['difficulty'] = $hikingRoute ? $hikingRoute->osmfeatures_data['properties']['cai_scale'] ?? '' : '';
+        $properties['difficulty'] = $hikingRoutesInBuffer->first() ? $hikingRoutesInBuffer->first()->osmfeatures_data['properties']['cai_scale'] ?? '' : '';
         $properties['activity'] = 'Escursionismo';
         $properties['has_hiking_routes'] = $hikingRoutesInBuffer->pluck('updated_at', 'id')->toArray() ?? [];
 
@@ -391,33 +386,22 @@ SQL;
         $this->logger()->info("Start caching hut $hut->id");
 
         //get the mountain groups for the hut based on the geometry intersection
-        $this->logger()->info("Getting mountain groups for hut $hut->id");
         $mountainGroups = $hut->getIntersections(new MountainGroups())->first();
-        $this->logger()->info("Mountain groups for hut $hut->id: ".($mountainGroups ? $mountainGroups->id : 'null'));
 
         //get the pois in a 1km buffer from the hut
-        $this->logger()->info("Getting pois in buffer for hut $hut->id");
         $pois = $hut->getElementsInBuffer(new EcPoi(), 1000);
-        $this->logger()->info("Pois for hut $hut->id: ".$pois->count());
 
         //get the hiking routes in a 1km buffer from the hut
-        $this->logger()->info("Getting hiking routes in buffer for hut $hut->id");
         $hikingRoutes = $hut->getElementsInBuffer(new HikingRoute(), 1000);
-        $this->logger()->info("Hiking routes for hut $hut->id: ".$hikingRoutes->count());
 
         //get osmfeatures data
-        $this->logger()->info("Getting osmfeatures data for hut $hut->id");
         $osmfeaturesData = $this->extractOsmfeaturesData($hut);
         $enrichmentsData = $this->extractEnrichmentsData($osmfeaturesData);
-        $this->logger()->info("Osmfeatures data for hut $hut->id: ".($osmfeaturesData ? 'found' : 'not found'));
 
         //get images from Osmfeatures
-        $this->logger()->info("Getting images from osmfeatures for hut $hut->id");
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
-        $this->logger()->info("Images for hut $hut->id: ".($images ? count($images) : 0));
 
         //build the geojson
-        $this->logger()->info("Building geojson for hut $hut->id");
         $geojson = [];
         $geojson['type'] = 'Feature';
 

@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\CaiHut;
 use App\Models\Club;
 use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
+use App\Models\CaiHut;
 use App\Models\Region;
 use App\Models\Section;
+use App\Models\HikingRoute;
+use App\Models\MountainGroups;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 
 class MiturAbruzzoController extends Controller
 {
@@ -152,7 +153,7 @@ class MiturAbruzzoController extends Controller
             return response()->json(['message' => 'Region not found'], 404);
         }
 
-        return redirect($region->getPublicAwsUrl());
+        return response()->json($region->getCachedData('wmfemitur'));
     }
 
     /**
@@ -386,9 +387,7 @@ class MiturAbruzzoController extends Controller
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
-        $data = json_decode($mountainGroup->cached_mitur_api_data, true);
-
-        return response()->json($data);
+        return response()->json($mountainGroup->getCachedData('wmfemitur'));
     }
 
     /**
@@ -647,7 +646,7 @@ class MiturAbruzzoController extends Controller
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
-        return redirect($hikingRoute->getPublicAwsUrl());
+        return response()->json($hikingRoute->getCachedData('wmfemitur'));
     }
 
     /**
@@ -943,7 +942,7 @@ class MiturAbruzzoController extends Controller
             return response()->json(['message' => 'Mountain group not found'], 404);
         }
 
-        return redirect($hut->getPublicAwsUrl());
+        return response()->json($hut->getCachedData('wmfemitur'));
     }
 
     /**
@@ -1067,7 +1066,7 @@ class MiturAbruzzoController extends Controller
             return response()->json(['message' => 'poi not found'], 404);
         }
 
-        return redirect($poi->getPublicAwsUrl());
+        return response()->json($poi->getCachedData('wmfemitur'));
     }
 
     /**
@@ -1228,7 +1227,7 @@ class MiturAbruzzoController extends Controller
             return response()->json(['message' => 'club not found'], 404);
         }
 
-        return redirect($club->getPublicAwsUrl());
+        return response()->json($club->getCachedData('wmfemitur'));
     }
 
     /*
@@ -1300,7 +1299,9 @@ class MiturAbruzzoController extends Controller
         }
         $geometry = json_decode($geometry[0]->geom, true);
 
-        $hikingRoutesIntersectingIds = array_keys(json_decode($mountainGroup->intersectings, true)['hiking_routes']);
+        $hikingRoutesIntersectingIds = Cache::remember('hiking_routes_intersecting_' . $id, 60 * 24, function () use ($mountainGroup) {
+            return array_keys($mountainGroup->getIntersections(new HikingRoute())->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray());
+        });
 
         $hikingRoutesGeojson = array_map(function ($hikingRoute) {
             $routeGeom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?', [$hikingRoute]);

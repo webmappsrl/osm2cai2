@@ -12,12 +12,6 @@ use Illuminate\Support\Facades\Storage;
  */
 trait AwsCacheable
 {
-    /**
-     * Get the storage disk name to use for caching
-     *
-     * @return string The disk name
-     */
-    abstract protected function getStorageDisk(): string;
 
     /**
      * Generate the cache key for the current model
@@ -26,61 +20,66 @@ trait AwsCacheable
      */
     protected function getCacheKey(): string
     {
-        return $this->id.'.geojson';
+        $modelName = strtolower(class_basename($this));
+        return "{$modelName}s/{$this->id}.json";
     }
 
     /**
      * Cache the provided data
      *
      * @param mixed $data The data to cache
+     * @param string $disk The disk name
      * @return void
      */
-    public function cacheDataToAws($data): void
+    public function cacheDataToAws($data, string $disk): void
     {
         $key = $this->getCacheKey();
         try {
-            Storage::disk($this->getStorageDisk())->put($key, json_encode($data));
+            Storage::disk($disk)->put($key, json_encode($data));
         } catch (\Exception $e) {
-            Log::error("Error caching data for key {$key}: ".$e->getMessage());
+            Log::error("Error caching data for key {$key}: " . $e->getMessage());
         }
     }
 
     /**
      * Retrieve cached data
      *
+     * @param string $disk The disk name
      * @return array|null The cached data as array or null if not found
      */
-    public function getCachedData(): ?array
+    public function getCachedData(string $disk): ?array
     {
         $key = $this->getCacheKey();
-        if (Storage::disk($this->getStorageDisk())->exists($key)) {
-            return json_decode(Storage::disk($this->getStorageDisk())->get($key), true);
+        if (Storage::disk($disk)->exists($key)) {
+            return json_decode(Storage::disk($disk)->get($key), true);
         }
 
-        return null;
+        return ['message' => class_basename($this) . ' not found'];
     }
 
     /**
      * Get the public URL for the cached data
      *
+     * @param string $disk The disk name
      * @return string The public URL
      */
-    public function getPublicAwsUrl(): string
+    public function getPublicAwsUrl(string $disk): string
     {
         $key = $this->getCacheKey();
-        $awsUrl = config('filesystems.disks.'.$this->getStorageDisk())['url'];
+        $awsUrl = config('filesystems.disks.' . $disk)['url'];
 
-        return $awsUrl.'/'.config('filesystems.disks.'.$this->getStorageDisk())['root'].$key;
+        return $awsUrl . '/' . config('filesystems.disks.' . $disk)['root'] . $key;
     }
 
     /**
      * Delete cached data
      *
+     * @param string $disk The disk name
      * @return void
      */
-    public function deleteCache(): void
+    public function deleteCache(string $disk): void
     {
         $key = $this->getCacheKey();
-        Storage::disk($this->getDisk())->delete($key);
+        Storage::disk($disk)->delete($key);
     }
 }

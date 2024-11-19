@@ -58,14 +58,4 @@ class Club extends Model
     {
         return $this->hasMany(User::class);
     }
-
-    /**
-     * Get the storage disk name to use for caching
-     *
-     * @return string The disk name
-     */
-    protected function getStorageDisk(): string
-    {
-        return 'wmfemitur-club';
-    }
 }
