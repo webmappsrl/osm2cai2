@@ -21,7 +21,7 @@ trait AwsCacheable
     protected function getCacheKey(): string
     {
         $modelName = strtolower(class_basename($this));
-        return "{$modelName}s/{$this->id}.json";
+        return "{$modelName}/{$this->id}.json";
     }
 
     /**

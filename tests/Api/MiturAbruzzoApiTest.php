@@ -77,7 +77,7 @@ class MiturAbruzzoApiTest extends TestCase
             }
             $modelInstance = $modelClass::factory()->create($columns);
 
-            // Dispatch job to get new API response
+            // Dispatch job to get new API response, flagging it as test=true
             $job = new CacheMiturAbruzzoData(class_basename($modelInstance), $modelInstance->id, true);
             $job->handle();
 
