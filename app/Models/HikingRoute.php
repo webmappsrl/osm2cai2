@@ -72,8 +72,8 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
                 return;
             }
-            //TODO: review from legacy osm2cai
             CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
+            //TODO: review from legacy osm2cai
             // Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
 
             if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
