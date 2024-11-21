@@ -1,17 +1,18 @@
 <?php
 
-use App\Http\Controllers\CsvController;
-use App\Http\Controllers\EcPoiController;
-use App\Http\Controllers\GeojsonController;
-use App\Http\Controllers\HikingRouteController;
-use App\Http\Controllers\ItineraryController;
-use App\Http\Controllers\KmlController;
-use App\Http\Controllers\MiturAbruzzoController;
-use App\Http\Controllers\ShapeFileController;
-use App\Http\Controllers\SourceSurveyController;
-use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CsvController;
+use App\Http\Controllers\KmlController;
+use App\Http\Controllers\UmapController;
+use App\Http\Controllers\EcPoiController;
+use App\Http\Controllers\GeojsonController;
+use App\Http\Controllers\ItineraryController;
+use App\Http\Controllers\ShapeFileController;
+use App\Http\Controllers\HikingRouteController;
+use App\Http\Controllers\MiturAbruzzoController;
+use App\Http\Controllers\SourceSurveyController;
+use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,4 +85,12 @@ Route::prefix('v2')->group(function () {
         Route::get('/poi/{id}', [MiturAbruzzoController::class, 'miturAbruzzoPoiById'])->name('poi-by-id');
         Route::get('/section/{id}', [MiturAbruzzoController::class, 'miturAbruzzoClubById'])->name('section-by-id');
     });
+});
+
+Route::prefix('umap')->name('umap.')->group(function () {
+    Route::get('/pois', [UmapController::class, 'pois'])->name('pois');
+    Route::get('/signs', [UmapController::class, 'signs'])->name('signs');
+    Route::get('/archaeological_sites', [UmapController::class, 'archaeologicalSites'])->name('archaeological_sites');
+    Route::get('/archaeological_areas', [UmapController::class, 'archaeologicalAreas'])->name('archaeological_areas');
+    Route::get('/geological_sites', [UmapController::class, 'geologicalSites'])->name('geological_sites');
 });
