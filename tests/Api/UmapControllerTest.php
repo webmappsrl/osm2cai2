@@ -4,11 +4,11 @@ namespace Tests\Api;
 
 use Tests\TestCase;
 use App\Models\UgcPoi;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class UmapControllerTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_pois_endpoint_returns_correct_structure()
     {

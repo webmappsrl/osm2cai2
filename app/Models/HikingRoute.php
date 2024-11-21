@@ -68,36 +68,32 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
-        static::saved(function ($hikingRoute) {
-            if ($hikingRoute->is_syncing) {
-                $hikingRoute->is_syncing = false;
+        // static::saved(function ($hikingRoute) {
+        //     if ($hikingRoute->is_syncing) {
+        //         $hikingRoute->is_syncing = false;
 
-                return;
-            }
-            CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
-            CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
+        //         return;
+        //     }
+        //     CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
+        //     CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
 
-            if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
-                ComputeTdhJob::dispatch($hikingRoute->id);
-                CacheMiturAbruzzoDataJob::dispatch('HikingRoute', $hikingRoute->id);
-            }
-        });
+        //     if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
+        //         ComputeTdhJob::dispatch($hikingRoute->id);
+        //         CacheMiturAbruzzoDataJob::dispatch('HikingRoute', $hikingRoute->id);
+        //     }
+        // });
 
-        static::created(function ($hikingRoute) {
-            if ($hikingRoute->is_syncing) {
-                $hikingRoute->is_syncing = false;
-                return;
-            }
+        // static::created(function ($hikingRoute) {
 
-            CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
-            CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
-        });
+        //     CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
+        //     CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
+        // });
 
-        static::updated(function ($hikingRoute) {
-            if ($hikingRoute->isDirty('geometry')) {
-                RecalculateIntersectionsJob::dispatch(null, $hikingRoute);
-            }
-        });
+        // static::updated(function ($hikingRoute) {
+        //     if ($hikingRoute->isDirty('geometry')) {
+        //         RecalculateIntersectionsJob::dispatch(null, $hikingRoute);
+        //     }
+        // });
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\CaiHut;
 use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
