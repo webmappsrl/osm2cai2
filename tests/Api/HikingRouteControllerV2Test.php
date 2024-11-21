@@ -23,7 +23,10 @@ class HikingRouteControllerV2Test extends TestCase
                 $table->json('osmfeatures_data')->nullable();
             });
         }
+        // Disable throttling for testing
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
     }
+
 
     private function createTestHikingRoute($id, $osm_id, $status, $geometry = null)
     {

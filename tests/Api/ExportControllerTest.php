@@ -11,6 +11,14 @@ class ExportControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Disable throttling for testing
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+    }
+
     private function testListEndpoint(string $endpoint, string $modelClass): void
     {
         if ($modelClass === User::class) {

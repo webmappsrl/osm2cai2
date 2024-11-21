@@ -10,6 +10,14 @@ class UmapControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Disable throttling for testing
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+    }
+
     public function test_pois_endpoint_returns_correct_structure()
     {
         $poi = UgcPoi::factory()->create([

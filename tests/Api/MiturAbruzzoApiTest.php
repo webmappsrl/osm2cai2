@@ -12,7 +12,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class MiturAbruzzoApiTest extends TestCase
 {
-
     use RefreshDatabase;
     /**
      * Legacy api samples data to test.
@@ -34,6 +33,14 @@ class MiturAbruzzoApiTest extends TestCase
      * @var string
      */
     protected $stubDirectory = 'tests/stubs/mitur';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Disable throttling for testing
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+    }
 
     /**
      * Test the consistency of the API structure with the saved GeoJSON file.
