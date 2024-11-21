@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoData;
-use App\Jobs\RecalculateIntersections;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\RecalculateIntersectionsJob;
 use App\Models\EcPoi;
 use App\Models\HikingRoute;
 use App\Models\MountainGroups;
@@ -38,13 +38,13 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     {
         static::updated(function ($region) {
             if ($region->isDirty('geometry')) {
-                RecalculateIntersections::dispatch($region, null);
+                RecalculateIntersectionsJob::dispatch($region, null);
             }
         });
 
         static::saved(function ($region) {
             if (app()->environment('production')) {
-                CacheMiturAbruzzoData::dispatch('Region', $region->id);
+                CacheMiturAbruzzoDataJob::dispatch('Region', $region->id);
             }
         });
     }

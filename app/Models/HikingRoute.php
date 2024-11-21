@@ -14,13 +14,14 @@ use App\Jobs\CheckNearbyHutsJob;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Support\Facades\DB;
-use App\Jobs\CacheMiturAbruzzoData;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use App\Jobs\RecalculateIntersections;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Stopwatch\Section;
+use App\Jobs\RecalculateIntersectionsJob;
+use App\Jobs\CheckNearbyNaturalSpringsJob;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Services\HikingRouteDescriptionService;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
@@ -47,6 +48,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_updated_at',
         'tdh',
         'nearby_cai_huts',
+        'nearby_natural_springs',
     ];
 
     protected $casts = [
@@ -73,29 +75,27 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
                 return;
             }
             CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
-            //TODO: review from legacy osm2cai
-            // Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
+            CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
 
             if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
                 ComputeTdhJob::dispatch($hikingRoute->id);
-                CacheMiturAbruzzoData::dispatch('HikingRoute', $hikingRoute->id);
+                CacheMiturAbruzzoDataJob::dispatch('HikingRoute', $hikingRoute->id);
             }
         });
 
-        //TODO: review from legacy osm2cai
-        // static::created(function ($hikingRoute) {
-        //     if ($hikingRoute->is_syncing) {
-        //         $hikingRoute->is_syncing = false;
-        //         return;
-        //     }
+        static::created(function ($hikingRoute) {
+            if ($hikingRoute->is_syncing) {
+                $hikingRoute->is_syncing = false;
+                return;
+            }
 
-        //     Artisan::call('osm2cai:add_cai_huts_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
-        //     Artisan::call('osm2cai:add_natural_springs_to_hiking_routes', ['model' => 'HikingRoute', 'id' => $hikingRoute->id]);
-        // });
+            CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
+            CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
+        });
 
         static::updated(function ($hikingRoute) {
             if ($hikingRoute->isDirty('geometry')) {
-                RecalculateIntersections::dispatch(null, $hikingRoute);
+                RecalculateIntersectionsJob::dispatch(null, $hikingRoute);
             }
         });
     }

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Models\User;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
@@ -38,7 +38,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     {
         static::saved(function ($ecPoi) {
             if (app()->environment('production')) {
-                CacheMiturAbruzzoData::dispatch('EcPoi', $ecPoi->id);
+                CacheMiturAbruzzoDataJob::dispatch('EcPoi', $ecPoi->id);
             }
         });
     }

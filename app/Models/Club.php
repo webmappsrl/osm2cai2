@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Models\HikingRoute;
 use App\Models\Region;
 use App\Models\User;
@@ -39,7 +39,7 @@ class Club extends Model
     {
         static::saved(function ($club) {
             if (app()->environment('production')) {
-                CacheMiturAbruzzoData::dispatch('Club', $club->id);
+                CacheMiturAbruzzoDataJob::dispatch('Club', $club->id);
             }
         });
     }

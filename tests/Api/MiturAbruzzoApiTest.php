@@ -4,7 +4,7 @@ namespace Tests\Api;
 
 use Tests\TestCase;
 use Illuminate\Support\Facades\DB;
-use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -78,7 +78,7 @@ class MiturAbruzzoApiTest extends TestCase
             $modelInstance = $modelClass::factory()->create($columns);
 
             // Dispatch job to get new API response, flagging it as test=true
-            $job = new CacheMiturAbruzzoData(class_basename($modelInstance), $modelInstance->id, true);
+            $job = new CacheMiturAbruzzoDataJob(class_basename($modelInstance), $modelInstance->id, true);
             $job->handle();
 
             $newApiResponse = json_decode(Storage::get($this->stubDirectory . '/aws/' . class_basename($modelInstance) . '_' . $modelInstance->id . '.json'), true);

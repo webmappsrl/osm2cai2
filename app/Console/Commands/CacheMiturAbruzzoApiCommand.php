@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -51,7 +51,7 @@ class CacheMiturAbruzzoApiCommand extends Command
 
         foreach ($query->cursor() as $model) {
             try {
-                CacheMiturAbruzzoData::dispatch($className, $model->id);
+                CacheMiturAbruzzoDataJob::dispatch($className, $model->id);
             } catch (\Exception $e) {
                 Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
                 $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());

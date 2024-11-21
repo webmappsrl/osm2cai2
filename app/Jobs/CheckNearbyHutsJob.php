@@ -63,7 +63,7 @@ class CheckNearbyHutsJob implements ShouldQueue
         sort($currentHuts);
         sort($nearbyHutsIds);
 
-        //only save if there is a change so the event observer in the hiking route model will not be triggered [app\Models\HikingRoute line 100]
+        //only save if there is a change so the event observer in the hiking route model will not be triggered
         if ($currentHuts !== $nearbyHutsIds) {
             $hikingRoute->nearby_cai_huts = json_encode($nearbyHutsIds);
             $hikingRoute->save();

@@ -24,7 +24,7 @@ class MountainGroups extends Model
     {
         static::saved(function ($mountainGroup) {
             if (app()->environment('production')) {
-                CacheMiturAbruzzoData::dispatch('MountainGroups', $mountainGroup->id);
+                CacheMiturAbruzzoDataJob::dispatch('MountainGroups', $mountainGroup->id);
             }
         });
     }

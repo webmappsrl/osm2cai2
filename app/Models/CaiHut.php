@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Console\Commands\CheckNearbyHikingRoutes;
-use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Jobs\CheckNearbyHikingRoutesJob;
 use App\Models\Region;
 use App\Traits\AwsCacheable;
@@ -40,7 +40,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
 
         static::saved(function ($caiHut) {
             if (app()->environment('production')) {
-                CacheMiturAbruzzoData::dispatch('CaiHut', $caiHut->id);
+                CacheMiturAbruzzoDataJob::dispatch('CaiHut', $caiHut->id);
             }
         });
     }
