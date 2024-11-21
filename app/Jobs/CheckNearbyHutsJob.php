@@ -32,13 +32,19 @@ class CheckNearbyHutsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        if (! $hikingRoute->geometry) {
-            Log::warning("Hiking route {$hikingRoute->id} has no geometry");
+        try {
+            if (!$this->hikingRoute->geometry) {
+                Log::warning("Hiking route {$this->hikingRoute->id} has no geometry");
+                return;
+            }
 
-            return;
-        }
-        //geometry casted to geography because more accurate for distance calculations
-        $nearbyHutsIds = DB::select(<<<'SQL'
+            if ($this->buffer < 0) {
+                Log::warning("Buffer distance must be positive");
+                return;
+            }
+
+            // Query per trovare i rifugi vicini
+            $nearbyHutsIds = DB::select(<<<'SQL'
             SELECT cai_huts.id 
             FROM cai_huts, hiking_routes 
             WHERE hiking_routes.id = :routeId 
@@ -48,25 +54,31 @@ class CheckNearbyHutsJob implements ShouldQueue
                 :buffer
             )
         SQL, [
-            'routeId' => $hikingRoute->id,
-            'buffer' => $buffer,
-        ]);
+                'routeId' => $this->hikingRoute->id,
+                'buffer' => $this->buffer,
+            ]);
 
-        $nearbyHutsIds = array_map(
-            function ($hut) {
-                return $hut->id;
-            },
-            $nearbyHutsIds
-        );
+            $nearbyHutsIds = array_map(
+                function ($hut) {
+                    return $hut->id;
+                },
+                $nearbyHutsIds
+            );
 
-        $currentHuts = json_decode($hikingRoute->nearby_cai_huts, true) ?: [];
-        sort($currentHuts);
-        sort($nearbyHutsIds);
+            $currentHuts = json_decode($this->hikingRoute->nearby_cai_huts, true) ?: [];
+            sort($currentHuts);
+            sort($nearbyHutsIds);
 
-        //only save if there is a change so the event observer in the hiking route model will not be triggered
-        if ($currentHuts !== $nearbyHutsIds) {
-            $hikingRoute->nearby_cai_huts = json_encode($nearbyHutsIds);
-            $hikingRoute->save();
+            // Aggiorna solo se ci sono cambiamenti
+            if ($currentHuts !== $nearbyHutsIds) {
+                $this->hikingRoute->nearby_cai_huts = json_encode($nearbyHutsIds);
+                $this->hikingRoute->save();
+            }
+        } catch (\Exception $e) {
+            Log::error('Error executing CheckNearbyHutsJob', [
+                'route_id' => $this->hikingRoute->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }
