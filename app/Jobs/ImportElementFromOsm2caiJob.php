@@ -250,7 +250,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $columnsToImport = ['id', 'name', 'geometry', 'code', 'full_code', 'num_expected', 'human_name', 'manager'];
 
         if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326)");
+            $data['geometry'] = DB::raw("ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($data['geometry']) . "'), 4326))");
         }
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
