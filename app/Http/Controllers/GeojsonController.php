@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\HikingRoute;
 use App\Models\Region;
+use App\Models\Sector;
+use App\Models\HikingRoute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -20,7 +21,7 @@ class GeojsonController extends Controller
     public function download(string $modelType, string $id)
     {
         // Dynamically load the model based on type
-        $modelClass = 'App\\Models\\'.ucfirst($modelType);
+        $modelClass = 'App\\Models\\' . ucfirst($modelType);
 
         // Verify that the model exists
         if (! class_exists($modelClass)) {
@@ -30,7 +31,7 @@ class GeojsonController extends Controller
         // Find the resource by ID
         $model = $modelClass::find($id);
         if (! $model) {
-            return response()->json(['error' => ucfirst($modelType).' '.$id.' not found'], 404);
+            return response()->json(['error' => ucfirst($modelType) . ' ' . $id . ' not found'], 404);
         }
 
         // Initialize GeoJSON structure
@@ -44,17 +45,20 @@ class GeojsonController extends Controller
         $relatedResources = $this->getRelatedResources($modelType, $model);
 
         foreach ($relatedResources as $resource) {
+
+            $geometry = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM ' . $resource->getTable() . ' WHERE id = ?', [$resource->id])[0];
+
             $geojson['features'][] = [
                 'type' => 'Feature',
-                'geometry' => json_decode($resource->geom),
-                'properties' => $this->getResourceProperties($resource),
+                'geometry' => json_decode($geometry->geom),
+                'properties' => $this->getResourceProperties($resource, $modelType),
             ];
         }
 
         // Settings for GeoJSON file download
         $headers = [
             'Content-type' => 'application/json',
-            'Content-Disposition' => 'attachment; filename="'.$id.'.geojson"',
+            'Content-Disposition' => 'attachment; filename="' . $id . '.geojson"',
         ];
 
         return response(json_encode($geojson), 200, $headers);
@@ -139,42 +143,36 @@ class GeojsonController extends Controller
                 $sectors = $model->getSectorIds();
 
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'province':
                 // Get sectors related to the province
                 $sectors = $model->getSectorIds();
 
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'area':
                 // Get sectors related to the area
                 $sectors = $model->getSectorIds();
 
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'club':
                 // Get hiking routes related to the club
                 $hikingRoutes = $model->hikingRoutes()->get();
 
                 return HikingRoute::whereIn('id', $hikingRoutes->pluck('id'))
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'area':
                 // Get sectors related to the area
                 $sectors = $model->getSectorIds();
 
                 return Sector::whereIn('id', $sectors)
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             case 'club':
                 // Get hiking routes related to the club
                 $hikingRoutes = $model->hikingRoutes()->get();
 
                 return HikingRoute::whereIn('id', $hikingRoutes->pluck('id'))
-                    ->select('id', DB::raw('ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom'))
                     ->get();
             default:
                 return [];
@@ -187,14 +185,13 @@ class GeojsonController extends Controller
      * @param object $resource
      * @return array
      */
-    private function getResourceProperties($resource)
+    private function getResourceProperties($resource, $modelType)
     {
         if ($resource instanceof HikingRoute) {
             $geometry = DB::select('SELECT ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom FROM hiking_routes WHERE id = ?;', [$resource->id]);
-            $geometry = json_decode($geometry[0]->geom);
-            $osmfeaturesDataProperties = $resource->osmfeaturesData['properties'];
+            $osmfeaturesDataProperties = $resource->osmfeatures_data['properties'];
 
-            $name = $resource->name ? $resource->name.' - '.$resource->ref : $resource->ref;
+            $name = $resource->name ? $resource->name . ' - ' . $resource->ref : $resource->ref;
 
             $regions = $resource->regions->pluck('name')->implode(', ');
             $provinces = $resource->provinces->pluck('name')->implode(', ');
@@ -204,37 +201,33 @@ class GeojsonController extends Controller
             $userName = $resource->user?->name ?? '';
 
             return [
-                'type' => 'Feature',
-                'geometry' => $geometry,
-                'properties' => [
-                    'id' => $resource->id,
-                    'name' => $name,
-                    'user' => $userName,
-                    'relation_id' => $osmfeaturesDataProperties['osm_id'] ?? '',
-                    'ref' => $resource->ref ?? '',
-                    'source_ref' => $osmfeaturesDataProperties['source_ref'] ?? '',
-                    'difficulty' => $resource->cai_scale ?? '',
-                    'from' => $osmfeaturesDataProperties['from'] ?? '',
-                    'to' => $osmfeaturesDataProperties['to'] ?? '',
-                    'regions' => $regions,
-                    'provinces' => $provinces,
-                    'areas' => $areas,
-                    'sector' => $resource->mainSector()->full_code ?? '',
-                    'clubs' => $clubs,
-                    'last_updated' => $resource->updated_at->format('Y-m-d'),
-                ],
+                'id' => $resource->id,
+                'name' => $name,
+                'user' => $userName,
+                'relation_id' => $osmfeaturesDataProperties['osm_id'] ?? '',
+                'ref' => $resource->ref ?? '',
+                'source_ref' => $osmfeaturesDataProperties['source_ref'] ?? '',
+                'difficulty' => $resource->cai_scale ?? '',
+                'from' => $osmfeaturesDataProperties['from'] ?? '',
+                'to' => $osmfeaturesDataProperties['to'] ?? '',
+                'regions' => $regions,
+                'provinces' => $provinces,
+                'areas' => $areas,
+                'sector' => $resource->mainSector()->full_code ?? '',
+                'clubs' => $clubs,
+                'last_updated' => $resource->updated_at->format('Y-m-d'),
             ];
         }
 
         return [
             'id' => $resource->id,
-            'name' => $resource->name,
-            'area' => $resource->area->name,
-            'province' => $resource->area->province->name,
-            'region' => $resource->area->province->region->name,
-            'geojson_url' => route('api.geojson.sector', ['id' => $resource->id]),
-            'shapefile_url' => route('api.shapefile.sector', ['id' => $resource->id]),
-            'kml' => route('api.kml.sector', ['id' => $resource->id]),
+            'name' => $resource->name ?? '',
+            'area' => $resource->area->name ?? '',
+            'province' => $resource->area->province->name ?? '',
+            'region' => $resource->area->province->region->name ?? '',
+            'geojson_url' => url("api/geojson/{$modelType}/{$resource->id}"),
+            'shapefile_url' => url("api/shapefile/{$modelType}/{$resource->id}"),
+            'kml' => url("api/kml/{$modelType}/{$resource->id}"),
         ];
     }
 }
