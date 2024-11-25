@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ShapeFileController extends Controller
 {
@@ -38,18 +39,14 @@ class ShapeFileController extends Controller
 
         $modelClass = $this->allowedModels[$modelType];
         $model = $modelClass::find($id);
+        $fileName = Str::lower($model->getTable()) . '_' . ($model->name ?? $model->id) . '_' . date('Ymd');
 
         if (! $model) {
             abort(404, 'Model not found');
         }
 
-        $shapefileData = $model->getShapefile();
+        $shapefile = $model->getShapefile();
 
-        $headers = [
-            'Content-Type' => 'application/zip',
-            'Content-Disposition' => 'attachment; filename="'.$model->getTable().'_'.date('Ymd').'.zip"',
-        ];
-
-        return response($shapefileData, 200, $headers);
+        return Storage::disk('public')->download($shapefile, $fileName . '.zip');
     }
 }

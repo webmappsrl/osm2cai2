@@ -36,13 +36,11 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
-        static::updated(function ($region) {
+
+        static::saved(function ($region) {
             if ($region->isDirty('geometry')) {
                 RecalculateIntersectionsJob::dispatch($region, null);
             }
-        });
-
-        static::saved(function ($region) {
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('Region', $region->id);
             }
