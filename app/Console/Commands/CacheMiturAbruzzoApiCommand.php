@@ -21,7 +21,7 @@ class CacheMiturAbruzzoApiCommand extends Command
         try {
             $modelClass = App::make("App\\Models\\{$this->argument('model')}");
         } catch (\Exception $e) {
-            $this->error('Model not found: ' . $e->getMessage());
+            $this->error($e->getMessage());
             return;
         }
         $className = class_basename($modelClass);
