@@ -2,7 +2,9 @@
 
 namespace App\Traits;
 
+use App\Models\Region;
 use App\Models\Sector;
+use App\Models\Province;
 use App\Traits\GeoBufferTrait;
 use App\Services\GeometryService;
 use App\Traits\GeoIntersectTrait;
@@ -142,10 +144,8 @@ trait SpatialDataTrait
      */
     public function getShapefile(): string
     {
-        $class = get_class($this);
-        $model = $class::find($this->id);
-        $name = str_replace(" ", "_", $model->name);
-        $ids = $model->getSectorIds();
+        $name = str_replace(" ", "_", $this->name);
+        $ids = $this->getSectorIds();
 
         if (empty($ids)) {
             throw new \RuntimeException('No sectors found for this model');
@@ -342,14 +342,29 @@ trait SpatialDataTrait
         return $features;
     }
 
-    private function getSectorIds(): array
+    public function getSectorIds(): array
     {
-        //if the model is an instance of Sector model, return the sector id
         if ($this instanceof Sector) {
             return [$this->id];
         }
 
-        return $this->sectors ? $this->sectors->pluck('id')->toArray() : [];
+        if ($this instanceof Region) {
+            return $this->provinces
+                ->flatMap(fn($province) => $province->getSectorIds()) //flatten the array of arrays
+                ->unique() //remove duplicates
+                ->values() //reset the keys
+                ->toArray();
+        }
+
+        if ($this instanceof Province) {
+            return $this->areas
+                ->flatMap(fn($area) => $area->getSectorIds()) //flatten the array of arrays
+                ->unique() //remove duplicates
+                ->values() //reset the keys
+                ->toArray();
+        }
+
+        return $this->sectors?->pluck('id')->toArray() ?? [];
     }
 
     private function generateShapefile(string $directory, string $sql): string

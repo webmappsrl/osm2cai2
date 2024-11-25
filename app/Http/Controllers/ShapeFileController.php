@@ -34,19 +34,23 @@ class ShapeFileController extends Controller
 
         // Validate model type
         if (! isset($this->allowedModels[$modelType])) {
-            abort(404, 'Invalid model type');
+            return response()->json(['error' => 'Invalid model type'], 404);
         }
 
         $modelClass = $this->allowedModels[$modelType];
         $model = $modelClass::find($id);
-        $fileName = Str::lower($model->getTable()) . '_' . ($model->name ?? $model->id) . '_' . date('Ymd');
 
         if (! $model) {
-            abort(404, 'Model not found');
+            return response()->json(['error' => 'Model not found'], 404);
         }
 
-        $shapefile = $model->getShapefile();
+        try {
+            $shapefile = $model->getShapefile();
+            $fileName = Str::slug(($model->name ?? $model->id) . '_' . date('Ymd')) . '.zip';
 
-        return Storage::disk('public')->download($shapefile, $fileName . '.zip');
+            return Storage::disk('public')->download($shapefile, $fileName);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
