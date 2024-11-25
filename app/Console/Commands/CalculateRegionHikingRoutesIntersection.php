@@ -21,8 +21,13 @@ class CalculateRegionHikingRoutesIntersection extends Command
 
     public function handle()
     {
-        $this->info('Inizio calcolo delle intersezioni...');
-        $this->intersectionService->calculateIntersections();
-        $this->info('Calcolo delle intersezioni completato con successo.');
+        $this->info('Start calculating intersections...');
+        try {
+            $this->intersectionService->calculateIntersections();
+        } catch (\Exception $e) {
+            $this->error($e->getMessage());
+            return Command::FAILURE;
+        }
+        $this->info('Calculating intersections completed successfully.');
     }
 }
