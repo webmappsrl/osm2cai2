@@ -23,22 +23,23 @@ class ShapeFileControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Storage::fake('public');
 
-        //create a region
+        // Assicurati che la directory esista
+        Storage::disk('public')->makeDirectory('shape_files/zip');
+        Storage::disk('public')->makeDirectory('shape_files/shp');
+
+        // Crea le entità di test come prima
         $this->region = Region::factory()->create([
             'name' => 'Test Region',
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
         ]);
 
-        //create a province
         $this->province = Province::factory()->create([
             'name' => 'Test Province',
             'region_id' => $this->region->id,
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
         ]);
 
-        //create an area
         $this->area = Area::factory()->create([
             'name' => 'Test Area',
             'code' => 'T',
@@ -48,7 +49,6 @@ class ShapeFileControllerTest extends TestCase
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
         ]);
 
-        //create a sector
         $this->sector = Sector::factory()->create([
             'name' => 'Test Sector',
             'code' => 'T',
@@ -57,6 +57,13 @@ class ShapeFileControllerTest extends TestCase
             'full_code' => 'TS123',
             'area_id' => $this->area->id,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        // Pulisci i file temporanei dopo ogni test
+        Storage::disk('public')->deleteDirectory('shape_files');
+        parent::tearDown();
     }
 
     public function test_download_shapefile_for_region()
