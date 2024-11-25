@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\User;
 use App\Models\Region;
 use App\Models\HikingRoute;
+use App\Traits\CsvableModelTrait;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,7 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class Province extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, SpatialDataTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, SpatialDataTrait, CsvableModelTrait;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'name', 'geometry'];
 

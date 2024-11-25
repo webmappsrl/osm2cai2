@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use App\Models\HikingRoute;
-use App\Models\Province;
-use App\Models\Sector;
 use App\Models\User;
+use App\Models\Sector;
+use App\Models\Province;
+use App\Models\HikingRoute;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\CsvableModelTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Area extends Model
 {
-    use HasFactory, SpatialDataTrait;
+    use HasFactory, SpatialDataTrait, CsvableModelTrait;
 
     protected $fillable = [
         'code',

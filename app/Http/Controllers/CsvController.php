@@ -35,19 +35,19 @@ class CsvController extends Controller
 
         // Validate model type
         if (! isset($this->allowedModels[$modelType])) {
-            abort(404, 'Invalid model type');
+            return response()->json(['error' => 'Invalid model type'], 404);
         }
 
         $modelClass = $this->allowedModels[$modelType];
         $model = $modelClass::find($id);
 
         if (! $model) {
-            abort(404, 'Model not found');
+            return response()->json(['error' => 'Model not found'], 404);
         }
 
         $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="osm2cai_'.date('Ymd').'_'.$model->getTable().'_'.($model->name ?? $model->id).'.csv"',
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="osm2cai_' . date('Ymd') . '_' . $model->getTable() . '_' . ($model->name ?? $model->id) . '.csv"',
         ];
 
         return response($model->getCsv(), 200, $headers);
