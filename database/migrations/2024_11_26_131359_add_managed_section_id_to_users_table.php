@@ -37,10 +37,19 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['region_id']);
+            $table->dropForeign(['club_id']);
+            $table->dropForeign(['managed_club_id']);
+
             $table->dropColumn('region_id');
+            $table->dropColumn('club_id');
             $table->dropColumn('managed_club_id');
             $table->dropColumn('section_manager_expire_date');
             $table->dropColumn('regional_referent_expire_date');
+            $table->dropColumn('default_overpass_query');
+
+            $table->string('region_name')->nullable();
+            $table->string('club_cai_code')->nullable();
         });
     }
 };

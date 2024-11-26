@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Province;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -268,7 +269,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
     private function importAreas($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'code', 'name', 'geometry', 'full_code', 'num_expected'];
+        $columnsToImport = ['id', 'code', 'name', 'geometry', 'full_code', 'num_expected', 'province_id'];
 
         if ($data['geometry'] !== null) {
             $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
@@ -276,6 +277,16 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
+            if ($key === 'province_id') {
+                //get the code from province table in legacy osm2cai
+                $province = DB::connection('legacyosm2cai')->table('provinces')->find($value);
+                $provinceCode = $province->code;
+                //search for the corresponding province in the province table
+                $province = Province::where('osmfeatures_data->properties->osm_tags->short_name', $provinceCode)
+                    ->orWhere('osmfeatures_data->properties->osm_tags->ref', $provinceCode)
+                    ->first();
+                $value = $province ? $province->id : null;
+            }
             $modelInstance->$key = $value;
         }
 
