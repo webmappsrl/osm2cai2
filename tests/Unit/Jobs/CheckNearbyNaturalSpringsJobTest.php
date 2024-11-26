@@ -2,14 +2,14 @@
 
 namespace Tests\Unit\Jobs;
 
-use Mockery;
-use Tests\TestCase;
+use App\Jobs\CheckNearbyNaturalSpringsJob;
 use App\Models\HikingRoute;
 use App\Models\NaturalSpring;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\CheckNearbyNaturalSpringsJob;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Mockery;
+use Tests\TestCase;
 
 class CheckNearbyNaturalSpringsJobTest extends TestCase
 {
@@ -69,7 +69,6 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
         $job->handle();
     }
 
-
     public function testDoesNotUpdateIfNoChange(): void
     {
         $hikingRoute = HikingRoute::factory()->create([
@@ -105,11 +104,10 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
 
         Log::shouldReceive('error')
             ->once()
-            ->with('Error in CheckNearbyNaturalSpringsJob: Hiking route ' . $hikingRoute->id . ' has no geometry');
+            ->with('Error in CheckNearbyNaturalSpringsJob: Hiking route '.$hikingRoute->id.' has no geometry');
 
         (new CheckNearbyNaturalSpringsJob($hikingRoute->id, $buffer))->handle();
     }
-
 
     public function testHandlesSqlExceptionGracefully(): void
     {
@@ -132,9 +130,6 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
 
         (new CheckNearbyNaturalSpringsJob($hikingRoute->id, $buffer))->handle();
     }
-
-
-
 
     public function testUpdatesCorrectlyWhenNearbySpringsChange(): void
     {

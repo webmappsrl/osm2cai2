@@ -48,7 +48,7 @@ class KmlController extends Controller
 
             return response($kmlData)
                 ->header('Content-Type', 'application/vnd.google-earth.kml+xml')
-                ->header('Content-Disposition', 'attachment; filename="' . $model->getTable() . '_' . date('Ymd') . '.kml"');
+                ->header('Content-Disposition', 'attachment; filename="'.$model->getTable().'_'.date('Ymd').'.kml"');
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

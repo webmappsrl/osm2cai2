@@ -2,38 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Area;
-use App\Models\Club;
-use App\Models\User;
-use App\Models\EcPoi;
-use App\Models\CaiHut;
-use App\Models\Sector;
-use App\Models\UgcPoi;
-use App\Models\CaiHuts;
-use App\Models\Section;
-use App\Models\UgcMedia;
-use App\Models\UgcTrack;
-use App\Models\Itinerary;
-use App\Models\HikingRoute;
-use App\Models\NaturalSpring;
-use App\Models\MountainGroups;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
 use App\Http\Resources\AreaResource;
-use App\Http\Resources\UserResource;
-use App\Http\Resources\EcPoiResource;
 use App\Http\Resources\CaiHutResource;
+use App\Http\Resources\EcPoiResource;
 use App\Http\Resources\ExportResource;
-use App\Http\Resources\SectorResource;
-use App\Http\Resources\UgcPoiResource;
-use App\Http\Resources\SectionResource;
-use App\Http\Resources\UgcMediaResource;
-use App\Http\Resources\UgcTrackResource;
-use App\Http\Resources\ItineraryResource;
 use App\Http\Resources\HikingRouteResource;
+use App\Http\Resources\ItineraryResource;
 use App\Http\Resources\MountainGroupResource;
 use App\Http\Resources\NaturalSpringResource;
+use App\Http\Resources\SectionResource;
+use App\Http\Resources\SectorResource;
+use App\Http\Resources\UgcMediaResource;
+use App\Http\Resources\UgcPoiResource;
+use App\Http\Resources\UgcTrackResource;
+use App\Http\Resources\UserResource;
+use App\Models\Area;
+use App\Models\CaiHut;
+use App\Models\CaiHuts;
+use App\Models\Club;
+use App\Models\EcPoi;
+use App\Models\HikingRoute;
+use App\Models\Itinerary;
+use App\Models\MountainGroups;
+use App\Models\NaturalSpring;
+use App\Models\Section;
+use App\Models\Sector;
+use App\Models\UgcMedia;
+use App\Models\UgcPoi;
+use App\Models\UgcTrack;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 /**
  * This controller handles the export of the data to OSM2CAI 2
@@ -45,8 +45,7 @@ class ExportController extends Controller
         /** @var Collection<int, HikingRoute> $hikingRoutes */
         $hikingRoutes = HikingRoute::all('id', 'updated_at');
 
-        $data =  $hikingRoutes->mapWithKeys(function (HikingRoute $hikingRoute) {
-
+        $data = $hikingRoutes->mapWithKeys(function (HikingRoute $hikingRoute) {
             return [$hikingRoute->id => $hikingRoute->updated_at];
         });
 
@@ -58,28 +57,27 @@ class ExportController extends Controller
      *
      * @param int $id the id of the hiking route
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function hikingRoutesSingleFeature(int $id): ExportResource
     {
         /** @var HikingRoute $hikingRoute */
         $hikingRoute = HikingRoute::find($id);
+
         return new ExportResource($hikingRoute);
     }
 
     /**
      * Return a list of users with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function UsersList(): JsonResponse
     {
-
         /** @var Collection<int, User> $users */
         $users = User::all('id', 'updated_at');
 
-        $data =  $users->mapWithKeys(function (User $user) {
-
+        $data = $users->mapWithKeys(function (User $user) {
             return [$user->id => $user->updated_at];
         });
 
@@ -91,27 +89,27 @@ class ExportController extends Controller
      *
      * @param int $id the id of the user
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function UsersSingleFeature(int $id): ExportResource
     {
         /** @var User $user */
         $user = User::find($id);
+
         return new ExportResource($user);
     }
 
     /**
      * Return a list of UGC points of interest with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function UgcPoisList(): JsonResponse
     {
-
         /** @var Collection<int, UgcPoi> $ugcPois */
         $ugcPois = UgcPoi::all('id', 'updated_at');
 
-        $data =  $ugcPois->mapWithKeys(function (UgcPoi $ugcPoi) {
+        $data = $ugcPois->mapWithKeys(function (UgcPoi $ugcPoi) {
             return [$ugcPoi->id => $ugcPoi->updated_at];
         });
 
@@ -123,27 +121,27 @@ class ExportController extends Controller
      *
      * @param int $id the id of the UGC poi
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function UgcPoisSingleFeature(int $id): ExportResource
     {
         /** @var UgcPoi $ugcPoi */
         $ugcPoi = UgcPoi::find($id);
+
         return new ExportResource($ugcPoi);
     }
 
     /**
      * Return a list of UGC tracks with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function UgcTracksList(): JsonResponse
     {
-
         /** @var Collection<int, UgcTrack> $tracks */
         $tracks = UgcTrack::all('id', 'updated_at');
 
-        $data =  $tracks->mapWithKeys(function (UgcTrack $track) {
+        $data = $tracks->mapWithKeys(function (UgcTrack $track) {
             return [$track->id => $track->updated_at];
         });
 
@@ -155,27 +153,27 @@ class ExportController extends Controller
      *
      * @param int $id the id of the UGC track
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function UgcTracksSingleFeature(int $id): ExportResource
     {
         /** @var UgcTrack $track */
         $track = UgcTrack::find($id);
+
         return new ExportResource($track);
     }
 
     /**
      * Return a list of UGC media with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function UgcMediasList(): JsonResponse
     {
-
         /** @var Collection<int, UgcMedia> $media */
         $media = UgcMedia::all('id', 'updated_at');
 
-        $data =  $media->mapWithKeys(function (UgcMedia $medium) {
+        $data = $media->mapWithKeys(function (UgcMedia $medium) {
             return [$medium->id => $medium->updated_at];
         });
 
@@ -187,28 +185,27 @@ class ExportController extends Controller
      *
      * @param int $id the id of the UGC media
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function UgcMediasSingleFeature(int $id): ExportResource
     {
         /** @var UgcMedia $medium */
         $medium = UgcMedia::find($id);
+
         return new ExportResource($medium);
     }
 
     /**
      * Return a list of areas with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function AreasList(): JsonResponse
     {
-
         /** @var Collection<int, Area> $areas */
         $areas = Area::all('id', 'updated_at');
 
-        $data =  $areas->mapWithKeys(function (Area $area) {
-
+        $data = $areas->mapWithKeys(function (Area $area) {
             return [$area->id => $area->updated_at];
         });
 
@@ -220,11 +217,10 @@ class ExportController extends Controller
      *
      * @param int $id the id of the area
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function AreasSingleFeature(int $id): ExportResource
     {
-
         /** @var Area $area */
         $area = Area::find($id);
 
@@ -234,33 +230,29 @@ class ExportController extends Controller
     /**
      * Return a list of sectors with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function SectorsList(): JsonResponse
     {
-
         /** @var Collection<int, Sector> $sectors */
         $sectors = Sector::all('id', 'updated_at');
 
-        $data =  $sectors->mapWithKeys(function (Sector $sector) {
-
+        $data = $sectors->mapWithKeys(function (Sector $sector) {
             return [$sector->id => $sector->updated_at];
         });
 
         return response()->json($data);
     }
 
-
     /**
      * Return a single sector with its features.
      *
      * @param int $id the id of the sector
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function SectorsSingleFeature(int $id): ExportResource
     {
-
         /** @var Sector $sector */
         $sector = Sector::find($id);
 
@@ -270,16 +262,14 @@ class ExportController extends Controller
     /**
      * Return a list of sections with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function ClubsList(): JsonResponse
     {
-
         /** @var Collection<int, Club> $clubs */
         $clubs = Club::all('id', 'updated_at');
 
-        $data =  $clubs->mapWithKeys(function (Club $club) {
-
+        $data = $clubs->mapWithKeys(function (Club $club) {
             return [$club->id => $club->updated_at];
         });
 
@@ -291,11 +281,10 @@ class ExportController extends Controller
      *
      * @param int $id the id of the club
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function ClubsSingleFeature(int $id): ExportResource
     {
-
         /** @var Club $club */
         $club = Club::find($id);
 
@@ -305,16 +294,14 @@ class ExportController extends Controller
     /**
      * Return a list of mountain groups with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function MountainGroupsList(): JsonResponse
     {
-
         /** @var Collection<int, MountainGroups> $mountainGroups */
         $mountainGroups = MountainGroups::all('id', 'updated_at');
 
-        $data =  $mountainGroups->mapWithKeys(function (MountainGroups $mountainGroup) {
-
+        $data = $mountainGroups->mapWithKeys(function (MountainGroups $mountainGroup) {
             return [$mountainGroup->id => $mountainGroup->updated_at];
         });
 
@@ -326,11 +313,10 @@ class ExportController extends Controller
      *
      * @param int $id the id of the mountain group
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function MountainGroupsSingleFeature(int $id): ExportResource
     {
-
         /** @var MountainGroups $mountainGroup */
         $mountainGroup = MountainGroups::find($id);
 
@@ -340,16 +326,14 @@ class ExportController extends Controller
     /**
      * Return a list of natural springs with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function NaturalSpringsList(): JsonResponse
     {
-
         /** @var Collection<int, NaturalSpring> $naturalSprings */
         $naturalSprings = NaturalSpring::all('id', 'updated_at');
 
-        $data =  $naturalSprings->mapWithKeys(function (NaturalSpring $naturalSpring) {
-
+        $data = $naturalSprings->mapWithKeys(function (NaturalSpring $naturalSpring) {
             return [$naturalSpring->id => $naturalSpring->updated_at];
         });
 
@@ -361,11 +345,10 @@ class ExportController extends Controller
      *
      * @param int $id the id of the natural spring
      *
-     * @return \App\Http\Resources\ExportResource   
+     * @return ExportResource
      */
     public function NaturalSpringsSingleFeature(int $id): ExportResource
     {
-
         /** @var NaturalSpring $naturalSpring */
         $naturalSpring = NaturalSpring::find($id);
 
@@ -375,17 +358,14 @@ class ExportController extends Controller
     /**
      * Return a list of itineraries with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function ItinerariesList(): JsonResponse
-
     {
-
         /** @var Collection<int, Itinerary> $itineraries */
         $itineraries = Itinerary::all('id', 'updated_at');
 
-        $data =  $itineraries->mapWithKeys(function (Itinerary $itinerary) {
-
+        $data = $itineraries->mapWithKeys(function (Itinerary $itinerary) {
             return [$itinerary->id => $itinerary->updated_at];
         });
 
@@ -397,11 +377,10 @@ class ExportController extends Controller
      *
      * @param int $id the id of the itinerary
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function ItinerariesSingleFeature(int $id): ExportResource
     {
-
         /** @var Itinerary $itinerary */
         $itinerary = Itinerary::find($id);
 
@@ -411,16 +390,14 @@ class ExportController extends Controller
     /**
      * Return a list of Cai Huts with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function HutsList(): JsonResponse
     {
-
         /** @var Collection<int, CaiHuts> $caiHuts */
         $caiHuts = CaiHut::all('id', 'updated_at');
 
-        $data =  $caiHuts->mapWithKeys(function (CaiHut $caiHut) {
-
+        $data = $caiHuts->mapWithKeys(function (CaiHut $caiHut) {
             return [$caiHut->id => $caiHut->updated_at];
         });
 
@@ -432,11 +409,10 @@ class ExportController extends Controller
      *
      * @param int $id the id of the Cai Hut
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function HutsSingleFeature(int $id): ExportResource
     {
-
         /** @var CaiHut $caiHut */
         $caiHut = CaiHut::find($id);
 
@@ -446,16 +422,14 @@ class ExportController extends Controller
     /**
      * Return a list of EC POIs with their updated_at date.
      *
-     * @return \Illuminate\Http\JsonResponse<array<int, string>>
+     * @return JsonResponse<array<int, string>>
      */
     public function EcPoisList(): JsonResponse
     {
-
         /** @var Collection<int, EcPoi> $ecPois */
         $ecPois = EcPoi::all('id', 'updated_at');
 
-        $data =  $ecPois->mapWithKeys(function (EcPoi $ecPoi) {
-
+        $data = $ecPois->mapWithKeys(function (EcPoi $ecPoi) {
             return [$ecPoi->id => $ecPoi->updated_at];
         });
 
@@ -467,11 +441,10 @@ class ExportController extends Controller
      *
      * @param int $id the id of the EC POI
      *
-     * @return \App\Http\Resources\ExportResource
+     * @return ExportResource
      */
     public function EcPoisSingleFeature(int $id): ExportResource
     {
-
         /** @var EcPoi $ecPoi */
         $ecPoi = EcPoi::find($id);
 
@@ -484,10 +457,10 @@ class ExportController extends Controller
 
     /**
      * Return a single EC POI with its features passing osmfeatures id
-     * 
+     *
      * @param string $osmfeaturesId
-     * 
-     * @return \App\Http\Resources\ExportResource
+     *
+     * @return ExportResource
      */
     public function ecPoisSingleFeatureByOsmfeaturesId(string $osmfeaturesId): ExportResource
     {

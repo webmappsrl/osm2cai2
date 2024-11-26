@@ -1,19 +1,19 @@
 <?php
 
-use App\Models\HikingRoute;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CsvController;
-use App\Http\Controllers\KmlController;
-use App\Http\Controllers\UmapController;
 use App\Http\Controllers\EcPoiController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GeojsonController;
-use App\Http\Controllers\ItineraryController;
-use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\HikingRouteController;
+use App\Http\Controllers\ItineraryController;
+use App\Http\Controllers\KmlController;
 use App\Http\Controllers\MiturAbruzzoController;
+use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\SourceSurveyController;
+use App\Http\Controllers\UmapController;
 use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
+use App\Models\HikingRoute;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------

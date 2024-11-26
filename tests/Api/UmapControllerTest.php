@@ -2,10 +2,10 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
 use App\Models\UgcPoi;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
 
 class UmapControllerTest extends TestCase
 {

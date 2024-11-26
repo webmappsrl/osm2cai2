@@ -2,13 +2,13 @@
 
 namespace App\Http\Resources;
 
-use App\Models\User;
 use App\Models\EcPoi;
-use App\Models\Itinerary;
 use App\Models\HikingRoute;
+use App\Models\Itinerary;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 
 class ExportResource extends JsonResource
 {

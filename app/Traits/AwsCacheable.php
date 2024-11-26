@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Storage;
  */
 trait AwsCacheable
 {
-
     /**
      * Generate the cache key for the current model
      *
@@ -21,6 +20,7 @@ trait AwsCacheable
     protected function getCacheKey(): string
     {
         $modelName = strtolower(class_basename($this));
+
         return "{$modelName}/{$this->id}.json";
     }
 
@@ -37,7 +37,7 @@ trait AwsCacheable
         try {
             Storage::disk($disk)->put($key, json_encode($data));
         } catch (\Exception $e) {
-            Log::error("Error caching data for key {$key}: " . $e->getMessage());
+            Log::error("Error caching data for key {$key}: ".$e->getMessage());
         }
     }
 
@@ -54,7 +54,7 @@ trait AwsCacheable
             return json_decode(Storage::disk($disk)->get($key), true);
         }
 
-        return ['message' => class_basename($this) . ' not found'];
+        return ['message' => class_basename($this).' not found'];
     }
 
     /**
@@ -66,9 +66,9 @@ trait AwsCacheable
     public function getPublicAwsUrl(string $disk): string
     {
         $key = $this->getCacheKey();
-        $awsUrl = config('filesystems.disks.' . $disk)['url'];
+        $awsUrl = config('filesystems.disks.'.$disk)['url'];
 
-        return $awsUrl . '/' . config('filesystems.disks.' . $disk)['root'] . $key;
+        return $awsUrl.'/'.config('filesystems.disks.'.$disk)['root'].$key;
     }
 
     /**

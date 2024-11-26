@@ -2,22 +2,25 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
 use App\Models\Area;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ShapeFileControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $region;
+
     protected $province;
+
     protected $area;
+
     protected $sector;
 
     protected function setUp(): void
@@ -31,13 +34,13 @@ class ShapeFileControllerTest extends TestCase
         // Crea le entità di test come prima
         $this->region = Region::factory()->create([
             'name' => 'Test Region',
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->province = Province::factory()->create([
             'name' => 'Test Province',
             'region_id' => $this->region->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->area = Area::factory()->create([
@@ -46,7 +49,7 @@ class ShapeFileControllerTest extends TestCase
             'full_code' => 'T123',
             'num_expected' => 10,
             'province_id' => $this->province->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->sector = Sector::factory()->create([
@@ -74,7 +77,7 @@ class ShapeFileControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/zip')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename=test-region-' . date('Ymd') . '.zip'
+                'attachment; filename=test-region-'.date('Ymd').'.zip'
             );
 
         Storage::disk('public')->assertExists('shape_files/zip/Test_Region.zip');
@@ -104,7 +107,7 @@ class ShapeFileControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/zip')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename=test-sector-' . date('Ymd') . '.zip'
+                'attachment; filename=test-sector-'.date('Ymd').'.zip'
             );
 
         Storage::disk('public')->assertExists('shape_files/zip/Test_Sector.zip');

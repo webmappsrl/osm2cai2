@@ -2,26 +2,30 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
 use App\Models\Area;
 use App\Models\Club;
+use App\Models\HikingRoute;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
-use App\Models\HikingRoute;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 class GeojsonControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $region;
+
     protected $province;
+
     protected $area;
+
     protected $sector;
+
     protected $club;
 
     protected function setUp(): void
@@ -31,13 +35,13 @@ class GeojsonControllerTest extends TestCase
         // Create a complete hierarchy of test entities
         $this->region = Region::factory()->create([
             'name' => 'Test Region',
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->province = Province::factory()->create([
             'name' => 'Test Province',
             'region_id' => $this->region->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->area = Area::factory()->create([
@@ -46,7 +50,7 @@ class GeojsonControllerTest extends TestCase
             'full_code' => 'T123',
             'num_expected' => 10,
             'province_id' => $this->province->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->sector = Sector::factory()->create([
@@ -62,11 +66,11 @@ class GeojsonControllerTest extends TestCase
             'name' => 'Test Club',
             'cai_code' => 'T123',
             'geometry' => DB::raw("ST_GeomFromText('POINT(0 0)')"),
-            'region_id' => $this->region->id
+            'region_id' => $this->region->id,
         ]);
 
         //if hiking routes table has not osmfeatures_data column, add it
-        if (!Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
+        if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
             Schema::table('hiking_routes', function (Blueprint $table) {
                 $table->json('osmfeatures_data')->nullable();
             });
@@ -88,8 +92,8 @@ class GeojsonControllerTest extends TestCase
                     'name',
                     'geojson_url',
                     'shapefile_url',
-                    'kml'
-                ]
+                    'kml',
+                ],
             ]);
     }
 
@@ -120,9 +124,9 @@ class GeojsonControllerTest extends TestCase
                     'cai_scale' => 'T',
                     'source_ref' => 'TEST123',
                     'from' => 'Start',
-                    'to' => 'End'
-                ]
-            ]
+                    'to' => 'End',
+                ],
+            ],
         ]);
 
         $this->club->hikingRoutes()->attach($hikingRoute->id);
@@ -137,7 +141,7 @@ class GeojsonControllerTest extends TestCase
                         'type',
                         'geometry' => [
                             'type',
-                            'coordinates'
+                            'coordinates',
                         ],
                         'properties' => [
                             'id',
@@ -154,9 +158,9 @@ class GeojsonControllerTest extends TestCase
                             'areas',
                             'sector',
                             'clubs',
-                            'last_updated'
-                        ]
-                    ]
+                            'last_updated',
+                        ],
+                    ],
                 ],
                 'properties' => [
                     'id',
@@ -164,21 +168,20 @@ class GeojsonControllerTest extends TestCase
                     'region',
                     'geojson_url',
                     'shapefile_url',
-                    'kml'
-                ]
+                    'kml',
+                ],
             ]);
     }
 
     public function test_geojson_contains_valid_geometry()
     {
-
         $response = $this->get("/api/geojson/region/{$this->region->id}");
         $content = json_decode($response->getContent(), true);
 
         $this->assertEquals('FeatureCollection', $content['type']);
         $this->assertIsArray($content['features']);
 
-        if (!empty($content['features'])) {
+        if (! empty($content['features'])) {
             foreach ($content['features'] as $feature) {
                 $this->assertArrayHasKey('geometry', $feature);
                 $this->assertNotNull($feature['geometry']);
@@ -202,8 +205,8 @@ class GeojsonControllerTest extends TestCase
                     'region',
                     'geojson_url',
                     'shapefile_url',
-                    'kml'
-                ]
+                    'kml',
+                ],
             ]);
     }
 
@@ -222,8 +225,8 @@ class GeojsonControllerTest extends TestCase
                     'region',
                     'geojson_url',
                     'shapefile_url',
-                    'kml'
-                ]
+                    'kml',
+                ],
             ]);
     }
 }

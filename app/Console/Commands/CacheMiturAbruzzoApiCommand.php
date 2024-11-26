@@ -22,6 +22,7 @@ class CacheMiturAbruzzoApiCommand extends Command
             $modelClass = App::make("App\\Models\\{$this->argument('model')}");
         } catch (\Exception $e) {
             $this->error($e->getMessage());
+
             return;
         }
         $className = class_basename($modelClass);
@@ -53,8 +54,8 @@ class CacheMiturAbruzzoApiCommand extends Command
             try {
                 CacheMiturAbruzzoDataJob::dispatch($className, $model->id);
             } catch (\Exception $e) {
-                Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
-                $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
+                Log::error("Failed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
+                $this->error("\nFailed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
             }
 
             $bar->advance();

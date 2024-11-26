@@ -2,27 +2,27 @@
 
 namespace App\Jobs;
 
+use App\Enums\WikiImageType;
+use App\Models\CaiHut;
 use App\Models\Club;
 use App\Models\EcPoi;
-use App\Models\CaiHut;
-use App\Models\Region;
-use App\Models\Province;
-use Illuminate\Log\Logger;
 use App\Models\HikingRoute;
-use App\Enums\WikiImageType;
-use App\Models\Municipality;
-use Illuminate\Bus\Queueable;
 use App\Models\MountainGroups;
+use App\Models\Municipality;
+use App\Models\Province;
+use App\Models\Region;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Log\Logger;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
 
 class CacheMiturAbruzzoDataJob implements ShouldQueue
 {
@@ -103,8 +103,8 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
             case Region::class:
                 return $this->buildRegionGeojson($model);
             default:
-                $this->logger()->error('Unsupported model type: ' . get_class($model));
-                throw new \Exception('Unsupported model type: ' . get_class($model));
+                $this->logger()->error('Unsupported model type: '.get_class($model));
+                throw new \Exception('Unsupported model type: '.get_class($model));
         }
     }
 
@@ -331,7 +331,7 @@ SQL;
             $type = $osmfeaturesData['class'];
         }
         if (isset($osmfeaturesData['subclass'])) {
-            $type .= '/' . $osmfeaturesData['subclass'];
+            $type .= '/'.$osmfeaturesData['subclass'];
         }
 
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);

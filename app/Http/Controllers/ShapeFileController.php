@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ShapeFileController extends Controller
 {
@@ -46,7 +46,7 @@ class ShapeFileController extends Controller
 
         try {
             $shapefile = $model->getShapefile();
-            $fileName = Str::slug(($model->name ?? $model->id) . '_' . date('Ymd')) . '.zip';
+            $fileName = Str::slug(($model->name ?? $model->id).'_'.date('Ymd')).'.zip';
 
             return Storage::disk('public')->download($shapefile, $fileName);
         } catch (\Exception $e) {

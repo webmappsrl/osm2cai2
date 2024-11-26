@@ -2,10 +2,22 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
-use Illuminate\Support\Facades\Schema;
+use App\Models\Area;
+use App\Models\CaiHut;
+use App\Models\Club;
+use App\Models\EcPoi;
+use App\Models\HikingRoute;
+use App\Models\Itinerary;
+use App\Models\MountainGroups;
+use App\Models\NaturalSpring;
+use App\Models\Sector;
+use App\Models\UgcMedia;
+use App\Models\UgcPoi;
+use App\Models\UgcTrack;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\{User, UgcPoi, UgcMedia, UgcTrack, HikingRoute, Area, Sector, Club, MountainGroups, NaturalSpring, Itinerary, CaiHut, EcPoi};
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 class ExportControllerTest extends TestCase
 {
@@ -27,39 +39,39 @@ class ExportControllerTest extends TestCase
                 ['email' => 'user2@example.com'],
                 ['email' => 'user3@example.com']
             )->create();
-        } else if ($modelClass === HikingRoute::class) {
+        } elseif ($modelClass === HikingRoute::class) {
             $modelClass::factory()->count(3)->create([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10],[20,20],[30,30]]}'
+                'geometry' => '{"type":"LineString","coordinates":[[10,10],[20,20],[30,30]]}',
             ]);
-        } else if ($modelClass === UgcTrack::class) {
+        } elseif ($modelClass === UgcTrack::class) {
             $modelClass::factory()->create([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}'
+                'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}',
             ]);
-        } else if ($modelClass === Sector::class) {
+        } elseif ($modelClass === Sector::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Sector 1', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Sector 2', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Sector 3', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
             )->create();
-        } else if ($modelClass === Club::class) {
+        } elseif ($modelClass === Club::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Club 1', 'cai_code' => '9200001'],
                 ['name' => 'Club 2', 'cai_code' => '9200002'],
                 ['name' => 'Club 3', 'cai_code' => '9200003']
             )->create();
-        } else if ($modelClass === MountainGroups::class) {
+        } elseif ($modelClass === MountainGroups::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Mountain Group 1', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Mountain Group 2', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Mountain Group 3', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
             )->create();
-        } else if ($modelClass === CaiHut::class) {
+        } elseif ($modelClass === CaiHut::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Cai Hut 1', 'geometry' => '{"type":"Point","coordinates":[10,10]}'],
                 ['name' => 'Cai Hut 2', 'geometry' => '{"type":"Point","coordinates":[20,20]}'],
                 ['name' => 'Cai Hut 3', 'geometry' => '{"type":"Point","coordinates":[30,30]}']
             )->create();
-        } else if ($modelClass === Area::class) {
+        } elseif ($modelClass === Area::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Area 1', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
                 ['name' => 'Area 2', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
@@ -85,29 +97,29 @@ class ExportControllerTest extends TestCase
     {
         if ($modelClass === User::class) {
             $model = $modelClass::factory()->create(['email' => 'user@example.com']);
-        } else if ($modelClass === HikingRoute::class) {
+        } elseif ($modelClass === HikingRoute::class) {
             $model = $modelClass::factory()->create([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10],[20,20],[30,30]]}'
+                'geometry' => '{"type":"LineString","coordinates":[[10,10],[20,20],[30,30]]}',
             ]);
-        } else if ($modelClass === UgcTrack::class) {
+        } elseif ($modelClass === UgcTrack::class) {
             $model = $modelClass::factory()->create([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}'
+                'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}',
             ]);
-        } else if ($modelClass === Sector::class) {
+        } elseif ($modelClass === Sector::class) {
             $model = $modelClass::factory()->create([
                 'name' => 'Test Sector',
                 'code' => 'T',
                 'full_code' => 'T123',
                 'num_expected' => 1234,
-                'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'
+                'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}',
             ]);
-        } else if ($modelClass === Club::class) {
+        } elseif ($modelClass === Club::class) {
             $model = $modelClass::factory()->create(['name' => 'Test Club', 'cai_code' => '9200001']);
-        } else if ($modelClass === MountainGroups::class) {
+        } elseif ($modelClass === MountainGroups::class) {
             $model = $modelClass::factory()->create(['name' => 'Test Mountain Group', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}']);
-        } else if ($modelClass === CaiHut::class) {
+        } elseif ($modelClass === CaiHut::class) {
             $model = $modelClass::factory()->create(['name' => 'Test Cai Hut', 'geometry' => '{"type":"Point","coordinates":[10,10]}']);
-        } else if ($modelClass === Area::class) {
+        } elseif ($modelClass === Area::class) {
             $model = $modelClass::factory()->create(
                 ['name' => 'Test Area', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
             );
@@ -115,7 +127,7 @@ class ExportControllerTest extends TestCase
             $model = $modelClass::factory()->create();
         }
 
-        $response = $this->getJson($endpoint . '/' . $model->id);
+        $response = $this->getJson($endpoint.'/'.$model->id);
         $response->assertStatus(200);
 
         $data = $response->json();

@@ -4,18 +4,19 @@ namespace App\Jobs;
 
 use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CheckNearbyHutsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected HikingRoute $hikingRoute;
+
     protected $buffer;
 
     /**
@@ -33,13 +34,15 @@ class CheckNearbyHutsJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            if (!$this->hikingRoute->geometry) {
+            if (! $this->hikingRoute->geometry) {
                 Log::warning("Hiking route {$this->hikingRoute->id} has no geometry");
+
                 return;
             }
 
             if ($this->buffer < 0) {
-                Log::warning("Buffer distance must be positive");
+                Log::warning('Buffer distance must be positive');
+
                 return;
             }
 

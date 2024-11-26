@@ -13,7 +13,6 @@ class CheckNearbyHutsJobTest extends TestCase
 {
     use DatabaseTransactions;
 
-
     public function testHandlesHikingRouteWithGeometry(): void
     {
         $hikingRoute = HikingRoute::factory()->create([
@@ -23,7 +22,7 @@ class CheckNearbyHutsJobTest extends TestCase
 
         $buffer = config('osm2cai.hiking_route_buffer');
 
-        // Mock query 
+        // Mock query
         DB::shouldReceive('select')
             ->once()
             ->withArgs(function ($query, $bindings) use ($hikingRoute, $buffer) {
@@ -51,13 +50,12 @@ class CheckNearbyHutsJobTest extends TestCase
 
         $buffer = config('osm2cai.hiking_route_buffer');
 
-        (new \App\Jobs\CheckNearbyHutsJob($hikingRoute, $buffer))->handle();
+        (new CheckNearbyHutsJob($hikingRoute, $buffer))->handle();
 
         $hikingRoute->refresh();
 
         $this->assertEquals([$caiHut->id], json_decode($hikingRoute->nearby_cai_huts));
     }
-
 
     public function testDoesNotUpdateIfNoChange(): void
     {

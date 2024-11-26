@@ -26,6 +26,7 @@ class CalculateRegionHikingRoutesIntersection extends Command
             $this->intersectionService->calculateIntersections();
         } catch (\Exception $e) {
             $this->error($e->getMessage());
+
             return Command::FAILURE;
         }
         $this->info('Calculating intersections completed successfully.');

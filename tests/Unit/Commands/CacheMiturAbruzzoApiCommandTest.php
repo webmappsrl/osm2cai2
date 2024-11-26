@@ -26,15 +26,15 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
         // Create some routes with different statuses
         HikingRoute::factory()->create([
             'osm2cai_status' => 4,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)")
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
         ]);
         HikingRoute::factory()->create([
             'osm2cai_status' => 4,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((3 3, 4 4))', 4326)")
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((3 3, 4 4))', 4326)"),
         ]);
         HikingRoute::factory()->create([
             'osm2cai_status' => 3,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((5 5, 6 6))', 4326)")
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((5 5, 6 6))', 4326)"),
         ]); // should not be processed
 
         $this->artisan('osm2cai2:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
@@ -49,14 +49,14 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     {
         $route = HikingRoute::factory()->create([
             'osm2cai_status' => 4,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)")
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
         ]);
 
         $this->artisan('osm2cai2:cache-mitur-abruzzo-api', [
             'model' => 'HikingRoute',
-            'id' => $route->id
+            'id' => $route->id,
         ])
-            ->expectsOutput("Processing 1 HikingRoute")
+            ->expectsOutput('Processing 1 HikingRoute')
             ->assertSuccessful();
 
         Queue::assertPushed(CacheMiturAbruzzoDataJob::class, 1);

@@ -47,7 +47,7 @@ class CsvController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="osm2cai_' . date('Ymd') . '_' . $model->getTable() . '_' . ($model->name ?? $model->id) . '.csv"',
+            'Content-Disposition' => 'attachment; filename="osm2cai_'.date('Ymd').'_'.$model->getTable().'_'.($model->name ?? $model->id).'.csv"',
         ];
 
         return response($model->getCsv(), 200, $headers);

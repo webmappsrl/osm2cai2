@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use App\Models\Sector;
-use App\Models\Province;
 use App\Models\HikingRoute;
-use App\Traits\SpatialDataTrait;
+use App\Models\Province;
+use App\Models\Sector;
+use App\Models\User;
 use App\Traits\CsvableModelTrait;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Area extends Model
 {

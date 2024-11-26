@@ -4,11 +4,11 @@ namespace App\Jobs;
 
 use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CheckNearbyNaturalSpringsJob implements ShouldQueue
@@ -16,6 +16,7 @@ class CheckNearbyNaturalSpringsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $hikingRouteId;
+
     protected $buffer;
 
     public function __construct($hikingRouteId, $buffer)
@@ -29,12 +30,12 @@ class CheckNearbyNaturalSpringsJob implements ShouldQueue
         try {
             $hikingRoute = HikingRoute::find($this->hikingRouteId);
 
-            if (!$hikingRoute) {
+            if (! $hikingRoute) {
                 Log::error('Hiking route not found', ['route_id' => $this->hikingRouteId]);
                 throw new \Exception('Hiking route not found');
             }
 
-            if (!$hikingRoute->geometry) {
+            if (! $hikingRoute->geometry) {
                 Log::error("Hiking route {$hikingRoute->id} has no geometry");
                 throw new \Exception("Hiking route {$hikingRoute->id} has no geometry");
             }
@@ -53,7 +54,7 @@ class CheckNearbyNaturalSpringsJob implements ShouldQueue
                 'buffer' => $this->buffer,
             ]);
 
-            $nearbySpringsIds = array_map(fn($spring) => $spring->id, $nearbySprings);
+            $nearbySpringsIds = array_map(fn ($spring) => $spring->id, $nearbySprings);
             $currentNearbySpringsIds = is_string($hikingRoute->nearby_natural_springs)
                 ? json_decode($hikingRoute->nearby_natural_springs, true)
                 : [];
@@ -64,7 +65,7 @@ class CheckNearbyNaturalSpringsJob implements ShouldQueue
                 $hikingRoute->update(['nearby_natural_springs' => json_encode($nearbySpringsIds)]);
             }
         } catch (\Throwable $e) {
-            Log::error('Error in CheckNearbyNaturalSpringsJob: ' . $e->getMessage());
+            Log::error('Error in CheckNearbyNaturalSpringsJob: '.$e->getMessage());
         }
     }
 }

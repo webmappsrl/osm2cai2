@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\CheckNearbyHutsJob;
 use App\Models\HikingRoute;
 use Illuminate\Console\Command;
-use App\Jobs\CheckNearbyHutsJob;
 use Illuminate\Support\Facades\Log;
 
 class CheckNearbyCaiHuts extends Command

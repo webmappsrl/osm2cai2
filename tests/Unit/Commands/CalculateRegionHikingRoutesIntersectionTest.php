@@ -4,8 +4,8 @@ namespace Tests\Unit\Commands;
 
 use App\Services\IntersectionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Mockery;
+use Tests\TestCase;
 
 class CalculateRegionHikingRoutesIntersectionTest extends TestCase
 {

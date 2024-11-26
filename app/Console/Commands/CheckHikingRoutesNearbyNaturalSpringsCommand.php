@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Jobs\CheckNearbyNaturalSpringsJob;
+use Illuminate\Console\Command;
 
 class CheckHikingRoutesNearbyNaturalSpringsCommand extends Command
 {

@@ -2,24 +2,27 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
 use App\Models\Area;
+use App\Models\HikingRoute;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
-use App\Models\HikingRoute;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 class CsvControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $region;
+
     protected $province;
+
     protected $area;
+
     protected $sector;
 
     protected function setUp(): void
@@ -28,13 +31,13 @@ class CsvControllerTest extends TestCase
 
         $this->region = Region::factory()->create([
             'name' => 'Test Region',
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->province = Province::factory()->create([
             'name' => 'Test Province',
             'region_id' => $this->region->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->area = Area::factory()->create([
@@ -43,7 +46,7 @@ class CsvControllerTest extends TestCase
             'full_code' => 'T123',
             'num_expected' => 10,
             'province_id' => $this->province->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->sector = Sector::factory()->create([
@@ -75,9 +78,8 @@ class CsvControllerTest extends TestCase
 
     protected function createTestHikingRoute($status, $osmId)
     {
-
         //if osmfeatures_data column is not present, create the column
-        if (!Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
+        if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
             Schema::table('hiking_routes', function (Blueprint $table) {
                 $table->json('osmfeatures_data')->nullable();
             });
@@ -93,7 +95,7 @@ class CsvControllerTest extends TestCase
                     'from' => 'Start',
                     'to' => 'End',
                     'cai_scale' => 'T',
-                ]
+                ],
             ],
             'geometry' => DB::raw("ST_GeomFromText('LINESTRING(0 0, 1 1)')"),
         ]);
@@ -107,7 +109,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_regions_Test Region.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_regions_Test Region.csv"'
             );
     }
 
@@ -135,7 +137,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_provinces_Test Province.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_provinces_Test Province.csv"'
             );
     }
 
@@ -147,7 +149,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_areas_Test Area.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_areas_Test Area.csv"'
             );
     }
 
@@ -159,7 +161,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_sectors_Test Sector.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_sectors_Test Sector.csv"'
             );
     }
 }

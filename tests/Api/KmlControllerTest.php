@@ -2,21 +2,24 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
 use App\Models\Area;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
 
 class KmlControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $region;
+
     protected $province;
+
     protected $area;
+
     protected $sector;
 
     protected function setUp(): void
@@ -26,13 +29,13 @@ class KmlControllerTest extends TestCase
         // Create test models with geometry
         $this->region = Region::factory()->create([
             'name' => 'Test Region',
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->province = Province::factory()->create([
             'name' => 'Test Province',
             'region_id' => $this->region->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->area = Area::factory()->create([
@@ -41,7 +44,7 @@ class KmlControllerTest extends TestCase
             'full_code' => 'T123',
             'num_expected' => 10,
             'province_id' => $this->province->id,
-            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')")
+            'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->sector = Sector::factory()->create([
@@ -62,7 +65,7 @@ class KmlControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/vnd.google-earth.kml+xml')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="regions_' . date('Ymd') . '.kml"'
+                'attachment; filename="regions_'.date('Ymd').'.kml"'
             );
 
         $this->assertStringContainsString('<?xml version="1.0" encoding="UTF-8"?>', $response->getContent());
@@ -93,7 +96,7 @@ class KmlControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/vnd.google-earth.kml+xml')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="sectors_' . date('Ymd') . '.kml"'
+                'attachment; filename="sectors_'.date('Ymd').'.kml"'
             );
 
         $this->assertStringContainsString('<?xml version="1.0" encoding="UTF-8"?>', $response->getContent());

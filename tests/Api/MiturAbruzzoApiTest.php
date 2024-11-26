@@ -2,17 +2,18 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
-use Illuminate\Support\Facades\DB;
 use App\Jobs\CacheMiturAbruzzoDataJob;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class MiturAbruzzoApiTest extends TestCase
 {
     use RefreshDatabase;
+
     /**
      * Legacy api samples data to test.
      *
@@ -50,10 +51,10 @@ class MiturAbruzzoApiTest extends TestCase
     public function testGeojsonStructureIsTheSameAsTheLegacyApi()
     {
         foreach ($this->legacyEndpoints as $model => $url) {
-            $geoJsonPath = $this->stubDirectory . '/' . $model . '.geojson';
+            $geoJsonPath = $this->stubDirectory.'/'.$model.'.geojson';
 
             // Check if the file exists, otherwise download it
-            if (!Storage::exists($geoJsonPath)) {
+            if (! Storage::exists($geoJsonPath)) {
                 $response = Http::get($url);
 
                 $this->assertTrue($response->successful(), "Errore nella risposta dell'API per {$model}");
@@ -88,7 +89,7 @@ class MiturAbruzzoApiTest extends TestCase
             $job = new CacheMiturAbruzzoDataJob(class_basename($modelInstance), $modelInstance->id, true);
             $job->handle();
 
-            $newApiResponse = json_decode(Storage::get($this->stubDirectory . '/aws/' . class_basename($modelInstance) . '_' . $modelInstance->id . '.json'), true);
+            $newApiResponse = json_decode(Storage::get($this->stubDirectory.'/aws/'.class_basename($modelInstance).'_'.$modelInstance->id.'.json'), true);
 
             $this->assertIsArray($newApiResponse);
             $this->assertNotEmpty($newApiResponse);
@@ -97,7 +98,7 @@ class MiturAbruzzoApiTest extends TestCase
             $this->assertGeoJsonStructureMatchesApi($geoJsonData, $newApiResponse);
 
             //after the test, delete the file in the stub directory
-            Storage::delete($this->stubDirectory . '/aws/' . class_basename($modelInstance) . '_' . $modelInstance->id . '.json');
+            Storage::delete($this->stubDirectory.'/aws/'.class_basename($modelInstance).'_'.$modelInstance->id.'.json');
         }
     }
 

@@ -18,6 +18,7 @@ class TagsMappingTraitTest extends TestCase
             use TagsMappingTrait;
 
             public $tags;
+
             public $osmfeatures_data;
 
             public function __construct()
@@ -26,12 +27,12 @@ class TagsMappingTraitTest extends TestCase
                 config(['osm2cai.osmTagsMapping' => [
                     'highway' => [
                         'path' => 'Sentiero',
-                        'track' => 'Mulattiera'
+                        'track' => 'Mulattiera',
                     ],
                     'surface' => [
                         'gravel' => 'Ghiaia',
-                        'paved' => 'Pavimentato'
-                    ]
+                        'paved' => 'Pavimentato',
+                    ],
                 ]]);
             }
         };
@@ -41,7 +42,7 @@ class TagsMappingTraitTest extends TestCase
     {
         $this->testClass->tags = json_encode([
             'highway' => 'path',
-            'surface' => 'gravel'
+            'surface' => 'gravel',
         ]);
 
         $result = $this->testClass->getTagsMapping();
@@ -56,9 +57,9 @@ class TagsMappingTraitTest extends TestCase
             'properties' => [
                 'osm_tags' => [
                     'highway' => 'track',
-                    'surface' => 'paved'
-                ]
-            ]
+                    'surface' => 'paved',
+                ],
+            ],
         ];
 
         $result = $this->testClass->getTagsMapping();
@@ -73,9 +74,9 @@ class TagsMappingTraitTest extends TestCase
             'properties' => [
                 'osm_tags' => [
                     'highway' => 'track',
-                    'surface' => 'paved'
-                ]
-            ]
+                    'surface' => 'paved',
+                ],
+            ],
         ]);
 
         $result = $this->testClass->getTagsMapping();
@@ -87,7 +88,7 @@ class TagsMappingTraitTest extends TestCase
     {
         $this->testClass->tags = json_encode([
             'highway' => 'nonexistent',
-            'surface' => 'unknown'
+            'surface' => 'unknown',
         ]);
 
         $result = $this->testClass->getTagsMapping();
@@ -100,7 +101,7 @@ class TagsMappingTraitTest extends TestCase
         $this->testClass->tags = json_encode([
             'highway' => 'path',
             'surface' => 'unknown',
-            'nonexistent_key' => 'value'
+            'nonexistent_key' => 'value',
         ]);
 
         $result = $this->testClass->getTagsMapping();
@@ -132,7 +133,7 @@ class TagsMappingTraitTest extends TestCase
     {
         $this->testClass->tags = json_encode([
             'highway' => 'path',
-            'surface' => 'gravel'
+            'surface' => 'gravel',
         ]);
         $this->testClass->osmfeatures_data = null;
 
@@ -146,8 +147,8 @@ class TagsMappingTraitTest extends TestCase
         $this->testClass->tags = null;
         $this->testClass->osmfeatures_data = [
             'properties' => [
-                'osm_tags' => []
-            ]
+                'osm_tags' => [],
+            ],
         ];
 
         $result = $this->testClass->getTagsMapping();
@@ -169,7 +170,7 @@ class TagsMappingTraitTest extends TestCase
     {
         $this->testClass->tags = null;
         $this->testClass->osmfeatures_data = [
-            'invalid' => 'structure'
+            'invalid' => 'structure',
         ];
 
         $result = $this->testClass->getTagsMapping();
