@@ -58,4 +58,9 @@ class Club extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function managerUsers()
+    {
+        return $this->hasMany(User::class, 'managed_club_id');
+    }
 }

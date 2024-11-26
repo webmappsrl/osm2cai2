@@ -101,4 +101,14 @@ class Province extends Model implements OsmfeaturesSyncableInterface
     {
         return $this->belongsToMany(HikingRoute::class);
     }
+
+    public function sectorsIds(): array
+    {
+        $result = [];
+        foreach ($this->areas as $area) {
+            $result = array_unique(array_values(array_merge($result, $area->sectorsIds())));
+        }
+
+        return $result;
+    }
 }

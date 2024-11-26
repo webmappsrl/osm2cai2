@@ -222,4 +222,14 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
         return json_encode($geojson);
     }
+
+    public function sectorsIds(): array
+    {
+        $result = [];
+        foreach ($this->provinces as $province) {
+            $result = array_unique(array_values(array_merge($result, $province->sectorsIds())));
+        }
+
+        return $result;
+    }
 }
