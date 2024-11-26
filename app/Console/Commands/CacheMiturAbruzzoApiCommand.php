@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -14,11 +14,16 @@ class CacheMiturAbruzzoApiCommand extends Command
         {id? : The model id}
         {--queue : Process through queue}';
 
-    protected $description = 'Store MITUR Abruzzo API data using AWS S3';
+    protected $description = 'Store MITUR Abruzzo API data using AWS S3. Only HikingRoutes with osm2cai_status 4 are cached.';
 
     public function handle()
     {
-        $modelClass = App::make("App\\Models\\{$this->argument('model')}");
+        try {
+            $modelClass = App::make("App\\Models\\{$this->argument('model')}");
+        } catch (\Exception $e) {
+            $this->error($e->getMessage());
+            return;
+        }
         $className = class_basename($modelClass);
 
         $query = $className === 'HikingRoute'
@@ -46,10 +51,10 @@ class CacheMiturAbruzzoApiCommand extends Command
 
         foreach ($query->cursor() as $model) {
             try {
-                CacheMiturAbruzzoData::dispatch($className, $model->id);
+                CacheMiturAbruzzoDataJob::dispatch($className, $model->id);
             } catch (\Exception $e) {
-                Log::error("Failed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
-                $this->error("\nFailed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
+                Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
+                $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
             }
 
             $bar->advance();

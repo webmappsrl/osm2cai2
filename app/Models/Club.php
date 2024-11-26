@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoData;
+use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Models\HikingRoute;
 use App\Models\Region;
 use App\Models\User;
@@ -38,7 +38,9 @@ class Club extends Model
     protected static function booted()
     {
         static::saved(function ($club) {
-            CacheMiturAbruzzoData::dispatch('Club', $club->id);
+            if (app()->environment('production')) {
+                CacheMiturAbruzzoDataJob::dispatch('Club', $club->id);
+            }
         });
     }
 
@@ -55,15 +57,5 @@ class Club extends Model
     public function users()
     {
         return $this->hasMany(User::class);
-    }
-
-    /**
-     * Get the storage disk name to use for caching
-     *
-     * @return string The disk name
-     */
-    protected function getStorageDisk(): string
-    {
-        return 'wmfemitur-club';
     }
 }

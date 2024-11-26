@@ -6,6 +6,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -28,5 +29,7 @@ class DatabaseSeeder extends Seeder
             $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Referente Nazionale']);
             $user->roles()->attach(Role::where('name', 'National Referent')->first());
         }
+
+        Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
     }
 }

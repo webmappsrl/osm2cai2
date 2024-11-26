@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoData;
-use App\Jobs\RecalculateIntersections;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\RecalculateIntersectionsJob;
 use App\Models\EcPoi;
 use App\Models\HikingRoute;
 use App\Models\MountainGroups;
@@ -36,14 +36,14 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
-        static::updated(function ($region) {
-            if ($region->isDirty('geometry')) {
-                RecalculateIntersections::dispatch($region, null);
-            }
-        });
 
         static::saved(function ($region) {
-            CacheMiturAbruzzoData::dispatch('Region', $region->id);
+            if ($region->isDirty('geometry')) {
+                RecalculateIntersectionsJob::dispatch($region, null);
+            }
+            if (app()->environment('production')) {
+                CacheMiturAbruzzoDataJob::dispatch('Region', $region->id);
+            }
         });
     }
 
@@ -83,16 +83,6 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     }
 
     /**
-     * Get the storage disk name to use for caching
-     *
-     * @return string The disk name
-     */
-    protected function getStorageDisk(): string
-    {
-        return 'wmfemitur-region';
-    }
-
-    /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
     public static function getOsmfeaturesEndpoint(): string
@@ -126,7 +116,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Region '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Region ' . $osmfeaturesId);
 
             return;
         }
@@ -138,7 +128,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Region '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Region ' . $osmfeaturesId);
         }
 
         // Execute the update only if there are data to update
@@ -191,7 +181,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 

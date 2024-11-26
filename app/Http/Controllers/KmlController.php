@@ -33,23 +33,24 @@ class KmlController extends Controller
 
         // Validate model type
         if (! isset($this->allowedModels[$modelType])) {
-            abort(404, 'Invalid model type');
+            return response()->json(['error' => 'Invalid model type'], 404);
         }
 
         $modelClass = $this->allowedModels[$modelType];
         $model = $modelClass::find($id);
 
         if (! $model) {
-            abort(404, 'Model not found');
+            return response()->json(['error' => 'Model not found'], 404);
         }
 
-        $kmlData = $model->getKml(); // Assume model has this method
+        try {
+            $kmlData = $model->getKml();
 
-        $headers = [
-            'Content-Type' => 'application/vnd.google-earth.kml+xml',
-            'Content-Disposition' => 'attachment; filename="'.$model->getTable().'_'.date('Ymd').'.kml"',
-        ];
-
-        return response($kmlData, 200, $headers);
+            return response($kmlData)
+                ->header('Content-Type', 'application/vnd.google-earth.kml+xml')
+                ->header('Content-Disposition', 'attachment; filename="' . $model->getTable() . '_' . date('Ymd') . '.kml"');
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

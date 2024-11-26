@@ -2,8 +2,11 @@
 
 namespace App\Traits;
 
-use App\Services\GeometryService;
+use App\Models\Region;
+use App\Models\Sector;
+use App\Models\Province;
 use App\Traits\GeoBufferTrait;
+use App\Services\GeometryService;
 use App\Traits\GeoIntersectTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -40,7 +43,7 @@ trait SpatialDataTrait
      */
     public function getGeometryGeojson(): ?array
     {
-        $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM '.$this->getTable().' WHERE id = '.$this->id)[0]->geom;
+        $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM ' . $this->getTable() . ' WHERE id = ' . $this->id)[0]->geom;
 
         return json_decode($geom, true);
     }
@@ -141,19 +144,74 @@ trait SpatialDataTrait
      */
     public function getShapefile(): string
     {
-        $sectorIds = $this->getSectorIds();
+        $name = str_replace(" ", "_", $this->name);
+        $ids = $this->getSectorIds();
 
-        // Se non ci sono settori, ritorna un messaggio o una risposta appropriata
-        if (empty($sectorIds)) {
-            return 'No sectors found.';
+        if (empty($ids)) {
+            throw new \RuntimeException('No sectors found for this model');
         }
 
-        // Procedi con la generazione dello shapefile solo se ci sono id di settori
-        return $this->generateShapefile(
-            'shape_files',
-            'SELECT ST_AsText(ST_Transform(geometry, 4326)) as geometry, id, name 
-        FROM sectors WHERE id IN ('.implode(',', $sectorIds).')'
+        // Create directories
+        $baseDir = Storage::disk('public')->path('shape_files');
+        $zipDir = $baseDir . '/zip';
+
+        if (!file_exists($baseDir)) {
+            mkdir($baseDir, 0755, true);
+        }
+        if (!file_exists($zipDir)) {
+            mkdir($zipDir, 0755, true);
+        }
+
+        // Check if ogr2ogr is available
+        exec('which ogr2ogr', $output, $returnVar);
+        if ($returnVar !== 0) {
+            throw new \RuntimeException('ogr2ogr command not found. Please install GDAL.');
+        }
+
+        // Absolute paths for the files
+        $shpFile = $baseDir . '/' . $name . '.shp';
+        $zipFile = $zipDir . '/' . $name . '.zip';
+
+        // Remove existing files
+        if (file_exists($zipFile)) {
+            unlink($zipFile);
+        }
+
+        // Build and execute the ogr2ogr command
+        $command = sprintf(
+            'ogr2ogr -f "ESRI Shapefile" %s PG:"dbname=\'%s\' host=\'%s\' port=\'%s\' user=\'%s\' password=\'%s\'" -sql "SELECT geometry, id, name FROM sectors WHERE id IN (%s);"',
+            escapeshellarg($shpFile),
+            config('database.connections.pgsql.database'),
+            config('database.connections.pgsql.host'),
+            config('database.connections.pgsql.port'),
+            config('database.connections.pgsql.username'),
+            config('database.connections.pgsql.password'),
+            implode(',', $ids)
         );
+
+        exec($command, $output, $returnVar);
+        if ($returnVar !== 0) {
+            throw new \RuntimeException('Error creating shapefile: ' . implode("\n", $output));
+        }
+
+        // Create the zip file
+        $zip = new \ZipArchive();
+        if ($zip->open($zipFile, \ZipArchive::CREATE) !== true) {
+            throw new \RuntimeException('Cannot create zip file');
+        }
+
+        // Add all related files to the shapefile
+        foreach (glob($baseDir . '/' . $name . '.*') as $file) {
+            $zip->addFile($file, basename($file));
+        }
+        $zip->close();
+
+        // Clean up temporary files
+        foreach (glob($baseDir . '/' . $name . '.*') as $file) {
+            unlink($file);
+        }
+
+        return 'shape_files/zip/' . $name . '.zip';
     }
 
     /**
@@ -184,10 +242,10 @@ trait SpatialDataTrait
                 ->where('id', $sectorId)
                 ->select(DB::raw('ST_AsKML(geometry) as kml'))
                 ->value('kml');
-            $kml .= '<Placemark>'.$geometry.'</Placemark>';
+            $kml .= '<Placemark>' . $geometry . '</Placemark>';
         }
 
-        return $kml.'</Document></kml>';
+        return $kml . '</Document></kml>';
     }
 
     // ------------------------------
@@ -226,7 +284,7 @@ trait SpatialDataTrait
         $table = $model->getTable();
         $id = $model->id;
 
-        $areaQuery = 'SELECT ST_Area(geometry) as area FROM '.$table.' WHERE id = :id';
+        $areaQuery = 'SELECT ST_Area(geometry) as area FROM ' . $table . ' WHERE id = :id';
         $area = DB::select($areaQuery, ['id' => $id])[0]->area / 1000000;
 
         return (int) round($area);
@@ -284,9 +342,29 @@ trait SpatialDataTrait
         return $features;
     }
 
-    private function getSectorIds(): array
+    public function getSectorIds(): array
     {
-        return $this->sectors ? $this->sectors->pluck('id')->toArray() : [];
+        if ($this instanceof Sector) {
+            return [$this->id];
+        }
+
+        if ($this instanceof Region) {
+            return $this->provinces
+                ->flatMap(fn($province) => $province->getSectorIds()) //flatten the array of arrays
+                ->unique() //remove duplicates
+                ->values() //reset the keys
+                ->toArray();
+        }
+
+        if ($this instanceof Province) {
+            return $this->areas
+                ->flatMap(fn($area) => $area->getSectorIds()) //flatten the array of arrays
+                ->unique() //remove duplicates
+                ->values() //reset the keys
+                ->toArray();
+        }
+
+        return $this->sectors?->pluck('id')->toArray() ?? [];
     }
 
     private function generateShapefile(string $directory, string $sql): string
@@ -298,7 +376,7 @@ trait SpatialDataTrait
         chdir($path);
 
         $this->clearPreviousShapefile($name, $directory);
-        exec("ogr2ogr -f 'ESRI Shapefile' {$name}.shp PG:'".$this->buildPgConnectionString()."' -sql \"{$sql}\"");
+        exec("ogr2ogr -f 'ESRI Shapefile' {$name}.shp PG:'" . $this->buildPgConnectionString() . "' -sql \"{$sql}\"");
         exec("zip {$name}.zip {$name}.* && mv {$name}.zip zip/ && rm {$name}.*");
 
         return "{$directory}/zip/{$name}.zip";
@@ -306,11 +384,11 @@ trait SpatialDataTrait
 
     private function buildPgConnectionString(): string
     {
-        return "dbname='".config('database.connections.pgsql.database').
-            "' host='".config('database.connections.pgsql.host').
-            "' port='".config('database.connections.pgsql.port').
-            "' user='".config('database.connections.pgsql.username').
-            "' password='".config('database.connections.pgsql.password')."'";
+        return "dbname='" . config('database.connections.pgsql.database') .
+            "' host='" . config('database.connections.pgsql.host') .
+            "' port='" . config('database.connections.pgsql.port') .
+            "' user='" . config('database.connections.pgsql.username') .
+            "' password='" . config('database.connections.pgsql.password') . "'";
     }
 
     private function clearPreviousShapefile(string $name, string $directory): void

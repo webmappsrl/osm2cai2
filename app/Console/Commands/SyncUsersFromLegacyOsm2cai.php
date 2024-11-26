@@ -20,23 +20,24 @@ class SyncUsersFromLegacyOsm2cai extends Command
     {
         $legacyUsers = DB::connection('legacyosm2cai')->table('users')->get();
 
+        //populate the roles and permissions table
+        Artisan::call('db:seed');
+
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: '.$legacyUser->email);
+            $this->info('Importing user: ' . $legacyUser->email);
 
             $user = User::updateOrCreate(
                 ['email' => $legacyUser->email],
                 [
+                    'id' => $legacyUser->id,
                     'name' => $legacyUser->name,
                     'email_verified_at' => $legacyUser->email_verified_at,
                     'password' => $legacyUser->password,
                     'remember_token' => $legacyUser->remember_token,
                     'created_at' => $legacyUser->created_at,
-                    'updated_at' => now(),
+                    'updated_at' => now()
                 ]
             );
-
-            //populate the roles and permissions table
-            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
 
             $this->assignRolesAndPermissions($user, $legacyUser);
             $this->syncTerritorialRelations($user, $legacyUser);

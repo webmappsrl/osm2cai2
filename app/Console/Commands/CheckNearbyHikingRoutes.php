@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\CaiHut;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+use App\Jobs\CheckNearbyHikingRoutesJob;
 
 class CheckNearbyHikingRoutes extends Command
 {
@@ -31,28 +33,18 @@ class CheckNearbyHikingRoutes extends Command
 
         $caiHut = CaiHut::find($caiHutId);
 
-        $this->checkNearbyHikingRoutes($caiHut, $buffer);
-    }
+        if (! $caiHut) {
+            Log::warning("Cai hut {$caiHutId} not found");
 
-    protected function checkNearbyHikingRoutes(CaiHut $caiHut, $buffer)
-    {
-        $nearbyRoutes = HikingRoute::select('id', 'geometry', 'cai_huts') //geometry casted to geography because more accurate for distance calculations
-            ->whereRaw('ST_DWithin(
-                hiking_routes.geometry::geography,
-                cai_huts.geometry::geography, 
-                ?
-            )', [$buffer])
-            ->get();
-
-        foreach ($nearbyRoutes as $route) {
-            $hr = HikingRoute::find($route->id);
-            $currentHuts = json_decode($hr->cai_huts, true) ?: [];
-            if (! in_array($caiHut->id, $currentHuts)) {
-                array_push($currentHuts, $caiHut->id);
-                $hr->update([
-                    'cai_huts' => json_encode($currentHuts),
-                ]);
-            }
+            return;
         }
+
+        if (! $caiHut->geometry) {
+            Log::warning("Cai hut {$caiHut->id} has no geometry");
+
+            return;
+        }
+
+        CheckNearbyHikingRoutesJob::dispatch($caiHut, $buffer);
     }
 }
