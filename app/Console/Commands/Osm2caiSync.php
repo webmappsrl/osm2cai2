@@ -23,7 +23,7 @@ class Osm2caiSync extends Command
      *
      * @var string
      */
-    protected $description = 'Perform a data import from legacy OSM2CAI API to the current database for the specified model (e.g. mountain_groups, natural_springs, etc)';
+    protected $description = 'Perform a data import from legacy OSM2CAI API to the current database for the specified model (current models: mountain_groups, natural_springs, areas, sectors, sections, itineraries, caiHuts)';
 
     /**
      * Execute the console command.
