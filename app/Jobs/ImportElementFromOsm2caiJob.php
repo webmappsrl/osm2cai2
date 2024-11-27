@@ -112,18 +112,26 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             try {
                 $this->importHikingRoutes($modelInstance, $data);
             } catch (Exception $e) {
-                Log::error('Failed to import Hiking Route with id: '.$data['id'].' '.$e->getMessage());
+                Log::error('Failed to import Hiking Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+            }
+        }
+
+        if ($modelInstance instanceof \App\Models\Itinerary) {
+            try {
+                $this->importItineraries($modelInstance, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
             }
         }
     }
 
     private function importMountainGroups($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'intersectings'];
+        $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'intersectings', 'elevation_min', 'elevation_max', 'elevation_avg', 'elevation_stddev', 'slope_min', 'slope_max', 'slope_avg', 'slope_stddev'];
 
         $data['intersectings'] = [
             'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
-            'clubs' => json_decode($data['clubs_intersecting'], true),
+            'clubs' => json_decode($data['sections_intersecting'], true),
             'huts' => json_decode($data['huts_intersecting']),
             'ec_pois' => json_decode($data['ec_pois_intersecting'], true),
         ];
@@ -324,7 +332,24 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $hr->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Hiking_Route with id: '.$data['id'].' '.$e->getMessage());
+            Log::error('Failed to save Hiking_Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+        }
+    }
+
+    private function importItineraries($modelInstance, $data)
+    {
+        $columnsToImport = ['name', 'edges', 'osm_id', 'ref', 'geometry'];
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        foreach ($intersect as $key => $value) {
+            $modelInstance->$key = $value;
+        }
+
+        try {
+            $modelInstance->save();
+        } catch (\Exception $e) {
+            Log::error('Failed to save Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 }
