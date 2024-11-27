@@ -13,7 +13,7 @@ class AssignRegionCode extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai2:assign-region-code';
+    protected $signature = 'osm2cai:assign-region-code';
 
     /**
      * The console command description.
@@ -76,7 +76,7 @@ class AssignRegionCode extends Command
         ];
 
         foreach ($regionsCode as $code => $name) {
-            $region = Region::where('name', 'LIKE', '%'.$name.'%')->first();
+            $region = Region::where('name', 'LIKE', '%' . $name . '%')->first();
             if ($region) {
                 $region->code = $code;
                 $region->save();

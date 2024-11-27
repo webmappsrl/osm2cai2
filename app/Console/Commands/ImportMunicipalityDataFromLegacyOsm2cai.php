@@ -13,7 +13,7 @@ class ImportMunicipalityDataFromLegacyOsm2cai extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai2:import-municipality-data';
+    protected $signature = 'osm2cai:import-municipality-data';
 
     /**
      * The console command description.
@@ -56,13 +56,13 @@ class ImportMunicipalityDataFromLegacyOsm2cai extends Command
             }
         }
 
-        $this->info('Updated municipalities: '.$updatedCount);
-        $this->info('Not updated municipalities: '.count($notUpdated));
+        $this->info('Updated municipalities: ' . $updatedCount);
+        $this->info('Not updated municipalities: ' . count($notUpdated));
 
         if (count($notUpdated) > 0) {
             $this->info('List of not updated municipalities:');
             foreach ($notUpdated as $comune) {
-                $this->error('- '.$comune);
+                $this->error('- ' . $comune);
             }
         }
     }

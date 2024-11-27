@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class SyncUsersFromLegacyOsm2cai extends Command
 {
-    protected $signature = 'osm2cai2:sync-users';
+    protected $signature = 'osm2cai:sync-users';
 
     protected $description = 'Sync users from legacy OSM2CAI along with relationships and handle roles and permissions.';
 
@@ -26,7 +26,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         Artisan::call('db:seed');
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: '.$legacyUser->email);
+            $this->info('Importing user: ' . $legacyUser->email);
 
             $user = User::updateOrCreate(
                 ['email' => $legacyUser->email],
