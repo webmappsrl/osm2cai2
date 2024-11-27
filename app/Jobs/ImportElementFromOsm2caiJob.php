@@ -112,7 +112,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             try {
                 $this->importHikingRoutes($modelInstance, $data);
             } catch (Exception $e) {
-                Log::error('Failed to import Hiking Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Hiking Route with id: '.$data['id'].' '.$e->getMessage());
             }
         }
 
@@ -120,7 +120,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             try {
                 $this->importItineraries($modelInstance, $data);
             } catch (\Exception $e) {
-                Log::error('Failed to import Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Itinerary with id: '.$data['id'].' '.$e->getMessage());
             }
         }
     }
@@ -332,7 +332,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $hr->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Hiking_Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Hiking_Route with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 
@@ -348,7 +348,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Itinerary with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }

@@ -76,7 +76,7 @@ class AssignRegionCode extends Command
         ];
 
         foreach ($regionsCode as $code => $name) {
-            $region = Region::where('name', 'LIKE', '%' . $name . '%')->first();
+            $region = Region::where('name', 'LIKE', '%'.$name.'%')->first();
             if ($region) {
                 $region->code = $code;
                 $region->save();

@@ -4,13 +4,13 @@ namespace App\Console\Commands;
 
 use App\Models\Area;
 use App\Models\Club;
-use App\Models\User;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
+use App\Models\User;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class SyncUsersFromLegacyOsm2cai extends Command
 {
@@ -26,7 +26,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         Artisan::call('db:seed');
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: ' . $legacyUser->email);
+            $this->info('Importing user: '.$legacyUser->email);
 
             $user = User::updateOrCreate(
                 ['email' => $legacyUser->email],

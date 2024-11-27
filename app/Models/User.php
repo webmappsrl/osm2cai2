@@ -5,20 +5,20 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Area;
 use App\Models\Club;
+use App\Models\HikingRoute;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use App\Models\UgcPoi;
-use App\Models\Province;
 use App\Models\UgcTrack;
-use App\Models\HikingRoute;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Database\Eloquent\Collection;
 use Wm\WmPackage\Model\User as Authenticatable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -130,13 +130,13 @@ class User extends Authenticatable implements JWTSubject
             return true;
         }
         //if permission does not exist, return true
-        if (! Permission::where('name', 'validate ' . $formId . 's')->exists()) {
+        if (! Permission::where('name', 'validate '.$formId.'s')->exists()) {
             return true;
         }
         if ($formId === 'water') {
             return $this->hasPermissionTo('validate source surveys');
         }
-        $permissionName = 'validate ' . $formId;
+        $permissionName = 'validate '.$formId;
         if (! str_ends_with($formId, 's')) {
             $permissionName .= 's';
         }
@@ -146,7 +146,7 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * Get the territorial role of the user.
-     * 
+     *
      * This method determines the user's territorial role based on their permissions and assignments:
      * - 'admin' for administrators
      * - 'national' for national referents
@@ -179,21 +179,21 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * Get all sectors associated with this user through various relationships.
-     * 
+     *
      * This method aggregates sectors from:
      * - The user's assigned region
      * - The user's assigned provinces
-     * - The user's assigned areas 
+     * - The user's assigned areas
      * - The user's directly assigned sectors
      *
-     * @return \Illuminate\Database\Eloquent\Collection<\App\Models\Sector>
+     * @return Collection<Sector>
      */
     public function getSectors(): Collection
     {
         $sectorIds = [];
 
         // Get sectors from user's region
-        if (!is_null($this->region)) {
+        if (! is_null($this->region)) {
             $sectorIds = $this->region->sectorsIds();
         }
 
@@ -229,15 +229,15 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * Determines if the user can manage a specific hiking route based on their territorial role and permissions.
-     * 
+     *
      * The authorization logic follows these rules:
      * - Users with 'unknown' role cannot manage any routes
      * - Administrators and national referents can manage all routes
      * - Regional referents can manage routes in their assigned region
      * - Local managers can manage routes that intersect with their assigned areas, sectors or provinces
      *
-     * @param \App\Models\HikingRoute $hr The hiking route to check permissions for
-     * 
+     * @param HikingRoute $hr The hiking route to check permissions for
+     *
      * @return bool True if the user can manage the hiking route, false otherwise
      */
     public function canManageHikingRoute(HikingRoute $hr): bool

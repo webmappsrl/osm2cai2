@@ -19,7 +19,7 @@ class ReconcileIDWithLegacyOsm2cai extends Command
 
             return;
         }
-        $class = 'App\\Models\\' . $model;
+        $class = 'App\\Models\\'.$model;
 
         // Get model table in database
         $modelTable = (new $class)->getTable();
@@ -28,7 +28,7 @@ class ReconcileIDWithLegacyOsm2cai extends Command
 
         // Check if the table exists in the legacy database
         if (! $legacyOsm2caiDb->getSchemaBuilder()->hasTable($modelTable)) {
-            $this->error('The table ' . $modelTable . ' does not exist in the legacy osm2cai database');
+            $this->error('The table '.$modelTable.' does not exist in the legacy osm2cai database');
 
             return;
         }

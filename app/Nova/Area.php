@@ -2,10 +2,10 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Area extends Resource
@@ -36,7 +36,7 @@ class Area extends Resource
     ];
 
     private static array $indexDefaultOrder = [
-        'name' => 'asc'
+        'name' => 'asc',
     ];
 
     public static function label(): string
