@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class ComputeHikingRoutesTdh extends Command
 {
-    protected $signature = 'osm2cai2:compute-hiking-routes-tdh {id?}';
+    protected $signature = 'osm2cai:compute-hiking-routes-tdh {id?}';
 
     protected $description = 'Compute the TDH of a hiking route on SDA 4';
 

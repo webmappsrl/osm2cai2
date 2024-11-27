@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Province;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -111,18 +112,26 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             try {
                 $this->importHikingRoutes($modelInstance, $data);
             } catch (Exception $e) {
-                Log::error('Failed to import Hiking Route with id: '.$data['id'].' '.$e->getMessage());
+                Log::error('Failed to import Hiking Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+            }
+        }
+
+        if ($modelInstance instanceof \App\Models\Itinerary) {
+            try {
+                $this->importItineraries($modelInstance, $data);
+            } catch (\Exception $e) {
+                Log::error('Failed to import Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
             }
         }
     }
 
     private function importMountainGroups($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'intersectings'];
+        $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'intersectings', 'elevation_min', 'elevation_max', 'elevation_avg', 'elevation_stddev', 'slope_min', 'slope_max', 'slope_avg', 'slope_stddev'];
 
         $data['intersectings'] = [
             'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
-            'clubs' => json_decode($data['clubs_intersecting'], true),
+            'clubs' => json_decode($data['sections_intersecting'], true),
             'huts' => json_decode($data['huts_intersecting']),
             'ec_pois' => json_decode($data['ec_pois_intersecting'], true),
         ];
@@ -268,7 +277,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
     private function importAreas($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'code', 'name', 'geometry', 'full_code', 'num_expected'];
+        $columnsToImport = ['id', 'code', 'name', 'geometry', 'full_code', 'num_expected', 'province_id'];
 
         if ($data['geometry'] !== null) {
             $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
@@ -276,6 +285,16 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
+            if ($key === 'province_id') {
+                //get the code from province table in legacy osm2cai
+                $province = DB::connection('legacyosm2cai')->table('provinces')->find($value);
+                $provinceCode = $province->code;
+                //search for the corresponding province in the province table
+                $province = Province::where('osmfeatures_data->properties->osm_tags->short_name', $provinceCode)
+                    ->orWhere('osmfeatures_data->properties->osm_tags->ref', $provinceCode)
+                    ->first();
+                $value = $province ? $province->id : null;
+            }
             $modelInstance->$key = $value;
         }
 
@@ -313,7 +332,24 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $hr->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Hiking_Route with id: '.$data['id'].' '.$e->getMessage());
+            Log::error('Failed to save Hiking_Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+        }
+    }
+
+    private function importItineraries($modelInstance, $data)
+    {
+        $columnsToImport = ['name', 'edges', 'osm_id', 'ref', 'geometry'];
+        $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        foreach ($intersect as $key => $value) {
+            $modelInstance->$key = $value;
+        }
+
+        try {
+            $modelInstance->save();
+        } catch (\Exception $e) {
+            Log::error('Failed to save Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
+            throw $e;
         }
     }
 }

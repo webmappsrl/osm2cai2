@@ -69,11 +69,6 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     protected static function booted()
     {
         static::saved(function ($hikingRoute) {
-            if ($hikingRoute->is_syncing) {
-                $hikingRoute->is_syncing = false;
-
-                return;
-            }
             CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
             CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
 

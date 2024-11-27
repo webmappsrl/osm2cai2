@@ -14,7 +14,7 @@ class CheckNearbyCaiHuts extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai2:check-nearby-huts {hiking_route_id}';
+    protected $signature = 'osm2cai:check-nearby-huts {hiking_route_id}';
 
     /**
      * The console command description.

@@ -23,7 +23,7 @@ class Osm2caiSync extends Command
      *
      * @var string
      */
-    protected $description = 'Perform a data import from legacy OSM2CAI API to the current database for the specified model (e.g. mountain_groups, natural_springs, etc)';
+    protected $description = 'Perform a data import from legacy OSM2CAI API to the current database for the specified model (current models: mountain_groups, natural_springs, areas, sectors, sections, itineraries, cai_huts)';
 
     /**
      * Execute the console command.
@@ -35,7 +35,7 @@ class Osm2caiSync extends Command
 
         if ($modelClass === null) {
             $this->error('Model class not found');
-            Log::error('Model'.$modelClass.' class not found');
+            Log::error('Model' . $modelClass . ' class not found');
 
             return;
         }
@@ -51,8 +51,8 @@ class Osm2caiSync extends Command
             $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
             $response = Http::get($listApi);
             if ($response->failed() || $response->json() === null) {
-                $this->error('Failed to retrieve data from API: '.$listApi);
-                Log::error('Failed to retrieve data from API: '.$listApi.' '.$response->body());
+                $this->error('Failed to retrieve data from API: ' . $listApi);
+                Log::error('Failed to retrieve data from API: ' . $listApi . ' ' . $response->body());
 
                 return;
             }
@@ -60,7 +60,7 @@ class Osm2caiSync extends Command
 
         $data = $response->json();
 
-        $this->info('Dispatching '.count($data).' jobs for '.$model.' model');
+        $this->info('Dispatching ' . count($data) . ' jobs for ' . $model . ' model');
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
@@ -98,16 +98,18 @@ class Osm2caiSync extends Command
     private function parseModelClass($model)
     {
         $model = str_replace('_', '', ucwords($model, '_'));
-        $modelClass = 'App\\Models\\'.$model;
+        $modelClass = 'App\\Models\\' . $model;
 
         if (! class_exists($modelClass)) {
             //remove final 's' from model name
             $modelName = substr($model, 0, -1);
-            $modelClass = 'App\\Models\\'.$modelName;
+            $modelClass = 'App\\Models\\' . $modelName;
             if (! class_exists($modelClass)) {
                 //rename section model to club
-                if ($model === 'Section') {
+                if ($model === 'Sections') {
                     $modelClass = 'App\\Models\\Club';
+                } elseif ($model === 'Itineraries') {
+                    $modelClass = 'App\\Models\\Itinerary';
                 } else {
                     return null;
                 }
@@ -122,8 +124,10 @@ class Osm2caiSync extends Command
         switch ($model) {
             case 'CaiHut':
                 return 'huts';
-            case 'HikingRoute':
-                return 'hiking-routes';
+                break;
+            case 'cai_huts':
+                return 'huts';
+                break;
             case 'MountainGroups':
                 return 'mountain_groups';
             case 'NaturalSpring':

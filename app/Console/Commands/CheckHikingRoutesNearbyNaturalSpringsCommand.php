@@ -13,7 +13,7 @@ class CheckHikingRoutesNearbyNaturalSpringsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai2:check-hiking-routes-nearby-natural-springs {id? : The id of the hiking route}';
+    protected $signature = 'osm2cai:check-hiking-routes-nearby-natural-springs {id? : The id of the hiking route}';
 
     /**
      * The console command description.

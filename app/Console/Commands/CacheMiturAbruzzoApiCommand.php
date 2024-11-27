@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class CacheMiturAbruzzoApiCommand extends Command
 {
-    protected $signature = 'osm2cai2:cache-mitur-abruzzo-api 
+    protected $signature = 'osm2cai:cache-mitur-abruzzo-api 
         {model=Region : The model name} 
         {id? : The model id}
         {--queue : Process through queue}';
@@ -54,8 +54,8 @@ class CacheMiturAbruzzoApiCommand extends Command
             try {
                 CacheMiturAbruzzoDataJob::dispatch($className, $model->id);
             } catch (\Exception $e) {
-                Log::error("Failed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
-                $this->error("\nFailed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
+                Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
+                $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
             }
 
             $bar->advance();
