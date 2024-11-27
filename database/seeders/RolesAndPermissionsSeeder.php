@@ -48,10 +48,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $users = User::whereDoesntHave('roles')->where('email', '!=', ['team@webmapp.it', 'referenteNazionale@webmapp.it'])->get();
         if ($users->count() > 0) {
             foreach ($users as $user) {
-                //if user has not roles
-                if (! $user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Club Manager', 'Validator'])) {
-                    $user->assignRole('Guest');
-                }
+                $user->assignRole('Guest');
+                $user->roles()->detach($user->roles()->where('name', '!=', 'Guest')->pluck('id'));
             }
             User::where('email', 'team@webmapp.it')->first()->assignRole('Administrator');
         }

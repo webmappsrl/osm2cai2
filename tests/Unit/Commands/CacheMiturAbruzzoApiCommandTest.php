@@ -37,7 +37,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
             'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((5 5, 6 6))', 4326)"),
         ]); // should not be processed
 
-        $this->artisan('osm2cai2:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
             ->expectsOutput('Processing 2 HikingRoute')
             ->assertSuccessful();
 
@@ -52,7 +52,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
             'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
         ]);
 
-        $this->artisan('osm2cai2:cache-mitur-abruzzo-api', [
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', [
             'model' => 'HikingRoute',
             'id' => $route->id,
         ])
@@ -65,7 +65,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     /** @test */
     public function it_shows_error_when_no_hiking_routes_found()
     {
-        $this->artisan('osm2cai2:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
             ->expectsOutput('No hiking routes found with osm2cai_status 4')
             ->assertSuccessful();
 
@@ -77,7 +77,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     {
         Region::factory()->count(3)->create();
 
-        $this->artisan('osm2cai2:cache-mitur-abruzzo-api', ['model' => 'Region'])
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'Region'])
             ->expectsOutput('Processing 3 Region')
             ->assertSuccessful();
 
@@ -87,7 +87,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     /** @test */
     public function it_shows_error_for_invalid_model()
     {
-        $this->artisan('osm2cai2:cache-mitur-abruzzo-api', ['model' => 'InvalidModel'])
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'InvalidModel'])
             ->expectsOutput('Target class [App\Models\InvalidModel] does not exist.')
             ->assertSuccessful();
 
