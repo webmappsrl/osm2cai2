@@ -21,10 +21,9 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'National Referent']);
         Role::firstOrCreate(['name' => 'Regional Referent']);
         Role::firstOrCreate(['name' => 'Local Referent']);
-        Role::firstOrCreate(['name' => 'Sectional Referent']);
+        Role::firstOrCreate(['name' => 'Club Manager']);
         Role::firstOrCreate(['name' => 'Validator']);
         Role::firstOrCreate(['name' => 'Guest']); //can login but no permissions
-        Role::firstOrCreate(['name' => 'No login user']); //can't login
 
         Permission::firstOrCreate(['name' => 'validate source surveys']);
         Permission::firstOrCreate(['name' => 'validate archaeological sites']);
@@ -50,7 +49,7 @@ class RolesAndPermissionsSeeder extends Seeder
         if ($users->count() > 0) {
             foreach ($users as $user) {
                 //if user has not roles
-                if (! $user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Sectional Referent', 'Validator'])) {
+                if (! $user->hasAnyRole(['Administrator', 'Itinerary Manager', 'National Referent', 'Regional Referent', 'Local Referent', 'Club Manager', 'Validator'])) {
                     $user->assignRole('Guest');
                 }
             }
