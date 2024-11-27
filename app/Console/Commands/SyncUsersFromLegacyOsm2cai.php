@@ -133,9 +133,12 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 ->first();
 
             if ($legacyRegion) {
-                $region = Region::where('code', $legacyRegion->code)->first();
+                $region = Region::where('osmfeatures_id', $legacyRegion->osmfeatures_id)->first();
                 if ($region) {
                     $user->region_id = $region->id;
+                    //assign role
+                    $user->removeRole('Guest');
+                    $user->assignRole('Regional Referent');
                 }
             }
 
@@ -149,6 +152,8 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 $managedSection = Club::where('cai_code', $legacyManagedSection->cai_code)->first();
                 if ($managedSection) {
                     $user->managed_club_id = $managedSection->id;
+                    $user->removeRole('Guest');
+                    $user->assignRole('Club Manager');
                 }
             }
         }
