@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Controllers\MiturAbruzzoController;
 use App\Jobs\TestJob;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CasLoginController;
+use App\Http\Controllers\MiturAbruzzoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,3 +42,18 @@ Route::get('/hiking-route/id/{id}', function ($id) {
         'hikingroute' => $hikingroute,
     ]);
 })->name('hiking-route-public-page');
+
+
+
+/**
+ * Route to login to application with cas with specific middleware and controller
+ */
+Route::get('/nova/cas-login', CasLoginController::class . '@casLogin')
+    ->middleware('cai.cas');
+
+/**
+ * Route to logout from application and cas with facade and specific middleware
+ */
+Route::get('/nova/cas-logout', function () {
+    cas()->logout();
+})->middleware('cas.auth');

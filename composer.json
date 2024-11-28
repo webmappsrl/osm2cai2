@@ -34,6 +34,7 @@
         "spatie/laravel-permission": "^6.9",
         "spatie/laravel-translatable": "^6.3",
         "spatie/schema-org": "^3.23",
+        "subfission/cas": "^5.1",
         "tymon/jwt-auth": "^2.1",
         "webmapp/wm-osmfeatures": "*",
         "wm/map-multi-linestring": "^0.0.10",
