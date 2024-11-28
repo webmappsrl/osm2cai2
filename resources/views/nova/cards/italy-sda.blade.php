@@ -1,4 +1,4 @@
 <div style="background-color: {{ $backgroundColor }}; color: white; font-size: xx-large; padding: 1rem 0">
-    {{ number_format($sal * 100, 2) }}%
+    {{ $number }}
 </div>
-<h6>SAL Nazionale</h6>
+<h6>#sda {{ $sda }}</h6>

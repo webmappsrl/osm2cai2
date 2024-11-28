@@ -62,7 +62,7 @@ class Main extends Dashboard
             (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $userName])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles->toArray()])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.last-login-card', ['lastLogin' => $user->last_login_at])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2).' %'])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2, '.', ''), 'backgroundColor' => Osm2CaiHelper::getSalColor($sal)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[1], 'sda' => 1, 'backgroundColor' => Osm2caiHelper::getSdaColor(1)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[2], 'sda' => 2, 'backgroundColor' => Osm2caiHelper::getSdaColor(2)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[3], 'sda' => 3, 'backgroundColor' => Osm2caiHelper::getSdaColor(3)])->center(true)->withBasicStyles(),
@@ -132,7 +132,7 @@ class Main extends Dashboard
             if ($att > 0) {
                 $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $att;
                 $sal = min($sal, 1); // Assicura che SAL non superi il 100%
-                $salDisplay = number_format($sal * 100, 2).' %';
+                $salDisplay = number_format($sal * 100, 2) . ' %';
             } else {
                 $sal = 0;
                 $salDisplay = 'N/A';
@@ -148,7 +148,7 @@ class Main extends Dashboard
                 new Cell((string) $tot4),
                 new Cell((string) $tot),
                 new Cell((string) $att),
-                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.$salDisplay.'</div>'),
+                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . $salDisplay . '</div>'),
             );
             $data[] = $row;
         }
