@@ -26,7 +26,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         Artisan::call('db:seed');
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: '.$legacyUser->email);
+            $this->info('Importing user: ' . $legacyUser->email);
 
             $user = User::updateOrCreate(
                 ['email' => $legacyUser->email],
@@ -189,27 +189,27 @@ class SyncUsersFromLegacyOsm2cai extends Command
             return;
         }
 
-        if (isset($legacyResourceValidation['is_sign_validator'])) {
+        if (isset($legacyResourceValidation['is_sign_validator']) && $legacyResourceValidation['is_sign_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate signs');
         }
 
-        if (isset($legacyResourceValidation['is_source_validator'])) {
+        if (isset($legacyResourceValidation['is_source_validator']) && $legacyResourceValidation['is_source_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate source surveys');
         }
 
-        if (isset($legacyResourceValidation['is_geological_site_validator'])) {
+        if (isset($legacyResourceValidation['is_geological_site_validator']) && $legacyResourceValidation['is_geological_site_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate geological sites');
         }
 
-        if (isset($legacyResourceValidation['is_archaeological_site_validator'])) {
+        if (isset($legacyResourceValidation['is_archaeological_site_validator']) && $legacyResourceValidation['is_archaeological_site_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate archaeological sites');
         }
 
-        if (isset($legacyResourceValidation['is_archaeological_area_validator'])) {
+        if (isset($legacyResourceValidation['is_archaeological_area_validator']) && $legacyResourceValidation['is_archaeological_area_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate archaeological areas');
         }

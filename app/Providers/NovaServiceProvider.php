@@ -63,6 +63,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilita'),
                     MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/main'),
                     MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/acqua-sorgente'),
+                    MenuItem::link('Riepilogo Settori', '/dashboards/settori'),
                 ])->icon('chart-bar')->collapsable(),
 
                 // Rete Escursionistica
