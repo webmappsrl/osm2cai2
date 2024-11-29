@@ -2,9 +2,9 @@
 
 namespace App\Nova\Metrics;
 
-use App\Enums\IssueStatus;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Enums\IssuesStatusEnum;
 use Laravel\Nova\Metrics\Partition;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Sda4IssueStatusPartition extends Partition
 {
@@ -27,7 +27,7 @@ class Sda4IssueStatusPartition extends Partition
         $percorribile = 0;
         $nonPercorribile = 0;
         $percorribileParzialmente = 0;
-        $issueStatus = IssueStatus::cases();
+        $issueStatus = IssuesStatusEnum::cases();
 
         $colors = [
             'sconosciuto' => '#666666',
