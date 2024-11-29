@@ -41,3 +41,11 @@ Route::get('/hiking-route/id/{id}', function ($id) {
         'hikingroute' => $hikingroute,
     ]);
 })->name('hiking-route-public-page');
+
+Route::get('/loading-download/{type}/{model}/{id}', function () {
+    return view('nova.loading', [
+        'type' => request()->type,
+        'model' => request()->model,
+        'id' => request()->id
+    ]);
+})->name('loading-download');

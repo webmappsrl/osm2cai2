@@ -63,4 +63,27 @@ class RegionController extends Controller
     {
         //
     }
+
+    /**
+     * Returns a complete GeoJSON representation of all hiking routes in the region.
+     * 
+     * @param string $id The ID of the region
+     * @return \Illuminate\Http\Response GeoJSON response with hiking routes data
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If region not found
+     */
+    public function geojsonComplete(string $id): \Illuminate\Http\Response
+    {
+        try {
+            $region = Region::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Region not found'], 404);
+        }
+
+        $headers = [
+            'Content-type' => 'application/json',
+            'Content-Disposition' => 'attachment; filename="osm2cai_' . date('Ymd') . '_regione_complete_' . $region->name . '.geojson"',
+        ];
+
+        return response($region->getGeojsonComplete(), 200, $headers);
+    }
 }

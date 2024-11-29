@@ -2,43 +2,12 @@
 
 namespace App\Providers;
 
-use DB;
-use App\Nova\Area;
-use App\Nova\Club;
-use App\Nova\Sign;
-use App\Nova\User;
-use App\Nova\EcPoi;
-use App\Nova\Poles;
-use App\Nova\CaiHut;
-use App\Nova\Region;
-use App\Nova\Sector;
-use App\Nova\UgcPoi;
-use App\Nova\Province;
-use App\Nova\UgcMedia;
-use App\Nova\UgcTrack;
-use Laravel\Nova\Nova;
-use App\Nova\HikingRoute;
-use App\Nova\Municipality;
-use App\Nova\SourceSurvey;
-use App\Nova\NaturalSpring;
-use App\Nova\GeologicalSite;
-use App\Nova\MountainGroups;
 use Illuminate\Http\Request;
-use App\Nova\Dashboards\Main;
-use App\Nova\Dashboards\Utenti;
-use Laravel\Nova\Menu\MenuItem;
-use App\Nova\ArchaeologicalArea;
-use App\Nova\ArchaeologicalSite;
-use Laravel\Nova\Menu\MenuSection;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Blade;
-use App\Nova\Dashboards\AcquaSorgente;
-use App\Nova\Dashboards\ItalyDashboard;
-use App\Nova\Dashboards\EcPoisDashboard;
-use App\Nova\Dashboards\PercorsiFavoriti;
-use App\Nova\Dashboards\SectorsDashboard;
-use Laravel\Nova\NovaApplicationServiceProvider;
-use App\Nova\Dashboards\Percorribilità;
+use Illuminate\Support\Facades\{Gate, Blade};
+use Laravel\Nova\Menu\{MenuItem, MenuSection};
+use Laravel\Nova\{NovaApplicationServiceProvider, Nova};
+use App\Nova\Dashboards\{Main, Utenti, AcquaSorgente, ItalyDashboard, Percorribilità, EcPoisDashboard, PercorsiFavoriti, SectorsDashboard, SALMiturAbruzzo};
+use App\Nova\{Area, Club, Sign, User, EcPoi, Poles, CaiHut, Region, Sector, UgcPoi, Province, UgcMedia, UgcTrack, HikingRoute, Municipality, SourceSurvey, NaturalSpring, GeologicalSite, MountainGroups, ArchaeologicalArea, ArchaeologicalSite};
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
@@ -62,7 +31,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::link('POIS', '/dashboards/ec-pois'),
                     MenuItem::link('Riepilogo utenti', '/dashboards/utenti'),
                     MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilità'),
-                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/main'),
+                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/sal-mitur-abruzzo'),
                     MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/acqua-sorgente'),
                     MenuItem::link('Riepilogo Settori', '/dashboards/settori'),
                 ])->icon('chart-bar')->collapsable(),
@@ -168,17 +137,42 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     protected function dashboards()
     {
-        return [
-            new Main,
-            new AcquaSorgente,
+
+        $dashboards = [
+            new ItalyDashboard,
+            new PercorsiFavoriti,
             new EcPoisDashboard,
-            new ItalyDashboard(),
-            new SectorsDashboard(),
-            new PercorsiFavoriti(),
-            new Utenti(),
-            new Percorribilità(auth()->user()),
+            new Main,
         ];
+
+        $loggedInUser = auth()->user();
+
+        if ($loggedInUser->hasRole('Administrator')) {
+            $dashboards[] = new Utenti();
+            $dashboards[] = new Percorribilità();
+            $dashboards[] = new SALMiturAbruzzo();
+            $dashboards[] = new AcquaSorgente();
+        }
+
+        if ($loggedInUser->hasRole('National Referent')) {
+            $dashboards[] = new Percorribilità();
+            $dashboards[] = new SALMiturAbruzzo();
+            $dashboards[] = new AcquaSorgente();
+        }
+
+        if ($loggedInUser->hasRole('Regional Referent')) {
+
+            $dashboards[] = new SectorsDashboard;
+            $dashboards[] = new Percorribilità($loggedInUser); //show data only for the user region
+        }
+
+        if ($loggedInUser->hasRole('Local Referent')) {
+            $dashboards[] = new Percorribilità($loggedInUser);
+        }
+
+        return $dashboards;
     }
+
 
     /**
      * Get the tools that should be listed in the Nova sidebar.

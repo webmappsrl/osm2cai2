@@ -30,6 +30,16 @@ class SectorsDashboard extends Dashboard
             }
         }
 
+        // Query to get sectors with their hiking route counts by osm2cai_status
+        // Selects:
+        // - sector id, full_code and num_expected
+        // - count of hiking routes with osm2cai_status = 1 as tot1
+        // - count of hiking routes with osm2cai_status = 2 as tot2 
+        // - count of hiking routes with osm2cai_status = 3 as tot3
+        // - count of hiking routes with osm2cai_status = 4 as tot4
+        // Left joins with hiking_route_sector and hiking_routes tables
+        // Filters by the provided sector IDs
+        // Groups by sector fields to get counts per sector
         $items = DB::table('sectors')
             ->select(
                 'sectors.id',

@@ -133,13 +133,17 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
         // Update the geometry if necessary
         $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
 
-        // Update osm2cai_status if necessary
-        if (isset($osmfeaturesData['properties']['osm2cai_status']) && $osmfeaturesData['properties']['osm2cai_status'] !== null) {
-            if ($model->osm2cai_status !== 4 && $model->osm2cai_status !== $osmfeaturesData['properties']['osm2cai_status']) {
-                $updateData['osm2cai_status'] = $osmfeaturesData['properties']['osm2cai_status'];
-                Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute ' . $osmfeaturesId);
+
+        if ($model->osm2cai_status != 4) {
+            // Update osm2cai_status if necessary
+            if (isset($osmfeaturesData['properties']['osm2cai_status']) && $osmfeaturesData['properties']['osm2cai_status'] !== null) {
+                if ($model->osm2cai_status !== $osmfeaturesData['properties']['osm2cai_status']) {
+                    $updateData['osm2cai_status'] = $osmfeaturesData['properties']['osm2cai_status'];
+                    Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute ' . $osmfeaturesId);
+                }
             }
         }
+
 
         // Execute the update only if there are data to update
         if (! empty($updateData)) {
