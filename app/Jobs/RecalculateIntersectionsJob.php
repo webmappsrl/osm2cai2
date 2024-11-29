@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use App\Traits\SpatialDataTrait;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * This job recalculates intersections between two models with spatial data trait.
@@ -62,6 +63,11 @@ class RecalculateIntersectionsJob implements ShouldQueue
         // Ensure intersecting model has SpatialDataTrait
         if (!in_array(SpatialDataTrait::class, class_uses_recursive($intersectingModel))) {
             throw new \Exception('Intersecting model must have SpatialDataTrait for intersections');
+        }
+
+        //check if base model has intersectings column
+        if (!Schema::hasColumn($baseModel->getTable(), 'intersectings')) {
+            throw new \Exception($baseModel->getTable() . ' does not have intersectings column. The column is required to store the intersections.');
         }
 
         try {

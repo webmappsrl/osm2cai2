@@ -30,8 +30,8 @@ class CalculateRegionHikingRoutesIntersectionTest extends TestCase
 
         //execute command
         $this->artisan('osm2cai:calculate-region-hiking-routes-intersection')
-            ->expectsOutput('Start calculating intersections...')
-            ->expectsOutput('Calculating intersections completed successfully.')
+            ->expectsOutput('Dispatching recalculate intersections jobs...')
+            ->expectsOutput('Recalculate intersections jobs dispatched successfully.')
             ->assertSuccessful();
     }
 
@@ -48,7 +48,7 @@ class CalculateRegionHikingRoutesIntersectionTest extends TestCase
 
         // Execute command and check exception handling
         $this->artisan('osm2cai:calculate-region-hiking-routes-intersection')
-            ->expectsOutput('Start calculating intersections...')
+            ->expectsOutput('Dispatching recalculate intersections jobs...')
             ->expectsOutput($errorMessage)
             ->assertFailed();
     }

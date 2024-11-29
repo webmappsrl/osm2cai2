@@ -2,8 +2,11 @@
 
 namespace App\Console\Commands;
 
-use App\Services\IntersectionService;
+use App\Jobs\RecalculateIntersectionsJob;
+use App\Models\Region;
+use App\Models\HikingRoute;
 use Illuminate\Console\Command;
+use App\Services\IntersectionService;
 
 class CalculateRegionHikingRoutesIntersection extends Command
 {
@@ -21,14 +24,32 @@ class CalculateRegionHikingRoutesIntersection extends Command
 
     public function handle()
     {
-        $this->info('Start calculating intersections...');
+        $this->info('Dispatching recalculate intersections jobs...');
         try {
-            $this->intersectionService->calculateIntersections();
+            $regions = Region::all();
+            $hikingRoutes = HikingRoute::all();
+            $totalItems = $regions->count() + $hikingRoutes->count();
+
+            $bar = $this->output->createProgressBar($totalItems);
+            $bar->start();
+
+            foreach ($regions as $region) {
+                RecalculateIntersectionsJob::dispatch($region, HikingRoute::class);
+                $bar->advance();
+            }
+
+            foreach ($hikingRoutes as $hikingRoute) {
+                RecalculateIntersectionsJob::dispatch($hikingRoute, Region::class);
+                $bar->advance();
+            }
+
+            $bar->finish();
+            $this->newLine();
         } catch (\Exception $e) {
             $this->error($e->getMessage());
 
             return Command::FAILURE;
         }
-        $this->info('Calculating intersections completed successfully.');
+        $this->info('Recalculate intersections jobs dispatched successfully.');
     }
 }
