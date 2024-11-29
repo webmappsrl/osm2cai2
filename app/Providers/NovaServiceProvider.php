@@ -38,6 +38,7 @@ use App\Nova\Dashboards\EcPoisDashboard;
 use App\Nova\Dashboards\PercorsiFavoriti;
 use App\Nova\Dashboards\SectorsDashboard;
 use Laravel\Nova\NovaApplicationServiceProvider;
+use App\Nova\Dashboards\Percorribilità;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
@@ -60,7 +61,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::link('Percorsi Favoriti', '/dashboards/percorsi-favoriti'),
                     MenuItem::link('POIS', '/dashboards/ec-pois'),
                     MenuItem::link('Riepilogo utenti', '/dashboards/utenti'),
-                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilita'),
+                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilità'),
                     MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/main'),
                     MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/acqua-sorgente'),
                     MenuItem::link('Riepilogo Settori', '/dashboards/settori'),
@@ -175,6 +176,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new SectorsDashboard(),
             new PercorsiFavoriti(),
             new Utenti(),
+            new Percorribilità(auth()->user()),
         ];
     }
 

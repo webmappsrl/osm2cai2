@@ -6,7 +6,6 @@ use App\Jobs\RecalculateIntersectionsJob;
 use App\Models\Region;
 use App\Models\HikingRoute;
 use Illuminate\Console\Command;
-use App\Services\IntersectionService;
 
 class CalculateRegionHikingRoutesIntersection extends Command
 {
@@ -14,12 +13,9 @@ class CalculateRegionHikingRoutesIntersection extends Command
 
     protected $description = 'Calculate the hiking routes that intersect each region';
 
-    protected $intersectionService;
-
-    public function __construct(IntersectionService $intersectionService)
+    public function __construct()
     {
         parent::__construct();
-        $this->intersectionService = $intersectionService;
     }
 
     public function handle()
