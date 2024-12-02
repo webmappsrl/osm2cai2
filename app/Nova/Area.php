@@ -2,15 +2,15 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Nova;
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
+use App\Nova\Actions\downloadGeojson;
 use App\Nova\Actions\DownloadKml;
 use App\Nova\Actions\DownloadShape;
-use App\Nova\Actions\downloadGeojson;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Filters\HikingRoutesAreaFilter;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
 
 class Area extends Resource
 {
@@ -96,7 +96,7 @@ class Area extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        if (!is_null($request['resourceId'])) {
+        if (! is_null($request['resourceId'])) {
             $area = \App\Models\Area::find($request['resourceId']);
             $tot = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
             $hikingRoutes = $area->intersectings['hiking_routes'] ?? [];
@@ -113,7 +113,7 @@ class Area extends Resource
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => $area->manager,
-                        'label' => 'Responsabili di settore'
+                        'label' => 'Responsabili di settore',
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -124,7 +124,7 @@ class Area extends Resource
                     ->view('nova.cards.area-sal-card', [
                         'value' => number_format($sal * 100, 2),
                         'label' => 'SAL',
-                        'backgroundColor' => Osm2caiHelper::getSalColor($sal)
+                        'backgroundColor' => Osm2caiHelper::getSalColor($sal),
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -134,7 +134,7 @@ class Area extends Resource
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => $tot[3] + $tot[4],
-                        'label' => 'Numero percorsi sda 3/4'
+                        'label' => 'Numero percorsi sda 3/4',
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -144,7 +144,7 @@ class Area extends Resource
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => $area->num_expected,
-                        'label' => 'Numero percorsi attesi'
+                        'label' => 'Numero percorsi attesi',
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -155,6 +155,7 @@ class Area extends Resource
                 $this->getSdaCard(4, $tot[4]),
             ];
         }
+
         return [];
     }
 
@@ -164,9 +165,9 @@ class Area extends Resource
         if ($num > 0) {
             $resourceId = request()->get('resourceId');
             $filter = base64_encode(json_encode([
-                ['class' => HikingRoutesAreaFilter::class, 'value' => $resourceId]
+                ['class' => HikingRoutesAreaFilter::class, 'value' => $resourceId],
             ]));
-            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+            $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
         return (new HtmlCard())
@@ -175,7 +176,7 @@ class Area extends Resource
                 'sda' => $sda,
                 'num' => $num,
                 'backgroundColor' => Osm2caiHelper::getSdaColor($sda),
-                'exploreUrl' => $exploreUrl
+                'exploreUrl' => $exploreUrl,
             ])
             ->center()
             ->withBasicStyles()
@@ -213,7 +214,7 @@ class Area extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            (new DownloadGeojson())->canRun(function () {
+            (new downloadGeojson())->canRun(function () {
                 return true;
             })->onlyInline(),
             (new DownloadShape())->canRun(function () {

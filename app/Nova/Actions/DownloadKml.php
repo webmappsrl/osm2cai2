@@ -15,13 +15,14 @@ class DownloadKml extends Action
     use InteractsWithQueue, Queueable;
 
     public $name = 'Download KML';
+
     public $withoutConfirmation = true;
 
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -31,13 +32,13 @@ class DownloadKml extends Action
         //trim app\models
         $modelType = str_replace('App\Models\\', '', $modelType);
 
-        return Action::redirect(url('/api/kml/' . $modelType . '/' . $models->first()->id));
+        return Action::redirect(url('/api/kml/'.$modelType.'/'.$models->first()->id));
     }
 
     /**
      * Get the fields available on the action.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)

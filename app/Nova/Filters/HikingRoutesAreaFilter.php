@@ -4,8 +4,8 @@ namespace App\Nova\Filters;
 
 use App\Models\Area;
 use Illuminate\Http\Request;
-use Laravel\Nova\Filters\Filter;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Nova\Filters\Filter;
 
 class HikingRoutesAreaFilter extends Filter
 {
@@ -21,7 +21,7 @@ class HikingRoutesAreaFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param mixed $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -36,7 +36,7 @@ class HikingRoutesAreaFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function options(Request $request)
@@ -52,6 +52,7 @@ class HikingRoutesAreaFilter extends Filter
                 $options[$item->name] = $item->id;
             }
         }
+
         return $options;
     }
 }

@@ -70,7 +70,7 @@ class CaiHut extends Resource
                 'defaultZoom' => 13,
             ])->hideFromIndex(),
             Text::make('Aws Cached Data', function () {
-                return '<a href="' . $this->getPublicAwsUrl('wmfemitur') . '" target="_blank" style="text-decoration:underline;">' . $this->getPublicAwsUrl('wmfemitur') . '</a>';
+                return '<a href="'.$this->getPublicAwsUrl('wmfemitur').'" target="_blank" style="text-decoration:underline;">'.$this->getPublicAwsUrl('wmfemitur').'</a>';
             })->onlyOnDetail()->asHtml(),
 
         ];
