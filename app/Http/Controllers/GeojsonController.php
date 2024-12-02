@@ -21,7 +21,7 @@ class GeojsonController extends Controller
     public function download(string $modelType, string $id)
     {
         // Dynamically load the model based on type
-        $modelClass = 'App\\Models\\'.ucfirst($modelType);
+        $modelClass = 'App\\Models\\' . ucfirst($modelType);
 
         // Verify that the model exists
         if (! class_exists($modelClass)) {
@@ -31,7 +31,7 @@ class GeojsonController extends Controller
         // Find the resource by ID
         $model = $modelClass::find($id);
         if (! $model) {
-            return response()->json(['error' => ucfirst($modelType).' '.$id.' not found'], 404);
+            return response()->json(['error' => ucfirst($modelType) . ' ' . $id . ' not found'], 404);
         }
 
         // Initialize GeoJSON structure
@@ -45,7 +45,7 @@ class GeojsonController extends Controller
         $relatedResources = $this->getRelatedResources($modelType, $model);
 
         foreach ($relatedResources as $resource) {
-            $geometry = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM '.$resource->getTable().' WHERE id = ?', [$resource->id])[0];
+            $geometry = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM ' . $resource->getTable() . ' WHERE id = ?', [$resource->id])[0];
 
             $geojson['features'][] = [
                 'type' => 'Feature',
@@ -57,7 +57,7 @@ class GeojsonController extends Controller
         // Settings for GeoJSON file download
         $headers = [
             'Content-type' => 'application/json',
-            'Content-Disposition' => 'attachment; filename="'.$id.'.geojson"',
+            'Content-Disposition' => 'attachment; filename="' . $id . '.geojson"',
         ];
 
         return response(json_encode($geojson), 200, $headers);
@@ -73,8 +73,8 @@ class GeojsonController extends Controller
     private function getModelProperties(string $modelType, $model)
     {
         // Perform dynamic property mapping based on model type
-        switch ($modelType) {
-            case 'Region':
+        switch (strtolower($modelType)) {
+            case 'region':
                 return [
                     'id' => $model->id,
                     'name' => $model->name,
@@ -82,7 +82,7 @@ class GeojsonController extends Controller
                     'shapefile_url' => url("api/shapefile/{$modelType}/{$model->id}"),
                     'kml' => url("api/kml/{$modelType}/{$model->id}"),
                 ];
-            case 'Province':
+            case 'province':
                 return [
                     'id' => $model->id,
                     'name' => $model->name,
@@ -91,7 +91,7 @@ class GeojsonController extends Controller
                     'shapefile_url' => url("api/shapefile/{$modelType}/{$model->id}"),
                     'kml' => url("api/kml/{$modelType}/{$model->id}"),
                 ];
-            case 'Area':
+            case 'area':
                 return [
                     'id' => $model->id,
                     'name' => $model->name,
@@ -101,7 +101,7 @@ class GeojsonController extends Controller
                     'shapefile_url' => url("api/shapefile/{$modelType}/{$model->id}"),
                     'kml' => url("api/kml/{$modelType}/{$model->id}"),
                 ];
-            case 'Sector':
+            case 'sector':
                 return [
                     'id' => $model->id,
                     'name' => $model->name,
@@ -112,7 +112,7 @@ class GeojsonController extends Controller
                     'shapefile_url' => url("api/shapefile/{$modelType}/{$model->id}"),
                     'kml' => url("api/kml/{$modelType}/{$model->id}"),
                 ];
-            case 'Club':
+            case 'club':
                 return [
                     'id' => $model->id,
                     'name' => $model->name,
@@ -136,27 +136,23 @@ class GeojsonController extends Controller
     private function getRelatedResources(string $modelType, $model)
     {
         // Execute query to get related resources based on model type
-        switch ($modelType) {
-            case 'Region':
-                // Get sectors related to the region
+        switch (strtolower($modelType)) {
+            case 'region':
                 $sectors = $model->sectorsIds();
 
                 return Sector::whereIn('id', $sectors)
                     ->get();
-            case 'Province':
-                // Get sectors related to the province
+            case 'province':
                 $sectors = $model->sectorsIds();
 
                 return Sector::whereIn('id', $sectors)
                     ->get();
-            case 'Area':
-                // Get sectors related to the area
+            case 'area':
                 $sectors = $model->sectorsIds();
 
                 return Sector::whereIn('id', $sectors)
                     ->get();
-            case 'Club':
-                // Get hiking routes related to the club
+            case 'club':
                 $hikingRoutes = $model->hikingRoutes()->get();
 
                 return HikingRoute::whereIn('id', $hikingRoutes->pluck('id'))
@@ -178,7 +174,7 @@ class GeojsonController extends Controller
             $geometry = DB::select('SELECT ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom FROM hiking_routes WHERE id = ?;', [$resource->id]);
             $osmfeaturesDataProperties = $resource->osmfeatures_data['properties'];
 
-            $name = $resource->name ? $resource->name.' - '.$resource->ref : $resource->ref;
+            $name = $resource->name ? $resource->name . ' - ' . $resource->ref : $resource->ref;
 
             $regions = $resource->regions->pluck('name')->implode(', ');
             $provinces = $resource->provinces->pluck('name')->implode(', ');

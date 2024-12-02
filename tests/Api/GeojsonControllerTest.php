@@ -9,14 +9,14 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class GeojsonControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $region;
 
@@ -34,17 +34,20 @@ class GeojsonControllerTest extends TestCase
 
         // Create a complete hierarchy of test entities
         $this->region = Region::factory()->create([
+            'id' => 9999,
             'name' => 'Test Region',
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->province = Province::factory()->create([
+            'id' => 9999,
             'name' => 'Test Province',
             'region_id' => $this->region->id,
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
         $this->area = Area::factory()->create([
+            'id' => 9999,
             'name' => 'Test Area',
             'code' => 'T',
             'full_code' => 'T123',
@@ -54,6 +57,7 @@ class GeojsonControllerTest extends TestCase
         ]);
 
         $this->sector = Sector::factory()->create([
+            'id' => 9999,
             'name' => 'Test Sector',
             'code' => 'T',
             'num_expected' => 10,
@@ -63,6 +67,7 @@ class GeojsonControllerTest extends TestCase
         ]);
 
         $this->club = Club::factory()->create([
+            'id' => 9999,
             'name' => 'Test Club',
             'cai_code' => 'T123',
             'geometry' => DB::raw("ST_GeomFromText('POINT(0 0)')"),
@@ -115,6 +120,7 @@ class GeojsonControllerTest extends TestCase
     public function test_download_geojson_for_club_with_hiking_routes()
     {
         $hikingRoute = HikingRoute::factory()->create([
+            'id' => 99999,
             'geometry' => DB::raw("ST_GeomFromText('LINESTRING(0 0, 1 1)')"),
             'osmfeatures_data' => [
                 'properties' => [
@@ -128,7 +134,9 @@ class GeojsonControllerTest extends TestCase
             ],
         ]);
 
-        $this->club->hikingRoutes()->attach($hikingRoute->id);
+        if (!$this->club->hikingRoutes()->where('hiking_route_id', $hikingRoute->id)->exists()) {
+            $this->club->hikingRoutes()->attach($hikingRoute->id);
+        }
 
         $response = $this->get("/api/geojson/club/{$this->club->id}");
 
