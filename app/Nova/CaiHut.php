@@ -2,7 +2,9 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\CacheMiturApi;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
@@ -26,13 +28,21 @@ class CaiHut extends Resource
      */
     public static $title = 'id';
 
+    public static function label()
+    {
+        $label = 'Rifugi';
+
+        return __($label);
+    }
+
     /**
      * The columns that should be searched.
      *
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id',
+        'name',
     ];
 
     /**
@@ -59,6 +69,9 @@ class CaiHut extends Resource
                 'maxZoom' => 17,
                 'defaultZoom' => 13,
             ])->hideFromIndex(),
+            Text::make('Aws Cached Data', function () {
+                return '<a href="' . $this->getPublicAwsUrl('wmfemitur') . '" target="_blank" style="text-decoration:underline;">' . $this->getPublicAwsUrl('wmfemitur') . '</a>';
+            })->onlyOnDetail()->asHtml(),
 
         ];
     }
@@ -104,6 +117,12 @@ class CaiHut extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new CacheMiturApi('CaiHut'))->canSee(function () {
+                return auth()->user()->hasRole('Administrator');
+            })->canRun(function () {
+                return auth()->user()->hasRole('Administrator');
+            }),
+        ];
     }
 }

@@ -177,6 +177,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         $loggedInUser = auth()->user();
 
+        if (! $loggedInUser) {
+            return $dashboards;
+        }
+
         if ($loggedInUser->hasRole('Administrator')) {
             $dashboards[] = new Utenti();
             $dashboards[] = new Percorribilità();

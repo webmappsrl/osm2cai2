@@ -26,16 +26,41 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         'geometry',
         'updated_at',
         'created_at',
+        'osmfeatures_updated_at',
+        'unico_id',
+        'name',
+        'second_name',
+        'description',
+        'elevation',
+        'owner',
+        'region_id',
+        'addr_city',
+        'addr_street',
+        'addr_housenumber',
+        'addr_postcode',
+        'website',
+        'phone',
+        'email',
+        'fax',
+        'ref_vatin',
+        'email_pec',
+        'facebook_contact',
+        'municipality_geo',
+        'province_geo',
+        'site_geo',
+        'type',
+        'type_custodial',
+        'company_management_property',
+        'cached_mitur_api_data',
         'osmfeatures_id',
         'osmfeatures_data',
-        'osmfeatures_updated_at',
+        'intersectings',
     ];
 
     protected static function booted()
     {
-        //TODO: review from legacy osm2cai
         static::created(function ($caiHut) {
-            CheckNearbyHikingRoutesJob::dispatch($caiHut, config(config('osm2cai.hiking_route_buffer')));
+            CheckNearbyHikingRoutesJob::dispatch($caiHut, config('osm2cai.hiking_route_buffer'));
         });
 
         static::saved(function ($caiHut) {
@@ -84,7 +109,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData || empty($osmfeaturesData)) {
-            Log::channel('wm-osmfeatures')->info('No data found for CaiHut '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for CaiHut ' . $osmfeaturesId);
 
             return;
         }
@@ -96,7 +121,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
             if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
                 $updateData['name'] = $osmfeaturesData['properties']['name'];
             } elseif ($osmfeaturesData['properties']['name'] === null) {
-                Log::channel('wm-osmfeatures')->info('No name found for CaiHut '.$osmfeaturesId);
+                Log::channel('wm-osmfeatures')->info('No name found for CaiHut ' . $osmfeaturesId);
             }
         }
 

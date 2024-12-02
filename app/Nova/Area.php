@@ -2,11 +2,15 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Nova;
 use Laravel\Nova\Fields\Text;
+use App\Helpers\Osm2caiHelper;
+use App\Nova\Actions\DownloadKml;
+use App\Nova\Actions\DownloadShape;
+use App\Nova\Actions\downloadGeojson;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Filters\HikingRoutesAreaFilter;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
 
 class Area extends Resource
 {
@@ -46,6 +50,10 @@ class Area extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
+        if (auth()->user()->hasRole('Administrator')) {
+            return $query;
+        }
+
         if (empty($request->get('orderBy'))) {
             $query->getQuery()->orders = [];
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
@@ -74,8 +82,8 @@ class Area extends Resource
             Text::make(__('Province'), 'province_id', function () {
                 return $this->province->name ?? null;
             }),
-            Number::make(__('Sectors'), 'sectors', function () {
-                return count($this->sectors) ?? null;
+            Text::make(__('Sectors'), 'sectors', function () {
+                return count($this->sectors) ?? 0;
             }),
         ];
     }
@@ -88,7 +96,90 @@ class Area extends Resource
      */
     public function cards(NovaRequest $request)
     {
+        if (!is_null($request['resourceId'])) {
+            $area = \App\Models\Area::find($request['resourceId']);
+            $tot = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+            $hikingRoutes = $area->intersectings['hiking_routes'] ?? [];
+
+            foreach ($hikingRoutes as $id => $updated_at) {
+                $hrStatus = HikingRoute::find($id)->osm2cai_status;
+                $tot[$hrStatus]++;
+            }
+
+            $sal = $area->getSal();
+
+            return [
+                (new HtmlCard())
+                    ->width('1/4')
+                    ->view('nova.cards.area-stats-card', [
+                        'value' => $area->manager,
+                        'label' => 'Responsabili di settore'
+                    ])
+                    ->center()
+                    ->withBasicStyles()
+                    ->onlyOnDetail(),
+
+                (new HtmlCard())
+                    ->width('1/4')
+                    ->view('nova.cards.area-sal-card', [
+                        'value' => number_format($sal * 100, 2),
+                        'label' => 'SAL',
+                        'backgroundColor' => Osm2caiHelper::getSalColor($sal)
+                    ])
+                    ->center()
+                    ->withBasicStyles()
+                    ->onlyOnDetail(),
+
+                (new HtmlCard())
+                    ->width('1/4')
+                    ->view('nova.cards.area-stats-card', [
+                        'value' => $tot[3] + $tot[4],
+                        'label' => 'Numero percorsi sda 3/4'
+                    ])
+                    ->center()
+                    ->withBasicStyles()
+                    ->onlyOnDetail(),
+
+                (new HtmlCard())
+                    ->width('1/4')
+                    ->view('nova.cards.area-stats-card', [
+                        'value' => $area->num_expected,
+                        'label' => 'Numero percorsi attesi'
+                    ])
+                    ->center()
+                    ->withBasicStyles()
+                    ->onlyOnDetail(),
+                $this->getSdaCard(1, $tot[1]),
+                $this->getSdaCard(2, $tot[2]),
+                $this->getSdaCard(3, $tot[3]),
+                $this->getSdaCard(4, $tot[4]),
+            ];
+        }
         return [];
+    }
+
+    private function getSdaCard(int $sda, int $num): HtmlCard
+    {
+        $exploreUrl = '';
+        if ($num > 0) {
+            $resourceId = request()->get('resourceId');
+            $filter = base64_encode(json_encode([
+                ['class' => HikingRoutesAreaFilter::class, 'value' => $resourceId]
+            ]));
+            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+        }
+
+        return (new HtmlCard())
+            ->width('1/4')
+            ->view('nova.cards.area-sda-card', [
+                'sda' => $sda,
+                'num' => $num,
+                'backgroundColor' => Osm2caiHelper::getSdaColor($sda),
+                'exploreUrl' => $exploreUrl
+            ])
+            ->center()
+            ->withBasicStyles()
+            ->onlyOnDetail();
     }
 
     /**
@@ -121,6 +212,16 @@ class Area extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new DownloadGeojson())->canRun(function () {
+                return true;
+            })->onlyInline(),
+            (new DownloadShape())->canRun(function () {
+                return true;
+            })->onlyInline(),
+            (new DownloadKml())->canRun(function () {
+                return true;
+            })->onlyInline(),
+        ];
     }
 }

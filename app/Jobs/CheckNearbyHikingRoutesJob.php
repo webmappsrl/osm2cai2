@@ -37,16 +37,16 @@ class CheckNearbyHikingRoutesJob implements ShouldQueue
                 hiking_routes.geometry::geography,
                 cai_huts.geometry::geography, 
                 ?
-            )', [$buffer])
+            )', [$this->buffer])
             ->get();
 
         foreach ($nearbyRoutes as $route) {
             $hr = HikingRoute::find($route->id);
-            $currentHuts = json_decode($hr->cai_huts, true) ?: [];
+            $currentHuts = json_decode($hr->nearby_cai_huts, true) ?: [];
             if (! in_array($this->caiHut->id, $currentHuts)) {
                 array_push($currentHuts, $this->caiHut->id);
                 $hr->update([
-                    'cai_huts' => json_encode($currentHuts),
+                    'nearby_cai_huts' => json_encode($currentHuts),
                 ]);
             }
         }
