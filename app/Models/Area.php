@@ -8,12 +8,14 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Traits\CsvableModelTrait;
 use App\Traits\SpatialDataTrait;
+use App\Traits\SallableTrait;
+use App\Traits\IntersectingRouteStats;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Area extends Model
 {
-    use HasFactory, SpatialDataTrait, CsvableModelTrait;
+    use HasFactory, SpatialDataTrait, CsvableModelTrait, SallableTrait, IntersectingRouteStats;
 
     protected $fillable = [
         'code',
@@ -46,5 +48,27 @@ class Area extends Model
     public function hikingRoutes()
     {
         return $this->belongsToMany(HikingRoute::class);
+    }
+
+    /**
+     * Alias
+     */
+    public function children()
+    {
+        return $this->sectors();
+    }
+    /**
+     * Alias
+     */
+    public function childrenIds()
+    {
+        return $this->sectorsIds();
+    }
+    /**
+     * Alias
+     */
+    public function parent()
+    {
+        return $this->province();
     }
 }

@@ -2,7 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Area;
+use App\Models\Region;
+use App\Models\Province;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class Osm2caiSetExpectedValuesCommand extends Command
 {
@@ -20,6 +24,8 @@ class Osm2caiSetExpectedValuesCommand extends Command
      */
     protected $description = 'Set the expected number of hiking routes for the regions';
 
+    private $legacyOsm2cai;
+
     /**
      * Create a new command instance.
      *
@@ -27,6 +33,7 @@ class Osm2caiSetExpectedValuesCommand extends Command
      */
     public function __construct()
     {
+        $this->legacyOsm2cai = DB::connection('legacyosm2cai');
         parent::__construct();
     }
 
@@ -58,6 +65,54 @@ class Osm2caiSetExpectedValuesCommand extends Command
         \App\Models\Region::where('name', 'Valle d\'Aosta / Vallée d\'Aoste')->first()->update(['num_expected' => 1118]);
         \App\Models\Region::where('name', 'Veneto')->first()->update(['num_expected' => 984]);
 
-        return 0;
+
+        $this->setProvinceExpectedValues();
+        $this->setAreaExpectedValues();
+        $this->setSectorExpectedValues();
+    }
+
+    private function setProvinceExpectedValues()
+    {
+        $legacyProvinces = $this->legacyOsm2cai->table('provinces')->get();
+
+        foreach ($legacyProvinces as $legacyProvince) {
+            $actualProvince = Province::whereIn('osmfeatures_data->properties->osm_tags->short_name', $legacyProvince->code)
+                ->orWhereIn('osmfeatures_data->properties->osm_tags->ref', $legacyProvince->code)
+                ->first();
+            if ($actualProvince) {
+                $actualProvince->num_expected = $legacyProvince->num_expected;
+                $actualProvince->save();
+            }
+        }
+    }
+
+    private function setAreaExpectedValues()
+    {
+
+        $legacyAreas = $this->legacyOsm2cai->table('areas')->get();
+
+        foreach ($legacyAreas as $legacyArea) {
+            $actualArea = Area::where('full_code', $legacyArea->full_code)
+                ->first();
+            if ($actualArea) {
+                $actualArea->num_expected = $legacyArea->num_expected;
+                $actualArea->save();
+            }
+        }
+    }
+
+    private function setSectorExpectedValues()
+    {
+
+        $legacySectors = $this->legacyOsm2cai->table('sectors')->get();
+
+        foreach ($legacySectors as $legacySector) {
+            $actualSector = Sector::where('full_code', $legacySector->full_code)
+                ->first();
+            if ($actualSector) {
+                $actualSector->num_expected = $legacySector->num_expected;
+                $actualSector->save();
+            }
+        }
     }
 }
