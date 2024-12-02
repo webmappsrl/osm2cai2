@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\DB;
 
 trait SallableTrait
 {
-
     public function getSal()
     {
         $hikingRoutes = $this->intersectings['hiking_routes'] ?? [];
@@ -37,6 +36,7 @@ trait SallableTrait
 
         if ($this->num_expected > 0) {
             $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $this->num_expected;
+
             return min($sal, 1);
         }
 

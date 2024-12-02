@@ -3,11 +3,11 @@
 namespace Tests\Unit\Commands;
 
 use App\Jobs\RecalculateIntersectionsJob;
-use App\Models\Region;
 use App\Models\HikingRoute;
+use App\Models\Region;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Tests\TestCase;
 use Mockery;
+use Tests\TestCase;
 
 class CalculateRegionHikingRoutesIntersectionTest extends TestCase
 {

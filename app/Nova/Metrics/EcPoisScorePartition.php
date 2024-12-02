@@ -3,26 +3,25 @@
 namespace App\Nova\Metrics;
 
 use App\Models\EcPoi;
-use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Metrics\Partition;
 
 class EcPoisScorePartition extends Partition
 {
-
     public $name = 'Distribuzione per campo score';
 
     public $width = '1/2';
+
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
     {
         return $this->count($request, EcPoi::class, 'score');
     }
-
 
     /**
      * Determine for how many minutes the metric should be cached.

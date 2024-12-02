@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Area;
-use App\Models\Region;
 use App\Models\Province;
+use App\Models\Region;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -44,27 +44,26 @@ class Osm2caiSetExpectedValuesCommand extends Command
      */
     public function handle()
     {
-        \App\Models\Region::where('name', 'Abruzzo')->first()->update(['num_expected' => 449]);
-        \App\Models\Region::where('name', 'Basilicata')->first()->update(['num_expected' => 26]);
-        \App\Models\Region::where('name', 'Calabria')->first()->update(['num_expected' => 234]);
-        \App\Models\Region::where('name', 'Campania')->first()->update(['num_expected' => 559]);
-        \App\Models\Region::where('name', 'Emilia-Romagna')->first()->update(['num_expected' => 1253]);
-        \App\Models\Region::where('name', 'Friuli-Venezia Giulia')->first()->update(['num_expected' => 645]);
-        \App\Models\Region::where('name', 'Lazio')->first()->update(['num_expected' => 1033]);
-        \App\Models\Region::where('name', 'Liguria')->first()->update(['num_expected' => 806]);
-        \App\Models\Region::where('name', 'Lombardia')->first()->update(['num_expected' => 3784]);
-        \App\Models\Region::where('name', 'Marche')->first()->update(['num_expected' => 602]);
-        \App\Models\Region::where('name', 'Molise')->first()->update(['num_expected' => 27]);
-        \App\Models\Region::where('name', 'Piemonte')->first()->update(['num_expected' => 4635]);
-        \App\Models\Region::where('name', 'Puglia')->first()->update(['num_expected' => 60]);
-        \App\Models\Region::where('name', 'Sardigna/Sardegna')->first()->update(['num_expected' => 292]);
-        \App\Models\Region::where('name', 'Sicilia')->first()->update(['num_expected' => 330]);
-        \App\Models\Region::where('name', 'Toscana')->first()->update(['num_expected' => 2610]);
-        \App\Models\Region::where('name', 'Trentino-Alto Adige/Südtirol')->first()->update(['num_expected' => 5162]);
-        \App\Models\Region::where('name', 'Umbria')->first()->update(['num_expected' => 444]);
-        \App\Models\Region::where('name', 'Valle d\'Aosta / Vallée d\'Aoste')->first()->update(['num_expected' => 1118]);
-        \App\Models\Region::where('name', 'Veneto')->first()->update(['num_expected' => 984]);
-
+        Region::where('name', 'Abruzzo')->first()->update(['num_expected' => 449]);
+        Region::where('name', 'Basilicata')->first()->update(['num_expected' => 26]);
+        Region::where('name', 'Calabria')->first()->update(['num_expected' => 234]);
+        Region::where('name', 'Campania')->first()->update(['num_expected' => 559]);
+        Region::where('name', 'Emilia-Romagna')->first()->update(['num_expected' => 1253]);
+        Region::where('name', 'Friuli-Venezia Giulia')->first()->update(['num_expected' => 645]);
+        Region::where('name', 'Lazio')->first()->update(['num_expected' => 1033]);
+        Region::where('name', 'Liguria')->first()->update(['num_expected' => 806]);
+        Region::where('name', 'Lombardia')->first()->update(['num_expected' => 3784]);
+        Region::where('name', 'Marche')->first()->update(['num_expected' => 602]);
+        Region::where('name', 'Molise')->first()->update(['num_expected' => 27]);
+        Region::where('name', 'Piemonte')->first()->update(['num_expected' => 4635]);
+        Region::where('name', 'Puglia')->first()->update(['num_expected' => 60]);
+        Region::where('name', 'Sardigna/Sardegna')->first()->update(['num_expected' => 292]);
+        Region::where('name', 'Sicilia')->first()->update(['num_expected' => 330]);
+        Region::where('name', 'Toscana')->first()->update(['num_expected' => 2610]);
+        Region::where('name', 'Trentino-Alto Adige/Südtirol')->first()->update(['num_expected' => 5162]);
+        Region::where('name', 'Umbria')->first()->update(['num_expected' => 444]);
+        Region::where('name', 'Valle d\'Aosta / Vallée d\'Aoste')->first()->update(['num_expected' => 1118]);
+        Region::where('name', 'Veneto')->first()->update(['num_expected' => 984]);
 
         $this->setProvinceExpectedValues();
         $this->setAreaExpectedValues();
@@ -88,7 +87,6 @@ class Osm2caiSetExpectedValuesCommand extends Command
 
     private function setAreaExpectedValues()
     {
-
         $legacyAreas = $this->legacyOsm2cai->table('areas')->get();
 
         foreach ($legacyAreas as $legacyArea) {
@@ -103,7 +101,6 @@ class Osm2caiSetExpectedValuesCommand extends Command
 
     private function setSectorExpectedValues()
     {
-
         $legacySectors = $this->legacyOsm2cai->table('sectors')->get();
 
         foreach ($legacySectors as $legacySector) {

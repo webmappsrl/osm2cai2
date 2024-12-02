@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Jobs\RecalculateIntersectionsJob;
-use App\Models\Region;
 use App\Models\HikingRoute;
+use App\Models\Region;
 use Illuminate\Console\Command;
 
 class CalculateRegionHikingRoutesIntersection extends Command

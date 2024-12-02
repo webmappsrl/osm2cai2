@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Models\User;
-use App\Traits\SallableTrait;
-use App\Traits\SpatialDataTrait;
 use App\Traits\CsvableModelTrait;
 use App\Traits\IntersectingRouteStats;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\SallableTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Sector extends Model
 {
@@ -30,7 +30,6 @@ class Sector extends Model
     {
         return $this->belongsToMany(HikingRoute::class);
     }
-
 
     /**
      * Alias
@@ -92,7 +91,7 @@ class Sector extends Model
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 

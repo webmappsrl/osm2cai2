@@ -2,27 +2,27 @@
 
 namespace App\Models;
 
-use App\Models\User;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\RecalculateIntersectionsJob;
 use App\Models\EcPoi;
-use App\Models\Province;
 use App\Models\HikingRoute;
-use App\Traits\AwsCacheable;
-use App\Traits\SallableTrait;
 use App\Models\MountainGroups;
-use App\Traits\SpatialDataTrait;
+use App\Models\Province;
+use App\Models\User;
+use App\Traits\AwsCacheable;
 use App\Traits\CsvableModelTrait;
+use App\Traits\IntersectingRouteStats;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Traits\SallableTrait;
+use App\Traits\SpatialDataTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\CacheMiturAbruzzoDataJob;
-use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\Stopwatch\Section;
-use App\Jobs\RecalculateIntersectionsJob;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use App\Traits\IntersectingRouteStats;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
@@ -58,7 +58,6 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     {
         return $this->hasMany(Province::class);
     }
-
 
     public function hikingRoutes()
     {
@@ -119,7 +118,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Region ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Region '.$osmfeaturesId);
 
             return;
         }
@@ -131,7 +130,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Region ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Region '.$osmfeaturesId);
         }
 
         // Execute the update only if there are data to update
@@ -184,7 +183,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 
@@ -254,6 +253,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
         return $result;
     }
+
     public function sectorsIds(): array
     {
         $result = [];

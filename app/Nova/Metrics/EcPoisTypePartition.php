@@ -7,14 +7,14 @@ use Laravel\Nova\Metrics\Partition;
 
 class EcPoisTypePartition extends Partition
 {
-
     public $name = 'Distribuzione per campo type';
 
     public $width = '1/2';
+
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)

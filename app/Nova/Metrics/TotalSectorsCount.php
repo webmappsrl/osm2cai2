@@ -8,7 +8,6 @@ use Laravel\Nova\Metrics\Value;
 
 class TotalSectorsCount extends Value
 {
-
     /**
      * Set card's label
      *
@@ -28,7 +27,7 @@ class TotalSectorsCount extends Value
      */
     public function calculate(NovaRequest $request)
     {
-        return $this->result(Sector::all()->count())->format("0");
+        return $this->result(Sector::all()->count())->format('0');
     }
 
     /**

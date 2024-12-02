@@ -8,7 +8,6 @@ use Laravel\Nova\Metrics\Partition;
 
 class UserDistributionByRegion extends Partition
 {
-
     protected $users;
 
     public function __construct(iterable $users)
@@ -19,7 +18,7 @@ class UserDistributionByRegion extends Partition
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)

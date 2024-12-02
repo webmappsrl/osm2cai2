@@ -12,7 +12,7 @@ class AreasNumberByMyRegionValueMetric extends Value
     /**
      * Calculate the value of the metric.
      *
-     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
+     * @param NovaRequest $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -22,6 +22,7 @@ class AreasNumberByMyRegionValueMetric extends Value
         foreach ($request->user()->region->provinces as $province) {
             $count += count($province->areas);
         }
+
         return $this->result($count);
     }
 

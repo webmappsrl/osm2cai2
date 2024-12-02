@@ -2,21 +2,21 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Helpers\Nova\DashboardCardsHelper;
+use App\Helpers\Osm2caiHelper;
 use App\Models\Area;
+use App\Models\HikingRoute;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
-use App\Models\HikingRoute;
-use App\Helpers\Osm2caiHelper;
-use Illuminate\Support\Facades\DB;
-use Mako\CustomTableCard\Table\Row;
 use Illuminate\Support\Facades\Auth;
-use Mako\CustomTableCard\Table\Cell;
 use Illuminate\Support\Facades\Cache;
-use Mako\CustomTableCard\CustomTableCard;
-use App\Helpers\Nova\DashboardCardsHelper;
-use Laravel\Nova\Dashboards\Main as Dashboard;
+use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Dashboards\Main as Dashboard;
+use Mako\CustomTableCard\CustomTableCard;
+use Mako\CustomTableCard\Table\Cell;
+use Mako\CustomTableCard\Table\Row;
 
 class Main extends Dashboard
 {
@@ -56,12 +56,13 @@ class Main extends Dashboard
                 $cards = $this->regionalCards();
                 break;
             case in_array('Local Referent', $roles):
-                if ($user->sectors->count())
+                if ($user->sectors->count()) {
                     $cards = $this->_localCardsByModelClassName(Sector::class);
-                elseif ($user->areas->count())
+                } elseif ($user->areas->count()) {
                     $cards = $this->_localCardsByModelClassName(Area::class);
-                else
+                } else {
                     $cards = $this->_localCardsByModelClassName(Province::class);
+                }
                 break;
             default:
                 $cards = [$this->dashboardCardsHelper->getNoPermissionsCard()];
@@ -102,7 +103,7 @@ class Main extends Dashboard
             (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $userName])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles->toArray()])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.last-login-card', ['lastLogin' => $user->last_login_at])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2, '.', ''), 'backgroundColor' => Osm2CaiHelper::getSalColor($sal)])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2, '.', ''), 'backgroundColor' => Osm2caiHelper::getSalColor($sal)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[1], 'sda' => 1, 'backgroundColor' => Osm2caiHelper::getSdaColor(1)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[2], 'sda' => 2, 'backgroundColor' => Osm2caiHelper::getSdaColor(2)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[3], 'sda' => 3, 'backgroundColor' => Osm2caiHelper::getSdaColor(3)])->center(true)->withBasicStyles(),
@@ -147,7 +148,7 @@ class Main extends Dashboard
         $num_areas = count(explode(',', $area_codes));
 
         $sal = $region->getSal();
-        $sal_color = Osm2CaiHelper::getSalColor($sal);
+        $sal_color = Osm2caiHelper::getSalColor($sal);
 
         $SALIssueStatus = $this->getSalIssueStatus($region);
 
@@ -175,7 +176,7 @@ class Main extends Dashboard
                 ->view('nova.cards.sal-regional-card', [
                     'sal' => number_format($sal * 100, 2),
                     'backgroundColor' => $sal_color,
-                    'regionName' => $region->name
+                    'regionName' => $region->name,
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -187,7 +188,7 @@ class Main extends Dashboard
                     'geojsonUrl' => route('loading-download', ['type' => 'geojson-complete', 'model' => 'region', 'id' => $region->id]),
                     'shapefileUrl' => route('loading-download', ['type' => 'shapefile', 'model' => 'region', 'id' => $region->id]),
                     'csvUrl' => route('loading-download', ['type' => 'csv', 'model' => 'region', 'id' => $region->id]),
-                    'lastSync' => Cache::get('last_osm_sync', '24 ore fa')
+                    'lastSync' => Cache::get('last_osm_sync', '24 ore fa'),
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -197,7 +198,7 @@ class Main extends Dashboard
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $region->provinces->count(),
-                    'label' => '#province'
+                    'label' => '#province',
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -206,7 +207,7 @@ class Main extends Dashboard
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $num_areas,
-                    'label' => '#aree'
+                    'label' => '#aree',
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -215,7 +216,7 @@ class Main extends Dashboard
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $num_sectors,
-                    'label' => '#settori'
+                    'label' => '#settori',
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -224,7 +225,7 @@ class Main extends Dashboard
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => array_sum($numbers),
-                    'label' => '#tot percorsi'
+                    'label' => '#tot percorsi',
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -248,7 +249,6 @@ class Main extends Dashboard
             $provinceCards, //areas
             //[$cardsService->getSectorsTableCard()]//sectors
         );
-
 
         return $cards;
     }
@@ -311,7 +311,7 @@ class Main extends Dashboard
             if ($att > 0) {
                 $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $att;
                 $sal = min($sal, 1); // Assicura che SAL non superi il 100%
-                $salDisplay = number_format($sal * 100, 2) . ' %';
+                $salDisplay = number_format($sal * 100, 2).' %';
             } else {
                 $sal = 0;
                 $salDisplay = 'N/A';
@@ -327,7 +327,7 @@ class Main extends Dashboard
                 new Cell((string) $tot4),
                 new Cell((string) $tot),
                 new Cell((string) $att),
-                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . $salDisplay . '</div>'),
+                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.$salDisplay.'</div>'),
             );
             $data[] = $row;
         }
@@ -364,7 +364,7 @@ class Main extends Dashboard
         $result = (($percorribile + $percorribileParzialmente + $nonPercorribile) / count($hikingRoutes)) * 100;
         $result = round($result, 2);
 
-        return strval($result) . '%';
+        return strval($result).'%';
     }
 
     private function getSdaRegionalCard(int $sda, int $num): HtmlCard
@@ -374,8 +374,8 @@ class Main extends Dashboard
             ->view('nova.cards.sda-regional-card', [
                 'sda' => $sda,
                 'num' => $num,
-                'backgroundColor' => Osm2CaiHelper::getSdaColor($sda),
-                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens')
+                'backgroundColor' => Osm2caiHelper::getSdaColor($sda),
+                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens'),
             ])
             ->center()
             ->withBasicStyles();
@@ -414,7 +414,7 @@ class Main extends Dashboard
             $sal = $item->num_expected > 0 ?
                 (($item->tot1 * 0.25) + ($item->tot2 * 0.50) + ($item->tot3 * 0.75) + ($item->tot4)) / $item->num_expected :
                 0;
-            $sal_color = Osm2CaiHelper::getSalColor($sal);
+            $sal_color = Osm2caiHelper::getSalColor($sal);
 
             $model = $childrenAbstractModel::find($item->id);
 
@@ -427,13 +427,14 @@ class Main extends Dashboard
                 new Cell($item->tot4),
                 new Cell($tot),
                 new Cell($item->num_expected ?? 0),
-                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
-                new Cell('<a href="/resources/' . ($childrenTable == 'regions' ? 'region' : $childrenTable) . '/' . $item->id . '">[VIEW]</a>'),
+                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
+                new Cell('<a href="/resources/'.($childrenTable == 'regions' ? 'region' : $childrenTable).'/'.$item->id.'">[VIEW]</a>'),
             );
             $data[] = $row;
         }
 
         $sectorsCard->data($data);
+
         return $sectorsCard;
     }
 }

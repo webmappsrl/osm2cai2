@@ -9,17 +9,17 @@ use Laravel\Nova\Metrics\Partition;
 
 class UserDistributionByRole extends Partition
 {
-
     protected $users;
 
     public function __construct(iterable $users)
     {
         $this->users = $users;
     }
+
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -52,6 +52,7 @@ class UserDistributionByRole extends Partition
             }
         }
         $result = array_combine($keys, [$adminUsers, $nationalUsers, $regionalUsers, $localUsers, $unknownUsers]);
+
         return $this->result($result);
     }
 

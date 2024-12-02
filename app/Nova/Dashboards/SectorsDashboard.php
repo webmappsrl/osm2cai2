@@ -2,12 +2,12 @@
 
 namespace App\Nova\Dashboards;
 
-use Laravel\Nova\Dashboard;
-use App\Models\Sector;
 use App\Helpers\Osm2CaiHelper;
+use App\Models\Sector;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Dashboard;
 
 class SectorsDashboard extends Dashboard
 {
@@ -34,7 +34,7 @@ class SectorsDashboard extends Dashboard
         // Selects:
         // - sector id, full_code and num_expected
         // - count of hiking routes with osm2cai_status = 1 as tot1
-        // - count of hiking routes with osm2cai_status = 2 as tot2 
+        // - count of hiking routes with osm2cai_status = 2 as tot2
         // - count of hiking routes with osm2cai_status = 3 as tot3
         // - count of hiking routes with osm2cai_status = 4 as tot4
         // Left joins with hiking_route_sector and hiking_routes tables
@@ -61,7 +61,7 @@ class SectorsDashboard extends Dashboard
             $tot = $item->tot1 + $item->tot2 + $item->tot3 + $item->tot4;
             $sal = $item->num_expected == 0 ? 0 : (($item->tot1 * 0.25) + ($item->tot2 * 0.50) + ($item->tot3 * 0.75) + ($item->tot4)) / $item->num_expected;
 
-            return (object)[
+            return (object) [
                 'id' => $item->id,
                 'full_code' => $item->full_code,
                 'human_name' => $sector->human_name,
@@ -71,7 +71,7 @@ class SectorsDashboard extends Dashboard
                 'tot4' => $item->tot4,
                 'num_expected' => $item->num_expected,
                 'sal' => $sal,
-                'sal_color' => Osm2CaiHelper::getSalColor($sal)
+                'sal_color' => Osm2CaiHelper::getSalColor($sal),
             ];
         });
 

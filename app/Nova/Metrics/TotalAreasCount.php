@@ -8,7 +8,6 @@ use Laravel\Nova\Metrics\Value;
 
 class TotalAreasCount extends Value
 {
-
     /**
      * Set card's label
      *

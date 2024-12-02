@@ -11,7 +11,7 @@ class TotalUsers extends Value
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -34,7 +34,7 @@ class TotalUsers extends Value
             'MTD' => __('Month To Date'),
             'QTD' => __('Quarter To Date'),
             'YTD' => __('Year To Date'),
-            'ALL' => __('All Time')
+            'ALL' => __('All Time'),
         ];
     }
 

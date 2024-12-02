@@ -26,7 +26,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         Artisan::call('db:seed');
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: ' . $legacyUser->email);
+            $this->info('Importing user: '.$legacyUser->email);
 
             $user = User::updateOrCreate(
                 ['email' => $legacyUser->email],

@@ -22,7 +22,7 @@ class DashboardCardsHelper
             ->width('1/4')
             ->view('nova.cards.sal-nazionale', [
                 'sal' => $sal,
-                'backgroundColor' => Osm2CaiHelper::getSalColor($sal)
+                'backgroundColor' => Osm2CaiHelper::getSalColor($sal),
             ])
             ->center()
             ->withBasicStyles();
@@ -41,7 +41,7 @@ class DashboardCardsHelper
             ->width('1/4')
             ->view('nova.cards.total-km', [
                 'total' => $formatted,
-                'label' => 'Totale km #sda3 e #sda4'
+                'label' => 'Totale km #sda3 e #sda4',
             ])
             ->center()
             ->withBasicStyles();
@@ -60,7 +60,7 @@ class DashboardCardsHelper
             ->width('1/4')
             ->view('nova.cards.total-km', [
                 'total' => $formatted,
-                'label' => 'Totale km #sda4'
+                'label' => 'Totale km #sda4',
             ])
             ->center()
             ->withBasicStyles();

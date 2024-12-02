@@ -4,18 +4,18 @@ namespace App\Nova\Dashboards;
 
 use App\Nova\Metrics\IssueLastUpdatePerMonth;
 use App\Nova\Metrics\ValidatedHrPerMonth;
-use Laravel\Nova\Dashboard;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Dashboard;
 
 class Utenti extends Dashboard
 {
-
     public function label()
     {
         return 'Riepilogo utenti';
     }
+
     /**
      * Get the cards for the dashboard.
      *

@@ -7,9 +7,9 @@ use App\Models\Province;
 use App\Models\Sector;
 use App\Models\User;
 use App\Traits\CsvableModelTrait;
-use App\Traits\SpatialDataTrait;
-use App\Traits\SallableTrait;
 use App\Traits\IntersectingRouteStats;
+use App\Traits\SallableTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -57,6 +57,7 @@ class Area extends Model
     {
         return $this->sectors();
     }
+
     /**
      * Alias
      */
@@ -64,6 +65,7 @@ class Area extends Model
     {
         return $this->sectorsIds();
     }
+
     /**
      * Alias
      */

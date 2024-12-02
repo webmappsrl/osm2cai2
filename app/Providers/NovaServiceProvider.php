@@ -2,12 +2,43 @@
 
 namespace App\Providers;
 
+use App\Nova\ArchaeologicalArea;
+use App\Nova\ArchaeologicalSite;
+use App\Nova\Area;
+use App\Nova\CaiHut;
+use App\Nova\Club;
+use App\Nova\Dashboards\AcquaSorgente;
+use App\Nova\Dashboards\EcPoisDashboard;
+use App\Nova\Dashboards\ItalyDashboard;
+use App\Nova\Dashboards\Main;
+use App\Nova\Dashboards\Percorribilità;
+use App\Nova\Dashboards\PercorsiFavoriti;
+use App\Nova\Dashboards\SALMiturAbruzzo;
+use App\Nova\Dashboards\SectorsDashboard;
+use App\Nova\Dashboards\Utenti;
+use App\Nova\EcPoi;
+use App\Nova\GeologicalSite;
+use App\Nova\HikingRoute;
+use App\Nova\MountainGroups;
+use App\Nova\Municipality;
+use App\Nova\NaturalSpring;
+use App\Nova\Poles;
+use App\Nova\Province;
+use App\Nova\Region;
+use App\Nova\Sector;
+use App\Nova\Sign;
+use App\Nova\SourceSurvey;
+use App\Nova\UgcMedia;
+use App\Nova\UgcPoi;
+use App\Nova\UgcTrack;
+use App\Nova\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Gate, Blade};
-use Laravel\Nova\Menu\{MenuItem, MenuSection};
-use Laravel\Nova\{NovaApplicationServiceProvider, Nova};
-use App\Nova\Dashboards\{Main, Utenti, AcquaSorgente, ItalyDashboard, Percorribilità, EcPoisDashboard, PercorsiFavoriti, SectorsDashboard, SALMiturAbruzzo};
-use App\Nova\{Area, Club, Sign, User, EcPoi, Poles, CaiHut, Region, Sector, UgcPoi, Province, UgcMedia, UgcTrack, HikingRoute, Municipality, SourceSurvey, NaturalSpring, GeologicalSite, MountainGroups, ArchaeologicalArea, ArchaeologicalSite};
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Menu\MenuItem;
+use Laravel\Nova\Menu\MenuSection;
+use Laravel\Nova\Nova;
+use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
@@ -137,7 +168,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     protected function dashboards()
     {
-
         $dashboards = [
             new ItalyDashboard,
             new PercorsiFavoriti,
@@ -161,7 +191,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         }
 
         if ($loggedInUser->hasRole('Regional Referent')) {
-
             $dashboards[] = new SectorsDashboard;
             $dashboards[] = new Percorribilità($loggedInUser); //show data only for the user region
         }
@@ -172,7 +201,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         return $dashboards;
     }
-
 
     /**
      * Get the tools that should be listed in the Nova sidebar.

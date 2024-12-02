@@ -3,8 +3,8 @@
 namespace App\Nova\Metrics;
 
 use App\Enums\IssuesStatusEnum;
-use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Metrics\Partition;
 
 class Sda3And4IssueStatusPartition extends Partition
 {
@@ -14,10 +14,11 @@ class Sda3And4IssueStatusPartition extends Partition
     {
         $this->hikingRoutes = $hikingRoutes;
     }
+
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -51,6 +52,7 @@ class Sda3And4IssueStatusPartition extends Partition
         }
 
         $result = array_combine(array_keys($issueStatus), [$sconosciuto, $percorribile, $nonPercorribile, $percorribileParzialmente]);
+
         return $this->result($result)->colors($colors);
     }
 

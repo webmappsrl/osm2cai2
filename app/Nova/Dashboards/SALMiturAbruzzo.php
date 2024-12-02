@@ -2,19 +2,19 @@
 
 namespace App\Nova\Dashboards;
 
+use Ericlagarda\NovaTextCard\TextCard;
+use Illuminate\Support\Facades\DB;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Card;
 use Laravel\Nova\Dashboard;
-use Illuminate\Support\Facades\DB;
-use Ericlagarda\NovaTextCard\TextCard;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
 
 class SALMiturAbruzzo extends Dashboard
 {
-
     public function label()
     {
         return 'Riepilogo MITUR-Abruzzo';
     }
+
     /**
      * Get the cards for the dashboard.
      *
@@ -39,6 +39,7 @@ class SALMiturAbruzzo extends Dashboard
             'sumCaiHuts' => $sumCaiHuts,
             'sumClubs' => $sumClubs,
         ];
+
         return [
             (new HtmlCard())
                 ->width('full')

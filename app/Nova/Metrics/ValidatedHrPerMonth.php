@@ -3,12 +3,11 @@
 namespace App\Nova\Metrics;
 
 use App\Models\HikingRoute;
-use Laravel\Nova\Metrics\Trend;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Metrics\Trend;
 
 class ValidatedHrPerMonth extends Trend
 {
-
     /**
      * Get the displayable name of the metric
      *
@@ -18,10 +17,11 @@ class ValidatedHrPerMonth extends Trend
     {
         return 'Validated Hiking Routes per month';
     }
+
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)

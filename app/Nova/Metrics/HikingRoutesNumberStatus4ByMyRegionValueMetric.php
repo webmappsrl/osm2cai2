@@ -8,13 +8,12 @@ use Laravel\Nova\Metrics\Value;
 
 class HikingRoutesNumberStatus4ByMyRegionValueMetric extends Value
 {
-
     public $name = '#percorsi (status 4)';
 
     /**
      * Calculate the value of the metric.
      *
-     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
+     * @param NovaRequest $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)

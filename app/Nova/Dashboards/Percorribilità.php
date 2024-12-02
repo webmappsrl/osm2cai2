@@ -3,12 +3,11 @@
 namespace App\Nova\Dashboards;
 
 use App\Models\User;
-use Laravel\Nova\Dashboard;
 use Illuminate\Support\Facades\Cache;
+use Laravel\Nova\Dashboard;
 
 class Percorribilità extends Dashboard
 {
-
     protected $user;
 
     public function __construct(User $user = null)
@@ -20,6 +19,7 @@ class Percorribilità extends Dashboard
     {
         return 'Riepilogo Percorribilità';
     }
+
     /**
      * Get the cards for the dashboard.
      *
@@ -56,7 +56,7 @@ class Percorribilità extends Dashboard
 
                 return [
                     new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34)
+                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
                 ];
             }
             if ($areas) {
@@ -82,7 +82,7 @@ class Percorribilità extends Dashboard
 
                 return [
                     new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34)
+                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
                 ];
             }
             if ($provinces) {
@@ -108,7 +108,7 @@ class Percorribilità extends Dashboard
 
                 return [
                     new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34)
+                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
                 ];
             }
             if ($sectors) {
@@ -134,7 +134,7 @@ class Percorribilità extends Dashboard
 
                 return [
                     new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34)
+                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
                 ];
             }
         } else {
@@ -148,9 +148,10 @@ class Percorribilità extends Dashboard
                     ->whereIn('osm2cai_status', [3, 4])
                     ->get();
             });
+
             return [
                 new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34)
+                new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
             ];
         }
     }

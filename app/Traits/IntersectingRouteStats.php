@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-use Illuminate\Support\Facades\DB;
 use App\Models\HikingRoute;
+use Illuminate\Support\Facades\DB;
 
 trait IntersectingRouteStats
 {
@@ -16,29 +16,29 @@ trait IntersectingRouteStats
             'tot1' => 0,
             'tot2' => 0,
             'tot3' => 0,
-            'tot4' => 0
+            'tot4' => 0,
         ];
 
-        if (!empty($routeIds)) {
+        if (! empty($routeIds)) {
             $routes = HikingRoute::whereIn('id', $routeIds)
                 ->select('id', 'osm2cai_status')
                 ->get();
 
             foreach ($routes as $route) {
                 if ($route->osm2cai_status >= 1 && $route->osm2cai_status <= 4) {
-                    $stats['tot' . $route->osm2cai_status]++;
+                    $stats['tot'.$route->osm2cai_status]++;
                 }
             }
         }
 
-        return (object)[
+        return (object) [
             'id' => $this->id,
             'full_code' => isset($this->full_code) ? $this->full_code : $this->osmfeatures_data['properties']['osm_tags']['short_name'] ?? $this->osmfeatures_data['properties']['osm_tags']['ref'] ?? null,
             'tot1' => $stats['tot1'],
             'tot2' => $stats['tot2'],
             'tot3' => $stats['tot3'],
             'tot4' => $stats['tot4'],
-            'num_expected' => $this->num_expected
+            'num_expected' => $this->num_expected,
         ];
     }
 
