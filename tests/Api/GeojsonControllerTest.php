@@ -134,7 +134,7 @@ class GeojsonControllerTest extends TestCase
             ],
         ]);
 
-        if (!$this->club->hikingRoutes()->where('hiking_route_id', $hikingRoute->id)->exists()) {
+        if (! $this->club->hikingRoutes()->where('hiking_route_id', $hikingRoute->id)->exists()) {
             $this->club->hikingRoutes()->attach($hikingRoute->id);
         }
 
