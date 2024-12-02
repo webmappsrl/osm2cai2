@@ -88,7 +88,6 @@ class GeojsonControllerTest extends TestCase
                 'type',
                 'features',
                 'properties' => [
-                    'id',
                     'name',
                     'geojson_url',
                     'shapefile_url',
@@ -144,7 +143,6 @@ class GeojsonControllerTest extends TestCase
                             'coordinates',
                         ],
                         'properties' => [
-                            'id',
                             'name',
                             'user',
                             'relation_id',
@@ -200,7 +198,6 @@ class GeojsonControllerTest extends TestCase
                 'type',
                 'features',
                 'properties' => [
-                    'id',
                     'name',
                     'region',
                     'geojson_url',
@@ -219,7 +216,6 @@ class GeojsonControllerTest extends TestCase
                 'type',
                 'features',
                 'properties' => [
-                    'id',
                     'name',
                     'province',
                     'region',
