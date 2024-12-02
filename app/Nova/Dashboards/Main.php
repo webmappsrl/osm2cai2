@@ -42,18 +42,17 @@ class Main extends Dashboard
         $cards = [];
 
         $user = auth()->user();
-        $userName = $user->name;
         $roles = $user->getRoleNames()->toArray();
 
         switch ($roles) {
             case in_array('Administrator', $roles):
-                $cards = $this->nationalCards();
+                $cards = $this->nationalCards($user);
                 break;
             case in_array('National Referent', $roles):
-                $cards = $this->nationalCards();
+                $cards = $this->nationalCards($user);
                 break;
             case in_array('Regional Referent', $roles):
-                $cards = $this->regionalCards();
+                $cards = $this->regionalCards($user);
                 break;
             case in_array('Local Referent', $roles):
                 if ($user->sectors->count()) {
@@ -72,12 +71,14 @@ class Main extends Dashboard
         return $cards;
     }
 
-    private function nationalCards()
+    private function nationalCards($user)
     {
         $values = DB::table('hiking_routes')
             ->select('osm2cai_status', DB::raw('count(*) as num'))
             ->groupBy('osm2cai_status')
             ->get();
+
+        $roles = $user->getRoleNames()->toArray();
 
         $numbers = [];
         $numbers[1] = 0;
@@ -100,8 +101,8 @@ class Main extends Dashboard
         ) / $totalExpected : 0;
 
         $cards = [
-            (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $userName])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles->toArray()])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $user->name])->center(true)->withBasicStyles(),
+            (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.last-login-card', ['lastLogin' => $user->last_login_at])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => number_format($sal * 100, 2, '.', ''), 'backgroundColor' => Osm2caiHelper::getSalColor($sal)])->center(true)->withBasicStyles(),
             (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $numbers[1], 'sda' => 1, 'backgroundColor' => Osm2caiHelper::getSdaColor(1)])->center(true)->withBasicStyles(),
@@ -115,9 +116,8 @@ class Main extends Dashboard
         return $cards;
     }
 
-    private function regionalCards()
+    private function regionalCards($user)
     {
-        $user = auth()->user();
         $region = $user->region;
 
         $numbers = [];
@@ -311,7 +311,7 @@ class Main extends Dashboard
             if ($att > 0) {
                 $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $att;
                 $sal = min($sal, 1); // Assicura che SAL non superi il 100%
-                $salDisplay = number_format($sal * 100, 2).' %';
+                $salDisplay = number_format($sal * 100, 2) . ' %';
             } else {
                 $sal = 0;
                 $salDisplay = 'N/A';
@@ -327,7 +327,7 @@ class Main extends Dashboard
                 new Cell((string) $tot4),
                 new Cell((string) $tot),
                 new Cell((string) $att),
-                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.$salDisplay.'</div>'),
+                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . $salDisplay . '</div>'),
             );
             $data[] = $row;
         }
@@ -364,7 +364,7 @@ class Main extends Dashboard
         $result = (($percorribile + $percorribileParzialmente + $nonPercorribile) / count($hikingRoutes)) * 100;
         $result = round($result, 2);
 
-        return strval($result).'%';
+        return strval($result) . '%';
     }
 
     private function getSdaRegionalCard(int $sda, int $num): HtmlCard
@@ -375,7 +375,7 @@ class Main extends Dashboard
                 'sda' => $sda,
                 'num' => $num,
                 'backgroundColor' => Osm2caiHelper::getSdaColor($sda),
-                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens'),
+                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens'),
             ])
             ->center()
             ->withBasicStyles();
@@ -427,8 +427,8 @@ class Main extends Dashboard
                 new Cell($item->tot4),
                 new Cell($tot),
                 new Cell($item->num_expected ?? 0),
-                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
-                new Cell('<a href="/resources/'.($childrenTable == 'regions' ? 'region' : $childrenTable).'/'.$item->id.'">[VIEW]</a>'),
+                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
+                new Cell('<a href="/resources/' . ($childrenTable == 'regions' ? 'region' : $childrenTable) . '/' . $item->id . '">[VIEW]</a>'),
             );
             $data[] = $row;
         }
