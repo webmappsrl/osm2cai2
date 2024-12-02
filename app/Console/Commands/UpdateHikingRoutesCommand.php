@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\HikingRoute;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,7 @@ class UpdateHikingRoutesCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Updates hiking routes by checking the latest updated_at timestamp and fetching updated data from the API.';
+    protected $description = 'Updates hiking routes by checking the latest updated_at timestamp and fetching updated data from osmfeatures API.';
 
     /**
      * Execute the console command.
@@ -115,6 +116,9 @@ class UpdateHikingRoutesCommand extends Command
                 $logger->error($failMessage);
             }
         }
+
+        // Store the current timestamp in cache
+        Cache::forever('last_osm_sync', now()->toDateTimeString());
 
         $logger->info('Finished updating hiking routes.');
     }

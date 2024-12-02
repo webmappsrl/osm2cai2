@@ -7,11 +7,12 @@ use App\Models\HikingRoute;
 use App\Models\Region;
 use App\Models\User;
 use App\Traits\CsvableModelTrait;
+use App\Traits\IntersectingRouteStats;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Traits\SallableTrait;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
@@ -19,7 +20,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Province extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, SpatialDataTrait, CsvableModelTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, SpatialDataTrait, CsvableModelTrait, SallableTrait, IntersectingRouteStats;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'name', 'geometry'];
 
@@ -100,6 +101,32 @@ class Province extends Model implements OsmfeaturesSyncableInterface
     public function hikingRoutes()
     {
         return $this->belongsToMany(HikingRoute::class);
+    }
+
+    /**
+     * Alias
+     */
+    public function children()
+    {
+        return $this->areas();
+    }
+
+    public function childrenIds()
+    {
+        return $this->areasIds();
+    }
+
+    public function areasIds(): array
+    {
+        return $this->areas->pluck('id')->toArray();
+    }
+
+    /**
+     * Alias
+     */
+    public function parent()
+    {
+        return $this->region();
     }
 
     public function sectorsIds(): array

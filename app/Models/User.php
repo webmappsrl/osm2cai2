@@ -84,7 +84,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function region()
     {
-        return $this->belongsTo(Region::class, 'region_name', 'name');
+        return $this->belongsTo(Region::class, 'region_id');
     }
 
     public function club()

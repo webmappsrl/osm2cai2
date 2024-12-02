@@ -8,6 +8,8 @@ use App\Http\Controllers\HikingRouteController;
 use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\KmlController;
 use App\Http\Controllers\MiturAbruzzoController;
+use App\Http\Controllers\RegionController;
+use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\SourceSurveyController;
 use App\Http\Controllers\UmapController;
@@ -39,6 +41,11 @@ Route::prefix('kml')->name('kml.')->group(function () {
 });
 Route::prefix('geojson')->name('geojson.')->group(function () {
     Route::get('/{modelType}/{id}', [GeojsonController::class, 'download']);
+});
+
+Route::prefix('geojson-complete')->name('geojson_complete.')->group(function () {
+    Route::get('/region/{id}', [RegionController::class, 'geojsonComplete'])->name('region');
+    Route::get('/sector/{id}', [SectorController::class, 'geojsonComplete'])->name('sector');
 });
 
 Route::prefix('v1')->name('v1')->group(function () {

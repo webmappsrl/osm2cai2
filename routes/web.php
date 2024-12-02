@@ -45,6 +45,7 @@ Route::get('/hiking-route/id/{id}', function ($id) {
 
 
 
+
 /**
  * Route to login to application with cas with specific middleware and controller
  */
@@ -57,3 +58,12 @@ Route::get('/nova/cas-login', CasLoginController::class . '@casLogin')
 Route::get('/nova/cas-logout', function () {
     cas()->logout();
 })->middleware('cas.auth');
+
+Route::get('/loading-download/{type}/{model}/{id}', function () {
+    return view('nova.loading', [
+        'type' => request()->type,
+        'model' => request()->model,
+        'id' => request()->id,
+    ]);
+})->name('loading-download');
+

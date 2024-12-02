@@ -11,7 +11,9 @@ use App\Models\Province;
 use App\Models\User;
 use App\Traits\AwsCacheable;
 use App\Traits\CsvableModelTrait;
+use App\Traits\IntersectingRouteStats;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Traits\SallableTrait;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +26,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait, AwsCacheable;
+    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait, AwsCacheable, SallableTrait, IntersectingRouteStats;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting', 'code'];
 
@@ -38,7 +40,8 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     {
         static::saved(function ($region) {
             if ($region->isDirty('geometry')) {
-                RecalculateIntersectionsJob::dispatch($region, null);
+                //recalculate intersections with hiking routes
+                RecalculateIntersectionsJob::dispatch($region, HikingRoute::class);
             }
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('Region', $region->id);
@@ -221,6 +224,34 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         }
 
         return json_encode($geojson);
+    }
+
+    /**
+     * Alias
+     */
+    public function children()
+    {
+        return $this->provinces();
+    }
+
+    public function childrenIds()
+    {
+        return $this->provincesIds();
+    }
+
+    public function provincesIds(): array
+    {
+        return $this->provinces->pluck('id')->toArray();
+    }
+
+    public function areasIds(): array
+    {
+        $result = [];
+        foreach ($this->provinces as $province) {
+            $result = array_unique(array_values(array_merge($result, $province->areasIds())));
+        }
+
+        return $result;
     }
 
     public function sectorsIds(): array
