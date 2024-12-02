@@ -48,6 +48,7 @@
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
+        "norman-huth/nova-assets-changer": "^1.2",
         "nunomaduro/collision": "^8.1",
         "phpunit/phpunit": "^10.0",
         "spatie/laravel-ignition": "^2.0"
@@ -70,7 +71,8 @@
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "@php artisan custom-assets:after-composer-update"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
