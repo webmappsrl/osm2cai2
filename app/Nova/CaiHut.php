@@ -26,13 +26,21 @@ class CaiHut extends Resource
      */
     public static $title = 'id';
 
+    public static function label()
+    {
+        $label = 'Rifugi';
+
+        return __($label);
+    }
+
     /**
      * The columns that should be searched.
      *
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id',
+        'name',
     ];
 
     /**

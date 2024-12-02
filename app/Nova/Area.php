@@ -3,12 +3,11 @@
 namespace App\Nova;
 
 use Laravel\Nova\Nova;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use Laravel\Nova\Fields\Number;
-use Illuminate\Support\Facades\DB;
+use App\Nova\Actions\DownloadKml;
+use App\Nova\Actions\DownloadShape;
+use App\Nova\Actions\downloadGeojson;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Filters\HikingRoutesAreaFilter;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
@@ -213,6 +212,16 @@ class Area extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new DownloadGeojson())->canRun(function () {
+                return true;
+            })->onlyInline(),
+            (new DownloadShape())->canRun(function () {
+                return true;
+            })->onlyInline(),
+            (new DownloadKml())->canRun(function () {
+                return true;
+            })->onlyInline(),
+        ];
     }
 }
