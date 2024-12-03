@@ -1,4 +1,5 @@
 <?php
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -17,7 +18,6 @@ return [
     | balanced hosts, then separate each with a comma.
     */
     'cas_real_hosts'      => env('CAS_REAL_HOSTS', 'accesso.cai.it'),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -77,7 +77,6 @@ return [
     | Example: 'http://localhost', 'https://example.com:8888'
     */
     'cas_client_service' => env('CAS_CLIENT_SERVICE', 'https://osm2cai.cai.it'),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -148,7 +147,7 @@ return [
     | will override this configuration.
     |--------------------------------------------------------------------------
     */
-    'cas_version'         => env('CAS_VERSION', "2.0"),
+    'cas_version'         => env('CAS_VERSION', '2.0'),
 
     /*
     |--------------------------------------------------------------------------
@@ -175,5 +174,5 @@ return [
     | This should only be used for developmental purposes.  getAttributes()
     | will return null in this condition.
      */
-    'cas_masquerade'      => env('CAS_MASQUERADE', '')
+    'cas_masquerade'      => env('CAS_MASQUERADE', ''),
 ];

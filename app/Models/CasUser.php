@@ -24,16 +24,16 @@ class CasUser extends Model
         'cas_id',
         'firstname',
         'lastname',
-        'roles'
+        'roles',
     ];
-
 
     /**
      * get the User model
      *
      * @return User
      */
-    public function user() {
-        return $this->belongsTo( User::class );
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -16,7 +16,6 @@ use Laravel\Nova\Nova;
  */
 class CasLoginController extends Controller
 {
-
     /**
      * Login and/or register cas user
      *
@@ -34,7 +33,7 @@ class CasLoginController extends Controller
          */
         $userEmail = $userAttributes['uid'];
         $validator = Validator::make(['email' => $userEmail], [
-            'email' => 'required|email'
+            'email' => 'required|email',
         ]);
         $userEmail = Str::lower($userEmail);
 
@@ -42,14 +41,14 @@ class CasLoginController extends Controller
          * Check if mail is valid
          */
         if ($validator->fails()) {
-            return redirect()->intended(Nova::path())->withErrors("Your username must be a valid email to use this function");
+            return redirect()->intended(Nova::path())->withErrors('Your username must be a valid email to use this function');
         }
 
         /**
          * Prepare CasUser model fillable attributes
          */
         $casUserFill = [
-            'uid' => $userEmail
+            'uid' => $userEmail,
         ];
 
         /**
@@ -62,7 +61,6 @@ class CasLoginController extends Controller
             $user = $casUser->user;
         } // yes, get it
         else { // no, create a new CasUser and maybe an User
-
             /**
              * Already exists an User with this email?
              */
@@ -73,9 +71,9 @@ class CasLoginController extends Controller
             } else { //no, create a new User
                 $newUserFill = [
                     'email' => $userEmail,
-                    'name' => $userAttributes['firstname'] . ' ' . $userAttributes['lastname'],
+                    'name' => $userAttributes['firstname'].' '.$userAttributes['lastname'],
                     'email_verified_at' => now(),
-                    'password' => Hash::make(Str::random(100)) //generate a random password with 100 characters
+                    'password' => Hash::make(Str::random(100)), //generate a random password with 100 characters
                 ];
                 $user = User::firstOrCreate($newUserFill);
             }
@@ -85,7 +83,7 @@ class CasLoginController extends Controller
                 'user_uuid' => $userAttributes['userUuid'],
                 'cas_id' => $userAttributes['id'],
                 'firstname' => $userAttributes['firstname'],
-                'lastname' => $userAttributes['lastname']
+                'lastname' => $userAttributes['lastname'],
             ]);
             $casUser = new CasUser($casUserFill);
             //associate User to CasUser (belongsTo)
