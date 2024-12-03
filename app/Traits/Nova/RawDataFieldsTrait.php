@@ -6,17 +6,16 @@ use Laravel\Nova\Fields\Code;
 
 /**
  * Trait RawDataFieldsTrait
- * 
+ *
  * This trait provides methods for handling raw data fields in JSON format.
  */
 trait RawDataFieldsTrait
 {
-
     /**
      * Get the code field.
-     * 
+     *
      * This method returns a code field in JSON format including only the specified keys.
-     * 
+     *
      * @param string $fieldName The name of the field.
      * @param array $includeKeys The keys to include in the field.
      * @return Code
@@ -28,12 +27,11 @@ trait RawDataFieldsTrait
         })->onlyOnDetail()->language('json')->rules('json');
     }
 
-
     /**
      * Get the metadata field.
-     * 
+     *
      * This method returns a metadata field in JSON format, if present (for tracks).
-     * 
+     *
      * @return Code
      */
     protected function getMetadataField()
@@ -43,12 +41,11 @@ trait RawDataFieldsTrait
         })->onlyOnDetail()->language('json')->rules('json');
     }
 
-
     /**
      * Encode filtered JSON data.
-     * 
+     *
      * This method encodes the filtered JSON data based on the provided include keys.
-     * 
+     *
      * @param $model
      * @param array $includeKeys
      * @param string $fieldName
@@ -57,19 +54,20 @@ trait RawDataFieldsTrait
     protected function encodeFilteredJsonData($model, $includeKeys, $fieldName)
     {
         $jsonRawData = $this->getJsonRawData($model, $fieldName);
-        if (!$jsonRawData) {
+        if (! $jsonRawData) {
             return null;
         }
 
         $filteredData = empty($includeKeys) ? $jsonRawData : array_intersect_key($jsonRawData, array_flip($includeKeys));
+
         return json_encode($filteredData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
     /**
      * Get the raw data in JSON format.
-     * 
+     *
      * This method returns the raw data in JSON format, decoding the JSON string if necessary.
-     * 
+     *
      * @param $model
      * @return array|null
      */
@@ -79,6 +77,7 @@ trait RawDataFieldsTrait
         if ($fieldName === 'Nominatim') {
             return $rawData ? $rawData['nominatim'] ?? null : null;
         }
+
         return $rawData;
     }
 }

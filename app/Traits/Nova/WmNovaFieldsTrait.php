@@ -3,9 +3,9 @@
 namespace App\Traits\Nova;
 
 use DKulyk\Nova\Tabs;
-use Laravel\Nova\Fields\Field;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Laravel\Nova\Fields\Field;
 
 trait WmNovaFieldsTrait
 {
@@ -38,13 +38,13 @@ trait WmNovaFieldsTrait
             $modelType = str_contains(request()->path(), 'ugc-tracks') ? 'track' : 'poi';
 
             if ($modelType === 'track') {
-                $formConfig = $config['track'][0] ?? null; // Take the first element of the track array 
+                $formConfig = $config['track'][0] ?? null; // Take the first element of the track array
             } else {
                 // Search for the corresponding element based on the form_id
                 $formConfig = collect($config['poi'])->firstWhere('id', $this->form_id);
             }
 
-            if (!$formConfig) {
+            if (! $formConfig) {
                 return $this->createNoDataField();
             }
 
@@ -57,7 +57,7 @@ trait WmNovaFieldsTrait
         }
 
         $tabs = new Tabs($tabsLabel, [
-            ' ' => $fields
+            ' ' => $fields,
         ]);
 
         return $tabs;
@@ -76,21 +76,21 @@ trait WmNovaFieldsTrait
                         'label' => [
                             'it' => 'Flora',
                             'en' => 'Flora',
-                        ]
+                        ],
                     ],
                     [
                         'value' => 'fauna',
                         'label' => [
                             'it' => 'Fauna',
                             'en' => 'Fauna',
-                        ]
+                        ],
                     ],
                     [
                         'value' => 'habitat',
                         'label' => [
                             'it' => 'Habitat',
                             'en' => 'Habitat',
-                        ]
+                        ],
                     ],
                 );
             }
@@ -158,6 +158,7 @@ trait WmNovaFieldsTrait
                 $options[$option['value']] = $option['label']['it'] ?? $option['label']['en'] ?? $option['value'];
             }
         }
+
         return $options;
     }
 
@@ -167,6 +168,7 @@ trait WmNovaFieldsTrait
         if (isset($fieldSchema['required']) && $fieldSchema['required']) {
             $rules[] = 'required';
         }
+
         return $rules;
     }
 
@@ -180,7 +182,7 @@ trait WmNovaFieldsTrait
 
     protected function ensureNovaIsInstalled()
     {
-        if (!class_exists('Laravel\Nova\Fields\Field')) {
+        if (! class_exists('Laravel\Nova\Fields\Field')) {
             throw new \Exception('Laravel Nova is not installed. Please install Laravel Nova to use this feature.');
         }
     }

@@ -2,19 +2,19 @@
 
 namespace App\Nova;
 
-use Wm\MapPoint\MapPoint;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\Textarea;
-use Laravel\Nova\Fields\BelongsTo;
-use Wm\MapPointNova3\MapPointNova3;
-use Illuminate\Support\Facades\Auth;
 use App\Nova\Filters\RelatedUGCFilter;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Webmapp\WmEmbedmapsField\WmEmbedmapsField;
+use Wm\MapPoint\MapPoint;
+use Wm\MapPointNova3\MapPointNova3;
 
 class UgcMedia extends Resource
 {
@@ -32,10 +32,11 @@ class UgcMedia extends Resource
      */
     public function title()
     {
-        if ($this->name)
+        if ($this->name) {
             return "{$this->name} ({$this->id})";
-        else
+        } else {
             return "{$this->id}";
+        }
     }
 
     /**
@@ -58,7 +59,7 @@ class UgcMedia extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function fields(Request $request)
@@ -113,14 +114,14 @@ class UgcMedia extends Resource
                 'maxZoom' => 14,
                 'defaultZoom' => 10,
                 'defaultCenter' => [43.7125, 10.4013],
-            ])->hideFromIndex()
+            ])->hideFromIndex(),
         ];
     }
 
     /**
      * Get the cards available for the request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function cards(Request $request)
@@ -131,7 +132,7 @@ class UgcMedia extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function filters(Request $request)
@@ -144,7 +145,7 @@ class UgcMedia extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function lenses(Request $request)
@@ -155,7 +156,7 @@ class UgcMedia extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function actions(Request $request)

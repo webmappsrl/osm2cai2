@@ -3,27 +3,35 @@
 namespace App\Console\Commands;
 
 use App\Models\Area;
-use App\Models\User;
-use App\Models\Sector;
+use App\Models\Club;
 use App\Models\Province;
+use App\Models\Region;
+use App\Models\Sector;
+use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class SyncUsersFromLegacyOsm2cai extends Command
 {
-    protected $signature = 'osm2cai2:sync-users';
-    protected $description = 'Sync users from legacy OSM2CAI and handle roles and permissions';
+    protected $signature = 'osm2cai:sync-users';
+
+    protected $description = 'Sync users from legacy OSM2CAI along with relationships and handle roles and permissions.';
 
     public function handle()
     {
         $legacyUsers = DB::connection('legacyosm2cai')->table('users')->get();
 
+        //populate the roles and permissions table
+        Artisan::call('db:seed');
+
         foreach ($legacyUsers as $legacyUser) {
-            $this->info("Importing user: " . $legacyUser->email);
+            $this->info('Importing user: '.$legacyUser->email);
 
             $user = User::updateOrCreate(
                 ['email' => $legacyUser->email],
                 [
+                    'id' => $legacyUser->id,
                     'name' => $legacyUser->name,
                     'email_verified_at' => $legacyUser->email_verified_at,
                     'password' => $legacyUser->password,
@@ -37,31 +45,35 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $this->syncTerritorialRelations($user, $legacyUser);
         }
 
-        $this->info('Import completato.');
+        $this->info('Import completed.');
     }
 
     private function syncTerritorialRelations($user, $legacyUser)
     {
-        // Sincronizza le province
+        // Sync the provinces
         $provinceIds = DB::connection('legacyosm2cai')
             ->table('province_user')
             ->where('user_id', $legacyUser->id)
             ->pluck('province_id');
 
-        $provinceNames = DB::connection('legacyosm2cai')
+        $provinceCodes = DB::connection('legacyosm2cai')
             ->table('provinces')
             ->whereIn('id', $provinceIds)
-            ->pluck('name');
+            ->pluck('code');
 
-        if ($provinceNames->isNotEmpty()) {
-            $provinces = Province::whereIn('name', $provinceNames)->get();
-            $user->provinces()->sync($provinces->pluck('name'));
-            //remove role guest
-            $user->removeRole('Guest');
-            $user->assignRole('Local Referent');
+        if ($provinceCodes->isNotEmpty()) {
+            $provinces = Province::whereIn('osmfeatures_data->properties->osm_tags->short_name', $provinceCodes)
+                ->orWhereIn('osmfeatures_data->properties->osm_tags->ref', $provinceCodes)
+                ->get();
+            if ($provinces->isNotEmpty()) {
+                $user->provinces()->sync($provinces->pluck('id'));
+                //remove role guest
+                $user->removeRole('Guest');
+                $user->assignRole('Local Referent');
+            }
         }
 
-        // Sincronizza le aree
+        // Sync the areas
         $areaIds = DB::connection('legacyosm2cai')
             ->table('area_user')
             ->where('user_id', $legacyUser->id)
@@ -74,12 +86,12 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if ($areaNames->isNotEmpty()) {
             $areas = Area::whereIn('name', $areaNames)->get();
-            $user->areas()->sync($areas->pluck('name')); // Sincronizza con i nomi delle aree
+            $user->areas()->sync($areas->pluck('id'));
             $user->removeRole('Guest');
             $user->assignRole('Local Referent');
         }
 
-        // Sincronizza i settori
+        // Sync the sectors
         $sectorIds = DB::connection('legacyosm2cai')
             ->table('sector_user')
             ->where('user_id', $legacyUser->id)
@@ -92,10 +104,61 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if ($sectorNames->isNotEmpty()) {
             $sectors = Sector::whereIn('name', $sectorNames)->get();
-            $user->sectors()->sync($sectors->pluck('name')); // Sincronizza con i nomi dei settori
+            $user->sectors()->sync($sectors->pluck('id'));
             $user->removeRole('Guest');
             $user->assignRole('Local Referent');
         }
+
+        //Sync the club
+        $clubId = $legacyUser->section_id;
+
+        if ($clubId) {
+            //get the section from legacy osm2cai
+            $legacySection = DB::connection('legacyosm2cai')
+                ->table('sections')
+                ->where('id', $clubId)
+                ->first();
+
+            if ($legacySection) {
+                $club = Club::where('cai_code', $legacySection->cai_code)->first();
+                if ($club) {
+                    $user->club_id = $club->id;
+                }
+            }
+
+            //sync the region
+            $legacyRegion = DB::connection('legacyosm2cai')
+                ->table('regions')
+                ->where('id', $legacyUser->region_id)
+                ->first();
+
+            if ($legacyRegion) {
+                $region = Region::where('osmfeatures_id', $legacyRegion->osmfeatures_id)->first();
+                if ($region) {
+                    $user->region_id = $region->id;
+                    //assign role
+                    $user->removeRole('Guest');
+                    $user->assignRole('Regional Referent');
+                }
+            }
+
+            //sync the managed section
+            $legacyManagedSection = DB::connection('legacyosm2cai')
+                ->table('sections')
+                ->where('id', $legacyUser->manager_section_id)
+                ->first();
+
+            if ($legacyManagedSection) {
+                $managedSection = Club::where('cai_code', $legacyManagedSection->cai_code)->first();
+                if ($managedSection) {
+                    $user->managed_club_id = $managedSection->id;
+                    $user->removeRole('Guest');
+                    $user->assignRole('Club Manager');
+                }
+            }
+        }
+
+        $user->save();
     }
 
     private function assignRolesAndPermissions($user, $legacyUser)
@@ -113,28 +176,6 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $user->assignRole('Itinerary Manager');
         }
 
-        // Recupera la regione e sezione dal database legacy
-        $regionName = DB::connection('legacyosm2cai')
-            ->table('regions')
-            ->where('id', $legacyUser->region_id)
-            ->value('name');
-
-        $sectionCode = DB::connection('legacyosm2cai')
-            ->table('sections')
-            ->where('id', $legacyUser->section_id)
-            ->value('cai_code');
-
-        if ($regionName) {
-            $user->region_name = $regionName;
-            $user->removeRole('Guest');
-            $user->assignRole('Regional Referent');
-        }
-        if ($sectionCode) {
-            $user->club_cai_code = $sectionCode;
-            $user->removeRole('Guest');
-            $user->assignRole('Sectional Referent');
-        }
-
         $this->assignResourcesValidationPermissions($legacyUser, $user);
     }
 
@@ -144,31 +185,31 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ? json_decode($legacyUser->resources_validator, true)
             : $legacyUser->resources_validator;
 
-        if (!$legacyResourceValidation) {
+        if (! $legacyResourceValidation) {
             return;
         }
 
-        if (isset($legacyResourceValidation['is_sign_validator'])) {
+        if (isset($legacyResourceValidation['is_sign_validator']) && $legacyResourceValidation['is_sign_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate signs');
         }
 
-        if (isset($legacyResourceValidation['is_source_validator'])) {
+        if (isset($legacyResourceValidation['is_source_validator']) && $legacyResourceValidation['is_source_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate source surveys');
         }
 
-        if (isset($legacyResourceValidation['is_geological_site_validator'])) {
+        if (isset($legacyResourceValidation['is_geological_site_validator']) && $legacyResourceValidation['is_geological_site_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate geological sites');
         }
 
-        if (isset($legacyResourceValidation['is_archaeological_site_validator'])) {
+        if (isset($legacyResourceValidation['is_archaeological_site_validator']) && $legacyResourceValidation['is_archaeological_site_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate archaeological sites');
         }
 
-        if (isset($legacyResourceValidation['is_archaeological_area_validator'])) {
+        if (isset($legacyResourceValidation['is_archaeological_area_validator']) && $legacyResourceValidation['is_archaeological_area_validator'] == true) {
             $user->syncRoles(['Validator']);
             $user->givePermissionTo('validate archaeological areas');
         }

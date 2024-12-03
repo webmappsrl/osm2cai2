@@ -63,4 +63,27 @@ class SectorController extends Controller
     {
         //
     }
+
+    /**
+     * Returns a complete GeoJSON representation of all hiking routes in the sector.
+     *
+     * @param string $id The ID of the sector
+     * @return \Illuminate\Http\Response GeoJSON response with hiking routes data
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If sector not found
+     */
+    public function geojsonComplete(string $id): \Illuminate\Http\Response
+    {
+        try {
+            $sector = Sector::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Sector not found'], 404);
+        }
+
+        $headers = [
+            'Content-type' => 'application/json',
+            'Content-Disposition' => 'attachment; filename="osm2cai_'.date('Ymd').'_settore_complete_'.$sector->name.'.geojson"',
+        ];
+
+        return response($sector->getGeojsonComplete(), 200, $headers);
+    }
 }

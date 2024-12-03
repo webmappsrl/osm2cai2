@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use App\Models\UgcMedia;
-use Illuminate\Support\Carbon;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\User;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class UgcPoi extends Model
 {
-    use HasFactory;
+    use HasFactory, SpatialDataTrait;
 
     protected $table = 'ugc_pois';
 
@@ -21,7 +22,7 @@ class UgcPoi extends Model
     protected $casts = [
         'raw_data' => 'array',
         'validation_date' => 'datetime',
-        'raw_data->date' => 'datetime:Y-m-d H:i:s'
+        'raw_data->date' => 'datetime:Y-m-d H:i:s',
     ];
 
     public function getRegisteredAtAttribute()
@@ -74,12 +75,13 @@ class UgcPoi extends Model
 
         $propertiesToClear = ['geometry'];
         foreach ($array as $property => $value) {
-            if (is_null($value) || in_array($property, $propertiesToClear))
+            if (is_null($value) || in_array($property, $propertiesToClear)) {
                 unset($array[$property]);
+            }
         }
 
         if (isset($array['raw_data'])) {
-            $array['raw_data']  = json_encode($array['raw_data']);
+            $array['raw_data'] = json_encode($array['raw_data']);
         }
 
         return $array;
@@ -93,10 +95,12 @@ class UgcPoi extends Model
     public function getGeojson(): ?array
     {
         $feature = $this->getEmptyGeojson();
-        if (isset($feature["properties"])) {
-            $feature["properties"] = $this->getJsonProperties();
+        if (isset($feature['properties'])) {
+            $feature['properties'] = $this->getJsonProperties();
 
             return $feature;
-        } else return null;
+        } else {
+            return null;
+        }
     }
 }

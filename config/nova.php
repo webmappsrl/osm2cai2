@@ -103,7 +103,7 @@ return [
         HandleInertiaRequests::class,
         DispatchServingNovaEvent::class,
         BootTools::class,
-        \Vyuldashev\NovaPermission\ForgetCachedPermissions::class,
+        Vyuldashev\NovaPermission\ForgetCachedPermissions::class,
 
     ],
 

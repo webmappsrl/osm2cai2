@@ -8,12 +8,12 @@ use Laravel\Nova\Filters\BooleanFilter;
 
 class RelatedUGCFilter extends BooleanFilter
 {
-
     public $name = 'Related UGC';
+
     /**
      * Apply the filter to the given query.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -30,7 +30,7 @@ class RelatedUGCFilter extends BooleanFilter
     /**
      * Get the filter's available options.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function options(Request $request)
@@ -41,8 +41,9 @@ class RelatedUGCFilter extends BooleanFilter
         $url = explode('?', $url)[0];
         //get the last part of the url
         $model = explode('/', $url)[count(explode('/', $url)) - 2];
+
         return [
-            __('Show my ' . $model) => 'show_my_ugc'
+            __('Show my '.$model) => 'show_my_ugc',
         ];
     }
 }

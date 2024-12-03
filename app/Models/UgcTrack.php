@@ -2,25 +2,25 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use App\Models\UgcMedia;
-use Illuminate\Support\Carbon;
-use App\Traits\GeojsonableTrait;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\User;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class UgcTrack extends Model
 {
-    use HasFactory, GeojsonableTrait;
+    use HasFactory, SpatialDataTrait;
 
     protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'metadata', 'app_id'];
 
     protected $casts = [
         'raw_data' => 'array',
         'validation_date' => 'datetime',
-        'raw_data->date' => 'datetime:Y-m-d H:i:s'
+        'raw_data->date' => 'datetime:Y-m-d H:i:s',
     ];
 
     protected static function boot()
@@ -64,10 +64,13 @@ class UgcTrack extends Model
     public function getGeojson(): ?array
     {
         $feature = $this->getEmptyGeojson();
-        if (isset($feature["properties"])) {
-            $feature["properties"] = $this->getJsonProperties();
+        if (isset($feature['properties'])) {
+            $feature['properties'] = $this->getJsonProperties();
+
             return $feature;
-        } else return null;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -81,12 +84,13 @@ class UgcTrack extends Model
 
         $propertiesToClear = ['geometry'];
         foreach ($array as $property => $value) {
-            if (is_null($value) || in_array($property, $propertiesToClear))
+            if (is_null($value) || in_array($property, $propertiesToClear)) {
                 unset($array[$property]);
+            }
         }
 
         if (isset($array['raw_data'])) {
-            $array['raw_data']  = json_encode($array['raw_data']);
+            $array['raw_data'] = json_encode($array['raw_data']);
         }
 
         return $array;

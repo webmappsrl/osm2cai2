@@ -64,7 +64,15 @@ return [
             'url' => config('services.wmdumps.url'),
             'endpoint' => config('services.wmdumps.endpoint'),
         ],
-
+        'wmfemitur' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_FE_BUCKET'),
+            'root' => 'osm2cai/mitur/',
+            'url' => env('AWS_URL'),
+        ],
     ],
 
     /*

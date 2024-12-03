@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use App\Traits\GeoIntersectTrait;
-use App\Traits\GeojsonableTrait;
+use App\Traits\AwsCacheable;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class MountainGroups extends Model
 {
-    use HasFactory, GeojsonableTrait, GeoIntersectTrait;
+    use HasFactory, SpatialDataTrait, AwsCacheable;
 
     protected $fillable = [
         'id',
@@ -19,4 +19,18 @@ class MountainGroups extends Model
         'aggregated_data',
         'intersectings',
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($mountainGroup) {
+            if (app()->environment('production')) {
+                CacheMiturAbruzzoDataJob::dispatch('MountainGroups', $mountainGroup->id);
+            }
+        });
+    }
+
+    public function regions()
+    {
+        return $this->belongsToMany(Region::class, 'mountain_group_region', 'mountain_group_id', 'region_id');
+    }
 }

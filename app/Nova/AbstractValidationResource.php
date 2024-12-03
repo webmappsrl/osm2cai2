@@ -2,18 +2,18 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
-use Illuminate\Support\Facades\Auth;
 use App\Nova\Filters\UgcFormIdFilter;
 use App\Nova\Filters\UgcUserNoMatchFilter;
 use App\Nova\Filters\ValidatedFilter;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Nova\Fields\Text;
 use Wm\WmPackage\Nova\Actions\EditFields;
 
 abstract class AbstractValidationResource extends UgcPoi
 {
-
     abstract public static function getFormId(): string;
+
     abstract public static function getLabel(): string;
 
     public static function label()
@@ -75,6 +75,7 @@ abstract class AbstractValidationResource extends UgcPoi
     public function actions(Request $request)
     {
         $parentActions = parent::actions($request);
+
         return array_merge($parentActions, [
             (new EditFields('Validate Resource', ['validated'], $this))->canSee(function () {
                 return auth()->user()->hasPermissionTo('validate tracks');

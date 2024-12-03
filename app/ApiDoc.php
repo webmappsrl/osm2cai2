@@ -12,15 +12,17 @@ namespace App;
  *         email="catastorei@cai.it"
  *     )
  * )
- * 
+ *
  * @OA\Server(
  *     url=L5_SWAGGER_CONST_HOST,
  *     description="API Server"
  * )
- * 
+ *
  * @OA\Tag(
  *     name="V2",
  *     description="API V2"
  * )
  */
-class ApiDoc {}
+class ApiDoc
+{
+}

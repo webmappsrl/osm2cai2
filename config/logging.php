@@ -57,10 +57,22 @@ return [
             'path' => storage_path('logs/wm-osmfeatures.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
+        'calculate-intersections' => [
+            'driver' => 'stack',
+            'channels' => ['single'],
+            'path' => storage_path('logs/calculate-intersections.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
         'hiking-routes-update' => [
             'driver' => 'stack',
             'channels' => ['single'],
             'path' => storage_path('logs/hiking-routes-update.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'mitur-cache' => [
+            'driver' => 'stack',
+            'channels' => ['single'],
+            'path' => storage_path('logs/mitur-cache.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
         'stack' => [
@@ -97,7 +109,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
             ],
         ],
 

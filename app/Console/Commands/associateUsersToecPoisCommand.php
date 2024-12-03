@@ -15,7 +15,7 @@ class associateUsersToecPoisCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai2:associate_users_to_ec_pois';
+    protected $signature = 'osm2cai:associate-users-to-ec-pois';
 
     /**
      * The console command description.
@@ -59,7 +59,7 @@ class associateUsersToecPoisCommand extends Command
             $password = bcrypt('webmapp123');
             $email = $userData['email'];
 
-            if (User::find($id) === null) {
+            if (User::where('email', $email)->first() === null) {
                 $user = new User();
                 $user->id = $id;
                 $user->name = $name;

@@ -2,35 +2,42 @@
 
 namespace App\Providers;
 
-use DB;
-use App\Nova\Area;
-use App\Nova\Club;
-use App\Nova\Sign;
-use App\Nova\User;
-use App\Nova\EcPoi;
-use App\Nova\Poles;
-use App\Nova\CaiHut;
-use App\Nova\Region;
-use App\Nova\Sector;
-use App\Nova\UgcPoi;
-use App\Nova\Province;
-use App\Nova\UgcTrack;
-use App\Nova\UgcMedia;
-use Laravel\Nova\Nova;
-use App\Nova\HikingRoute;
-use App\Nova\Municipality;
-use App\Nova\SourceSurvey;
-use App\Nova\NaturalSpring;
-use App\Nova\GeologicalSite;
-use App\Nova\MountainGroups;
-use Illuminate\Http\Request;
-use App\Nova\Dashboards\Main;
-use Laravel\Nova\Menu\MenuItem;
 use App\Nova\ArchaeologicalArea;
 use App\Nova\ArchaeologicalSite;
-use Laravel\Nova\Menu\MenuSection;
-use Illuminate\Support\Facades\Gate;
+use App\Nova\Area;
+use App\Nova\CaiHut;
+use App\Nova\Club;
+use App\Nova\Dashboards\AcquaSorgente;
+use App\Nova\Dashboards\EcPoisDashboard;
+use App\Nova\Dashboards\ItalyDashboard;
+use App\Nova\Dashboards\Main;
+use App\Nova\Dashboards\Percorribilità;
+use App\Nova\Dashboards\PercorsiFavoriti;
+use App\Nova\Dashboards\SALMiturAbruzzo;
+use App\Nova\Dashboards\SectorsDashboard;
+use App\Nova\Dashboards\Utenti;
+use App\Nova\EcPoi;
+use App\Nova\GeologicalSite;
+use App\Nova\HikingRoute;
+use App\Nova\MountainGroups;
+use App\Nova\Municipality;
+use App\Nova\NaturalSpring;
+use App\Nova\Poles;
+use App\Nova\Province;
+use App\Nova\Region;
+use App\Nova\Sector;
+use App\Nova\Sign;
+use App\Nova\SourceSurvey;
+use App\Nova\UgcMedia;
+use App\Nova\UgcPoi;
+use App\Nova\UgcTrack;
+use App\Nova\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Menu\MenuItem;
+use Laravel\Nova\Menu\MenuSection;
+use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -50,13 +57,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             return [
                 // Dashboard
                 MenuSection::make('Dashboard', [
-                    MenuItem::link('Riepilogo nazionale', '/dashboards/main'),
-                    MenuItem::link('Percorsi Favoriti', '/dashboards/main'),
-                    MenuItem::link('POIS', '/dashboards/main'),
-                    MenuItem::link('Riepilogo utenti', '/dashboards/main'),
-                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/main'),
-                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/main'),
-                    MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/main'),
+                    MenuItem::link('Riepilogo nazionale', '/dashboards/italy-dashboard'),
+                    MenuItem::link('Percorsi Favoriti', '/dashboards/percorsi-favoriti'),
+                    MenuItem::link('POIS', '/dashboards/ec-pois'),
+                    MenuItem::link('Riepilogo utenti', '/dashboards/utenti'),
+                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilità'),
+                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/sal-mitur-abruzzo'),
+                    MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/acqua-sorgente'),
+                    MenuItem::link('Riepilogo Settori', '/dashboards/settori'),
                 ])->icon('chart-bar')->collapsable(),
 
                 // Rete Escursionistica
@@ -110,7 +118,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::link('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521'),
                     MenuItem::link('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map'),
                     MenuItem::link('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map'),
-                    MenuItem::link('API', '/dashboards/main'),
+                    MenuItem::link('API', '/api/documentation'),
                     MenuItem::link('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai'),
                 ])->icon('color-swatch')->collapsable(),
 
@@ -123,8 +131,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             ];
         });
     }
-
-
 
     /**
      * Register the Nova routes.
@@ -162,9 +168,42 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     protected function dashboards()
     {
-        return [
+        $dashboards = [
+            new ItalyDashboard,
+            new PercorsiFavoriti,
+            new EcPoisDashboard,
             new Main,
         ];
+
+        $loggedInUser = auth()->user();
+
+        if (! $loggedInUser) {
+            return $dashboards;
+        }
+
+        if ($loggedInUser->hasRole('Administrator')) {
+            $dashboards[] = new Utenti();
+            $dashboards[] = new Percorribilità();
+            $dashboards[] = new SALMiturAbruzzo();
+            $dashboards[] = new AcquaSorgente();
+        }
+
+        if ($loggedInUser->hasRole('National Referent')) {
+            $dashboards[] = new Percorribilità();
+            $dashboards[] = new SALMiturAbruzzo();
+            $dashboards[] = new AcquaSorgente();
+        }
+
+        if ($loggedInUser->hasRole('Regional Referent')) {
+            $dashboards[] = new SectorsDashboard;
+            $dashboards[] = new Percorribilità($loggedInUser); //show data only for the user region
+        }
+
+        if ($loggedInUser->hasRole('Local Referent')) {
+            $dashboards[] = new Percorribilità($loggedInUser);
+        }
+
+        return $dashboards;
     }
 
     /**
@@ -175,7 +214,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function tools()
     {
         return [
-            \Vyuldashev\NovaPermission\NovaPermissionTool::make()
+            \Vyuldashev\NovaPermission\NovaPermissionTool::make(),
         ];
     }
 
