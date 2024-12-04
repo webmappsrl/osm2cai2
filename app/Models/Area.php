@@ -25,6 +25,16 @@ class Area extends Model
         'num_expected',
     ];
 
+    protected static function booted()
+    {
+        static::updated(function ($area) {
+            if ($area->isDirty('geometry')) {
+                //recalculate intersections with hiking routes
+                CalculateIntersectionsJob::dispatch($area, HikingRoute::class);
+            }
+        });
+    }
+
     public function province()
     {
         return $this->belongsTo(Province::class);

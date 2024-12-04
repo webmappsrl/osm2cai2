@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MountainGroups extends Model
 {
@@ -22,7 +23,11 @@ class MountainGroups extends Model
 
     protected static function booted()
     {
-        static::saved(function ($mountainGroup) {
+        static::updated(function ($mountainGroup) {
+            if ($mountainGroup->isDirty('geometry')) {
+                //recalculate intersections with regions
+                CalculateIntersectionsJob::dispatch($mountainGroup, Region::class);
+            }
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('MountainGroups', $mountainGroup->id);
             }

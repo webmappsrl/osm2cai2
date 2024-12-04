@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
  * This job recalculates intersections between two models with spatial data trait.
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
  * rather than the full model instances. This approach solves serialization issues that occur
  * when Laravel tries to queue models with complex attributes like geometries.
  */
-class RecalculateIntersectionsJob implements ShouldQueue
+class CalculateIntersectionsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -49,7 +50,6 @@ class RecalculateIntersectionsJob implements ShouldQueue
         $baseModelClass = $this->baseModelClass;
         $intersectingModelClass = $this->intersectingModelClass;
 
-        // Retrieve the base model and create a new instance of the intersecting model
         $baseModel = $baseModelClass::findOrFail($this->baseModelId);
         $intersectingModel = new $intersectingModelClass();
 
@@ -67,20 +67,95 @@ class RecalculateIntersectionsJob implements ShouldQueue
             throw new \Exception('Intersecting model must have SpatialDataTrait for intersections');
         }
 
-        //check if base model has intersectings column
-        if (! Schema::hasColumn($baseModel->getTable(), 'intersectings')) {
-            throw new \Exception($baseModel->getTable().' does not have intersectings column. The column is required to store the intersections.');
-        }
-
         try {
             // Calculate intersections
-            $results = $baseModel->getIntersections($intersectingModel)->pluck('updated_at', 'id')->toArray();
+            $intersectingIds = $baseModel->getIntersections($intersectingModel)
+                ->pluck('id')
+                ->toArray();
 
-            // Update model (should have intersectings column)
-            $baseModel->update(['intersectings' => [$intersectingModel->getTable() => $results]]);
+            // Determine pivot table name based on models
+            $pivotTable = $this->determinePivotTable($baseModel->getTable(), $intersectingModel->getTable());
+
+            // Sync relationships in pivot table
+            \DB::table($pivotTable)->where([
+                $this->getModelForeignKey($baseModel) => $baseModel->id
+            ])->delete();
+
+            $pivotRecords = array_map(function ($intersectingId) use ($baseModel) {
+                return [
+                    $this->getModelForeignKey($baseModel) => $baseModel->id,
+                    $this->getModelForeignKey($this->intersectingModelClass) => $intersectingId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }, $intersectingIds);
+
+            \DB::table($pivotTable)->insert($pivotRecords);
+
+            // Calculate and update percentages
+            $this->updateIntersectionPercentages($baseModel, $intersectingModel, $pivotTable);
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
-            throw new \Exception('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
+            Log::error('Error recalculating intersections for model ' . $baseModel->getTable() . ': ' . $e->getMessage());
+            throw $e;
         }
+    }
+
+    /**
+     * Determine pivot table name based on models
+     */
+    private function determinePivotTable(string $baseModelTable, string $intersectingModelTable): string
+    {
+        $tables = [
+            'hiking_routes' => [
+                'regions' => 'hiking_route_region',
+                'provinces' => 'hiking_route_province',
+                'sectors' => 'hiking_route_sector',
+                'areas' => 'area_hiking_route',
+            ],
+            'regions' => [
+                'hiking_routes' => 'hiking_route_region',
+                'mountain_groups' => 'mountain_group_region',
+            ],
+            'provinces' => [
+                'hiking_routes' => 'hiking_route_province',
+            ],
+            'sectors' => [
+                'hiking_routes' => 'hiking_route_sector',
+            ],
+            'areas' => [
+                'hiking_routes' => 'area_hiking_route',
+            ],
+            'mountain_groups' => [
+                'regions' => 'mountain_group_region',
+            ],
+        ];
+
+        if (isset($tables[$baseModelTable][$intersectingModelTable])) {
+            return $tables[$baseModelTable][$intersectingModelTable];
+        }
+        if (isset($tables[$intersectingTable][$baseTable])) {
+            return $tables[$intersectingTable][$baseTable];
+        }
+
+        throw new \Exception("No pivot table found for {$baseTable} and {$intersectingTable}");
+    }
+
+    /**
+     * Get foreign key name for a model
+     */
+    private function getModelForeignKey($model): string
+    {
+        if (is_string($model)) {
+            $model = new $model();
+        }
+        return Str::singular($model->getTable()) . '_id';
+    }
+
+    /**
+     * Calculate intersection percentage
+     */
+    private function calculateIntersectionPercentage($baseModelId, $intersectingModelClass, $intersectingId): float
+    {
+        return 0;
     }
 }
