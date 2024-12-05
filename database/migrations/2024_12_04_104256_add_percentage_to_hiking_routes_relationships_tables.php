@@ -11,22 +11,32 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('area_hiking_route', function (Blueprint $table) {
-            $table->float('percentage')->default(0);
-        });
-        Schema::table('hiking_route_province', function (Blueprint $table) {
-            $table->float('percentage')->default(0);
-        });
-        Schema::table('hiking_route_region', function (Blueprint $table) {
-            $table->float('percentage')->default(0);
-        });
-        Schema::table('hiking_route_sector', function (Blueprint $table) {
-            $table->float('percentage')->default(0);
-        });
+        if (!Schema::hasColumn('area_hiking_route', 'percentage')) {
+            Schema::table('area_hiking_route', function (Blueprint $table) {
+                $table->float('percentage')->default(0);
+            });
+        }
+        if (!Schema::hasColumn('hiking_route_province', 'percentage')) {
+            Schema::table('hiking_route_province', function (Blueprint $table) {
+                $table->float('percentage')->default(0);
+            });
+        }
+        if (!Schema::hasColumn('hiking_route_region', 'percentage')) {
+            Schema::table('hiking_route_region', function (Blueprint $table) {
+                $table->float('percentage')->default(0);
+            });
+        }
+        if (!Schema::hasColumn('hiking_route_sector', 'percentage')) {
+            Schema::table('hiking_route_sector', function (Blueprint $table) {
+                $table->float('percentage')->default(0);
+            });
+        }
 
-        Schema::table('mountain_group_region', function (Blueprint $table) {
-            $table->float('percentage')->default(0);
-        });
+        if (!Schema::hasColumn('mountain_group_region', 'percentage')) {
+            Schema::table('mountain_group_region', function (Blueprint $table) {
+                $table->float('percentage')->default(0);
+            });
+        }
     }
 
     /**
