@@ -57,14 +57,45 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             return [
                 // Dashboard
                 MenuSection::make('Dashboard', [
-                    MenuItem::link('Riepilogo nazionale', '/dashboards/italy-dashboard'),
-                    MenuItem::link('Percorsi Favoriti', '/dashboards/percorsi-favoriti'),
-                    MenuItem::link('POIS', '/dashboards/ec-pois'),
-                    MenuItem::link('Riepilogo utenti', '/dashboards/utenti'),
-                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilità'),
-                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/sal-mitur-abruzzo'),
-                    MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/acqua-sorgente'),
-                    MenuItem::link('Riepilogo Settori', '/dashboards/settori'),
+                    MenuItem::link('Riepilogo nazionale', '/dashboards/italy-dashboard')
+                        ->canSee(function () {
+                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
+                        }),
+
+                    MenuItem::link('Percorsi Favoriti', '/dashboards/percorsi-favoriti')
+                        ->canSee(function () {
+                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
+                        }),
+
+                    MenuItem::link('POIS', '/dashboards/ec-pois')
+                        ->canSee(function () {
+                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent']);
+                        }),
+
+                    MenuItem::link('Riepilogo utenti', '/dashboards/utenti')
+                        ->canSee(function () {
+                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                        }),
+
+                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilità')
+                        ->canSee(function () {
+                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
+                        }),
+
+                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/sal-mitur-abruzzo')
+                        ->canSee(function () {
+                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                        }),
+
+                    MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/acqua-sorgente')
+                        ->canSee(function () {
+                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                        }),
+
+                    MenuItem::link('Riepilogo Settori', '/dashboards/settori')
+                        ->canSee(function () {
+                            return auth()->user()->hasRole('Regional Referent');
+                        }),
                 ])->icon('chart-bar')->collapsable(),
 
                 // Rete Escursionistica

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\RecalculateIntersectionsJob;
+use App\Jobs\CalculateIntersectionsJob;
 use App\Models\HikingRoute;
 use App\Models\Region;
 use Illuminate\Console\Command;
@@ -11,7 +11,7 @@ class CalculateRegionHikingRoutesIntersection extends Command
 {
     protected $signature = 'osm2cai:calculate-region-hiking-routes-intersection';
 
-    protected $description = 'Calculate the hiking routes that intersect each region';
+    protected $description = 'Calculate the hiking routes that intersect each region and populate the pivot table';
 
     public function __construct()
     {
@@ -23,19 +23,16 @@ class CalculateRegionHikingRoutesIntersection extends Command
         $this->info('Dispatching recalculate intersections jobs...');
         try {
             $regions = Region::all();
-            $hikingRoutes = HikingRoute::all();
-            $totalItems = $regions->count() + $hikingRoutes->count();
 
-            $bar = $this->output->createProgressBar($totalItems);
+            $bar = $this->output->createProgressBar($regions->count());
             $bar->start();
 
             foreach ($regions as $region) {
-                RecalculateIntersectionsJob::dispatch($region, HikingRoute::class);
-                $bar->advance();
-            }
-
-            foreach ($hikingRoutes as $hikingRoute) {
-                RecalculateIntersectionsJob::dispatch($hikingRoute, Region::class);
+                if (!$region->geometry || empty($region->geometry) || !isset($region->geometry)) {
+                    $this->error('Region ' . $region->id . ' has no geometry');
+                    continue;
+                }
+                CalculateIntersectionsJob::dispatch($region, HikingRoute::class);
                 $bar->advance();
             }
 

@@ -3,20 +3,21 @@
 namespace App\Models;
 
 use App\Models\Area;
-use App\Models\HikingRoute;
-use App\Models\Region;
 use App\Models\User;
-use App\Traits\CsvableModelTrait;
-use App\Traits\IntersectingRouteStats;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Models\Region;
+use App\Models\HikingRoute;
 use App\Traits\SallableTrait;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\CsvableModelTrait;
 use Illuminate\Support\Facades\Log;
+use App\Traits\IntersectingRouteStats;
+use App\Jobs\CalculateIntersectionsJob;
+use Illuminate\Database\Eloquent\Model;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Province extends Model implements OsmfeaturesSyncableInterface
 {
@@ -28,6 +29,15 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($province) {
+            if ($province->isDirty('geometry')) {
+                CalculateIntersectionsJob::dispatch($province, HikingRoute::class)->onQueue('geometric-computations');
+            }
+        });
+    }
 
     public function users()
     {
@@ -68,7 +78,7 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Province '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Province ' . $osmfeaturesId);
 
             return;
         }
@@ -79,7 +89,7 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Province '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Province ' . $osmfeaturesId);
         }
 
         // Execute the update only if there are data to update

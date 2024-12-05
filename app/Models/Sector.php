@@ -3,18 +3,29 @@
 namespace App\Models;
 
 use App\Models\User;
-use App\Traits\CsvableModelTrait;
-use App\Traits\IntersectingRouteStats;
+use App\Models\HikingRoute;
 use App\Traits\SallableTrait;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\CsvableModelTrait;
+use App\Traits\IntersectingRouteStats;
+use App\Jobs\CalculateIntersectionsJob;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Sector extends Model
 {
     use HasFactory, SpatialDataTrait, CsvableModelTrait, SallableTrait, IntersectingRouteStats;
 
     protected $guarded = [];
+
+    protected static function booted()
+    {
+        static::saved(function ($sector) {
+            if ($sector->isDirty('geometry')) {
+                CalculateIntersectionsJob::dispatch($sector, HikingRoute::class)->onQueue('geometric-computations');
+            }
+        });
+    }
 
     public function area()
     {
@@ -91,7 +102,7 @@ class Sector extends Model
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 
