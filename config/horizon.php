@@ -56,7 +56,7 @@ return [
 
     'prefix' => env(
         'HORIZON_PREFIX',
-        Str::slug(env('APP_NAME', 'laravel'), '_').'_horizon:'
+        Str::slug(env('APP_NAME', 'laravel'), '_') . '_horizon:'
     ),
 
     /*
@@ -191,7 +191,7 @@ return [
             'maxJobs' => 0,
             'memory' => 128,
             'tries' => 1,
-            'timeout' => 60,
+            'timeout' => 120,
             'nice' => 0,
         ],
     ],
@@ -204,6 +204,15 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
+            'supervisor-geometric-computations' => [
+                'connection' => 'redis',
+                'queue' => ['geometric-computations'],
+                'balance' => 'simple',
+                'maxProcesses' => 5,
+                'memory' => 256, //memoria allocata a php
+                'tries' => 1,
+                'timeout' => 300,
+            ],
         ],
 
         'local' => [
@@ -213,11 +222,14 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
-            'supervisor-2' => [
+            'supervisor-geometric-computations' => [
                 'connection' => 'redis',
-                'maxProcesses' => 10,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
+                'queue' => ['geometric-computations'],
+                'balance' => 'simple',
+                'maxProcesses' => 1,
+                'memory' => 256,
+                'tries' => 1,
+                'timeout' => 300,
             ],
         ],
     ],

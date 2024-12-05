@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\HikingRoute;
 use Illuminate\Database\Eloquent\Model;
+use App\Jobs\CheckNearbyHikingRoutesJob;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class NaturalSpring extends Model
 {
@@ -11,14 +13,17 @@ class NaturalSpring extends Model
 
     protected $guarded = [];
 
-    // protected static function booted()
-    // {
-    //     static::saved(function ($spring) {
-    //         Artisan::call('osm2cai:add_cai_huts_to_hiking_routes NaturalSpring ' . $spring->id);
-    //     });
+    protected static function booted()
+    {
+        static::saved(function ($spring) {
+            if ($spring->isDirty('geometry')) {
+                CheckNearbyHikingRoutesJob::dispatch($spring, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
+            }
+        });
+    }
 
-    //     static::created(function ($spring) {
-    //         Artisan::call('osm2cai:add_cai_huts_to_hiking_routes NaturalSpring ' . $spring->id);
-    //     });
-    // }
+    public function nearbyHikingRoutes()
+    {
+        return $this->belongsToMany(HikingRoute::class, 'hiking_route_natural_spring')->withPivot(['buffer']);
+    }
 }
