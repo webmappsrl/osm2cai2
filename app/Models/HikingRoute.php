@@ -2,33 +2,35 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
-use App\Jobs\CheckNearbyHutsJob;
-use App\Jobs\CheckNearbyNaturalSpringsJob;
-use App\Jobs\ComputeTdhJob;
-use App\Jobs\CalculateIntersectionsJob;
 use App\Models\Area;
-use App\Models\Itinerary;
-use App\Models\Province;
+use App\Models\User;
+use App\Models\CaiHut;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\User;
-use App\Services\HikingRouteDescriptionService;
+use App\Models\Province;
+use App\Models\Itinerary;
+use App\Jobs\ComputeTdhJob;
 use App\Traits\AwsCacheable;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Models\NaturalSpring;
+use App\Jobs\CheckNearbyHutsJob;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\CalculateIntersectionsJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\Stopwatch\Section;
-use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use App\Jobs\CheckNearbyNaturalSpringsJob;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Services\HikingRouteDescriptionService;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 {
@@ -69,18 +71,15 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     protected static function booted()
     {
         static::saved(function ($hikingRoute) {
-            if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
-                ComputeTdhJob::dispatch($hikingRoute->id);
-                CacheMiturAbruzzoDataJob::dispatch('HikingRoute', $hikingRoute->id);
+            if ($hikingRoute->isDirty('geometry')) {
+                $this->dispatchGeometricComputationsJobs($hikingRoute, 'geometric-computations');
             }
         });
 
         static::updated(function ($hikingRoute) {
-            if ($hikingRoute->isDirty('geometry')) {
-                //recalculate intersections with regions
-                CalculateIntersectionsJob::dispatch($hikingRoute, Region::class); //TODO: recalculate intersections with other models (sectors, areas, provinces)
-                CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'));
-                CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, config('osm2cai.hiking_route_buffer'));
+            if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
+                ComputeTdhJob::dispatch($hikingRoute->id);
+                CacheMiturAbruzzoDataJob::dispatch('HikingRoute', $hikingRoute->id);
             }
         });
     }
@@ -226,6 +225,16 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     public function itineraries()
     {
         return $this->belongsToMany(Itinerary::class);
+    }
+
+    public function nearbyCaiHuts()
+    {
+        return $this->belongsToMany(CaiHut::class, 'hiking_route_cai_hut')->withPivot(['buffer']);
+    }
+
+    public function nearbyNaturalSprings()
+    {
+        return $this->belongsToMany(NaturalSpring::class, 'hiking_route_natural_spring')->withPivot(['buffer']);
     }
 
     /**
@@ -657,5 +666,22 @@ SQL;
         }
 
         return $v;
+    }
+
+    /**
+     * Dispatch jobs for geometric computations
+     *
+     * @param HikingRoute $hikingRoute
+     * @param string $queue
+     * @return void
+     */
+    protected function dispatchGeometricComputationsJobs(HikingRoute $hikingRoute, string $queue = 'default'): void
+    {
+        CalculateIntersectionsJob::dispatch($hikingRoute, Region::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($hikingRoute, Sector::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($hikingRoute, Area::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($hikingRoute, Province::class)->onQueue($queue);
+        CheckNearbyHutsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'))->onQueue($queue);
+        CheckNearbyNaturalSpringsJob::dispatch($hikingRoute, config('osm2cai.hiking_route_buffer'))->onQueue($queue);
     }
 }

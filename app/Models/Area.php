@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use App\Models\HikingRoute;
-use App\Models\Province;
-use App\Models\Sector;
 use App\Models\User;
-use App\Traits\CsvableModelTrait;
-use App\Traits\IntersectingRouteStats;
+use App\Models\Sector;
+use App\Models\Province;
+use App\Models\HikingRoute;
 use App\Traits\SallableTrait;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\CsvableModelTrait;
+use App\Traits\IntersectingRouteStats;
+use App\Jobs\CalculateIntersectionsJob;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Area extends Model
 {
@@ -27,10 +28,10 @@ class Area extends Model
 
     protected static function booted()
     {
-        static::updated(function ($area) {
+        static::saved(function ($area) {
             if ($area->isDirty('geometry')) {
                 //recalculate intersections with hiking routes
-                CalculateIntersectionsJob::dispatch($area, HikingRoute::class);
+                CalculateIntersectionsJob::dispatch($area, HikingRoute::class)->onQueue('geometric-computations');
             }
         });
     }

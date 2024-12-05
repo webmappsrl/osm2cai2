@@ -38,15 +38,15 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
-        static::updated(function ($region) {
+        static::saved(function ($region) {
             if ($region->isDirty('geometry')) {
-                //recalculate intersections with hiking routes and mountain groups
-                CalculateIntersectionsJob::dispatch($region, HikingRoute::class);
-                CalculateIntersectionsJob::dispatch($region, MountainGroups::class);
+                CalculateIntersectionsJob::dispatch($region, HikingRoute::class)->onQueue('geometric-computations');
+                CalculateIntersectionsJob::dispatch($region, MountainGroups::class)->onQueue('geometric-computations');
             }
-            if (app()->environment('production')) {
-                CacheMiturAbruzzoDataJob::dispatch('Region', $region->id);
-            }
+        });
+
+        static::updated(function ($region) {
+            CacheMiturAbruzzoDataJob::dispatch('Region', $region->id);
         });
     }
 

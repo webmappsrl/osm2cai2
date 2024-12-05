@@ -20,10 +20,9 @@ class Sector extends Model
 
     protected static function booted()
     {
-        static::updated(function ($sector) {
+        static::saved(function ($sector) {
             if ($sector->isDirty('geometry')) {
-                //recalculate intersections with hiking routes
-                CalculateIntersectionsJob::dispatch($sector, HikingRoute::class);
+                CalculateIntersectionsJob::dispatch($sector, HikingRoute::class)->onQueue('geometric-computations');
             }
         });
     }

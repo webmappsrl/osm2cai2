@@ -32,10 +32,9 @@ class Province extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
-        static::updated(function ($province) {
+        static::saved(function ($province) {
             if ($province->isDirty('geometry')) {
-                //recalculate intersections with hiking routes
-                CalculateIntersectionsJob::dispatch($province, HikingRoute::class);
+                CalculateIntersectionsJob::dispatch($province, HikingRoute::class)->onQueue('geometric-computations');
             }
         });
     }

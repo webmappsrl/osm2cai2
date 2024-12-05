@@ -37,7 +37,7 @@ class Club extends Model
 
     protected static function booted()
     {
-        static::saved(function ($club) {
+        static::updated(function ($club) {
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('Club', $club->id);
             }
