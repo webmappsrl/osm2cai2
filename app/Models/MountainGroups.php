@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\CalculateIntersectionsJob;
 use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
-use App\Jobs\CacheMiturAbruzzoDataJob;
-use App\Jobs\CalculateIntersectionsJob;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class MountainGroups extends Model
 {

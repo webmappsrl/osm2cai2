@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  * rather than the full model instances. This approach solves serialization issues that occur
  * when Laravel tries to queue models with complex attributes like geometries.
  */
-class CalculateIntersectionsJob implements ShouldQueue
+class RecalculateIntersectionsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -78,7 +78,7 @@ class CalculateIntersectionsJob implements ShouldQueue
 
             // Sync relationships in pivot table
             \DB::table($pivotTable)->where([
-                $this->getModelForeignKey($baseModel) => $baseModel->id
+                $this->getModelForeignKey($baseModel) => $baseModel->id,
             ])->delete();
 
             $pivotRecords = array_map(function ($intersectingId) use ($baseModel) {
@@ -95,7 +95,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             // Calculate and update percentages
             $this->updateIntersectionPercentages($baseModel, $intersectingModel, $pivotTable);
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections for model ' . $baseModel->getTable() . ': ' . $e->getMessage());
+            Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
             throw $e;
         }
     }
@@ -148,7 +148,8 @@ class CalculateIntersectionsJob implements ShouldQueue
         if (is_string($model)) {
             $model = new $model();
         }
-        return Str::singular($model->getTable()) . '_id';
+
+        return Str::singular($model->getTable()).'_id';
     }
 
     /**

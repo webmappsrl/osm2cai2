@@ -27,7 +27,6 @@ To ensure successful synchronization, verify that the "HikingRoute" and "Club" m
 
 ';
 
-
     /**
      * Create a new command instance.
      *
@@ -47,27 +46,25 @@ To ensure successful synchronization, verify that the "HikingRoute" and "Club" m
     {
         $this->info('[START] Sync relationships between hiking routes and clubs');
 
-
         $clubs = Club::all();
 
         //HikingRoute has a source_ref field that is the same as the cai_code field in Section, so we can use that to match them
         foreach ($clubs as $club) {
-            $this->info('Syncing club ' . $club->name . ' with hiking routes source ref: ' . $club->cai_code);
+            $this->info('Syncing club '.$club->name.' with hiking routes source ref: '.$club->cai_code);
 
             try {
-                $hikingRoutes = HikingRoute::where('osmfeatures_data->properties->source_ref', 'like', '%' . $club->cai_code . '%')->get();
+                $hikingRoutes = HikingRoute::where('osmfeatures_data->properties->source_ref', 'like', '%'.$club->cai_code.'%')->get();
             } catch (\Exception $e) {
-                $this->error('Error syncing club ' . $club->name . ' with hiking routes source ref: ' . $club->cai_code);
+                $this->error('Error syncing club '.$club->name.' with hiking routes source ref: '.$club->cai_code);
                 $this->error($e->getMessage());
             }
 
             if ($hikingRoutes->isNotEmpty()) {
                 $hikingRoutesId = $hikingRoutes->pluck('id')->toArray();
                 $club->hikingRoutes()->sync($hikingRoutesId);
-                $this->info('Synced club ' . $club->name . ' with hiking routes source ref: ' . $club->cai_code . PHP_EOL);
+                $this->info('Synced club '.$club->name.' with hiking routes source ref: '.$club->cai_code.PHP_EOL);
             }
         }
-
 
         $this->info('[END] Sync relationships between hiking routes and sections');
     }

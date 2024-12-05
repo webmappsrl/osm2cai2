@@ -3,9 +3,9 @@
 namespace App\Nova\Dashboards;
 
 use App\Models\User;
-use Laravel\Nova\Dashboard;
-use Illuminate\Support\Facades\Cache;
 use App\Nova\Metrics\IssueStatusPartition;
+use Illuminate\Support\Facades\Cache;
+use Laravel\Nova\Dashboard;
 
 class Percorribilità extends Dashboard
 {

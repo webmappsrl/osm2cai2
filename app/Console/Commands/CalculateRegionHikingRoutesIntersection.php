@@ -28,8 +28,8 @@ class CalculateRegionHikingRoutesIntersection extends Command
             $bar->start();
 
             foreach ($regions as $region) {
-                if (!$region->geometry || empty($region->geometry) || !isset($region->geometry)) {
-                    $this->error('Region ' . $region->id . ' has no geometry');
+                if (! $region->geometry || empty($region->geometry) || ! isset($region->geometry)) {
+                    $this->error('Region '.$region->id.' has no geometry');
                     continue;
                 }
                 CalculateIntersectionsJob::dispatch($region, HikingRoute::class);

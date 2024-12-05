@@ -4,14 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-
         //remove nearby_cai_hut and nearby_natural_spring columns from hiking_routes table
         Schema::table('hiking_routes', function (Blueprint $table) {
             $table->dropColumn('nearby_cai_huts');
@@ -35,38 +33,38 @@ return new class extends Migration
         });
 
         //add timestamps to hiking_route relationships tables
-        if (!Schema::hasColumn('area_hiking_route', 'created_at')) {
+        if (! Schema::hasColumn('area_hiking_route', 'created_at')) {
             Schema::table('area_hiking_route', function (Blueprint $table) {
                 $table->timestamps();
             });
         }
-        if (!Schema::hasColumn('hiking_route_province', 'created_at')) {
+        if (! Schema::hasColumn('hiking_route_province', 'created_at')) {
             Schema::table('hiking_route_province', function (Blueprint $table) {
                 $table->timestamps();
             });
         }
-        if (!Schema::hasColumn('hiking_route_region', 'created_at')) {
+        if (! Schema::hasColumn('hiking_route_region', 'created_at')) {
             Schema::table('hiking_route_region', function (Blueprint $table) {
                 $table->timestamps();
             });
         }
-        if (!Schema::hasColumn('hiking_route_sector', 'created_at')) {
+        if (! Schema::hasColumn('hiking_route_sector', 'created_at')) {
             Schema::table('hiking_route_sector', function (Blueprint $table) {
                 $table->timestamps();
             });
         }
-        if (!Schema::hasColumn('hiking_route_club', 'created_at')) {
+        if (! Schema::hasColumn('hiking_route_club', 'created_at')) {
             Schema::table('hiking_route_club', function (Blueprint $table) {
                 $table->timestamps();
             });
         }
-        if (!Schema::hasColumn('hiking_route_itinerary', 'created_at')) {
+        if (! Schema::hasColumn('hiking_route_itinerary', 'created_at')) {
             Schema::table('hiking_route_itinerary', function (Blueprint $table) {
                 $table->timestamps();
             });
         }
 
-        if (!Schema::hasColumn('mountain_group_region', 'created_at')) {
+        if (! Schema::hasColumn('mountain_group_region', 'created_at')) {
             Schema::table('mountain_group_region', function (Blueprint $table) {
                 $table->timestamps();
             });
