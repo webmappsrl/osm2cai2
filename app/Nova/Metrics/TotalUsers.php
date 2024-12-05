@@ -45,7 +45,7 @@ class TotalUsers extends Value
      */
     public function cacheFor()
     {
-        return now()->addMinutes(60);
+        return now()->addDay();
     }
 
     /**

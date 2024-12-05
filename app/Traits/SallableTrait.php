@@ -8,15 +8,13 @@ trait SallableTrait
 {
     public function getSal()
     {
-        $hikingRoutes = $this->intersectings['hiking_routes'] ?? [];
-
         $tot1 = 0;
         $tot2 = 0;
         $tot3 = 0;
         $tot4 = 0;
 
-        if (is_array($hikingRoutes)) {
-            foreach ($hikingRoutes as $route) {
+        if (count($this->hikingRoutes) > 0) {
+            foreach ($this->hikingRoutes as $route) {
                 switch ($route['osm2cai_status'] ?? 0) {
                     case 1:
                         $tot1++;

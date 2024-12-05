@@ -59,7 +59,7 @@ class UserDistributionByRegion extends Partition
      */
     public function cacheFor()
     {
-        return now()->addMinutes(5);
+        return now()->addDay();
     }
 
     /**

@@ -209,7 +209,7 @@ return [
                 'queue' => ['geometric-computations'],
                 'balance' => 'simple',
                 'maxProcesses' => 5,
-                'memory' => 128, //memoria allocata a php
+                'memory' => 256, //memoria allocata a php
                 'tries' => 1,
                 'timeout' => 300,
             ],

@@ -82,16 +82,24 @@ class CalculateIntersectionsJob implements ShouldQueue
                 $baseModelForeignKey = $this->getModelForeignKey($baseModel);
                 $intersectingModelForeignKey = $this->getModelForeignKey($intersectingModel);
 
-                $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
-                Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
+                $hasPercentageColumn = Schema::hasColumn($pivotTable, 'percentage');
+                if ($hasPercentageColumn) {
+                    $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
+                    Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
+                }
 
-                return [
+                $record = [
                     $baseModelForeignKey => $baseModel->id,
                     $intersectingModelForeignKey => $intersectingId,
                     'created_at' => now(),
                     'updated_at' => now(),
-                    'percentage' => $percentage,
                 ];
+
+                if ($hasPercentageColumn) {
+                    $record['percentage'] = $percentage;
+                }
+
+                return $record;
             }, $intersectingIds);
 
 
@@ -113,6 +121,7 @@ class CalculateIntersectionsJob implements ShouldQueue
                 'provinces' => 'hiking_route_province',
                 'sectors' => 'hiking_route_sector',
                 'areas' => 'area_hiking_route',
+                'mountain_groups' => 'mountain_group_hiking_route',
             ],
             'regions' => [
                 'hiking_routes' => 'hiking_route_region',
@@ -129,14 +138,28 @@ class CalculateIntersectionsJob implements ShouldQueue
             ],
             'mountain_groups' => [
                 'regions' => 'mountain_group_region',
+                'cai_huts' => 'mountain_group_cai_hut',
+                'ec_pois' => 'mountain_group_ec_poi',
+                'clubs' => 'mountain_group_club',
+                'hiking_routes' => 'mountain_group_hiking_route',
             ],
+            'cai_huts' => [
+                'mountain_groups' => 'mountain_group_cai_hut',
+            ],
+            'ec_pois' => [
+                'mountain_groups' => 'mountain_group_ec_poi',
+            ],
+            'clubs' => [
+                'mountain_groups' => 'mountain_group_club',
+            ],
+
         ];
 
         if (isset($tables[$baseModelTable][$intersectingModelTable])) {
             return $tables[$baseModelTable][$intersectingModelTable];
         }
-        if (isset($tables[$intersectingTable][$baseTable])) {
-            return $tables[$intersectingTable][$baseTable];
+        if (isset($tables[$intersectingModelTable][$baseModelTable])) {
+            return $tables[$intersectingModelTable][$baseModelTable];
         }
 
         throw new \Exception("No pivot table found for {$baseTable} and {$intersectingTable}");

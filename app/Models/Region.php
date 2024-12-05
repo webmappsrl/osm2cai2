@@ -2,27 +2,29 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
-use App\Jobs\CalculateIntersectionsJob;
-use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
-use App\Models\Province;
+use App\Models\Club;
 use App\Models\User;
+use App\Models\EcPoi;
+use App\Models\CaiHut;
+use App\Models\Province;
+use App\Models\HikingRoute;
 use App\Traits\AwsCacheable;
-use App\Traits\CsvableModelTrait;
-use App\Traits\IntersectingRouteStats;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SallableTrait;
+use App\Models\MountainGroups;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\CsvableModelTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Traits\IntersectingRouteStats;
+use App\Jobs\CalculateIntersectionsJob;
+use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\Stopwatch\Section;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
@@ -65,9 +67,9 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         return $this->belongsToMany(HikingRoute::class);
     }
 
-    public function sections()
+    public function clubs()
     {
-        return $this->hasMany(Section::class);
+        return $this->hasMany(Club::class);
     }
 
     public function ecPois()
@@ -82,7 +84,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     public function caiHuts()
     {
-        return $this->hasMany(CaiHuts::class);
+        return $this->hasMany(CaiHut::class);
     }
 
     /**

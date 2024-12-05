@@ -30,7 +30,6 @@ class Area extends Model
     {
         static::saved(function ($area) {
             if ($area->isDirty('geometry')) {
-                //recalculate intersections with hiking routes
                 CalculateIntersectionsJob::dispatch($area, HikingRoute::class)->onQueue('geometric-computations');
             }
         });
