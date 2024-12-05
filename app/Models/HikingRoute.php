@@ -72,7 +72,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     {
         static::saved(function ($hikingRoute) {
             if ($hikingRoute->isDirty('geometry')) {
-                $this->dispatchGeometricComputationsJobs($hikingRoute, 'geometric-computations');
+                static::dispatchGeometricComputationsJobs($hikingRoute, 'geometric-computations');
             }
         });
 
@@ -675,7 +675,7 @@ SQL;
      * @param string $queue
      * @return void
      */
-    protected function dispatchGeometricComputationsJobs(HikingRoute $hikingRoute, string $queue = 'default'): void
+    protected static function dispatchGeometricComputationsJobs(HikingRoute $hikingRoute, string $queue = 'default'): void
     {
         CalculateIntersectionsJob::dispatch($hikingRoute, Region::class)->onQueue($queue);
         CalculateIntersectionsJob::dispatch($hikingRoute, Sector::class)->onQueue($queue);
