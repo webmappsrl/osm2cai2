@@ -16,6 +16,7 @@ abstract class CheckNearbyEntitiesJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Model $sourceModel;
+
     protected $buffer;
 
     public function __construct(Model $sourceModel, $buffer)
@@ -30,6 +31,7 @@ abstract class CheckNearbyEntitiesJob implements ShouldQueue
     }
 
     abstract protected function getTargetTableName(): string;
+
     abstract protected function getRelationshipMethod(): string;
 
     public function handle(): void
@@ -37,13 +39,15 @@ abstract class CheckNearbyEntitiesJob implements ShouldQueue
         Log::info("Checking nearby {$this->getTargetTableName()} for {$this->getSourceTableName()} {$this->sourceModel->id}");
 
         try {
-            if (!$this->sourceModel->geometry) {
+            if (! $this->sourceModel->geometry) {
                 Log::warning("{$this->getSourceTableName()} {$this->sourceModel->id} has no geometry");
+
                 return;
             }
 
             if ($this->buffer < 0) {
                 Log::warning('Buffer distance must be positive');
+
                 return;
             }
 
@@ -63,17 +67,18 @@ abstract class CheckNearbyEntitiesJob implements ShouldQueue
 
             if (empty($nearbyEntities)) {
                 Log::info("No nearby {$this->getTargetTableName()} found for {$this->getSourceTableName()} {$this->sourceModel->id}");
+
                 return;
             }
 
-            $nearbyIds = array_map(fn($entity) => $entity->id, $nearbyEntities);
+            $nearbyIds = array_map(fn ($entity) => $entity->id, $nearbyEntities);
 
             $syncData = array_combine(
                 $nearbyIds,
                 array_fill(0, count($nearbyIds), [
                     'buffer' => $this->buffer,
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ])
             );
 

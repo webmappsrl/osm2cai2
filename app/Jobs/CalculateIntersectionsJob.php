@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
-use DB;
-use Illuminate\Support\Str;
-use Illuminate\Bus\Queueable;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Queue\InteractsWithQueue;
+use DB;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
  * This job recalculates intersections between two models with spatial data trait.
@@ -23,7 +23,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 class CalculateIntersectionsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
 
     protected $baseModel;
 
@@ -74,7 +73,7 @@ class CalculateIntersectionsJob implements ShouldQueue
 
             // Sync relationships in pivot table
             DB::table($pivotTable)->where([
-                $this->getModelForeignKey($baseModel) => $baseModel->id
+                $this->getModelForeignKey($baseModel) => $baseModel->id,
             ])->delete();
 
             $pivotRecords = array_map(function ($intersectingId) use ($baseModel, $intersectingModelInstance, $pivotTable) {
@@ -102,10 +101,9 @@ class CalculateIntersectionsJob implements ShouldQueue
                 return $record;
             }, $intersectingIds);
 
-
-            \DB::table($pivotTable)->insert($pivotRecords);
+            DB::table($pivotTable)->insert($pivotRecords);
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections for model ' . $baseModel->getTable() . ': ' . $e->getMessage());
+            Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
             throw $e;
         }
     }
@@ -173,7 +171,8 @@ class CalculateIntersectionsJob implements ShouldQueue
         if (is_string($model)) {
             $model = new $model();
         }
-        return Str::singular($model->getTable()) . '_id';
+
+        return Str::singular($model->getTable()).'_id';
     }
 
     /**
@@ -228,17 +227,17 @@ class CalculateIntersectionsJob implements ShouldQueue
                 $baseModel->geometry,
                 $intersectingModel->geometry,
                 $baseModel->geometry,
-                $baseModel->geometry
+                $baseModel->geometry,
             ])[0]->percentage ?? 0.0;
         }
 
         $percentage = DB::select($query);
 
         // Log for debug
-        Log::info("Calculated percentage:", [
+        Log::info('Calculated percentage:', [
             'base_model' => $baseModel->getTable(),
             'intersecting_model' => $intersectingModel->getTable(),
-            'percentage' => $percentage[0]->percentage
+            'percentage' => $percentage[0]->percentage,
         ]);
 
         return (float) ($percentage[0]->percentage ?? 0.0);

@@ -3,11 +3,11 @@
 namespace App\Nova\Dashboards;
 
 use App\Models\Region;
+use Ericlagarda\NovaTextCard\TextCard;
+use Illuminate\Support\Facades\DB;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Card;
 use Laravel\Nova\Dashboard;
-use Illuminate\Support\Facades\DB;
-use Ericlagarda\NovaTextCard\TextCard;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
 
 class SALMiturAbruzzo extends Dashboard
 {
