@@ -162,9 +162,9 @@ class CalculateIntersectionsJob implements ShouldQueue
             throw new \Exception('Intersecting model not found');
         }
 
-        // Special case for hiking_routes (MultiLineString): needs to calculate intersections with ST_Length
+        // special case for hiking_routes (MultiLineString): needs to calculate intersections with ST_Length
         if ($baseModel->getTable() === 'hiking_routes') {
-            $query = "
+            $query = <<<'SQL'
                 SELECT (ST_Length(
                     ST_Intersection(
                         (SELECT geometry FROM {$baseModel->getTable()} WHERE id = {$baseModel->id}),
@@ -174,9 +174,9 @@ class CalculateIntersectionsJob implements ShouldQueue
                     (SELECT geometry FROM {$baseModel->getTable()} WHERE id = {$baseModel->id}), 
                     true
                 )) * 100 as percentage
-            ";
+            SQL;
         } elseif ($intersectingModel->getTable() === 'hiking_routes') {
-            $query = "
+            $query = <<<'SQL'
                 SELECT (ST_Length(
                     ST_Intersection(
                         (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = {$intersectingModel->id}),
@@ -186,10 +186,10 @@ class CalculateIntersectionsJob implements ShouldQueue
                     (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = {$intersectingModel->id}), 
                     true
                 )) * 100 as percentage
-            ";
+            SQL;
         } else {
-            // Caso per MultiPolygon (resta invariato)
-            return DB::select("
+            // case for multipolygons
+            return DB::select(<<<'SQL'
                 WITH intersection AS (
                     SELECT ST_Intersection(
                         ST_Transform(?, 3857),
@@ -201,7 +201,7 @@ class CalculateIntersectionsJob implements ShouldQueue
                     THEN (ST_Area((SELECT geom FROM intersection)) / ST_Area(ST_Transform(?, 3857))) * 100
                     ELSE 0 
                 END as percentage
-            ", [
+            SQL, [
                 $baseModel->geometry,
                 $intersectingModel->geometry,
                 $baseModel->geometry,
@@ -211,8 +211,8 @@ class CalculateIntersectionsJob implements ShouldQueue
 
         $percentage = DB::select($query);
 
-        // Log per debug
-        Log::info("Percentuale calcolata:", [
+        // Log for debug
+        Log::info("Calculated percentage:", [
             'base_model' => $baseModel->getTable(),
             'intersecting_model' => $intersectingModel->getTable(),
             'percentage' => $percentage[0]->percentage
