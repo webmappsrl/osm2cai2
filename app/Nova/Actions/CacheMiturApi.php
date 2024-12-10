@@ -30,6 +30,9 @@ class CacheMiturApi extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        if (!app()->environment('production')) {
+            return Action::danger('This action is only available in production');
+        }
         foreach ($models as $model) {
             CacheMiturAbruzzoDataJob::dispatch($this->class, $model->id);
         }
