@@ -23,11 +23,19 @@ class DatabaseSeeder extends Seeder
 
         if (! $admin) {
             $user = User::factory()->create();
-            $user->roles()->attach(Role::where('name', 'Administrator')->first());
+
+            // if the user already have the role, skip
+            if (!$user->hasRole('Administrator')) {
+                $user->roles()->attach(Role::where('name', 'Administrator')->first());
+            }
         }
         if (! $nationalReferent) {
             $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Referente Nazionale']);
-            $user->roles()->attach(Role::where('name', 'National Referent')->first());
+
+            // if the user already have the role, skip
+            if (!$user->hasRole('National Referent')) {
+                $user->roles()->attach(Role::where('name', 'National Referent')->first());
+            }
         }
 
         Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);

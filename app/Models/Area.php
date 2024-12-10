@@ -57,7 +57,7 @@ class Area extends Model
 
     public function hikingRoutes()
     {
-        return $this->belongsToMany(HikingRoute::class);
+        return $this->belongsToMany(HikingRoute::class, 'area_hiking_route');
     }
 
     /**

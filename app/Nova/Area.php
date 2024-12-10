@@ -2,15 +2,16 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Nova;
+use App\Models\HikingRoute;
+use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use App\Nova\Actions\downloadGeojson;
 use App\Nova\Actions\DownloadKml;
 use App\Nova\Actions\DownloadShape;
+use App\Nova\Actions\downloadGeojson;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Filters\HikingRoutesAreaFilter;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Nova;
 
 class Area extends Resource
 {
@@ -99,10 +100,10 @@ class Area extends Resource
         if (! is_null($request['resourceId'])) {
             $area = \App\Models\Area::find($request['resourceId']);
             $tot = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
-            $hikingRoutes = $area->intersectings['hiking_routes'] ?? [];
+            $hikingRoutes = $area->hikingRoutes;
 
-            foreach ($hikingRoutes as $id => $updated_at) {
-                $hrStatus = HikingRoute::find($id)->osm2cai_status;
+            foreach ($hikingRoutes as $hr) {
+                $hrStatus = HikingRoute::find($hr->id)->osm2cai_status;
                 $tot[$hrStatus]++;
             }
 
@@ -167,7 +168,7 @@ class Area extends Resource
             $filter = base64_encode(json_encode([
                 ['class' => HikingRoutesAreaFilter::class, 'value' => $resourceId],
             ]));
-            $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
         return (new HtmlCard())
