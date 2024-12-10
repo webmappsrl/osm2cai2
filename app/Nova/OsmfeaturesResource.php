@@ -2,23 +2,24 @@
 
 namespace App\Nova;
 
+use Wm\MapPoint\MapPoint;
+use Laravel\Nova\Resource;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
+use App\Nova\Filters\OsmFilter;
 use App\Nova\Filters\ScoreFilter;
+use App\Services\GeometryService;
+use Laravel\Nova\Fields\DateTime;
 use App\Nova\Filters\SourceFilter;
 use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
-use App\Services\GeometryService;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Resource;
-use Wm\MapMultiLinestring\MapMultiLinestring;
 use Wm\MapMultiPolygon\MapMultiPolygon;
-use Wm\MapPoint\MapPoint;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\MapMultiLinestring\MapMultiLinestring;
 
 abstract class OsmfeaturesResource extends Resource
 {
@@ -76,6 +77,7 @@ abstract class OsmfeaturesResource extends Resource
             Text::make('Osmfeatures ID', function () {
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
+            Text::make('OSM Type', 'osmfeatures_data->properties->osm_type'),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
             Code::make('Osmfeatures Data', 'osmfeatures_data')
                 ->json()
@@ -101,6 +103,7 @@ abstract class OsmfeaturesResource extends Resource
     public function filters(NovaRequest $request)
     {
         return [
+            (new OsmFilter),
             (new ScoreFilter),
             (new WikiPediaFilter),
             (new WikiDataFilter),

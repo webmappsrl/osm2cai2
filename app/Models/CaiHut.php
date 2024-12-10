@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
-use App\Console\Commands\CheckNearbyHikingRoutes;
-use App\Jobs\CacheMiturAbruzzoDataJob;
-use App\Jobs\CheckNearbyHikingRoutesJob;
-use App\Models\HikingRoute;
+use App\Models\EcPoi;
 use App\Models\Region;
+use App\Models\HikingRoute;
 use App\Traits\AwsCacheable;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use Illuminate\Database\Eloquent\Model;
+use App\Jobs\CheckNearbyHikingRoutesJob;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Console\Commands\CheckNearbyHikingRoutes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class CaiHut extends Model implements OsmfeaturesSyncableInterface
 {
@@ -83,6 +84,11 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         return $this->belongsToMany(HikingRoute::class, 'hiking_route_cai_hut')->withPivot(['buffer']);
     }
 
+    public function nearbyEcPois()
+    {
+        return $this->belongsToMany(EcPoi::class, 'ec_poi_cai_hut')->withPivot(['buffer']);
+    }
+
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
@@ -117,7 +123,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData || empty($osmfeaturesData)) {
-            Log::channel('wm-osmfeatures')->info('No data found for CaiHut '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for CaiHut ' . $osmfeaturesId);
 
             return;
         }
@@ -129,7 +135,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
             if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
                 $updateData['name'] = $osmfeaturesData['properties']['name'];
             } elseif ($osmfeaturesData['properties']['name'] === null) {
-                Log::channel('wm-osmfeatures')->info('No name found for CaiHut '.$osmfeaturesId);
+                Log::channel('wm-osmfeatures')->info('No name found for CaiHut ' . $osmfeaturesId);
             }
         }
 

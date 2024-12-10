@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Models\Club;
 use App\Models\User;
+use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
@@ -77,21 +80,21 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi ' . $osmfeaturesId);
 
             return;
         }
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi ' . $osmfeaturesId);
             $geometry = null;
         }
 
         if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi ' . $osmfeaturesId);
             $name = null;
         } else {
             $name = $osmfeaturesData['properties']['name'];
@@ -113,5 +116,30 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     public function region()
     {
         return $this->belongsTo(Region::class);
+    }
+
+    public function mountainGroups()
+    {
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_ec_poi', 'ec_poi_id', 'mountain_group_id');
+    }
+
+    public function clubs()
+    {
+        return $this->belongsToMany(Club::class, 'ec_poi_club', 'ec_poi_id', 'club_id');
+    }
+
+    public function nearbyCaiHuts()
+    {
+        return $this->belongsToMany(CaiHut::class, 'ec_poi_cai_hut', 'ec_poi_id', 'cai_hut_id')->withPivot(['buffer']);
+    }
+
+    public function nearbyHikingRoutes()
+    {
+        return $this->belongsToMany(HikingRoute::class, 'hiking_route_ec_poi', 'ec_poi_id', 'hiking_route_id')->withPivot(['buffer']);
+    }
+
+    public function municipalities()
+    {
+        return $this->belongsToMany(Municipality::class, 'ec_poi_municipality', 'ec_poi_id', 'municipality_id');
     }
 }

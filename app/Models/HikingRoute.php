@@ -2,35 +2,36 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
-use App\Jobs\CalculateIntersectionsJob;
-use App\Jobs\CheckNearbyHutsJob;
-use App\Jobs\CheckNearbyNaturalSpringsJob;
-use App\Jobs\ComputeTdhJob;
 use App\Models\Area;
+use App\Models\User;
+use App\Models\EcPoi;
 use App\Models\CaiHut;
-use App\Models\Itinerary;
-use App\Models\NaturalSpring;
-use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\User;
-use App\Services\HikingRouteDescriptionService;
+use App\Models\Province;
+use App\Models\Itinerary;
+use App\Jobs\ComputeTdhJob;
 use App\Traits\AwsCacheable;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Models\NaturalSpring;
+use App\Jobs\CheckNearbyHutsJob;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\CalculateIntersectionsJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\Stopwatch\Section;
-use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use App\Jobs\CheckNearbyNaturalSpringsJob;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Services\HikingRouteDescriptionService;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
+use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface
 {
@@ -235,6 +236,11 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface
     public function nearbyNaturalSprings()
     {
         return $this->belongsToMany(NaturalSpring::class, 'hiking_route_natural_spring')->withPivot(['buffer']);
+    }
+
+    public function nearbyEcPois()
+    {
+        return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi')->withPivot(['buffer']);
     }
 
     /**

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
- * This job recalculates intersections between two models with spatial data trait.
+ * This job calculates intersections between two models with spatial data trait.
  *
  * We store only the base model's ID and class, along with the intersecting model's class,
  * rather than the full model instances. This approach solves serialization issues that occur
@@ -119,6 +119,9 @@ class CalculateIntersectionsJob implements ShouldQueue
                 'sectors' => 'hiking_route_sector',
                 'areas' => 'area_hiking_route',
                 'mountain_groups' => 'mountain_group_hiking_route',
+                'ec_pois' => 'hiking_route_ec_poi',
+                'clubs' => 'hiking_route_club',
+                'cai_huts' => 'hiking_route_cai_hut',
             ],
             'regions' => [
                 'hiking_routes' => 'hiking_route_region',
@@ -142,12 +145,17 @@ class CalculateIntersectionsJob implements ShouldQueue
             ],
             'cai_huts' => [
                 'mountain_groups' => 'mountain_group_cai_hut',
+                'ec_pois' => 'cai_hut_ec_poi',
             ],
             'ec_pois' => [
                 'mountain_groups' => 'mountain_group_ec_poi',
+                'clubs' => 'ec_poi_club',
+                'cai_huts' => 'ec_poi_cai_hut',
+                'hiking_routes' => 'hiking_route_ec_poi',
             ],
             'clubs' => [
                 'mountain_groups' => 'mountain_group_club',
+                'ec_pois' => 'ec_poi_club',
             ],
 
         ];
