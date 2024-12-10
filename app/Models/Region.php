@@ -32,6 +32,29 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting', 'code'];
 
+    protected static $regionsCode = [
+        'A' => 'Friuli-Venezia Giulia',
+        'B' => 'Veneto',
+        'C' => 'Trentino-Alto Adige',
+        'D' => 'Lombardia',
+        'E' => 'Piemonte',
+        'F' => "Valle d'Aosta",
+        'G' => 'Liguria',
+        'H' => 'Emilia-Romagna',
+        'L' => 'Toscana',
+        'M' => 'Marche',
+        'N' => 'Umbria',
+        'O' => 'Lazio',
+        'P' => 'Abruzzo',
+        'Q' => 'Molise',
+        'S' => 'Campania',
+        'R' => 'Puglia',
+        'T' => 'Basilicata',
+        'U' => 'Calabria',
+        'V' => 'Sicilia',
+        'Z' => 'Sardegna',
+    ];
+
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
@@ -121,7 +144,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Region '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Region ' . $osmfeaturesId);
 
             return;
         }
@@ -133,12 +156,17 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Region '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Region ' . $osmfeaturesId);
         }
 
         // Execute the update only if there are data to update
         if (! empty($updateData)) {
             $model->update($updateData);
+        }
+
+        //if the code column in the model is empty, run the assignCode command
+        if (empty($model->code)) {
+            $model->assignCode();
         }
     }
 
@@ -186,7 +214,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 
@@ -236,17 +264,39 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     {
         return $this->provinces();
     }
-
+    /**
+     * Get IDs of all child provinces.
+     * 
+     * Alias method that calls provincesIds().
+     *
+     * @return array Array of province IDs belonging to this region
+     */
     public function childrenIds()
     {
         return $this->provincesIds();
     }
 
+    /**
+     * Get IDs of all provinces belonging to this region.
+     * 
+     * Retrieves the IDs of all provinces associated with this region
+     * through the provinces relationship.
+     *
+     * @return array Array of province IDs belonging to this region
+     */
     public function provincesIds(): array
     {
         return $this->provinces->pluck('id')->toArray();
     }
 
+    /**
+     * Get all area IDs associated with this region through its provinces.
+     * 
+     * Iterates through all provinces belonging to this region and collects their area IDs.
+     * The IDs are merged and duplicates are removed.
+     *
+     * @return array Array of unique area IDs belonging to this region's provinces
+     */
     public function areasIds(): array
     {
         $result = [];
@@ -257,6 +307,14 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         return $result;
     }
 
+    /**
+     * Get all sector IDs associated with this region through its provinces.
+     * 
+     * Iterates through all provinces belonging to this region and collects their sector IDs.
+     * The IDs are merged and duplicates are removed.
+     *
+     * @return array Array of unique sector IDs belonging to this region's provinces
+     */
     public function sectorsIds(): array
     {
         $result = [];
@@ -265,5 +323,28 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         }
 
         return $result;
+    }
+
+    /**
+     * Assigns a CAI region code to this region based on its name.
+     * 
+     * Iterates through the predefined region codes and names, checking if the region's name
+     * contains any of the predefined region names. When a match is found, assigns the 
+     * corresponding code and saves the model.
+     *
+     * The codes follow the CAI (Club Alpino Italiano) convention:
+     * A = Friuli-Venezia Giulia, B = Veneto, C = Trentino-Alto Adige, etc.
+     *
+     * @return void
+     */
+    public function assignCode()
+    {
+        foreach (self::$regionsCode as $code => $name) {
+            if (stripos($this->name, $name) !== false) {
+                $this->code = $code;
+                $this->saveQuietly();
+                return;
+            }
+        }
     }
 }
