@@ -81,11 +81,6 @@ class CalculateIntersectionsJob implements ShouldQueue
                 $baseModelForeignKey = $this->getModelForeignKey($baseModel);
                 $intersectingModelForeignKey = $this->getModelForeignKey($intersectingModel);
 
-                if (Schema::hasColumn($pivotTable, 'percentage')) {
-                    $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
-                    Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
-                }
-
                 $record = [
                     $baseModelForeignKey => $baseModel->id,
                     $intersectingModelForeignKey => $intersectingId,
@@ -93,7 +88,9 @@ class CalculateIntersectionsJob implements ShouldQueue
                     'updated_at' => now(),
                 ];
 
-                if ($hasPercentageColumn) {
+                if (Schema::hasColumn($pivotTable, 'percentage')) {
+                    $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
+                    Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
                     $record['percentage'] = $percentage;
                 }
 

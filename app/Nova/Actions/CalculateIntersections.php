@@ -41,17 +41,17 @@ class CalculateIntersections extends Action
         foreach ($models as $model) {
             switch ($this->class) {
                 case 'EcPoi':
-                    CalculateIntersectionsJob::dispatch($model, new Club());
-                    CalculateIntersectionsJob::dispatch($model, new MountainGroups());
+                    CalculateIntersectionsJob::dispatch($model, Club::class);
+                    CalculateIntersectionsJob::dispatch($model, MountainGroups::class);
                     CheckNearbyHikingRoutesJob::dispatch($model, 250);
                     CheckNearbyHutsJob::dispatch($model, 250);
                     break;
                 case 'MountainGroups':
-                    CalculateIntersectionsJob::dispatch($model, new Club());
-                    CalculateIntersectionsJob::dispatch($model, new Region());
-                    CalculateIntersectionsJob::dispatch($model, new CaiHut());
-                    CalculateIntersectionsJob::dispatch($model, new HikingRoute());
-                    CalculateIntersectionsJob::dispatch($model, new EcPoi());
+                    CalculateIntersectionsJob::dispatch($model, Club::class);
+                    CalculateIntersectionsJob::dispatch($model, Region::class);
+                    CalculateIntersectionsJob::dispatch($model, CaiHut::class);
+                    CalculateIntersectionsJob::dispatch($model, HikingRoute::class);
+                    CalculateIntersectionsJob::dispatch($model, EcPoi::class);
                     break;
             }
         }
