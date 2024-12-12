@@ -3,18 +3,23 @@
 namespace App\Nova;
 
 use App\Models\User;
-use App\Nova\Cards\LinksCard;
-use App\Nova\Cards\Osm2caiStatusCard;
-use App\Nova\Cards\RefCard;
+use App\Models\EcPoi;
 use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
-use Eminiarts\Tabs\Traits\HasTabs;
-use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Date;
+use App\Nova\Cards\RefCard;
+use Illuminate\Support\Arr;
 use Laravel\Nova\Fields\ID;
+use App\Nova\Cards\LinksCard;
+use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Image;
+use Laravel\Nova\Fields\Boolean;
+use App\Nova\Filters\ScoreFilter;
 use Laravel\Nova\Fields\Textarea;
+use Eminiarts\Tabs\Traits\HasTabs;
+use App\Nova\Cards\Osm2caiStatusCard;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 
 class HikingRoute extends OsmfeaturesResource
 {
@@ -43,6 +48,24 @@ class HikingRoute extends OsmfeaturesResource
         'id',
         'osmfeatures_id',
     ];
+
+    public function title()
+    {
+        $supplementaryString = ' - ';
+
+        if ($this->name) {
+            $supplementaryString .= $this->name;
+        }
+
+        if ($this->ref)
+            $supplementaryString .= 'ref: ' . $this->ref;
+
+        if ($this->sectors->count()) {
+            $supplementaryString .= " (" . $this->sectors->pluck('name')->implode(', ') . ")";
+        }
+
+        return $this->id . $supplementaryString;
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -95,13 +118,13 @@ class HikingRoute extends OsmfeaturesResource
 
         return array_merge($orderedFields, [
             Boolean::make('Correttezza Geometria', function () {
-                return 'TBI';
+                return $this->hasCorrectGeometry();
             })->onlyOnDetail(),
             Boolean::make('Coerenza ref REI', function () {
-                return 'TBI';
+                return $this->osmfeatures_data['properties']['ref_REI'] == $this->ref_rei;
             })->onlyOnDetail(),
             Boolean::make('Geometry Sync', function () {
-                return 'TBI';
+                return $this->geometry == $this->osmfeatures_data['geometry'];
             })->onlyOnDetail(),
         ], $this->getTabs());
     }
@@ -147,9 +170,12 @@ class HikingRoute extends OsmfeaturesResource
     public function filters(NovaRequest $request)
     {
         $parentFilters = parent::filters($request);
-        //remove score filter
-        unset($parentFilters[0]);
-
+        //remove App\Nova\Filters\ScoreFilter from $parentFilters array
+        foreach ($parentFilters as $key => $filter) {
+            if ($filter instanceof ScoreFilter) {
+                unset($parentFilters[$key]);
+            }
+        }
         return $parentFilters;
     }
 
@@ -181,32 +207,57 @@ class HikingRoute extends OsmfeaturesResource
             Text::make('Osm2cai Status', 'osm2cai_status')
                 ->hideFromDetail(),
             Text::make('Regioni', function () {
-                return 'TBI';
-            })->hideFromDetail(),
+                $val = "ND";
+                if (Arr::accessible($this->regions)) {
+                    if (count($this->regions) > 0) {
+                        $val = implode(', ', $this->regions->pluck('name')->toArray());
+                    }
+                    if (count($this->regions) >= 2) {
+                        $val = implode(', ', $this->regions->pluck('name')->take(1)->toArray()) . ' [...]';
+                    }
+                }
+                return $val;
+            })->onlyOnIndex(),
             Text::make('Province', function () {
-                return 'TBI';
-            })->hideFromDetail(),
+                $val = "ND";
+                if (Arr::accessible($this->provinces)) {
+                    if (count($this->provinces) > 0) {
+                        $val = implode(', ', $this->provinces->pluck('name')->toArray());
+                    }
+                    if (count($this->provinces) >= 2) {
+                        $val = implode(', ', $this->provinces->pluck('name')->take(1)->toArray()) . ' [...]';
+                    }
+                }
+                return $val;
+            })->onlyOnIndex(),
             Text::make('Aree', function () {
-                return 'TBI';
-            })->hideFromDetail(),
+                $val = "ND";
+                if (Arr::accessible($this->areas)) {
+                    if (count($this->areas) > 0) {
+                        $val = implode(', ', $this->areas->pluck('name')->toArray());
+                    }
+                    if (count($this->areas) >= 2) {
+                        $val = implode(', ', $this->areas->pluck('name')->take(1)->toArray()) . ' [...]';
+                    }
+                }
+                return $val;
+            })->onlyOnIndex(),
             Text::make('Settori', function () {
-                return 'TBI';
-            })->hideFromDetail(),
-            Text::make('Ref', function () {
-                return 'TBI';
-            })->hideFromDetail(),
-            Text::make('Cod_rei_osm', function () {
-                return 'TBI';
-            })->hideFromDetail(),
-            Text::make('Cod_rei_comp', function () {
-                return 'TBI';
-            })->hideFromDetail(),
-            Text::make('Percorribilitá', function () {
-                return 'TBI';
-            })->hideFromDetail(),
-            Text::make('Ultima Ricognizione', function () {
-                return 'TBI';
-            })->hideFromDetail(),
+                $val = "ND";
+                if (Arr::accessible($this->sectors)) {
+                    if (count($this->sectors) > 0) {
+                        $val = implode(', ', $this->sectors->pluck('name')->toArray());
+                    }
+                    if (count($this->sectors) >= 2) {
+                        $val = implode(', ', $this->areas->pluck('name')->take(1)->toArray()) . ' [...]';
+                    }
+                }
+                return $val;
+            })->onlyOnIndex(),
+            Text::make('REF', 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
+            Text::make('Cod_REI', 'ref_rei')->hideFromDetail(),
+            Text::make('Percorribilitá', 'issues_status')->hideFromDetail(),
+            Text::make('Ultima Ricognizione', 'osmfeatures_data->properties->survey_date')->hideFromDetail(),
         ];
 
         return $specificFields;
@@ -215,7 +266,7 @@ class HikingRoute extends OsmfeaturesResource
     private function getDetailFields()
     {
         $fields = [
-            Text::make('OSM ID', 'osmfeatures_data->properties->osm_id'),
+            Text::make('OSM ID', 'osmfeatures_data->properties->osm_id')->onlyOnDetail(),
             Text::make('Legenda', function () {
                 return <<<'HTML'
     <ul>
@@ -252,111 +303,277 @@ class HikingRoute extends OsmfeaturesResource
         ];
     }
 
+    private function createField($label, $infomont, $osmPath, $modelAttribute = null, $isLink = false, $withCalculated = false)
+    {
+        return Text::make($label, function () use ($infomont, $osmPath, $modelAttribute, $isLink, $withCalculated) {
+            $osmValue = $this->getOsmValue($osmPath);
+
+            if ($isLink && $osmValue) {
+                $osmValue = "<a style='color:blue;' href='{$osmValue}' target='_blank'>{$osmValue}</a>";
+            }
+
+            $infomontValue = $modelAttribute ? $this->$modelAttribute : $this->$infomont;
+
+            $html = "<p>INFOMONT: {$infomontValue}</p><p>OSM: {$osmValue}</p>";
+
+            if ($withCalculated) {
+                $calculated = $this->getOsmValue(str_replace('properties', 'properties.dem_enrichment', $osmPath));
+                $html .= "<p>VALORE CALCOLATO: {$calculated}</p>";
+            }
+
+            return $html;
+        })->onlyOnDetail()->asHtml();
+    }
+
+    private function getOsmValue($path)
+    {
+        $keys = explode('.', $path);
+        $value = $this->osmfeatures_data;
+
+        foreach ($keys as $key) {
+            if (!isset($value[$key])) {
+                return '';
+            }
+            $value = $value[$key];
+        }
+
+        return $value;
+    }
+
     private function getMainTabFields()
     {
         return [
-            Text::make('Source', 'osmfeatures_data->properties->source')->hideFromIndex(),
-            Text::make('Data ricognizione', fn () => 'TBI')->hideFromIndex(),
-            Text::make('Codice Sezione CAI', fn () => 'TBI')->hideFromIndex(),
-            Text::make('REF precedente', fn () => 'TBI')->hideFromIndex(),
-            Text::make('REF rei', 'osmfeatures_data->properties->ref_REI')->hideFromIndex(),
-            Text::make('REF regionale', fn () => 'TBI')->hideFromIndex(),
+            $this->createField('Source', 'source', 'properties.source'),
+            $this->createField('Data ricognizione', 'survey_date', 'properties.survey_date'),
+            $this->createField('Codice Sezione CAI', 'source_ref', 'properties.osm_tags.source:ref'),
+            $this->createField('REF precedente', 'old_ref', 'properties.old_ref'),
+            $this->createField('REF rei', 'ref_rei', 'properties.ref_REI'),
+            $this->createField('REF regionale', 'reg_ref', 'properties.osm_tags.reg_ref'),
         ];
     }
 
     private function getGeneralTabFields()
     {
         return [
-            Text::make('Localitá di partenza', 'osmfeatures_data->properties->from')->hideFromIndex(),
-            Text::make('Localitá di arrivo', 'osmfeatures_data->properties->to')->hideFromIndex(),
-            Text::make('Nome del percorso', 'osmfeatures_data->properties->name')->hideFromIndex(),
-            Text::make('Tipo di rete escursionistica', 'osmfeatures_data->properties->osm_tags->type')->hideFromIndex(),
-            Text::make('Codice OSM segnaletica', 'osmfeatures_data->properties->osm_tags->osmc:symbol')->hideFromIndex(),
-            Text::make('Segnaletica descr. (EN)', 'osmfeatures_data->properties->osm_tags->symbol')->hideFromIndex(),
-            Text::make('Segnaletica descr. (IT)', 'osmfeatures_data->properties->osm_tags->symbol:it')->hideFromIndex(),
-            Text::make('Percorso ad Anello', 'osmfeatures_data->properties->roundtrip')->hideFromIndex(),
-            Text::make('Nome rete escursionistica', 'osmfeatures_data->properties->rwn_name')->hideFromIndex(),
+            $this->createField('Localitá di partenza', 'from', 'properties.from'),
+            $this->createField('Localitá di arrivo', 'to', 'properties.to'),
+            $this->createField('Nome del percorso', 'name', 'properties.name'),
+            $this->createField('Tipo di rete escursionistica', 'type', 'properties.osm_tags.type'),
+            $this->createField('Codice OSM segnaletica', 'osmc_symbol', 'properties.osm_tags.osmc:symbol'),
+            $this->createField('Segnaletica descr. (EN)', 'symbol', 'properties.osm_tags.symbol'),
+            $this->createField('Segnaletica descr. (IT)', 'symbol_it', 'properties.osm_tags.symbol:it'),
+            $this->createField('Percorso ad Anello', 'roundtrip', 'properties.roundtrip'),
+            $this->createField('Nome rete escursionistica', 'rwn_name', 'properties.rwn_name'),
         ];
     }
 
     private function getTechTabFields()
     {
-        return [
-            Text::make('Lunghezza in Km', 'osmfeatures_data->properties->distance')->hideFromIndex(),
-            Text::make('Diff CAI', 'osmfeatures_data->properties->cai_scale')->hideFromIndex(),
-            Text::make('Dislivello positivo in metri', 'osmfeatures_data->properties->dem_enrichment->ascent')->hideFromIndex(),
-            Text::make('Dislivello negativo in metri', 'osmfeatures_data->properties->dem_enrichment->descent')->hideFromIndex(),
-            Text::make('Durata (P->A) in minuti', 'osmfeatures_data->properties->dem_enrichment->duration_forward_hiking')->hideFromIndex(),
-            Text::make('Durata (A->P) in minuti', 'osmfeatures_data->properties->dem_enrichment->duration_backward_hiking')->hideFromIndex(),
-            Text::make('Quota Massima in metri', 'osmfeatures_data->properties->dem_enrichment->ele_max')->hideFromIndex(),
-            Text::make('Quota Minima in metri', 'osmfeatures_data->properties->dem_enrichment->ele_min')->hideFromIndex(),
-            Text::make('Quota punto di partenza in metri', 'osmfeatures_data->properties->dem_enrichment->ele_from')->hideFromIndex(),
-            Text::make('Quota punto di arrivo in metri', 'osmfeatures_data->properties->dem_enrichment->ele_to')->hideFromIndex(),
+        $techFields = [
+            'Lunghezza in Km' => ['distance', 'properties.distance'],
+            'Diff CAI' => ['cai_scale', 'properties.cai_scale'],
+            'Dislivello positivo in metri' => ['ascent', 'properties.ascent'],
+            'Dislivello negativo in metri' => ['descent', 'properties.descent'],
+            'Durata (P->A) in minuti' => ['duration_forward', 'properties.duration_forward'],
+            'Durata (A->P) in minuti' => ['duration_backward', 'properties.duration_backward'],
+            'Quota Massima in metri' => ['ele_max', 'properties.ele_max'],
+            'Quota Minima in metri' => ['ele_min', 'properties.ele_min'],
+            'Quota punto di partenza in metri' => ['ele_from', 'properties.ele_from'],
+            'Quota punto di arrivo in metri' => ['ele_to', 'properties.ele_to'],
         ];
+
+        return array_map(function ($label, $config) {
+            //if diff cai
+            if ($label == 'Diff CAI') {
+                return $this->createField($label, $config[0], $config[1], null, false, false);
+            }
+            return $this->createField($label, $config[0], $config[1], null, false, true);
+        }, array_keys($techFields), $techFields);
     }
 
     private function getOtherTabFields()
     {
-        return [
-            Text::make('Descrizione (EN)', 'osmfeatures_data->properties->description')->hideFromIndex(),
-            Text::make('Descrizione (IT)', 'osmfeatures_data->properties->description_it')->hideFromIndex(),
-            Text::make('Manutenzione (EN)', 'osmfeatures_data->properties->maintenance')->hideFromIndex(),
-            Text::make('MANUTENZIONE (IT)', 'osmfeatures_data->properties->maintenance_it')->hideFromIndex(),
-            Text::make('Note (EN)', 'osmfeatures_data->properties->note')->hideFromIndex(),
-            Text::make('Note (IT)', 'osmfeatures_data->properties->note_it')->hideFromIndex(),
-            Text::make('Note di progetto', 'osmfeatures_data->properties->note_project_page')->hideFromIndex(),
-            Text::make('Operatore', 'osmfeatures_data->properties->osm_tags->operator')->hideFromIndex(),
-            Text::make('Stato del percorso', fn () => 'TBI')->hideFromIndex(),
-            Text::make('Indirizzo web', 'osmfeatures_data->properties->website')->hideFromIndex()->displayUsing(fn ($value) => '<a style="color:blue;" href="'.$value.'" target="_blank">'.$value.'</a>')->asHtml(),
-            Text::make('Immagine su wikimedia', 'osmfeatures_data->properties->wikimedia_commons')->hideFromIndex()->displayUsing(fn ($value) => '<a style="color:blue;" href="'.$value.'" target="_blank">'.$value.'</a>')->asHtml(),
+        $fields = [
+            'Descrizione (EN)' => ['description', 'properties.description'],
+            'Descrizione (IT)' => ['description_it', 'properties.description_it'],
+            'Manutenzione (EN)' => ['maintenance', 'properties.maintenance'],
+            'Manutenzione (IT)' => ['maintenance_it', 'properties.maintenance_it'],
+            'Note (EN)' => ['note', 'properties.note'],
+            'Note (IT)' => ['note_it', 'properties.note_it'],
+            'Note di progetto' => ['note_project_page', 'properties.note_project_page'],
+            'Operatore' => ['operator', 'properties.osm_tags.operator'],
+            'Stato del percorso' => ['state', 'properties.state'],
         ];
+
+        $standardFields = array_map(function ($label, $config) {
+            return $this->createField($label, $config[0], $config[1]);
+        }, array_keys($fields), $fields);
+
+        return array_merge($standardFields, [
+            $this->createField('Indirizzo web', 'website', 'properties.website', null, true),
+            $this->createField('Immagine su wikimedia', 'wikimedia_commons', 'properties.wikimedia_commons', null, true),
+        ]);
     }
 
     private function getContentTabFields()
     {
         return [
-            Text::make('Automatic Name (computed for TDH)', fn () => 'TBI')->hideFromIndex(),
-            Text::make('Automatic Abstract (computed for TDH)', fn () => 'TBI')->hideFromIndex(),
-            Text::make('Feature Image', fn () => 'TBI')->hideFromIndex(),
-            Text::make('Description CAI IT', fn () => 'TBI')->hideFromIndex(),
+            Text::make('Automatic Name (computed for TDH)', fn() => $this->getNameForTDH()['it'])->onlyOnDetail(),
+            Text::make('Automatic Abstract (computed for TDH)', fn() => $this->tdh['abstract'] ?? '')->onlyOnDetail(),
+            Images::make('Feature Image', 'feature_image')->onlyOnDetail(),
+            Text::make('Description CAI IT', 'description_cai_it')->hideFromIndex(),
         ];
     }
 
     private function getIssuesTabFields()
     {
         return [
-            Text::make('Issue Status', 'issues_status')->hideFromIndex(),
-            Textarea::make('Issue Description', 'issues_description')->hideFromIndex(),
-            Date::make('Issue Date', 'issues_last_update')->hideFromIndex(),
+            Text::make('Issue Status', 'issues_status')->onlyOnDetail(),
+            Textarea::make('Issue Description', 'issues_description')->onlyOnDetail(),
+            Date::make('Issue Date', 'issues_last_update')->onlyOnDetail(),
             Text::make('Issue Author', function () {
                 $user = User::find($this->model()->issues_user_id);
 
                 return $user
-                    ? '<a style="color:blue;" href="'.url('/resources/users/'.$user->id).'" target="_blank">'.$user->name.'</a>'
+                    ? '<a style="color:blue;" href="' . url('/resources/users/' . $user->id) . '" target="_blank">' . $user->name . '</a>'
                     : 'No user';
             })->hideFromIndex()->asHtml(),
-            Text::make('Cronologia Percorribilità', 'issues_chronology')->hideFromIndex(),
+            Text::make('Cronologia Percorribilità', 'issues_chronology')->onlyOnDetail(),
         ];
     }
 
     private function getPOITabFields()
     {
-        return [
-            Text::make('POI in buffer (1km)', fn () => 'TBI')->hideFromIndex(),
-        ];
+        $pois = $this->model()->getElementsInBuffer(new EcPoi(), 10000);
+        $fields[] = Text::make('', function () use ($pois) {
+            if (count($pois) < 1) {
+                return '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">Nessun POI trovato nel raggio di 1km</h2>';
+            }
+            return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">Punti di interesse nel raggio di 1km</h2>';
+        })->asHtml()->onlyOnDetail();
+
+        if (count($pois) > 0) {
+            $tableRows = [];
+            foreach ($pois as $poi) {
+                $tags = $poi->osmfeatures_data['properties']['osm_tags'];
+                $tagList = '';
+                if ($tags) {
+                    $tagList = '<ul style="list-style:none; padding:0; margin:0;">';
+                    foreach ($tags as $key => $value) {
+                        $tagList .= "<li style='padding:3px 0;'><span style='color:#666; font-weight:bold;'>{$key}:</span> {$value}</li>";
+                    }
+                    $tagList .= '</ul>';
+                }
+
+                $tableRows[] = "<tr style='border-bottom:1px solid #eee; transition: background 0.2s;' onmouseover=\"this.style.background='#f5f5f5'\" onmouseout=\"this.style.background='white'\">
+            <td style='padding:12px; border-right:1px solid #eee;'><a style='text-decoration: none; color: #2697bc; font-weight: bold; transition: color 0.2s;' href='/resources/ec-pois/{$poi->id}' onmouseover=\"this.style.color='#1a7594'\" onmouseout=\"this.style.color='#2697bc'\">{$poi->name}</a></td>
+            <td style='padding:12px; border-right:1px solid #eee;'><code style='background:#f8f8f8; padding:2px 6px; border-radius:3px;'>{$poi->osmfeatures_data['properties']['osm_id']}</code></td>
+            <td style='padding:12px; border-right:1px solid #eee;'>{$tagList}</td>
+            <td style='padding:12px; text-align:center;'><span style='background:#e3f2fd; color:#1976d2; padding:4px 8px; border-radius:4px; font-size:0.9em;'>{$poi->osmfeatures_data['properties']['osm_type']}</span></td>
+        </tr>";
+            }
+
+            $fields[] = Text::make('Risultati', function () use ($tableRows) {
+                return "<div style='background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); overflow:hidden; margin:10px 0;'>
+                <table style='width:100%; border-collapse:collapse; background:white;'>
+                    <thead>
+                        <tr style='background:#f5f7fa;'>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Name</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>OSM ID</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Tag OSM</th>
+                            <th style='padding:15px; text-align:center; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Type OSM</th>
+                        </tr>
+                    </thead>
+                    <tbody>" . implode('', $tableRows) . "</tbody>
+                </table>
+                </div>";
+            })->asHtml()->onlyOnDetail();
+        }
+        return $fields;
     }
 
     private function getHutsTabFields()
     {
-        return [
-            Text::make('Huts nelle vicinanze', fn () => 'TBI')->hideFromIndex(),
+        $hr = HikingRoute::find($this->id);
+        $huts = $hr->nearbyCaiHuts;
+
+        if (empty($huts)) {
+            return [
+                Text::make('', fn() => '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">Nessun rifugio nelle vicinanze</h2>')->asHtml()->onlyOnDetail(),
+            ];
+        }
+        $fields = [
+            Text::make('', function () {
+                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">Rifugi nelle vicinanze</h2>';
+            })->asHtml()->onlyOnDetail()
         ];
+
+        $tableRows = [];
+
+        foreach ($huts as $hut) {
+            $tableRows[] = "<tr style='border-bottom:1px solid #eee; transition: background 0.2s;' onmouseover=\"this.style.background='#f5f5f5'\" onmouseout=\"this.style.background='white'\">
+                <td style='padding:12px; border-right:1px solid #eee;'><code style='background:#f8f8f8; padding:2px 6px; border-radius:3px;'>{$hut->id}</code></td>
+                <td style='padding:12px; border-right:1px solid #eee;'><a style='text-decoration: none; color: #2697bc; font-weight: bold; transition: color 0.2s;' href='/resources/cai-huts/{$hut->id}' onmouseover=\"this.style.color='#1a7594'\" onmouseout=\"this.style.color='#2697bc'\">{$hut->name}</a></td>
+            </tr>";
+        }
+
+        $fields[] = Text::make('Risultati', function () use ($tableRows) {
+            return "<div style='background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); overflow:hidden; margin:10px 0;'>
+                <table style='width:100%; border-collapse:collapse; background:white;'>
+                    <thead>
+                        <tr style='background:#f5f7fa;'>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>ID</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Nome</th>
+                        </tr>
+                    </thead>
+                    <tbody>" . implode('', $tableRows) . "</tbody>
+                </table>
+            </div>";
+        })->asHtml()->onlyOnDetail();
+
+        return $fields;
     }
 
     private function getNaturalSpringsTabFields()
     {
-        return [
-            Text::make('Huts nelle vicinanze', fn () => 'TBI')->hideFromIndex(),
+        $hr = HikingRoute::find($this->id);
+        $naturalSprings = $hr->nearbyNaturalSprings;
+
+        if (empty($naturalSprings)) {
+            return [
+                Text::make('', fn() => '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">Nessuna sorgente naturale nelle vicinanze</h2>')->asHtml()->onlyOnDetail(),
+            ];
+        }
+
+        $fields = [
+            Text::make('', function () {
+                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">Sorgenti naturali nelle vicinanze</h2>';
+            })->asHtml()->onlyOnDetail()
         ];
+
+        $tableRows = [];
+
+        foreach ($naturalSprings as $naturalSpring) {
+            $tableRows[] = "<tr style='border-bottom:1px solid #eee; transition: background 0.2s;' onmouseover=\"this.style.background='#f5f5f5'\" onmouseout=\"this.style.background='white'\">
+                <td style='padding:12px; border-right:1px solid #eee;'><code style='background:#f8f8f8; padding:2px 6px; border-radius:3px;'>{$naturalSpring->id}</code></td>
+                <td style='padding:12px; border-right:1px solid #eee;'><a style='text-decoration: none; color: #2697bc; font-weight: bold; transition: color 0.2s;' href='/resources/natural-springs/{$naturalSpring->id}' onmouseover=\"this.style.color='#1a7594'\" onmouseout=\"this.style.color='#2697bc'\">{$naturalSpring->name}</a></td>
+            </tr>";
+        }
+
+        $fields[] = Text::make('Risultati', function () use ($tableRows) {
+            return "<div style='background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); overflow:hidden; margin:10px 0;'>
+                <table style='width:100%; border-collapse:collapse; background:white;'>
+                    <thead>
+                        <tr style='background:#f5f7fa;'>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>ID</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Nome</th>
+                        </tr>
+                    </thead>
+                    <tbody>" . implode('', $tableRows) . "</tbody>
+                </table>
+            </div>";
+        })->asHtml()->onlyOnDetail();
+
+        return $fields;
     }
 }
