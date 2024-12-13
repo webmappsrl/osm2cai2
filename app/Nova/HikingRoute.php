@@ -12,29 +12,38 @@ use App\Nova\Cards\LinksCard;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use App\Nova\Filters\SDAFilter;
+use App\Nova\Actions\ImportPois;
 use Laravel\Nova\Fields\Boolean;
+use App\Nova\Actions\CreateIssue;
+use App\Nova\Actions\OverpassMap;
 use App\Nova\Filters\ScoreFilter;
 use Laravel\Nova\Fields\Textarea;
 use Eminiarts\Tabs\Traits\HasTabs;
+use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Cards\Osm2caiStatusCard;
 use App\Nova\Filters\CaiHutsHRFilter;
+use App\Nova\Actions\SectorRefactoring;
 use App\Nova\Filters\IssueStatusFilter;
 use App\Nova\Filters\DeletedOnOsmFilter;
 use App\Nova\Filters\CorrectGeometryFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\PercorsoFavoritoAction;
 use App\Nova\Filters\HikingRoutesAreaFilter;
 use App\Nova\Lenses\HikingRoutesStatus0Lens;
 use App\Nova\Lenses\HikingRoutesStatus1Lens;
 use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
+use App\Nova\Actions\DeleteHikingRouteAction;
 use App\Nova\Filters\HikingRoutesRegionFilter;
 use App\Nova\Filters\HikingRoutesSectorFilter;
 use App\Nova\Actions\ValidateHikingRouteAction;
 use App\Nova\Filters\HikingRoutesProvinceFilter;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\UploadValidationRawDataAction;
+use App\Nova\Actions\RevertValidateHikingRouteAction;
 use App\Nova\Filters\RegionFavoriteHikingRouteFilter;
+use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 
 class HikingRoute extends OsmfeaturesResource
 {
@@ -165,7 +174,7 @@ class HikingRoute extends OsmfeaturesResource
             return [
                 (new RefCard($refCardData))->onlyOnDetail(),
                 (new LinksCard($linksCardData))->onlyOnDetail(),
-                (new Osm2caiStatusCard($this->osm2cai_status))->onlyOnDetail(),
+                (new Osm2caiStatusCard($hr->osm2cai_status))->onlyOnDetail(),
             ];
         }
 
@@ -266,7 +275,7 @@ class HikingRoute extends OsmfeaturesResource
                         return true;
                     }
                 ),
-            // (new OsmSyncHikingRouteAction)
+            // (new OsmSyncHikingRouteAction) TODO: check if still needed after osmfeatures sync
             //     ->confirmText('Sei sicuro di voler sincronizzare i dati osm?')
             //     ->confirmButtonText('Aggiorna con dati osm')
             //     ->cancelButtonText("Annulla")
@@ -278,138 +287,111 @@ class HikingRoute extends OsmfeaturesResource
             //             return true;
             //         }
             //     ),
-            // (new RevertValidateHikingRouteAction)
-            //     ->confirmText('Sei sicuro di voler revertare la validazione di questo percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         return true;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
-            // (new DeleteHikingRouteAction())
-            //     ->confirmText('Sei sicuro di voler eliminare il percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         return true;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
-            // (new SectorRefactoring())
-            //     ->onlyOnDetail('true')
-            //     ->confirmText('Sei sicuro di voler rifattorizzare i settori per il percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         return true;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
-            // (new CacheMiturApi())
-            //     ->canSee(function ($request) {
-            //         return $request->user()->is_administrator;
-            //     })->canRun(function ($request) {
-            //         return $request->user()->is_administrator;
-            //     }),
-
-            // (new ToggleRegionFavoriteHikingRouteAction())
-            //     ->onlyOnDetail('true')
-            //     ->confirmText($this->region_favorite ? 'Sei sicuro di voler togliere il percorso dai favoriti della Regione?' : 'Sei sicuro di voler aggiungere il percorso ai favoriti della Regione?')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         return true;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
-            // (new AddFeatureImageToHikingRoute())
-            //     ->onlyOnDetail('true')
-            //     ->confirmText('Sei sicuro di voler caricare una nuova immagine in evidenza e sostituire quella esistente?')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         return true;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
-            // (new PercorsoFavoritoAction())
-            //     ->onlyOnDetail('true')
-            //     ->confirmText('Sei sicuro di voler aggiornare il percorso?')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         return true;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
-            // (new AddRegionFavoritePublicationDateToHikingRouteAction())
-            //     ->onlyOnDetail('true')
-            //     ->confirmText('Imposta la data prevista per la publicazione sullo Scarpone Online')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText('Annulla')
-            //     ->canSee(function ($request) {
-            //         $u = auth()->user();
-            //         return $u->is_administrator || $u->is_national_referent;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
-            // (new CreateIssue($this->model()))
-            //     ->confirmText('Sei sicuro di voler creare un issue per questo percorso?')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         $u = auth()->user();
-            //         //can only see if the getTerritorialRole is not unknown
-            //         return $u->getTerritorialRole() != 'unknown';
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     )
-            //     ->showOnTableRow(),
-            // (new OverpassMap($this->model()))
-            //     ->onlyOnDetail('true')
-            //     ->confirmText('Sei sicuro di voler creare una mappa Overpass per questo percorso?')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         $u = auth()->user();
-            //         //can only see if admin, itinerary manager or national referent
-            //         return $u->is_administrator || $u->is_national_referent || $u->is_itinerary_manager;
-            //     }),
-            // (new ImportPois($this->model()))
-            //     ->onlyOnDetail('true')
-            //     ->confirmText('Sei sicuro di voler importare i POI per questo percorso?')
-            //     ->confirmButtonText('Confermo')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         $u = auth()->user();
-            //         //can only see if admin, itinerary manager or national referent
-            //         return $u->is_administrator || $u->is_national_referent || $u->is_itinerary_manager;
-            //     }),
+            (new RevertValidateHikingRouteAction)
+                ->confirmText('Sei sicuro di voler revertare la validazione di questo percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Annulla")
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
+            (new DeleteHikingRouteAction())
+                ->confirmText('Sei sicuro di voler eliminare il percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Annulla")
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
+            (new SectorRefactoring())
+                ->onlyOnDetail('true')
+                ->confirmText('Sei sicuro di voler rifattorizzare i settori per il percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Annulla")
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
+            (new CacheMiturApi('HikingRoute'))
+                ->canSee(function ($request) {
+                    return $request->user()->hasRole('Administrator');
+                })->canRun(function ($request) {
+                    return $request->user()->hasRole('Administrator');
+                }),
+            (new PercorsoFavoritoAction())
+                ->onlyOnDetail('true')
+                ->confirmText('Sei sicuro di voler aggiornare il percorso?')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Annulla")
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
+            (new AddRegionFavoritePublicationDateToHikingRouteAction())
+                ->onlyOnDetail('true')
+                ->confirmText('Imposta la data prevista per la publicazione sullo Scarpone Online')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText('Annulla')
+                ->canSee(function ($request) {
+                    $u = auth()->user();
+                    return $u->is_administrator || $u->is_national_referent;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
+            (new CreateIssue($this->model()))
+                ->confirmText('Sei sicuro di voler creare un issue per questo percorso?')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Annulla")
+                ->canSee(function ($request) {
+                    $u = auth()->user();
+                    //can only see if the getTerritorialRole is not unknown
+                    return $u->getTerritorialRole() != 'unknown';
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                )
+                ->showInline(),
+            (new OverpassMap($this->model()))
+                ->onlyOnDetail('true')
+                ->confirmText('Sei sicuro di voler creare una mappa Overpass per questo percorso?')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Annulla")
+                ->canSee(function ($request) {
+                    $userRoles = auth()->user()->getRoleNames()->toArray();
+                    //can only see if admin, itinerary manager or national referent
+                    return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                }),
+            (new ImportPois($this->model()))
+                ->onlyOnDetail('true')
+                ->confirmText('Sei sicuro di voler importare i POI per questo percorso?')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Annulla")
+                ->canSee(function ($request) {
+                    $userRoles = auth()->user()->getRoleNames()->toArray();
+                    //can only see if admin, itinerary manager or national referent
+                    return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                }),
         ];
     }
 

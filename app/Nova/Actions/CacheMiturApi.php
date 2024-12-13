@@ -16,9 +16,13 @@ class CacheMiturApi extends Action
 
     protected $class;
 
+
+    public $name;
+
     public function __construct(string $class)
     {
         $this->class = $class;
+        $this->name = __('CACHE MITUR API');
     }
 
     /**

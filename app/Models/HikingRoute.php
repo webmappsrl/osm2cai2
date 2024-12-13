@@ -60,6 +60,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         'osmfeatures_data' => 'array',
         'issues_last_update' => 'date',
         'tdh' => 'array',
+        'issues_chronology' => 'array',
     ];
 
     private HikingRouteDescriptionService $descriptionService;

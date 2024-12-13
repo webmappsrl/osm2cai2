@@ -11,6 +11,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 use Wm\MapMultiPolygon\MapMultiPolygon;
+use Wm\WmPackage\Nova\Actions\ExportTo;
 
 class Region extends Resource
 {
@@ -34,7 +35,8 @@ class Region extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id',
+        'name',
     ];
 
     /**
@@ -109,6 +111,28 @@ class Region extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new ExportTo($this->getExportColumns(), [], 'regions'))->canRun(function () {
+                return auth()->user()->hasRole('Administrator');
+            })
+        ];
+    }
+
+    /**
+     * Get the columns for export
+     *
+     * @return array
+     */
+    private function getExportColumns(): array
+    {
+        return [
+            'id' => 'ID',
+            'name' => 'Name',
+            'created_at' => 'Created At',
+            'updated_at' => 'Updated At',
+            'osmfeatures_id' => 'Osmfeatures ID',
+            'num_expected' => 'Num Expected',
+            'code' => 'Code',
+        ];
     }
 }

@@ -30,11 +30,13 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         'type',
         'score',
         'user_id',
+        'tags',
     ];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
+        'tags' => 'array',
     ];
 
     protected static function booted()
