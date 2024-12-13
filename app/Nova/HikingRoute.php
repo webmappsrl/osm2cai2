@@ -8,18 +8,33 @@ use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
 use App\Nova\Cards\RefCard;
 use Illuminate\Support\Arr;
-use Laravel\Nova\Fields\ID;
 use App\Nova\Cards\LinksCard;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Image;
+use App\Nova\Filters\SDAFilter;
 use Laravel\Nova\Fields\Boolean;
 use App\Nova\Filters\ScoreFilter;
 use Laravel\Nova\Fields\Textarea;
 use Eminiarts\Tabs\Traits\HasTabs;
 use App\Nova\Cards\Osm2caiStatusCard;
+use App\Nova\Filters\CaiHutsHRFilter;
+use App\Nova\Filters\IssueStatusFilter;
+use App\Nova\Filters\DeletedOnOsmFilter;
+use App\Nova\Filters\CorrectGeometryFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Filters\HikingRoutesAreaFilter;
+use App\Nova\Lenses\HikingRoutesStatus0Lens;
+use App\Nova\Lenses\HikingRoutesStatus1Lens;
+use App\Nova\Lenses\HikingRoutesStatus2Lens;
+use App\Nova\Lenses\HikingRoutesStatus3Lens;
+use App\Nova\Lenses\HikingRoutesStatus4Lens;
+use App\Nova\Filters\HikingRoutesRegionFilter;
+use App\Nova\Filters\HikingRoutesSectorFilter;
+use App\Nova\Actions\ValidateHikingRouteAction;
+use App\Nova\Filters\HikingRoutesProvinceFilter;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
+use App\Nova\Actions\UploadValidationRawDataAction;
+use App\Nova\Filters\RegionFavoriteHikingRouteFilter;
 
 class HikingRoute extends OsmfeaturesResource
 {
@@ -75,23 +90,23 @@ class HikingRoute extends OsmfeaturesResource
      */
     public function fields(NovaRequest $request)
     {
-        // Ottieni i campi dal genitore
+        // Get fields from parent
         $osmfeaturesFields = parent::fields($request);
 
-        // Filtra i campi indesiderati
+        // Filter unwanted fields
         $filteredFields = array_filter($osmfeaturesFields, function ($field) {
             return ! in_array($field->attribute, ['id', 'name', 'osmfeatures_data', 'created_at', 'updated_at', 'osmfeatures_updated_at']);
         });
 
-        // Definisci l'ordine desiderato dei campi
+        // Define desired field order
         $order = [
-            'Osmfeatures ID' => 'Osmfeatures ID',
-            'percorribilita' => 'Percorribilitá',
-            'legenda' => 'Legenda',
-            'geometry' => 'Geometry',
-            'correttezza_geometria' => 'Correttezza Geometria',
-            'coerenza_ref_rei' => 'Coerenza ref REI',
-            'geometry_sync' => 'Geometry Sync',
+            'Osmfeatures ID' => __('Osmfeatures ID'),
+            'percorribilita' => __('Walkability'),
+            'legenda' => __('Legend'),
+            'geometry' => __('Geometry'),
+            'correttezza_geometria' => __('Geometry Correctness'),
+            'coerenza_ref_rei' => __('REI Ref Consistency'),
+            'geometry_sync' => __('Geometry Sync'),
         ];
 
         $specificFields = array_merge($this->getIndexFields(), $this->getDetailFields());
@@ -113,17 +128,15 @@ class HikingRoute extends OsmfeaturesResource
             return $aIndex <=> $bIndex;
         });
 
-        // Converti di nuovo in array indicizzato
+        // Convert back to indexed array
         $orderedFields = array_values($allFieldsAssoc);
 
         return array_merge($orderedFields, [
-            Boolean::make('Correttezza Geometria', function () {
-                return $this->hasCorrectGeometry();
-            })->onlyOnDetail(),
-            Boolean::make('Coerenza ref REI', function () {
+            Boolean::make(__('Geometry Correctness'), 'geometry_check')->onlyOnDetail(),
+            Boolean::make(__('REI Ref Consistency'), function () {
                 return $this->osmfeatures_data['properties']['ref_REI'] == $this->ref_rei;
             })->onlyOnDetail(),
-            Boolean::make('Geometry Sync', function () {
+            Boolean::make(__('Geometry Sync'), function () {
                 return $this->geometry == $this->osmfeatures_data['geometry'];
             })->onlyOnDetail(),
         ], $this->getTabs());
@@ -137,9 +150,9 @@ class HikingRoute extends OsmfeaturesResource
      */
     public function cards(NovaRequest $request)
     {
-        // Verifica se l'ID della risorsa è presente nella richiesta
+        // Check if resource ID is present in request
         if ($request->resourceId) {
-            // Accedi al modello corrente tramite l'ID della risorsa
+            // Access current model via resource ID
             $hr = \App\Models\HikingRoute::find($request->resourceId);
             $osmfeaturesData = $hr->osmfeatures_data;
             $linksCardData = $hr->getDataForNovaLinksCard();
@@ -148,16 +161,15 @@ class HikingRoute extends OsmfeaturesResource
             }
 
             $refCardData = $osmfeaturesData['properties']['osm_tags'];
-            $osm2caiStatusCardData = $osmfeaturesData['properties']['osm2cai_status'];
 
             return [
                 (new RefCard($refCardData))->onlyOnDetail(),
                 (new LinksCard($linksCardData))->onlyOnDetail(),
-                (new Osm2caiStatusCard($osm2caiStatusCardData))->onlyOnDetail(),
+                (new Osm2caiStatusCard($this->osm2cai_status))->onlyOnDetail(),
             ];
         }
 
-        // Restituisci un array vuoto se non sei nel dettaglio o non ci sono dati
+        // Return empty array if not in detail or no data
         return [];
     }
 
@@ -169,6 +181,18 @@ class HikingRoute extends OsmfeaturesResource
      */
     public function filters(NovaRequest $request)
     {
+        $regionalReferentFilters = [
+            (new HikingRoutesProvinceFilter()),
+            (new HikingRoutesAreaFilter()),
+            (new HikingRoutesSectorFilter()),
+            (new DeletedOnOsmFilter()),
+            (new RegionFavoriteHikingRouteFilter()),
+        ];
+
+        if (auth()->user()->hasRole('Regional Referent')) {
+            return $regionalReferentFilters;
+        }
+
         $parentFilters = parent::filters($request);
         //remove App\Nova\Filters\ScoreFilter from $parentFilters array
         foreach ($parentFilters as $key => $filter) {
@@ -176,7 +200,20 @@ class HikingRoute extends OsmfeaturesResource
                 unset($parentFilters[$key]);
             }
         }
-        return $parentFilters;
+        $specificFilters = [
+            (new HikingRoutesRegionFilter),
+            (new HikingRoutesProvinceFilter),
+            (new HikingRoutesAreaFilter),
+            (new HikingRoutesSectorFilter),
+            (new DeletedOnOsmFilter),
+            (new RegionFavoriteHikingRouteFilter),
+            (new IssueStatusFilter),
+            (new CorrectGeometryFilter),
+            (new CaiHutsHRFilter),
+            (new SDAFilter),
+        ];
+        $filters = array_merge($parentFilters, $specificFilters);
+        return $filters;
     }
 
     /**
@@ -187,7 +224,13 @@ class HikingRoute extends OsmfeaturesResource
      */
     public function lenses(NovaRequest $request)
     {
-        return [];
+        return [
+            (new HikingRoutesStatus0Lens()),
+            (new HikingRoutesStatus1Lens()),
+            (new HikingRoutesStatus2Lens()),
+            (new HikingRoutesStatus3Lens()),
+            (new HikingRoutesStatus4Lens()),
+        ];
     }
 
     /**
@@ -198,15 +241,184 @@ class HikingRoute extends OsmfeaturesResource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+
+        return [
+            (new UploadValidationRawDataAction)
+                ->confirmButtonText('Carica')
+                ->cancelButtonText("Non caricare")
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
+            (new ValidateHikingRouteAction)
+                ->confirmText('Sei sicuro di voler validare questo percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
+                ->confirmButtonText('Confermo')
+                ->cancelButtonText("Non validare")
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
+            // (new OsmSyncHikingRouteAction)
+            //     ->confirmText('Sei sicuro di voler sincronizzare i dati osm?')
+            //     ->confirmButtonText('Aggiorna con dati osm')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         return true;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new RevertValidateHikingRouteAction)
+            //     ->confirmText('Sei sicuro di voler revertare la validazione di questo percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         return true;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new DeleteHikingRouteAction())
+            //     ->confirmText('Sei sicuro di voler eliminare il percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         return true;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new SectorRefactoring())
+            //     ->onlyOnDetail('true')
+            //     ->confirmText('Sei sicuro di voler rifattorizzare i settori per il percorso?' . 'REF:' . $this->ref . ' (CODICE REI: ' . $this->ref_REI . ' / ' . $this->ref_REI_comp . ')')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         return true;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new CacheMiturApi())
+            //     ->canSee(function ($request) {
+            //         return $request->user()->is_administrator;
+            //     })->canRun(function ($request) {
+            //         return $request->user()->is_administrator;
+            //     }),
+
+            // (new ToggleRegionFavoriteHikingRouteAction())
+            //     ->onlyOnDetail('true')
+            //     ->confirmText($this->region_favorite ? 'Sei sicuro di voler togliere il percorso dai favoriti della Regione?' : 'Sei sicuro di voler aggiungere il percorso ai favoriti della Regione?')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         return true;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new AddFeatureImageToHikingRoute())
+            //     ->onlyOnDetail('true')
+            //     ->confirmText('Sei sicuro di voler caricare una nuova immagine in evidenza e sostituire quella esistente?')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         return true;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new PercorsoFavoritoAction())
+            //     ->onlyOnDetail('true')
+            //     ->confirmText('Sei sicuro di voler aggiornare il percorso?')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         return true;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new AddRegionFavoritePublicationDateToHikingRouteAction())
+            //     ->onlyOnDetail('true')
+            //     ->confirmText('Imposta la data prevista per la publicazione sullo Scarpone Online')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText('Annulla')
+            //     ->canSee(function ($request) {
+            //         $u = auth()->user();
+            //         return $u->is_administrator || $u->is_national_referent;
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     ),
+            // (new CreateIssue($this->model()))
+            //     ->confirmText('Sei sicuro di voler creare un issue per questo percorso?')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         $u = auth()->user();
+            //         //can only see if the getTerritorialRole is not unknown
+            //         return $u->getTerritorialRole() != 'unknown';
+            //     })
+            //     ->canRun(
+            //         function ($request, $user) {
+            //             return true;
+            //         }
+            //     )
+            //     ->showOnTableRow(),
+            // (new OverpassMap($this->model()))
+            //     ->onlyOnDetail('true')
+            //     ->confirmText('Sei sicuro di voler creare una mappa Overpass per questo percorso?')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         $u = auth()->user();
+            //         //can only see if admin, itinerary manager or national referent
+            //         return $u->is_administrator || $u->is_national_referent || $u->is_itinerary_manager;
+            //     }),
+            // (new ImportPois($this->model()))
+            //     ->onlyOnDetail('true')
+            //     ->confirmText('Sei sicuro di voler importare i POI per questo percorso?')
+            //     ->confirmButtonText('Confermo')
+            //     ->cancelButtonText("Annulla")
+            //     ->canSee(function ($request) {
+            //         $u = auth()->user();
+            //         //can only see if admin, itinerary manager or national referent
+            //         return $u->is_administrator || $u->is_national_referent || $u->is_itinerary_manager;
+            //     }),
+        ];
     }
 
     private function getIndexFields()
     {
         $specificFields = [
-            Text::make('Osm2cai Status', 'osm2cai_status')
+            Text::make(__('Osm2cai Status'), 'osm2cai_status')
                 ->hideFromDetail(),
-            Text::make('Regioni', function () {
+            Text::make(__('Regions'), function () {
                 $val = "ND";
                 if (Arr::accessible($this->regions)) {
                     if (count($this->regions) > 0) {
@@ -218,7 +430,7 @@ class HikingRoute extends OsmfeaturesResource
                 }
                 return $val;
             })->onlyOnIndex(),
-            Text::make('Province', function () {
+            Text::make(__('Provinces'), function () {
                 $val = "ND";
                 if (Arr::accessible($this->provinces)) {
                     if (count($this->provinces) > 0) {
@@ -230,7 +442,7 @@ class HikingRoute extends OsmfeaturesResource
                 }
                 return $val;
             })->onlyOnIndex(),
-            Text::make('Aree', function () {
+            Text::make(__('Areas'), function () {
                 $val = "ND";
                 if (Arr::accessible($this->areas)) {
                     if (count($this->areas) > 0) {
@@ -242,7 +454,7 @@ class HikingRoute extends OsmfeaturesResource
                 }
                 return $val;
             })->onlyOnIndex(),
-            Text::make('Settori', function () {
+            Text::make(__('Sectors'), function () {
                 $val = "ND";
                 if (Arr::accessible($this->sectors)) {
                     if (count($this->sectors) > 0) {
@@ -254,10 +466,10 @@ class HikingRoute extends OsmfeaturesResource
                 }
                 return $val;
             })->onlyOnIndex(),
-            Text::make('REF', 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
-            Text::make('Cod_REI', 'ref_rei')->hideFromDetail(),
-            Text::make('Percorribilitá', 'issues_status')->hideFromDetail(),
-            Text::make('Ultima Ricognizione', 'osmfeatures_data->properties->survey_date')->hideFromDetail(),
+            Text::make(__('REF'), 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
+            Text::make(__('REI Code'), 'ref_rei')->hideFromDetail(),
+            Text::make(__('Walkability'), 'issues_status')->hideFromDetail(),
+            Text::make(__('Last Survey'), 'osmfeatures_data->properties->survey_date')->hideFromDetail(),
         ];
 
         return $specificFields;
@@ -266,12 +478,12 @@ class HikingRoute extends OsmfeaturesResource
     private function getDetailFields()
     {
         $fields = [
-            Text::make('OSM ID', 'osmfeatures_data->properties->osm_id')->onlyOnDetail(),
-            Text::make('Legenda', function () {
+            Text::make(__('OSM ID'), 'osmfeatures_data->properties->osm_id')->onlyOnDetail(),
+            Text::make(__('Legend'), function () {
                 return <<<'HTML'
     <ul>
-        <li>Linea blu: percorso OSM2CAI/OSM</li>
-        <li>Linea rossa: percorso caricato dall'utente</li>
+        <li>Blue line: OSM2CAI/OSM path</li>
+        <li>Red line: user uploaded path</li>
     </ul>
     HTML;
             })->asHtml()->onlyOnDetail(),
@@ -284,28 +496,28 @@ class HikingRoute extends OsmfeaturesResource
     private function getTabs()
     {
         return [
-            Tabs::make('Metadata', $this->getMetadataTabs()),
+            Tabs::make(__('Metadata'), $this->getMetadataTabs()),
         ];
     }
 
     private function getMetadataTabs()
     {
         return [
-            Tab::make('Main', $this->getMainTabFields()),
-            Tab::make('General', $this->getGeneralTabFields()),
-            Tab::make('Tech', $this->getTechTabFields()),
-            Tab::make('Other', $this->getOtherTabFields()),
-            Tab::make('Content', $this->getContentTabFields()),
-            Tab::make('Issues', $this->getIssuesTabFields()),
-            Tab::make('POI', $this->getPOITabFields()),
-            Tab::make('Huts', $this->getHutsTabFields()),
-            Tab::make('Natural Springs', $this->getNaturalSpringsTabFields()),
+            Tab::make(__('Main'), $this->getMainTabFields()),
+            Tab::make(__('General'), $this->getGeneralTabFields()),
+            Tab::make(__('Tech'), $this->getTechTabFields()),
+            Tab::make(__('Other'), $this->getOtherTabFields()),
+            Tab::make(__('Content'), $this->getContentTabFields()),
+            Tab::make(__('Issues'), $this->getIssuesTabFields()),
+            Tab::make(__('POI'), $this->getPOITabFields()),
+            Tab::make(__('Huts'), $this->getHutsTabFields()),
+            Tab::make(__('Natural Springs'), $this->getNaturalSpringsTabFields()),
         ];
     }
 
     private function createField($label, $infomont, $osmPath, $modelAttribute = null, $isLink = false, $withCalculated = false)
     {
-        return Text::make($label, function () use ($infomont, $osmPath, $modelAttribute, $isLink, $withCalculated) {
+        return Text::make(__($label), function () use ($infomont, $osmPath, $modelAttribute, $isLink, $withCalculated) {
             $osmValue = $this->getOsmValue($osmPath);
 
             if ($isLink && $osmValue) {
@@ -318,7 +530,7 @@ class HikingRoute extends OsmfeaturesResource
 
             if ($withCalculated) {
                 $calculated = $this->getOsmValue(str_replace('properties', 'properties.dem_enrichment', $osmPath));
-                $html .= "<p>VALORE CALCOLATO: {$calculated}</p>";
+                $html .= "<p>CALCULATED VALUE: {$calculated}</p>";
             }
 
             return $html;
@@ -344,47 +556,47 @@ class HikingRoute extends OsmfeaturesResource
     {
         return [
             $this->createField('Source', 'source', 'properties.source'),
-            $this->createField('Data ricognizione', 'survey_date', 'properties.survey_date'),
-            $this->createField('Codice Sezione CAI', 'source_ref', 'properties.osm_tags.source:ref'),
-            $this->createField('REF precedente', 'old_ref', 'properties.old_ref'),
+            $this->createField('Survey Date', 'survey_date', 'properties.survey_date'),
+            $this->createField('CAI Section Code', 'source_ref', 'properties.osm_tags.source:ref'),
+            $this->createField('Previous REF', 'old_ref', 'properties.old_ref'),
             $this->createField('REF rei', 'ref_rei', 'properties.ref_REI'),
-            $this->createField('REF regionale', 'reg_ref', 'properties.osm_tags.reg_ref'),
+            $this->createField('Regional REF', 'reg_ref', 'properties.osm_tags.reg_ref'),
         ];
     }
 
     private function getGeneralTabFields()
     {
         return [
-            $this->createField('Localitá di partenza', 'from', 'properties.from'),
-            $this->createField('Localitá di arrivo', 'to', 'properties.to'),
-            $this->createField('Nome del percorso', 'name', 'properties.name'),
-            $this->createField('Tipo di rete escursionistica', 'type', 'properties.osm_tags.type'),
-            $this->createField('Codice OSM segnaletica', 'osmc_symbol', 'properties.osm_tags.osmc:symbol'),
-            $this->createField('Segnaletica descr. (EN)', 'symbol', 'properties.osm_tags.symbol'),
-            $this->createField('Segnaletica descr. (IT)', 'symbol_it', 'properties.osm_tags.symbol:it'),
-            $this->createField('Percorso ad Anello', 'roundtrip', 'properties.roundtrip'),
-            $this->createField('Nome rete escursionistica', 'rwn_name', 'properties.rwn_name'),
+            $this->createField('Starting Location', 'from', 'properties.from'),
+            $this->createField('Ending Location', 'to', 'properties.to'),
+            $this->createField('Path Name', 'name', 'properties.name'),
+            $this->createField('Hiking Network Type', 'type', 'properties.osm_tags.type'),
+            $this->createField('OSM Sign Code', 'osmc_symbol', 'properties.osm_tags.osmc:symbol'),
+            $this->createField('Sign Description (EN)', 'symbol', 'properties.osm_tags.symbol'),
+            $this->createField('Sign Description (IT)', 'symbol_it', 'properties.osm_tags.symbol:it'),
+            $this->createField('Round Trip', 'roundtrip', 'properties.roundtrip'),
+            $this->createField('Hiking Network Name', 'rwn_name', 'properties.rwn_name'),
         ];
     }
 
     private function getTechTabFields()
     {
         $techFields = [
-            'Lunghezza in Km' => ['distance', 'properties.distance'],
-            'Diff CAI' => ['cai_scale', 'properties.cai_scale'],
-            'Dislivello positivo in metri' => ['ascent', 'properties.ascent'],
-            'Dislivello negativo in metri' => ['descent', 'properties.descent'],
-            'Durata (P->A) in minuti' => ['duration_forward', 'properties.duration_forward'],
-            'Durata (A->P) in minuti' => ['duration_backward', 'properties.duration_backward'],
-            'Quota Massima in metri' => ['ele_max', 'properties.ele_max'],
-            'Quota Minima in metri' => ['ele_min', 'properties.ele_min'],
-            'Quota punto di partenza in metri' => ['ele_from', 'properties.ele_from'],
-            'Quota punto di arrivo in metri' => ['ele_to', 'properties.ele_to'],
+            'Length in Km' => ['distance', 'properties.distance'],
+            'CAI Difficulty' => ['cai_scale', 'properties.cai_scale'],
+            'Positive Elevation in meters' => ['ascent', 'properties.ascent'],
+            'Negative Elevation in meters' => ['descent', 'properties.descent'],
+            'Duration (S->E) in minutes' => ['duration_forward', 'properties.duration_forward'],
+            'Duration (E->S) in minutes' => ['duration_backward', 'properties.duration_backward'],
+            'Maximum Elevation in meters' => ['ele_max', 'properties.ele_max'],
+            'Minimum Elevation in meters' => ['ele_min', 'properties.ele_min'],
+            'Starting Point Elevation in meters' => ['ele_from', 'properties.ele_from'],
+            'Ending Point Elevation in meters' => ['ele_to', 'properties.ele_to'],
         ];
 
         return array_map(function ($label, $config) {
             //if diff cai
-            if ($label == 'Diff CAI') {
+            if ($label == 'CAI Difficulty') {
                 return $this->createField($label, $config[0], $config[1], null, false, false);
             }
             return $this->createField($label, $config[0], $config[1], null, false, true);
@@ -394,15 +606,15 @@ class HikingRoute extends OsmfeaturesResource
     private function getOtherTabFields()
     {
         $fields = [
-            'Descrizione (EN)' => ['description', 'properties.description'],
-            'Descrizione (IT)' => ['description_it', 'properties.description_it'],
-            'Manutenzione (EN)' => ['maintenance', 'properties.maintenance'],
-            'Manutenzione (IT)' => ['maintenance_it', 'properties.maintenance_it'],
+            'Description (EN)' => ['description', 'properties.description'],
+            'Description (IT)' => ['description_it', 'properties.description_it'],
+            'Maintenance (EN)' => ['maintenance', 'properties.maintenance'],
+            'Maintenance (IT)' => ['maintenance_it', 'properties.maintenance_it'],
             'Note (EN)' => ['note', 'properties.note'],
             'Note (IT)' => ['note_it', 'properties.note_it'],
-            'Note di progetto' => ['note_project_page', 'properties.note_project_page'],
-            'Operatore' => ['operator', 'properties.osm_tags.operator'],
-            'Stato del percorso' => ['state', 'properties.state'],
+            'Project Notes' => ['note_project_page', 'properties.note_project_page'],
+            'Operator' => ['operator', 'properties.osm_tags.operator'],
+            'Path Status' => ['state', 'properties.state'],
         ];
 
         $standardFields = array_map(function ($label, $config) {
@@ -410,35 +622,35 @@ class HikingRoute extends OsmfeaturesResource
         }, array_keys($fields), $fields);
 
         return array_merge($standardFields, [
-            $this->createField('Indirizzo web', 'website', 'properties.website', null, true),
-            $this->createField('Immagine su wikimedia', 'wikimedia_commons', 'properties.wikimedia_commons', null, true),
+            $this->createField('Website', 'website', 'properties.website', null, true),
+            $this->createField('Wikimedia Image', 'wikimedia_commons', 'properties.wikimedia_commons', null, true),
         ]);
     }
 
     private function getContentTabFields()
     {
         return [
-            Text::make('Automatic Name (computed for TDH)', fn() => $this->getNameForTDH()['it'])->onlyOnDetail(),
-            Text::make('Automatic Abstract (computed for TDH)', fn() => $this->tdh['abstract'] ?? '')->onlyOnDetail(),
-            Images::make('Feature Image', 'feature_image')->onlyOnDetail(),
-            Text::make('Description CAI IT', 'description_cai_it')->hideFromIndex(),
+            Text::make(__('Automatic Name (computed for TDH)'), fn() => $this->getNameForTDH()['it'])->onlyOnDetail(),
+            Text::make(__('Automatic Abstract (computed for TDH)'), fn() => $this->tdh['abstract'] ?? '')->onlyOnDetail(),
+            Images::make(__('Feature Image'), 'feature_image')->onlyOnDetail(),
+            Text::make(__('Description CAI IT'), 'description_cai_it')->hideFromIndex(),
         ];
     }
 
     private function getIssuesTabFields()
     {
         return [
-            Text::make('Issue Status', 'issues_status')->onlyOnDetail(),
-            Textarea::make('Issue Description', 'issues_description')->onlyOnDetail(),
-            Date::make('Issue Date', 'issues_last_update')->onlyOnDetail(),
-            Text::make('Issue Author', function () {
+            Text::make(__('Issue Status'), 'issues_status')->onlyOnDetail(),
+            Textarea::make(__('Issue Description'), 'issues_description')->onlyOnDetail(),
+            Date::make(__('Issue Date'), 'issues_last_update')->onlyOnDetail(),
+            Text::make(__('Issue Author'), function () {
                 $user = User::find($this->model()->issues_user_id);
 
                 return $user
                     ? '<a style="color:blue;" href="' . url('/resources/users/' . $user->id) . '" target="_blank">' . $user->name . '</a>'
                     : 'No user';
             })->hideFromIndex()->asHtml(),
-            Text::make('Cronologia Percorribilità', 'issues_chronology')->onlyOnDetail(),
+            Text::make(__('Walkability History'), 'issues_chronology')->onlyOnDetail(),
         ];
     }
 
@@ -447,9 +659,9 @@ class HikingRoute extends OsmfeaturesResource
         $pois = $this->model()->getElementsInBuffer(new EcPoi(), 10000);
         $fields[] = Text::make('', function () use ($pois) {
             if (count($pois) < 1) {
-                return '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">Nessun POI trovato nel raggio di 1km</h2>';
+                return '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">' . __('No POIs found within 1km radius') . '</h2>';
             }
-            return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">Punti di interesse nel raggio di 1km</h2>';
+            return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">' . __('Points of interest within 1km radius') . '</h2>';
         })->asHtml()->onlyOnDetail();
 
         if (count($pois) > 0) {
@@ -473,15 +685,15 @@ class HikingRoute extends OsmfeaturesResource
         </tr>";
             }
 
-            $fields[] = Text::make('Risultati', function () use ($tableRows) {
+            $fields[] = Text::make(__('Results'), function () use ($tableRows) {
                 return "<div style='background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); overflow:hidden; margin:10px 0;'>
                 <table style='width:100%; border-collapse:collapse; background:white;'>
                     <thead>
                         <tr style='background:#f5f7fa;'>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Name</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>OSM ID</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Tag OSM</th>
-                            <th style='padding:15px; text-align:center; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Type OSM</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('Name') . "</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('OSM ID') . "</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('OSM Tags') . "</th>
+                            <th style='padding:15px; text-align:center; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('OSM Type') . "</th>
                         </tr>
                     </thead>
                     <tbody>" . implode('', $tableRows) . "</tbody>
@@ -494,17 +706,17 @@ class HikingRoute extends OsmfeaturesResource
 
     private function getHutsTabFields()
     {
-        $hr = HikingRoute::find($this->id);
-        $huts = $hr->nearbyCaiHuts;
+
+        $huts = $this->model()->nearbyCaiHuts;
 
         if (empty($huts)) {
             return [
-                Text::make('', fn() => '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">Nessun rifugio nelle vicinanze</h2>')->asHtml()->onlyOnDetail(),
+                Text::make('', fn() => '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">' . __('No huts nearby') . '</h2>')->asHtml()->onlyOnDetail(),
             ];
         }
         $fields = [
             Text::make('', function () {
-                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">Rifugi nelle vicinanze</h2>';
+                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">' . __('Nearby Huts') . '</h2>';
             })->asHtml()->onlyOnDetail()
         ];
 
@@ -517,13 +729,13 @@ class HikingRoute extends OsmfeaturesResource
             </tr>";
         }
 
-        $fields[] = Text::make('Risultati', function () use ($tableRows) {
+        $fields[] = Text::make(__('Results'), function () use ($tableRows) {
             return "<div style='background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); overflow:hidden; margin:10px 0;'>
                 <table style='width:100%; border-collapse:collapse; background:white;'>
                     <thead>
                         <tr style='background:#f5f7fa;'>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>ID</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Nome</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('ID') . "</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('Name') . "</th>
                         </tr>
                     </thead>
                     <tbody>" . implode('', $tableRows) . "</tbody>
@@ -536,18 +748,17 @@ class HikingRoute extends OsmfeaturesResource
 
     private function getNaturalSpringsTabFields()
     {
-        $hr = HikingRoute::find($this->id);
-        $naturalSprings = $hr->nearbyNaturalSprings;
+        $naturalSprings = $this->model()->nearbyNaturalSprings;
 
         if (empty($naturalSprings)) {
             return [
-                Text::make('', fn() => '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">Nessuna sorgente naturale nelle vicinanze</h2>')->asHtml()->onlyOnDetail(),
+                Text::make('', fn() => '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">' . __('No natural springs nearby') . '</h2>')->asHtml()->onlyOnDetail(),
             ];
         }
 
         $fields = [
             Text::make('', function () {
-                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">Sorgenti naturali nelle vicinanze</h2>';
+                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">' . __('Nearby Natural Springs') . '</h2>';
             })->asHtml()->onlyOnDetail()
         ];
 
@@ -560,13 +771,13 @@ class HikingRoute extends OsmfeaturesResource
             </tr>";
         }
 
-        $fields[] = Text::make('Risultati', function () use ($tableRows) {
+        $fields[] = Text::make(__('Results'), function () use ($tableRows) {
             return "<div style='background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); overflow:hidden; margin:10px 0;'>
                 <table style='width:100%; border-collapse:collapse; background:white;'>
                     <thead>
                         <tr style='background:#f5f7fa;'>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>ID</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>Nome</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('ID') . "</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>" . __('Name') . "</th>
                         </tr>
                     </thead>
                     <tbody>" . implode('', $tableRows) . "</tbody>
@@ -575,5 +786,15 @@ class HikingRoute extends OsmfeaturesResource
         })->asHtml()->onlyOnDetail();
 
         return $fields;
+    }
+
+    public function authorizedToDelete($request)
+    {
+        return $request instanceof ActionRequest;
+    }
+
+    public function authorizedToForceDelete($request)
+    {
+        return $request instanceof ActionRequest;
     }
 }

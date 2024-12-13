@@ -58,7 +58,6 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
-        'hiking_routes_intersecting' => 'array',
     ];
 
     protected static function booted()

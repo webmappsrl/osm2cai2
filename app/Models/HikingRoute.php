@@ -331,17 +331,19 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
      */
     public function mainSector()
     {
-        $q = "SELECT sector_id from hiking_route_sector where hiking_route_id={$this->id} order by percentage desc limit 1;";
-        $res = DB::select($q);
-        if (count($res) > 0) {
-            foreach ($res as $item) {
-                $sector_id = $item->sector_id;
-            }
+        $sectorId = DB::select("
+        SELECT sector_id 
+        FROM hiking_route_sector 
+        WHERE hiking_route_id = ? 
+        ORDER BY percentage DESC 
+        LIMIT 1
+    ", [$this->id]);
 
-            return Sector::find($sector_id);
+        if (empty($sectorId)) {
+            return null;
         }
 
-        return null;
+        return Sector::find($sectorId[0]->sector_id);
     }
 
     /**
