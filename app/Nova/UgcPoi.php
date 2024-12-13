@@ -39,7 +39,7 @@ class UgcPoi extends AbstractUgc
 
     public static function label()
     {
-        $label = 'Ugc Poi';
+        $label = 'Poi';
 
         return __($label);
     }
@@ -173,7 +173,7 @@ class UgcPoi extends AbstractUgc
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/'.$resource->id.'/edit';
+        return '/resources/ugc-pois/' . $resource->id . '/edit';
     }
 
     /**

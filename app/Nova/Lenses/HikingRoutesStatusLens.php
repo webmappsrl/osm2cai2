@@ -8,12 +8,11 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Lenses\Lens;
 use Laravel\Nova\Fields\Number;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Http\Requests\LensRequest;
 use App\Nova\Filters\HikingRoutesAreaFilter;
 use App\Nova\Filters\HikingRoutesRegionFilter;
 use App\Nova\Filters\HikingRoutesSectorFilter;
-use App\Nova\Filters\HikingRoutesSectionFilter;
+use App\Nova\Filters\HikingRoutesClubFilter;
 use App\Nova\Filters\HikingRoutesProvinceFilter;
 
 
@@ -128,7 +127,7 @@ class HikingRoutesStatusLens extends Lens
                 (new HikingRoutesProvinceFilter()),
                 (new HikingRoutesAreaFilter()),
                 (new HikingRoutesSectorFilter()),
-                (new HikingRoutesSectionFilter()),
+                (new HikingRoutesClubFilter()),
             ];
         } else {
             return [
@@ -136,7 +135,7 @@ class HikingRoutesStatusLens extends Lens
                 (new HikingRoutesProvinceFilter()),
                 (new HikingRoutesAreaFilter()),
                 (new HikingRoutesSectorFilter()),
-                (new HikingRoutesSectionFilter()),
+                (new HikingRoutesClubFilter()),
             ];
         }
     }

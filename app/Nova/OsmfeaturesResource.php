@@ -75,6 +75,9 @@ abstract class OsmfeaturesResource extends Resource
             DateTime::make('Created At', 'created_at')->hideFromIndex(),
             DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
             Text::make('Osmfeatures ID', function () {
+                if (!$this->osmfeatures_id) {
+                    return '';
+                }
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
             Text::make('OSM Type', 'osmfeatures_data->properties->osm_type'),
