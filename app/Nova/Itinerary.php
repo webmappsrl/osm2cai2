@@ -20,9 +20,12 @@ class Itinerary extends Resource
     /**
      * The single value that should be used to represent the resource when being displayed.
      *
-     * @var string
+     * @return string
      */
-    public static string $title = 'name';
+    public function title()
+    {
+        return $this->name;
+    }
 
     public static $perPageViaRelationship = 50;
 
@@ -37,7 +40,7 @@ class Itinerary extends Resource
      *
      * @var array
      */
-    public static array $search = [
+    public static $search = [
         'id',
     ];
 
