@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Filters\MountainGroupsRegionFilter;
 
 class MountainGroups extends Resource
 {
@@ -21,10 +22,17 @@ class MountainGroups extends Resource
     /**
      * The single value that should be used to represent the resource when being displayed.
      *
-     * @var string
+     * @return string
      */
-    public static $title = 'id';
+    public function title()
+    {
+        return $this->name;
+    }
 
+    public static function label()
+    {
+        return 'Gruppi Montuosi';
+    }
     /**
      * The columns that should be searched.
      *
@@ -43,8 +51,6 @@ class MountainGroups extends Resource
      */
     public function fields(Request $request)
     {
-        $aggregatedData = json_decode($this->aggregated_data);
-        $intersectings = json_decode($this->intersectings, true);
 
         return [
             ID::make(__('ID'), 'id')->sortable(),
@@ -52,33 +58,21 @@ class MountainGroups extends Resource
             Textarea::make('Descrizione', 'description')->hideFromIndex(),
             Nova4FieldMap::make('Mappa')
                 ->type('GeoJson')
-                ->geoJson(json_encode($this->getEmptyGeojson()))
+                ->geoJson($this->getEmptyGeojson())
                 ->zoom(9)
                 ->onlyOnDetail(),
-            Text::make('POI Generico', function () use ($aggregatedData) {
-                return $aggregatedData->ec_pois_count;
+            Text::make('POI Generico', function () {
+                return $this->ecPois->count();
             })->sortable(),
-            Text::make('POI Rifugio', function () use ($aggregatedData) {
-                return $aggregatedData->cai_huts_count;
+            Text::make('POI Rifugio', function () {
+                return $this->caiHuts->count();
             })->sortable(),
-            Text::make('Percorsi POI Totali', function () use ($aggregatedData) {
-                return $aggregatedData->poi_total;
+            Text::make('Percorsi POI Totali', function () {
+                return $this->ecPois->count() + $this->caiHuts->count();
             })->sortable(),
-            Text::make('Attivitá o Esperienze', function () use ($aggregatedData) {
-                return $aggregatedData->sections_count;
+            Text::make('Attivitá o Esperienze', function () {
+                return $this->hikingRoutes->count();
             })->sortable(),
-            // Text::make('Rifugi Intersecanti', function () use ($intersectings) {
-            //     return count($intersectings['huts']);
-            // })->sortable(),
-            // Text::make('POI Intersecanti', function () use ($intersectings) {
-            //     return count($intersectings['ec_pois']);
-            // })->sortable(),
-            // Text::make('Sezioni Intersecanti', function () use ($intersectings) {
-            //     return count($intersectings['sections']);
-            // })->sortable(),
-            // Text::make('Percorsi Intersecanti', function () use ($intersectings) {
-            //     return count($intersectings['hiking_routes']);
-            // })->sortable(),
         ];
     }
 
@@ -101,7 +95,9 @@ class MountainGroups extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new MountainGroupsRegionFilter(),
+        ];
     }
 
     /**

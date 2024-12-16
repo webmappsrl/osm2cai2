@@ -6,6 +6,7 @@ use App\Models\EcPoi;
 use App\Models\Region;
 use App\Models\HikingRoute;
 use App\Traits\AwsCacheable;
+use App\Models\MountainGroups;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\CacheMiturAbruzzoDataJob;
@@ -77,6 +78,11 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
     public function region()
     {
         return $this->belongsTo(Region::class);
+    }
+
+    public function mountainGroups()
+    {
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_cai_hut', 'cai_hut_id', 'mountain_group_id');
     }
 
     public function nearbyHikingRoutes()

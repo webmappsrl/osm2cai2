@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Stopwatch\Section;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
