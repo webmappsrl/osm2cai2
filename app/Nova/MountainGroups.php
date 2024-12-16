@@ -8,7 +8,7 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use App\Nova\Filters\MountainGroupsRegionFilter;
+use App\Nova\Filters\RegionFilter;
 
 class MountainGroups extends Resource
 {
@@ -96,7 +96,7 @@ class MountainGroups extends Resource
     public function filters(NovaRequest $request)
     {
         return [
-            new MountainGroupsRegionFilter(),
+            new RegionFilter(),
         ];
     }
 

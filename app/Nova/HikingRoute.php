@@ -35,7 +35,7 @@ use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use App\Nova\Actions\DeleteHikingRouteAction;
-use App\Nova\Filters\HikingRoutesRegionFilter;
+use App\Nova\Filters\RegionFilter;
 use App\Nova\Filters\HikingRoutesSectorFilter;
 use App\Nova\Actions\ValidateHikingRouteAction;
 use App\Nova\Filters\HikingRoutesProvinceFilter;
@@ -210,7 +210,7 @@ class HikingRoute extends OsmfeaturesResource
             }
         }
         $specificFilters = [
-            (new HikingRoutesRegionFilter),
+            (new RegionFilter),
             (new HikingRoutesProvinceFilter),
             (new HikingRoutesAreaFilter),
             (new HikingRoutesSectorFilter),

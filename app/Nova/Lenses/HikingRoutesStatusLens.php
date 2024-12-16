@@ -10,7 +10,7 @@ use Laravel\Nova\Lenses\Lens;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Http\Requests\LensRequest;
 use App\Nova\Filters\HikingRoutesAreaFilter;
-use App\Nova\Filters\HikingRoutesRegionFilter;
+use App\Nova\Filters\RegionFilter;
 use App\Nova\Filters\HikingRoutesSectorFilter;
 use App\Nova\Filters\HikingRoutesClubFilter;
 use App\Nova\Filters\HikingRoutesProvinceFilter;
@@ -131,7 +131,7 @@ class HikingRoutesStatusLens extends Lens
             ];
         } else {
             return [
-                (new HikingRoutesRegionFilter()),
+                (new RegionFilter()),
                 (new HikingRoutesProvinceFilter()),
                 (new HikingRoutesAreaFilter()),
                 (new HikingRoutesSectorFilter()),

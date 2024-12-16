@@ -3,10 +3,10 @@
 namespace App\Nova\Filters;
 
 use App\Models\Region;
-use Illuminate\Http\Request;
 use Laravel\Nova\Filters\Filter;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
-class MountainGroupsRegionFilter extends Filter
+class RegionFilter extends Filter
 {
     /**
      * The filter's component.
@@ -15,18 +15,21 @@ class MountainGroupsRegionFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Regione';
+    public $name = 'Region';
 
     /**
      * Apply the filter to the given query.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function apply(Request $request, $query, $value)
+    public function apply(NovaRequest $request, $query, $value)
     {
+        if ($query->getModel() instanceof \App\Models\Province) {
+            return $query->where('region_id', $value);
+        }
         return $query->whereHas('regions', function ($query) use ($value) {
             $query->where('region_id', $value);
         });
@@ -35,15 +38,15 @@ class MountainGroupsRegionFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
-    public function options(Request $request)
+    public function options(NovaRequest $request)
     {
-        $regions = Region::all();
-
-        return $regions->mapWithKeys(function ($region) {
-            return [$region->name => $region->id];
-        })->toArray();
+        $options = [];
+        foreach (Region::all() as $region) {
+            $options[$region->name] = $region->id;
+        }
+        return $options;
     }
 }
