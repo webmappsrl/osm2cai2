@@ -28,12 +28,12 @@ trait GeoIntersectTrait
         try {
             $intersectingIds = DB::table($model->getTable())
                 ->select('id')
-                ->whereRaw('ST_Intersects(geometry::geography, (SELECT geometry::geography FROM ' . $this->getTable() . ' WHERE id = ?))', [$this->id])
+                ->whereRaw('ST_Intersects(geometry::geography, (SELECT geometry::geography FROM '.$this->getTable().' WHERE id = ?))', [$this->id])
                 ->pluck('id');
 
             return $model::whereIn('id', $intersectingIds)->get();
         } catch (\Exception $e) {
-            Log::error('Error getting intersections for model ' . $this->getTable() . ': ' . $e->getMessage());
+            Log::error('Error getting intersections for model '.$this->getTable().': '.$e->getMessage());
             throw $e;
         }
     }

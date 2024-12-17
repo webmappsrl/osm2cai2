@@ -2,13 +2,13 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\CacheMiturApi;
-use App\Nova\Filters\EcPoiTypeFIlter;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Actions\CalculateIntersections;
+use App\Nova\Filters\EcPoiTypeFIlter;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class EcPoi extends OsmfeaturesResource
 {
@@ -67,6 +67,7 @@ class EcPoi extends OsmfeaturesResource
     {
         $filters = parent::filters($request);
         $filters[] = (new EcPoiTypeFIlter);
+
         return $filters;
     }
 
@@ -83,6 +84,7 @@ class EcPoi extends OsmfeaturesResource
         })->canRun(function () {
             return auth()->user()->hasRole('Administrator');
         });
+
         return $actions;
     }
 }

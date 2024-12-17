@@ -2,23 +2,23 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Panel;
-use Laravel\Nova\Fields\ID;
+use App\Helpers\Osm2caiHelper;
+use App\Nova\Actions\CacheMiturApi;
+use App\Nova\Actions\DownloadCsvCompleteAction;
+use App\Nova\Actions\DownloadGeojson;
+use App\Nova\Actions\DownloadGeojsonCompleteAction;
+use App\Nova\Actions\DownloadKml;
+use App\Nova\Actions\DownloadShape;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
-use App\Helpers\Osm2caiHelper;
-use Laravel\Nova\Fields\Number;
-use App\Nova\Actions\DownloadKml;
 use Laravel\Nova\Fields\DateTime;
-use App\Nova\Actions\CacheMiturApi;
-use App\Nova\Actions\DownloadShape;
-use App\Nova\Actions\DownloadGeojson;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Panel;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 use Wm\WmPackage\Nova\Actions\ExportTo;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use App\Nova\Actions\DownloadCsvCompleteAction;
-use App\Nova\Actions\DownloadGeojsonCompleteAction;
 
 class Region extends Resource
 {
@@ -56,7 +56,7 @@ class Region extends Resource
     }
 
     private static $indexDefaultOrder = [
-        'name' => 'asc'
+        'name' => 'asc',
     ];
 
     public static function indexQuery(NovaRequest $request, $query)
@@ -78,45 +78,47 @@ class Region extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $provincesCount = cache()->remember('region_' . $this->id . '_provinces_count', 60 * 60 * 24, function () {
+        $provincesCount = cache()->remember('region_'.$this->id.'_provinces_count', 60 * 60 * 24, function () {
             return count($this->provinces);
         });
 
-        $areasCount = cache()->remember('region_' . $this->id . '_areas_count', 60 * 60 * 24, function () {
+        $areasCount = cache()->remember('region_'.$this->id.'_areas_count', 60 * 60 * 24, function () {
             $count = 0;
             foreach ($this->provinces as $province) {
                 $count += count($province->areas);
             }
+
             return $count;
         });
 
-        $sectorsCount = cache()->remember('region_' . $this->id . '_sectors_count', 60 * 60 * 24, function () {
+        $sectorsCount = cache()->remember('region_'.$this->id.'_sectors_count', 60 * 60 * 24, function () {
             $count = 0;
             foreach ($this->provinces as $province) {
                 foreach ($province->areas as $area) {
                     $count += count($area->sectors);
                 }
             }
+
             return $count;
         });
 
-        $hikingRoutes4Count = cache()->remember('region_' . $this->id . '_hiking_routes_4_count', 60 * 60 * 24, function () {
+        $hikingRoutes4Count = cache()->remember('region_'.$this->id.'_hiking_routes_4_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 4)->count();
         });
 
-        $hikingRoutes3Count = cache()->remember('region_' . $this->id . '_hiking_routes_3_count', 60 * 60 * 24, function () {
+        $hikingRoutes3Count = cache()->remember('region_'.$this->id.'_hiking_routes_3_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 3)->count();
         });
 
-        $hikingRoutes2Count = cache()->remember('region_' . $this->id . '_hiking_routes_2_count', 60 * 60 * 24, function () {
+        $hikingRoutes2Count = cache()->remember('region_'.$this->id.'_hiking_routes_2_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 2)->count();
         });
 
-        $hikingRoutes1Count = cache()->remember('region_' . $this->id . '_hiking_routes_1_count', 60 * 60 * 24, function () {
+        $hikingRoutes1Count = cache()->remember('region_'.$this->id.'_hiking_routes_1_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 1)->count();
         });
 
-        $hikingRoutes0Count = cache()->remember('region_' . $this->id . '_hiking_routes_0_count', 60 * 60 * 24, function () {
+        $hikingRoutes0Count = cache()->remember('region_'.$this->id.'_hiking_routes_0_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 0)->count();
         });
 

@@ -2,20 +2,20 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\User;
+use App\Enums\IssuesStatusEnum;
 use App\Enums\IssueStatus;
 use App\Models\HikingRoute;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\Text;
-use App\Enums\IssuesStatusEnum;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Actions\Action;
-use Laravel\Nova\Fields\Textarea;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\ActionFields;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
 
 class CreateIssue extends Action
 {
@@ -23,11 +23,11 @@ class CreateIssue extends Action
 
     public $model;
 
-    function __construct($model = null)
+    public function __construct($model = null)
     {
         $this->model = $model;
 
-        if (!is_null($resourceId = request('resourceId'))) {
+        if (! is_null($resourceId = request('resourceId'))) {
             $this->model = HikingRoute::find($resourceId);
         }
 
@@ -37,8 +37,8 @@ class CreateIssue extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -57,7 +57,7 @@ class CreateIssue extends Action
                 'issues_status' => $hikingRoute->issues_status,
                 'issues_description' => $hikingRoute->issues_description,
                 'issues_last_update' => $hikingRoute->issues_last_update,
-                'issues_user' => $user->name ?? $hikingRoute->issues_user->name
+                'issues_user' => $user->name ?? $hikingRoute->issues_user->name,
             ];
             $hikingRoute->issues_chronology = $chronology;
             $hikingRoute->saveQuietly();
@@ -79,7 +79,7 @@ class CreateIssue extends Action
                 ->default($this->model->issues_status ?? null),
             Textarea::make(__('Issues Description'), 'issues_description')
                 ->default($this->model->issues_description ?? null)
-                ->nullable()
+                ->nullable(),
         ];
     }
 }

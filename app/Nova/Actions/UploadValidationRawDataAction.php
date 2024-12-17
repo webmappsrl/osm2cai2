@@ -4,12 +4,12 @@ namespace App\Nova\Actions;
 
 use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Actions\Action;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\ActionFields;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\File;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class UploadValidationRawDataAction extends Action
@@ -17,8 +17,11 @@ class UploadValidationRawDataAction extends Action
     use InteractsWithQueue, Queueable;
 
     public $showOnDetail = true;
+
     public $showOnIndex = false;
+
     public $name = 'UPLOAD GPX/KML/GEOJSON';
+
     public $HR;
 
     public function __construct($HR = null)
@@ -29,8 +32,8 @@ class UploadValidationRawDataAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -38,10 +41,10 @@ class UploadValidationRawDataAction extends Action
         $model = $models->first();
 
         if ($model->osm2cai_status > 3) {
-            return Action::danger("To upload the detected track of the route, the route must have a registration status less than or equal to 3; if necessary proceed first with REVERT VALIDATION");
+            return Action::danger('To upload the detected track of the route, the route must have a registration status less than or equal to 3; if necessary proceed first with REVERT VALIDATION');
         }
 
-        if (!$this->checkUserAuthorization($model)) {
+        if (! $this->checkUserAuthorization($model)) {
             return Action::danger('You are not authorized to perform this action');
         }
 
@@ -62,9 +65,9 @@ class UploadValidationRawDataAction extends Action
         }
 
         if (in_array('Local Referent', $roles)) {
-            return !$model->sectors->intersect($user->sectors)->isEmpty() ||
-                !$model->areas->intersect($user->areas)->isEmpty() ||
-                !$model->provinces->intersect($user->provinces)->isEmpty();
+            return ! $model->sectors->intersect($user->sectors)->isEmpty() ||
+                ! $model->areas->intersect($user->areas)->isEmpty() ||
+                ! $model->provinces->intersect($user->provinces)->isEmpty();
         }
 
         return false;
@@ -72,19 +75,19 @@ class UploadValidationRawDataAction extends Action
 
     private function processGeometryUpload($fields, $model)
     {
-        if (!$fields->geometry) {
-            return Action::danger("Unable to update geometry. Please enter a valid file.");
+        if (! $fields->geometry) {
+            return Action::danger('Unable to update geometry. Please enter a valid file.');
         }
 
         $path = $fields->geometry->storeAs(
             'local',
-            explode('.', $fields->geometry->hashName())[0] . '.' . $fields->geometry->getClientOriginalExtension()
+            explode('.', $fields->geometry->hashName())[0].'.'.$fields->geometry->getClientOriginalExtension()
         );
 
         $content = Storage::get($path);
         $jsonDecoded = json_decode($content, true);
         if (isset($jsonDecoded['features']) && count($jsonDecoded['features']) < 1) {
-            return Action::danger("Unable to update geometry. The uploaded file does not contain a valid geometry.");
+            return Action::danger('Unable to update geometry. The uploaded file does not contain a valid geometry.');
         }
         $geom = $model->fileToGeometry($content);
 
@@ -105,7 +108,7 @@ class UploadValidationRawDataAction extends Action
 
         return [
             File::make('Geometry')
-                ->help($confirmText)
+                ->help($confirmText),
         ];
     }
 }

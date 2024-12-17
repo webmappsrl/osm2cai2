@@ -38,7 +38,7 @@ class ScoreFilter extends Filter
     {
         //get all the score values distinct from the current table
         $table = $request->model()->getTable();
-        $query = 'SELECT DISTINCT score FROM ' . $table;
+        $query = 'SELECT DISTINCT score FROM '.$table;
 
         //return an array with the score values ordered by score
         $scores = array_column(DB::select($query), 'score', 'score');

@@ -5,11 +5,11 @@ namespace App\Nova\Actions;
 use App\Models\UgcPoi;
 use App\Models\UgcTrack;
 use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class DeleteUgcMedia extends Action
@@ -17,18 +17,19 @@ class DeleteUgcMedia extends Action
     use Queueable;
 
     public $showOnDetail = true;
+
     public $showOnTableRow = true;
 
     public $model;
 
-    function __construct($model = null)
+    public function __construct($model = null)
     {
         $this->model = $model;
 
-        if (!is_null($resourceId = request('resourceId'))) {
+        if (! is_null($resourceId = request('resourceId'))) {
             //get base class name
             $modelClass = class_basename($this->model);
-            $this->model = app('App\Models\\' . $modelClass)->find($resourceId);
+            $this->model = app('App\Models\\'.$modelClass)->find($resourceId);
             $this->name = __('Delete Image');
         }
     }
@@ -44,12 +45,11 @@ class DeleteUgcMedia extends Action
         $ugcMediaId = $fields->ugc_media_id;
 
         $ugcMedia = \App\Models\UgcMedia::find($ugcMediaId);
-        if (!$ugcMedia) {
+        if (! $ugcMedia) {
             return Action::danger(__('Image not found.'));
         }
 
         try {
-
             Storage::disk('public')->delete($ugcMedia->relative_url);
 
             $ugcMedia->ugc_poi()->dissociate();
@@ -59,7 +59,7 @@ class DeleteUgcMedia extends Action
 
             return Action::message(__('Image deleted successfully!'));
         } catch (\Exception $e) {
-            return Action::danger(__('Error while deleting image: ') . $e->getMessage());
+            return Action::danger(__('Error while deleting image: ').$e->getMessage());
         }
     }
 
@@ -67,11 +67,12 @@ class DeleteUgcMedia extends Action
     {
         $medias = $this->model->ugc_media()->get();
         $options = $medias->pluck('id', 'id');
+
         return [
             Select::make(__('Image'), 'ugc_media_id')
                 ->options($options)
                 ->rules('required')
-                ->help(__('Select the ID of the image to delete.'))
+                ->help(__('Select the ID of the image to delete.')),
         ];
     }
 }

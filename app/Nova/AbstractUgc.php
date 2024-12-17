@@ -2,27 +2,27 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Resource;
-use Illuminate\Support\Arr;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\DateTime;
 use App\Enums\ValidatedStatusEnum;
-use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\DeleteUgcMedia;
-use App\Nova\Filters\UgcAppIdFilter;
-use App\Nova\Filters\ValidatedFilter;
-use App\Nova\Filters\RelatedUGCFilter;
-use App\Traits\Nova\WmNovaFieldsTrait;
-use Idez\DateRangeFilter\Enums\Config;
-use App\Traits\Nova\RawDataFieldsTrait;
-use Idez\DateRangeFilter\DateRangeFilter;
-use App\Nova\UgcTrack as UgcTrackResource;
 use App\Nova\Actions\DownloadFeatureCollection;
 use App\Nova\Actions\UploadAndAssociateUgcMedia;
+use App\Nova\Filters\RelatedUGCFilter;
+use App\Nova\Filters\UgcAppIdFilter;
+use App\Nova\Filters\ValidatedFilter;
+use App\Nova\UgcTrack as UgcTrackResource;
+use App\Traits\Nova\RawDataFieldsTrait;
+use App\Traits\Nova\WmNovaFieldsTrait;
+use Idez\DateRangeFilter\DateRangeFilter;
+use Idez\DateRangeFilter\Enums\Config;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Resource;
 
 abstract class AbstractUgc extends Resource
 {
@@ -44,7 +44,7 @@ abstract class AbstractUgc extends Resource
      */
     public function validatedStatusOptions()
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
     }
 
     /**
@@ -61,9 +61,10 @@ abstract class AbstractUgc extends Resource
                 if ($this->user_id) {
                     if (auth()->user()->isValidatorForFormId($this->form_id)) {
                         //add the email of the user next to the name for validator
-                        return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/' . $this->user_id . '">' . $this->user->name . ' (' . $this->user->email . ')' . '</a>';
+                        return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.' ('.$this->user->email.')'.'</a>';
                     }
-                    return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/' . $this->user_id . '">' . $this->user->name . '</a>';
+
+                    return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.'</a>';
                 } else {
                     return $this->user->email ?? 'N/A';
                 }
@@ -125,16 +126,16 @@ abstract class AbstractUgc extends Resource
                 foreach ($images as $image) {
                     $url = $image->getUrl();
                     $html .= '<div style="margin: 5px; text-align: center; min-width: 100px;">';
-                    $html .= '<a href="' . $url . '" target="_blank" style="display: block;">';
-                    $html .= '<img src="' . $url . '" width="100" height="100" style="object-fit: cover; display: block; border: 1px solid #ddd; border-radius: 4px;">';
+                    $html .= '<a href="'.$url.'" target="_blank" style="display: block;">';
+                    $html .= '<img src="'.$url.'" width="100" height="100" style="object-fit: cover; display: block; border: 1px solid #ddd; border-radius: 4px;">';
                     $html .= '</a>';
-                    $html .= '<p style="margin-top: 5px; color: #666; font-size: 12px;">ID: ' . $image->id . '</p>';
+                    $html .= '<p style="margin-top: 5px; color: #666; font-size: 12px;">ID: '.$image->id.'</p>';
                     $html .= '</div>';
                 }
                 $html .= '</div>';
 
                 return $html;
-            })->asHtml()->onlyOnDetail()
+            })->asHtml()->onlyOnDetail(),
         ];
 
         $formFields = $this->jsonForm('raw_data');
@@ -178,8 +179,10 @@ abstract class AbstractUgc extends Resource
     {
         return [
             (new UploadAndAssociateUgcMedia())->canSee(function ($request) {
-                if ($this->user_id)
+                if ($this->user_id) {
                     return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatusEnum::NOT_VALIDATED->value;
+                }
+
                 return $request->has('resources');
             })
                 ->canRun(function ($request) {
@@ -189,8 +192,10 @@ abstract class AbstractUgc extends Resource
                 ->confirmButtonText('Carica')
                 ->cancelButtonText('Annulla'),
             (new DeleteUgcMedia($this->model()))->canSee(function ($request) {
-                if ($this->user_id)
+                if ($this->user_id) {
                     return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatusEnum::NOT_VALIDATED->value;
+                }
+
                 return $request->has('resources');
             }),
             (new DownloadFeatureCollection())->canSee(function ($request) {

@@ -2,24 +2,24 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Nova;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use Laravel\Nova\Fields\Number;
+use App\Nova\Actions\DownloadGeojson;
 use App\Nova\Actions\DownloadKml;
-use Laravel\Nova\Fields\DateTime;
+use App\Nova\Actions\DownloadShape;
+use App\Nova\Filters\HikingRoutesProvinceFilter;
+use App\Nova\Filters\ProvinceFilter;
 use App\Nova\Filters\RegionFilter;
 use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Fields\BelongsTo;
-use App\Nova\Actions\DownloadShape;
-use App\Nova\Filters\ProvinceFilter;
-use App\Nova\Actions\DownloadGeojson;
-use Wm\MapMultiPolygon\MapMultiPolygon;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use App\Nova\Filters\HikingRoutesProvinceFilter;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
+use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class Province extends Resource
 {
@@ -60,7 +60,7 @@ class Province extends Resource
     ];
 
     private static $indexDefaultOrder = [
-        'name' => 'asc'
+        'name' => 'asc',
     ];
 
     public static function indexQuery(NovaRequest $request, $query)
@@ -82,19 +82,20 @@ class Province extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $areasCount = cache()->remember('province_' . $this->id . '_areas_count', 60 * 60 * 24, function () {
+        $areasCount = cache()->remember('province_'.$this->id.'_areas_count', 60 * 60 * 24, function () {
             return count($this->areas);
         });
-        $sectorsCount = cache()->remember('province_' . $this->id . '_sectors_count', 60 * 60 * 24, function () {
+        $sectorsCount = cache()->remember('province_'.$this->id.'_sectors_count', 60 * 60 * 24, function () {
             return 0;
         });
-        $code = cache()->remember('province_' . $this->id . '_code', 60 * 60 * 24, function () {
+        $code = cache()->remember('province_'.$this->id.'_code', 60 * 60 * 24, function () {
             return $this->osmfeatures_data['properties']['osm_tags']['short_name'] ?? $this->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
         });
 
         foreach ($this->areas as $area) {
             $sectorsCount += count($area->sectors);
         }
+
         return [
             ID::make()->sortable(),
             Text::make('Name', 'name')->sortable(),
@@ -104,8 +105,9 @@ class Province extends Resource
             Text::make('Full Code', function () use ($code) {
                 //if code is not null, add the region code
                 if ($code) {
-                    $code = $this->region ?  $this->region->code . '.' . $code : $code;
+                    $code = $this->region ? $this->region->code.'.'.$code : $code;
                 }
+
                 return $code;
             })->sortable(),
             Number::make('Areas', function () use ($areasCount) {
@@ -132,8 +134,8 @@ class Province extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        if (!is_null($request['resourceId'])) {
-            $province = Province::find($request['resourceId']);
+        if (! is_null($request['resourceId'])) {
+            $province = self::find($request['resourceId']);
 
             $data = DB::table('hiking_route_province')
                 ->join('hiking_routes', 'hiking_route_province.hiking_route_id', '=', 'hiking_routes.id')
@@ -144,9 +146,6 @@ class Province extends Resource
                 ->mapWithKeys(function ($item) {
                     return [$item->osm2cai_status => $item->total];
                 });
-
-
-
 
             $numbers[1] = $data[1] ?? 0;
             $numbers[2] = $data[2] ?? 0;
@@ -203,6 +202,7 @@ class Province extends Resource
                 $this->getSdaProvinceCard(4, $numbers[4], $request),
             ];
         }
+
         return [];
     }
 
@@ -213,7 +213,7 @@ class Province extends Resource
             $resourceId = $request->get('resourceId');
 
             // Get filters from HikingRoute resource
-            $hikingRouteResource = new \App\Nova\HikingRoute;
+            $hikingRouteResource = new HikingRoute;
             $availableFilters = collect($hikingRouteResource->filters($request))
                 ->map(function ($filter) {
                     return [get_class($filter) => ''];
@@ -231,7 +231,7 @@ class Province extends Resource
             $filter = base64_encode(json_encode($availableFilters));
 
             // Build the URL
-            $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
+            $link = trim(Nova::path(), '/').'/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens?hiking-routes_filter='.$filter;
             $exploreUrl = $link;
         }
 
@@ -247,7 +247,6 @@ class Province extends Resource
             ->withBasicStyles()
             ->onlyOnDetail();
     }
-
 
     /**
      * Get the filters available for the resource.
@@ -288,7 +287,7 @@ class Province extends Resource
             }),
             (new DownloadKml())->canRun(function ($request, $zone) {
                 return true;
-            })
+            }),
         ];
     }
 }

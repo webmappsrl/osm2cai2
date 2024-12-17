@@ -2,32 +2,32 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Nova;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use Laravel\Nova\Fields\Number;
-use App\Nova\Filters\AreaFilter;
-use App\Nova\Actions\DownloadKml;
-use App\Nova\Filters\RegionFilter;
-use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Fields\BelongsTo;
-use App\Nova\Actions\DownloadShape;
-use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Actions\BulkSectorsModeratorAssignAction;
+use App\Nova\Actions\DownloadCsvCompleteAction;
 use App\Nova\Actions\DownloadGeojson;
-use Laravel\Nova\Fields\BelongsToMany;
-use Wm\MapMultiPolygon\MapMultiPolygon;
+use App\Nova\Actions\DownloadKml;
+use App\Nova\Actions\DownloadShape;
 use App\Nova\Actions\SectorAssignModerator;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\UploadSectorGeometryAction;
+use App\Nova\Filters\AreaFilter;
+use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Filters\RegionFilter;
 use App\Nova\Lenses\NoNameSectorsColumnsLens;
 use App\Nova\Lenses\NoNumExpectedColumnsLens;
-use App\Nova\Actions\DownloadCsvCompleteAction;
-use App\Nova\Actions\UploadSectorGeometryAction;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use App\Nova\Lenses\NoResponsabileSectorsColumnsLens;
-use App\Nova\Actions\BulkSectorsModeratorAssignAction;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\File;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
+use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class Sector extends Resource
 {
@@ -57,9 +57,8 @@ class Sector extends Resource
         'full_code',
     ];
 
-
     private static $indexDefaultOrder = [
-        'name' => 'asc'
+        'name' => 'asc',
     ];
 
     // default order by name asc
@@ -122,8 +121,8 @@ class Sector extends Resource
      */
     public function cards(Request $request)
     {
-        if (!is_null($request['resourceId'])) {
-            $sector = Sector::find($request['resourceId']);
+        if (! is_null($request['resourceId'])) {
+            $sector = self::find($request['resourceId']);
 
             $numbers = DB::table('hiking_route_sector')
                 ->join('hiking_routes', 'hiking_route_sector.hiking_route_id', '=', 'hiking_routes.id')
@@ -140,7 +139,7 @@ class Sector extends Resource
                 1 => $numbers->tot1,
                 2 => $numbers->tot2,
                 3 => $numbers->tot3,
-                4 => $numbers->tot4
+                4 => $numbers->tot4,
             ];
 
             $sal = $sector->getSal();
@@ -149,7 +148,7 @@ class Sector extends Resource
                 (new HtmlCard())
                     ->width('1/4')
                     ->view('nova.cards.sector-manager-card', [
-                        'manager' => $sector->manager
+                        'manager' => $sector->manager,
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -159,7 +158,7 @@ class Sector extends Resource
                     ->width('1/4')
                     ->view('nova.cards.sector-sal-card', [
                         'sal' => number_format($sal * 100, 2),
-                        'backgroundColor' => Osm2CaiHelper::getSalColor($sal)
+                        'backgroundColor' => Osm2caiHelper::getSalColor($sal),
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -169,7 +168,7 @@ class Sector extends Resource
                     ->width('1/4')
                     ->view('nova.cards.sector-stats-card', [
                         'value' => $numbers[3] + $numbers[4],
-                        'label' => 'Numero percorsi sda 3/4'
+                        'label' => 'Numero percorsi sda 3/4',
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -179,7 +178,7 @@ class Sector extends Resource
                     ->width('1/4')
                     ->view('nova.cards.sector-stats-card', [
                         'value' => $sector->num_expected,
-                        'label' => 'Numero percorsi attesi'
+                        'label' => 'Numero percorsi attesi',
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -191,6 +190,7 @@ class Sector extends Resource
                 $this->getSdaSectorCard(4, $numbers[4], $request),
             ];
         }
+
         return [];
     }
 
@@ -201,7 +201,7 @@ class Sector extends Resource
             $resourceId = $request->get('resourceId');
 
             // Get filters from HikingRoute resource
-            $hikingRouteResource = new \App\Nova\HikingRoute;
+            $hikingRouteResource = new HikingRoute;
             $availableFilters = collect($hikingRouteResource->filters($request))
                 ->map(function ($filter) {
                     return [get_class($filter) => ''];
@@ -210,8 +210,8 @@ class Sector extends Resource
 
             // Set the value only for the sector filter
             foreach ($availableFilters as &$filter) {
-                if (key($filter) === \App\Nova\Filters\SectorFilter::class) {
-                    $filter[\App\Nova\Filters\SectorFilter::class] = $resourceId;
+                if (key($filter) === Filters\SectorFilter::class) {
+                    $filter[Filters\SectorFilter::class] = $resourceId;
                 }
             }
 
@@ -219,7 +219,7 @@ class Sector extends Resource
             $filter = base64_encode(json_encode($availableFilters));
 
             // Build the URL
-            $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
+            $link = trim(Nova::path(), '/').'/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens?hiking-routes_filter='.$filter;
             $exploreUrl = $link;
         }
 
@@ -268,7 +268,7 @@ class Sector extends Resource
         return [
             new NoResponsabileSectorsColumnsLens,
             new NoNameSectorsColumnsLens,
-            new NoNumExpectedColumnsLens
+            new NoNumExpectedColumnsLens,
         ];
     }
 
@@ -300,7 +300,7 @@ class Sector extends Resource
             (new UploadSectorGeometryAction)
                 ->confirmText('Inserire un file con la nuova geometria del settore.')
                 ->confirmButtonText('Aggiorna geometria')
-                ->cancelButtonText("Annulla")
+                ->cancelButtonText('Annulla')
                 ->canSee(function ($request) {
                     return auth()->user()->hasRole('Administrator');
                 })
@@ -312,7 +312,7 @@ class Sector extends Resource
             }),
             (new SectorAssignModerator)->canRun(function ($request, $user) {
                 return auth()->user()->hasRole('Regional Referent') || auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent');
-            })
+            }),
         ];
     }
 
@@ -328,7 +328,6 @@ class Sector extends Resource
         if ($user->region_id && $sector->area->province->region->id === $user->region_id) {
             return true;
         }
-
 
         return false;
     }

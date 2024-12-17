@@ -16,13 +16,12 @@ class GenerateItineraryEdgesAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-
         foreach ($models as $model) {
             $json = $model->generateItineraryEdges();
             $model->edges = $json;

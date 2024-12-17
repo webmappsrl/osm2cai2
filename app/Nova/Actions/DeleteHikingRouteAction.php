@@ -24,16 +24,17 @@ class DeleteHikingRouteAction extends DestructiveAction
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
     {
         $user = auth()->user();
         $roles = $user->getRoleNames()->toArray();
-        if (!$user || $user == null)
+        if (! $user || $user == null) {
             return Action::danger(__('User info is not available'));
+        }
         if (in_array('Administrator', $roles) || in_array('National referent', $roles) || in_array('Regional referent', $roles)) {
             foreach ($models as $m) {
                 if ($m->deleted_on_osm) {
@@ -47,6 +48,7 @@ class DeleteHikingRouteAction extends DestructiveAction
                     return Action::danger(__('You can not delete this Hiking Route because it is not deleted from OSM'));
                 }
             }
+
             return Action::redirect('/resources/hiking-routes');
         } else {
             return Action::danger(__('You do not have permissions to delete this Hiking Route'));

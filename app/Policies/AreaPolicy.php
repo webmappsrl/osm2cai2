@@ -13,6 +13,7 @@ class AreaPolicy
     private function hasAllowedRole(User $user): bool
     {
         $userRoles = $user->getRoleNames();
+
         return $userRoles->intersect($this->allowedRoles)->isNotEmpty();
     }
 
