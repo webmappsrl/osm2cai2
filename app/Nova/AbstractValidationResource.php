@@ -4,11 +4,8 @@ namespace App\Nova;
 
 use App\Nova\Filters\UgcFormIdFilter;
 use App\Nova\Filters\UgcUserNoMatchFilter;
-use App\Nova\Filters\ValidatedFilter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Fields\Text;
-use Wm\WmPackage\Nova\Actions\EditFields;
 
 abstract class AbstractValidationResource extends UgcPoi
 {
@@ -49,37 +46,26 @@ abstract class AbstractValidationResource extends UgcPoi
 
     public function authorizeToView(Request $request)
     {
-        return Auth::user()->isValidatorForFormId(static::getFormId());
+        return auth()->user()->isValidatorForFormId(static::getFormId());
     }
 
     public function authorizeToViewAny(Request $request)
     {
-        return Auth::user()->isValidatorForFormId(static::getFormId());
+        return auth()->user()->isValidatorForFormId(static::getFormId());
     }
 
     public static function availableForNavigation(Request $request)
     {
-        return Auth::user()->isValidatorForFormId(static::getFormId());
+        return auth()->user()->isValidatorForFormId(static::getFormId());
     }
 
     public function authorizedToUpdate(Request $request)
     {
-        return Auth::user()->isValidatorForFormId(static::getFormId());
+        return auth()->user()->isValidatorForFormId(static::getFormId());
     }
 
     public static function authorizedToCreate(Request $request)
     {
         return false;
-    }
-
-    public function actions(Request $request)
-    {
-        $parentActions = parent::actions($request);
-
-        return array_merge($parentActions, [
-            (new EditFields('Validate Resource', ['validated'], $this))->canSee(function () {
-                return auth()->user()->hasPermissionTo('validate tracks');
-            }),
-        ]);
     }
 }

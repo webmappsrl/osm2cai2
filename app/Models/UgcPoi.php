@@ -22,7 +22,7 @@ class UgcPoi extends Model
     protected $casts = [
         'raw_data' => 'array',
         'validation_date' => 'datetime',
-        'raw_data->date' => 'datetime:Y-m-d H:i:s',
+        'raw_data->date' => 'datetime:Y-m-d H:i:s'
     ];
 
     public function getRegisteredAtAttribute()
