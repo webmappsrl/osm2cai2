@@ -29,60 +29,26 @@ class associateUsersToecPoisCommand extends Command
      */
     public function handle()
     {
-        //get all users by api and retrieve name, password and email. ID must be imported from osm2cai legacy (important for the upcoming association)
-        $usersApiList = 'https://osm2cai.cai.it/api/v2/export/users/list';
-
-        //make the call to api list
-        $response = Http::get($usersApiList);
-
-        if ($response->failed() || $response->json() === null) {
-            $this->info('Failed to retrieve data from API: '.$usersApiList);
-            Log::error('Failed to retrieve data from API: '.$usersApiList.' '.$response->body());
-
-            return;
-        }
-        $list = $response->json();
-
-        foreach ($list as $userId => $updated_at) {
-            $userData = Http::get('https://osm2cai.cai.it/api/v2/export/users/'.$userId);
-
-            if ($userData->failed() || $userData->json() === null) {
-                $this->info('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/users/'.$userId);
-                Log::error('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/users/'.$userId.' '.$userData->body());
-                continue;
-            }
-
-            $userData = $userData->json();
-
-            $id = $userData['id'];
-            $name = $userData['name'];
-            $password = bcrypt('webmapp123');
-            $email = $userData['email'];
-
-            if (User::where('email', $email)->first() === null) {
-                $user = new User();
-                $user->id = $id;
-                $user->name = $name;
-                $user->password = $password;
-                $user->email = $email;
-                $user->save();
-            }
-        }
-
-        $this->info('Imported '.count($list).' users');
-
         //get all ec_pois
         $ecPois = EcPoi::all();
 
         foreach ($ecPois as $ecPoi) {
-            $ecPoiApiData = Http::get('https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id);
+            $ecPoiApiData = Http::get('https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id);
 
             if ($ecPoiApiData->failed() || $ecPoiApiData->json() === null) {
-                $this->info('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id);
-                Log::error('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id.' '.$ecPoiApiData->body());
+                $this->info('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id);
+                Log::error('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id . ' ' . $ecPoiApiData->body());
             }
 
             $ecPoiApiData = $ecPoiApiData->json();
+
+            //check if the user with $ecPoiApiData['user_id'] exists (ids are the same in both legacy and new database as previously imported with app/Console/Commands/SyncUsersFromLegacyOsm2cai.php)
+            $user = User::where('id', $ecPoiApiData['user_id'])->first();
+
+            if (!$user) {
+                $this->info('User with id ' . $ecPoiApiData['user_id'] . ' does not exist');
+                continue;
+            }
 
             $ecPoi->update(['user_id' => $ecPoiApiData['user_id']]);
         }

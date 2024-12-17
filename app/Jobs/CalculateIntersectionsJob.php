@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
- * This job recalculates intersections between two models with spatial data trait.
+ * This job calculates intersections between two models with spatial data trait.
  *
  * We store only the base model's ID and class, along with the intersecting model's class,
  * rather than the full model instances. This approach solves serialization issues that occur
@@ -81,12 +81,6 @@ class CalculateIntersectionsJob implements ShouldQueue
                 $baseModelForeignKey = $this->getModelForeignKey($baseModel);
                 $intersectingModelForeignKey = $this->getModelForeignKey($intersectingModel);
 
-                $hasPercentageColumn = Schema::hasColumn($pivotTable, 'percentage');
-                if ($hasPercentageColumn) {
-                    $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
-                    Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
-                }
-
                 $record = [
                     $baseModelForeignKey => $baseModel->id,
                     $intersectingModelForeignKey => $intersectingId,
@@ -94,7 +88,9 @@ class CalculateIntersectionsJob implements ShouldQueue
                     'updated_at' => now(),
                 ];
 
-                if ($hasPercentageColumn) {
+                if (Schema::hasColumn($pivotTable, 'percentage')) {
+                    $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
+                    Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
                     $record['percentage'] = $percentage;
                 }
 
@@ -103,7 +99,7 @@ class CalculateIntersectionsJob implements ShouldQueue
 
             DB::table($pivotTable)->insert($pivotRecords);
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
+            Log::error('Error recalculating intersections for model ' . $baseModel->getTable() . ': ' . $e->getMessage());
             throw $e;
         }
     }
@@ -120,6 +116,9 @@ class CalculateIntersectionsJob implements ShouldQueue
                 'sectors' => 'hiking_route_sector',
                 'areas' => 'area_hiking_route',
                 'mountain_groups' => 'mountain_group_hiking_route',
+                'ec_pois' => 'hiking_route_ec_poi',
+                'clubs' => 'hiking_route_club',
+                'cai_huts' => 'hiking_route_cai_hut',
             ],
             'regions' => [
                 'hiking_routes' => 'hiking_route_region',
@@ -143,12 +142,17 @@ class CalculateIntersectionsJob implements ShouldQueue
             ],
             'cai_huts' => [
                 'mountain_groups' => 'mountain_group_cai_hut',
+                'ec_pois' => 'cai_hut_ec_poi',
             ],
             'ec_pois' => [
                 'mountain_groups' => 'mountain_group_ec_poi',
+                'clubs' => 'ec_poi_club',
+                'cai_huts' => 'ec_poi_cai_hut',
+                'hiking_routes' => 'hiking_route_ec_poi',
             ],
             'clubs' => [
                 'mountain_groups' => 'mountain_group_club',
+                'ec_pois' => 'ec_poi_club',
             ],
 
         ];
@@ -172,7 +176,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             $model = new $model();
         }
 
-        return Str::singular($model->getTable()).'_id';
+        return Str::singular($model->getTable()) . '_id';
     }
 
     /**
@@ -180,38 +184,38 @@ class CalculateIntersectionsJob implements ShouldQueue
      */
     private function calculateIntersectionPercentage($baseModel, $intersectingModel): float
     {
-        if (! $intersectingModel) {
+        if (!$intersectingModel) {
             throw new \Exception('Intersecting model not found');
         }
 
         // special case for hiking_routes (MultiLineString): needs to calculate intersections with ST_Length
         if ($baseModel->getTable() === 'hiking_routes') {
-            $query = <<<'SQL'
+            $query = DB::select("
                 SELECT (ST_Length(
                     ST_Intersection(
-                        (SELECT geometry FROM {$baseModel->getTable()} WHERE id = {$baseModel->id}),
-                        (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = {$intersectingModel->id})
+                        (SELECT geometry FROM {$baseModel->getTable()} WHERE id = ?),
+                        (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = ?)
                     ), true
                 ) / ST_Length(
-                    (SELECT geometry FROM {$baseModel->getTable()} WHERE id = {$baseModel->id}), 
+                    (SELECT geometry FROM {$baseModel->getTable()} WHERE id = ?), 
                     true
                 )) * 100 as percentage
-            SQL;
+            ", [$baseModel->id, $intersectingModel->id, $baseModel->id]);
         } elseif ($intersectingModel->getTable() === 'hiking_routes') {
-            $query = <<<'SQL'
+            $query = DB::select("
                 SELECT (ST_Length(
                     ST_Intersection(
-                        (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = {$intersectingModel->id}),
-                        (SELECT geometry FROM {$baseModel->getTable()} WHERE id = {$baseModel->id})
+                        (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = ?),
+                        (SELECT geometry FROM {$baseModel->getTable()} WHERE id = ?)
                     ), true
                 ) / ST_Length(
-                    (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = {$intersectingModel->id}), 
+                    (SELECT geometry FROM {$intersectingModel->getTable()} WHERE id = ?), 
                     true
                 )) * 100 as percentage
-            SQL;
+            ", [$intersectingModel->id, $baseModel->id, $intersectingModel->id]);
         } else {
             // case for multipolygons
-            return DB::select(<<<'SQL'
+            return DB::select("
                 WITH intersection AS (
                     SELECT ST_Intersection(
                         ST_Transform(?, 3857),
@@ -223,7 +227,7 @@ class CalculateIntersectionsJob implements ShouldQueue
                     THEN (ST_Area((SELECT geom FROM intersection)) / ST_Area(ST_Transform(?, 3857))) * 100
                     ELSE 0 
                 END as percentage
-            SQL, [
+            ", [
                 $baseModel->geometry,
                 $intersectingModel->geometry,
                 $baseModel->geometry,
@@ -231,15 +235,13 @@ class CalculateIntersectionsJob implements ShouldQueue
             ])[0]->percentage ?? 0.0;
         }
 
-        $percentage = DB::select($query);
-
         // Log for debug
         Log::info('Calculated percentage:', [
             'base_model' => $baseModel->getTable(),
             'intersecting_model' => $intersectingModel->getTable(),
-            'percentage' => $percentage[0]->percentage,
+            'percentage' => $query[0]->percentage,
         ]);
 
-        return (float) ($percentage[0]->percentage ?? 0.0);
+        return (float) ($query[0]->percentage ?? 0.0);
     }
 }

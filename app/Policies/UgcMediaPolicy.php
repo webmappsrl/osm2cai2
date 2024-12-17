@@ -65,11 +65,7 @@ class UgcMediaPolicy
      */
     public function delete(User $user, UgcMedia $ugcMedia)
     {
-        if ($user->is_administrator) {
-            return true;
-        }
-
-        return $user->id === $ugcMedia->user_id;
+        return $user->hasRole('Administrator') || $user->id === $ugcMedia->user_id;
     }
 
     /**

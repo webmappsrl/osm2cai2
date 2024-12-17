@@ -13,7 +13,7 @@ class RegionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasRole('Administrator') || $user->hasRole('National Referent');
     }
 
     /**
@@ -21,7 +21,7 @@ class RegionPolicy
      */
     public function view(User $user, Region $region): bool
     {
-        return true;
+        return false;
     }
 
     /**

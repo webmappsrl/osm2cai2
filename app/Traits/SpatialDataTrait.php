@@ -43,7 +43,7 @@ trait SpatialDataTrait
      */
     public function getGeometryGeojson(): ?array
     {
-        $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM '.$this->getTable().' WHERE id = '.$this->id)[0]->geom;
+        $geom = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM ' . $this->getTable() . ' WHERE id = ' . $this->id)[0]->geom;
 
         return json_decode($geom, true);
     }
@@ -115,7 +115,7 @@ trait SpatialDataTrait
      */
     public function getGeometryType(): ?string
     {
-        $type = DB::select('SELECT ST_GeometryType(geometry) as type FROM '.$this->getTable().' WHERE id = '.$this->id)[0]->type;
+        $type = DB::select('SELECT ST_GeometryType(geometry) as type FROM ' . $this->getTable() . ' WHERE id = ' . $this->id)[0]->type;
 
         return $type;
     }
@@ -196,7 +196,7 @@ trait SpatialDataTrait
 
         // Create directories
         $baseDir = Storage::disk('public')->path('shape_files');
-        $zipDir = $baseDir.'/zip';
+        $zipDir = $baseDir . '/zip';
 
         if (! file_exists($baseDir)) {
             mkdir($baseDir, 0755, true);
@@ -212,8 +212,8 @@ trait SpatialDataTrait
         }
 
         // Absolute paths for the files
-        $shpFile = $baseDir.'/'.$name.'.shp';
-        $zipFile = $zipDir.'/'.$name.'.zip';
+        $shpFile = $baseDir . '/' . $name . '.shp';
+        $zipFile = $zipDir . '/' . $name . '.zip';
 
         // Remove existing files
         if (file_exists($zipFile)) {
@@ -234,7 +234,7 @@ trait SpatialDataTrait
 
         exec($command, $output, $returnVar);
         if ($returnVar !== 0) {
-            throw new \RuntimeException('Error creating shapefile: '.implode("\n", $output));
+            throw new \RuntimeException('Error creating shapefile: ' . implode("\n", $output));
         }
 
         // Create the zip file
@@ -244,17 +244,17 @@ trait SpatialDataTrait
         }
 
         // Add all related files to the shapefile
-        foreach (glob($baseDir.'/'.$name.'.*') as $file) {
+        foreach (glob($baseDir . '/' . $name . '.*') as $file) {
             $zip->addFile($file, basename($file));
         }
         $zip->close();
 
         // Clean up temporary files
-        foreach (glob($baseDir.'/'.$name.'.*') as $file) {
+        foreach (glob($baseDir . '/' . $name . '.*') as $file) {
             unlink($file);
         }
 
-        return 'shape_files/zip/'.$name.'.zip';
+        return 'shape_files/zip/' . $name . '.zip';
     }
 
     /**
@@ -285,10 +285,10 @@ trait SpatialDataTrait
                 ->where('id', $sectorId)
                 ->select(DB::raw('ST_AsKML(geometry) as kml'))
                 ->value('kml');
-            $kml .= '<Placemark>'.$geometry.'</Placemark>';
+            $kml .= '<Placemark>' . $geometry . '</Placemark>';
         }
 
-        return $kml.'</Document></kml>';
+        return $kml . '</Document></kml>';
     }
 
     // ------------------------------
@@ -327,7 +327,7 @@ trait SpatialDataTrait
         $table = $model->getTable();
         $id = $model->id;
 
-        $areaQuery = 'SELECT ST_Area(geometry) as area FROM '.$table.' WHERE id = :id';
+        $areaQuery = 'SELECT ST_Area(geometry) as area FROM ' . $table . ' WHERE id = :id';
         $area = DB::select($areaQuery, ['id' => $id])[0]->area / 1000000;
 
         return (int) round($area);
@@ -393,7 +393,7 @@ trait SpatialDataTrait
 
         if ($this instanceof Region) {
             return $this->provinces
-                ->flatMap(fn ($province) => $province->getSectorIds()) //flatten the array of arrays
+                ->flatMap(fn($province) => $province->getSectorIds()) //flatten the array of arrays
                 ->unique() //remove duplicates
                 ->values() //reset the keys
                 ->toArray();
@@ -401,7 +401,7 @@ trait SpatialDataTrait
 
         if ($this instanceof Province) {
             return $this->areas
-                ->flatMap(fn ($area) => $area->getSectorIds()) //flatten the array of arrays
+                ->flatMap(fn($area) => $area->getSectorIds()) //flatten the array of arrays
                 ->unique() //remove duplicates
                 ->values() //reset the keys
                 ->toArray();
@@ -419,7 +419,7 @@ trait SpatialDataTrait
         chdir($path);
 
         $this->clearPreviousShapefile($name, $directory);
-        exec("ogr2ogr -f 'ESRI Shapefile' {$name}.shp PG:'".$this->buildPgConnectionString()."' -sql \"{$sql}\"");
+        exec("ogr2ogr -f 'ESRI Shapefile' {$name}.shp PG:'" . $this->buildPgConnectionString() . "' -sql \"{$sql}\"");
         exec("zip {$name}.zip {$name}.* && mv {$name}.zip zip/ && rm {$name}.*");
 
         return "{$directory}/zip/{$name}.zip";
@@ -427,11 +427,11 @@ trait SpatialDataTrait
 
     private function buildPgConnectionString(): string
     {
-        return "dbname='".config('database.connections.pgsql.database').
-            "' host='".config('database.connections.pgsql.host').
-            "' port='".config('database.connections.pgsql.port').
-            "' user='".config('database.connections.pgsql.username').
-            "' password='".config('database.connections.pgsql.password')."'";
+        return "dbname='" . config('database.connections.pgsql.database') .
+            "' host='" . config('database.connections.pgsql.host') .
+            "' port='" . config('database.connections.pgsql.port') .
+            "' user='" . config('database.connections.pgsql.username') .
+            "' password='" . config('database.connections.pgsql.password') . "'";
     }
 
     private function clearPreviousShapefile(string $name, string $directory): void

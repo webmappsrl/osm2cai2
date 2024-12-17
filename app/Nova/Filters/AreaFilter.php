@@ -4,10 +4,9 @@ namespace App\Nova\Filters;
 
 use App\Models\Area;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Filters\Filter;
 
-class HikingRoutesAreaFilter extends Filter
+class AreaFilter extends Filter
 {
     /**
      * The filter's component.
@@ -16,7 +15,12 @@ class HikingRoutesAreaFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Area';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = 'Area';
+    }
 
     /**
      * Apply the filter to the given query.
@@ -28,9 +32,12 @@ class HikingRoutesAreaFilter extends Filter
      */
     public function apply(Request $request, $query, $value)
     {
-        return $query->whereHas('areas', function ($query) use ($value) {
-            $query->where('area_id', $value);
-        });
+        if ($query->getModel() instanceof \App\Models\HikingRoute) {
+            return $query->whereHas('area', function ($query) use ($value) {
+                $query->where('area_id', $value);
+            });
+        }
+        return $query->where('area_id', $value);
     }
 
     /**
@@ -43,8 +50,8 @@ class HikingRoutesAreaFilter extends Filter
     {
         $options = [];
         if (auth()->user()->hasRole('Regional Referent')) {
-            $provinces = Area::whereIn('province_id', auth()->user()->region->provinces->pluck('id')->toArray())->orderBy('name')->get();
-            foreach ($provinces as $item) {
+            $areas = Area::whereIn('province_id', auth()->user()->region->provinces->pluck('id')->toArray())->orderBy('name')->get();
+            foreach ($areas as $item) {
                 $options[$item->name] = $item->id;
             }
         } else {

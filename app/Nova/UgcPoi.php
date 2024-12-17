@@ -2,13 +2,8 @@
 
 namespace App\Nova;
 
-use App\Enums\UgcValidatedStatus;
 use App\Nova\AbstractUgc;
-use App\Nova\Actions\CheckUserNoMatchAction;
-use App\Nova\Actions\DeleteUgcMedia;
-use App\Nova\Actions\DownloadFeatureCollection;
 use App\Nova\Actions\DownloadUgcCsv;
-use App\Nova\Actions\UploadAndAssociateUgcMedia;
 use App\Nova\Filters\UgcFormIdFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +11,6 @@ use Illuminate\Support\Facades\Http;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Wm\MapPoint\MapPoint;
-use Wm\MapPointNova3\MapPointNova3;
 
 class UgcPoi extends AbstractUgc
 {
@@ -39,9 +33,34 @@ class UgcPoi extends AbstractUgc
 
     public static function label()
     {
-        $label = 'Ugc Poi';
+        $label = 'Poi';
 
         return __($label);
+    }
+
+    /**
+     * Apply search filters to the query
+     * 
+     * Searches for matches in:
+     * - POI name
+     * - POI ID
+     * - Associated user's name
+     * - Associated user's email
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query The query builder instance
+     * @param string $search The search term to filter by
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function applySearch($query, $search)
+    {
+        return $query->where(function ($query) use ($search) {
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('id', 'like', '%' . $search . '%')
+                ->orWhereHas('user', function ($query) use ($search) {
+                    $query->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                });
+        });
     }
 
     /**
@@ -173,7 +192,7 @@ class UgcPoi extends AbstractUgc
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/'.$resource->id.'/edit';
+        return '/resources/ugc-pois/' . $resource->id . '/edit';
     }
 
     /**
@@ -206,5 +225,20 @@ class UgcPoi extends AbstractUgc
 
             return $formIdOptions;
         });
+    }
+
+    public static function getExportFields(): array
+    {
+        return [
+            'id' => 'ID',
+            'user->name' => 'Nome utente',
+            'user->email' => 'Email utente',
+            'registered_at' => 'Data di acquisizione',
+            'raw_data->latitude' => 'Latitudine',
+            'raw_data->longitude' => 'Longitudine',
+            'validated' => 'Stato di validazione',
+            'validation_date' => 'Data di validazione',
+            'app_id' => 'App ID',
+        ];
     }
 }
