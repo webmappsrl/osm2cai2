@@ -39,9 +39,9 @@
         "subfission/cas": "^5.1",
         "tymon/jwt-auth": "^2.1",
         "webmapp/wm-osmfeatures": "*",
-        "wm/map-multi-linestring": "*",
+        "wm/map-multi-linestring": "^0.0.10",
         "wm/map-multi-polygon": "v0.0.4",
-        "wm/map-point": "*",
+        "wm/map-point": "^0.0.9",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },
