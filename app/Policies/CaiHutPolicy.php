@@ -29,7 +29,7 @@ class CaiHutPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('Administrator') || $user->hasRole('National Referent');
     }
 
     /**
@@ -37,7 +37,7 @@ class CaiHutPolicy
      */
     public function update(User $user, CaiHut $caiHut): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class CaiHutPolicy
      */
     public function delete(User $user, CaiHut $caiHut): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class CaiHutPolicy
      */
     public function restore(User $user, CaiHut $caiHut): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class CaiHutPolicy
      */
     public function forceDelete(User $user, CaiHut $caiHut): bool
     {
-        return false;
+        return true;
     }
 }

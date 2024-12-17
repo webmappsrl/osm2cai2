@@ -39,11 +39,6 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         });
     }
 
-    public function users()
-    {
-        return $this->belongsToMany(User::class);
-    }
-
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
@@ -78,7 +73,7 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Province '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Province ' . $osmfeaturesId);
 
             return;
         }
@@ -89,13 +84,18 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Province '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Province ' . $osmfeaturesId);
         }
 
         // Execute the update only if there are data to update
         if (! empty($updateData)) {
             $model->update($updateData);
         }
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
     }
 
     public function region()
@@ -147,5 +147,29 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         }
 
         return $result;
+    }
+
+    /**
+     * Scope a query to only include provinces owned by a certain user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Model\User  $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOwnedBy($query, User $user)
+    {
+        // Verify region
+        if ($user->region) {
+            $query->whereHas('region', function ($q) use ($user) {
+                $q->where('id', $user->region->id);
+            });
+        }
+
+        // Verify provinces
+        if ($user->provinces->isNotEmpty()) {
+            $query->orWhereIn('id', $user->provinces->pluck('id'));
+        }
+
+        return $query;
     }
 }

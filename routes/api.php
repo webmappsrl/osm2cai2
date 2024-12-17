@@ -1,21 +1,23 @@
 <?php
 
-use App\Http\Controllers\CsvController;
-use App\Http\Controllers\EcPoiController;
-use App\Http\Controllers\ExportController;
-use App\Http\Controllers\GeojsonController;
-use App\Http\Controllers\HikingRouteController;
-use App\Http\Controllers\ItineraryController;
-use App\Http\Controllers\KmlController;
-use App\Http\Controllers\MiturAbruzzoController;
-use App\Http\Controllers\RegionController;
-use App\Http\Controllers\SectorController;
-use App\Http\Controllers\ShapeFileController;
-use App\Http\Controllers\SourceSurveyController;
-use App\Http\Controllers\UmapController;
-use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CsvController;
+use App\Http\Controllers\KmlController;
+use App\Http\Controllers\UmapController;
+use App\Http\Controllers\EcPoiController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\RegionController;
+use App\Http\Controllers\SectorController;
+use App\Http\Controllers\GeojsonController;
+use App\Http\Controllers\ItineraryController;
+use App\Http\Controllers\ShapeFileController;
+use App\Http\Controllers\HikingRouteController;
+use App\Http\Controllers\MiturAbruzzoController;
+use App\Http\Controllers\SourceSurveyController;
+use Wm\WmPackage\Http\Controllers\UgcPoiController;
+use Wm\WmPackage\Http\Controllers\UgcTrackController;
+use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +43,8 @@ Route::prefix('kml')->name('kml.')->group(function () {
 });
 Route::prefix('geojson')->name('geojson.')->group(function () {
     Route::get('/{modelType}/{id}', [GeojsonController::class, 'download']);
+    Route::get('/ugcpoi/{ids}', [UgcPoiController::class, 'geojson'])->name('ugcpoi');
+    Route::get('/ugctrack/{ids}', [UgcTrackController::class, 'geojson'])->name('ugctrack');
 });
 
 Route::prefix('geojson-complete')->name('geojson_complete.')->group(function () {

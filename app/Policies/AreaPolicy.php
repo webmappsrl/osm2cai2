@@ -8,12 +8,20 @@ use Illuminate\Auth\Access\Response;
 
 class AreaPolicy
 {
+    private $allowedRoles = ['Administrator', 'National Referent', 'Regional Referent'];
+
+    private function hasAllowedRole(User $user): bool
+    {
+        $userRoles = $user->getRoleNames();
+        return $userRoles->intersect($this->allowedRoles)->isNotEmpty();
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->hasAllowedRole($user);
     }
 
     /**
@@ -21,7 +29,7 @@ class AreaPolicy
      */
     public function view(User $user, Area $area): bool
     {
-        return true;
+        return $this->hasAllowedRole($user);
     }
 
     /**

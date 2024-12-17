@@ -8,6 +8,14 @@ use Illuminate\Auth\Access\Response;
 
 class SectorPolicy
 {
+
+    private $allowedRoles = ['Administrator', 'National Referent'];
+
+    private function hasAllowedRole(User $user): bool
+    {
+        $userRoles = $user->getRoleNames();
+        return $userRoles->intersect($this->allowedRoles)->isNotEmpty();
+    }
     /**
      * Determine whether the user can view any models.
      */
@@ -29,7 +37,7 @@ class SectorPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $this->hasAllowedRole($user);
     }
 
     /**
@@ -37,7 +45,7 @@ class SectorPolicy
      */
     public function update(User $user, Sector $sector): bool
     {
-        return false;
+        return $this->hasAllowedRole($user) || $user->region_id === $sector->area_province->region_id;
     }
 
     /**

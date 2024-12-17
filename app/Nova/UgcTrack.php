@@ -137,8 +137,7 @@ class UgcTrack extends AbstractUgc
      */
     public function actions(Request $request)
     {
-        $parentActions = parent::actions($request);
-        $specificActions = [
+        return [
             (new DownloadGeojsonZip())
                 ->canSee(function ($request) {
                     return true;
@@ -149,7 +148,13 @@ class UgcTrack extends AbstractUgc
                 return auth()->user()->hasPermissionTo('validate tracks');
             }),
         ];
+    }
 
-        return array_merge($parentActions, $specificActions);
+    public static function getExportFields(): array
+    {
+        return array_merge(parent::getExportFields(), [
+            'raw_data->latitude' => __('Latitudine'),
+            'raw_data->longitude' => __('Longitudine'),
+        ]);
     }
 }

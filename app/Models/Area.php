@@ -57,7 +57,7 @@ class Area extends Model
 
     public function hikingRoutes()
     {
-        return $this->belongsToMany(HikingRoute::class);
+        return $this->belongsToMany(HikingRoute::class, 'area_hiking_route');
     }
 
     /**
@@ -82,5 +82,36 @@ class Area extends Model
     public function parent()
     {
         return $this->province();
+    }
+
+    /**
+     * Scope a query to only include areas owned by a certain user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Model\User  $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOwnedBy($query, User $user)
+    {
+        // Verify region
+        if ($user->region) {
+            $query->whereHas('province.region', function ($q) use ($user) {
+                $q->where('id', $user->region->id);
+            });
+        }
+
+        // Verify provinces
+        if ($user->provinces->isNotEmpty()) {
+            $query->orWhereHas('provinces', function ($q) use ($user) {
+                $q->whereIn('id', $user->provinces->pluck('id'));
+            });
+        }
+
+        // Verify areas
+        if ($user->areas->isNotEmpty()) {
+            $query->orWhereIn('id', $user->areas->pluck('id'));
+        }
+
+        return $query;
     }
 }

@@ -20,7 +20,10 @@ class GeometryService
 
     public function geojsonToGeometry($geojson)
     {
-        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('".$geojson."'))) as g ")[0]->g;
+        if (is_array($geojson)) {
+            $geojson = json_encode($geojson);
+        }
+        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('" . $geojson . "'))) as g ")[0]->g;
     }
 
     /**
@@ -33,7 +36,7 @@ class GeometryService
     {
         return DB::select(DB::raw("select (
         ST_Multi(
-          ST_GeomFromGeoJSON('".$geojson."')
+          ST_GeomFromGeoJSON('" . $geojson . "')
         )
     ) as g "))[0]->g;
     }
@@ -48,7 +51,7 @@ class GeometryService
     {
         return DB::select(DB::raw("select (
         ST_Multi(
-          ST_Transform( ST_GeomFromGeoJSON('".$geojson."' ) , 3857 )
+          ST_Transform( ST_GeomFromGeoJSON('" . $geojson . "' ) , 3857 )
         )
     ) as g "))[0]->g;
     }
@@ -56,7 +59,7 @@ class GeometryService
     public function geometryTo4326Srid($geometry)
     {
         return DB::select(DB::raw("select (
-      ST_Transform('".$geometry."', 4326)
+      ST_Transform('" . $geometry . "', 4326)
     ) as g "))[0]->g;
     }
 
@@ -84,37 +87,35 @@ class GeometryService
                     }
                 }
             } else {
-                $content = json_decode($text);
+                $content = json_decode($text, true);
                 $isJson = json_last_error() === JSON_ERROR_NONE;
                 if ($isJson) {
-                    $contentType = $content->type;
+                    $contentType = $content['type'];
                 }
             }
 
             if ($contentType) {
                 switch ($contentType) {
                     case 'GeometryCollection':
-                        foreach ($content->geometries as $item) {
-                            if ($item->type == 'LineString') {
+                        foreach ($content['geometries'] as $item) {
+                            if ($item['type'] == 'LineString') {
                                 $contentGeometry = $item;
                             }
                         }
                         break;
                     case 'FeatureCollection':
-                        $contentGeometry = $content->features[0]->geometry;
+                        $contentGeometry = $content['features'][0]['geometry'];
                         break;
                     case 'LineString':
                         $contentGeometry = $content;
                         break;
                     default:
-                        $contentGeometry = $content->geometry;
+                        $contentGeometry = $content['geometry'];
                         break;
                 }
-
-                $geometry = json_encode($contentGeometry);
             }
 
-            return $geometry;
+            return $contentGeometry;
         }
     }
 
@@ -160,6 +161,6 @@ class GeometryService
     {
         $geometry = $this->geojsonToGeometry($geometry);
 
-        return DB::select("select ST_AsGeoJSON(ST_Centroid('".$geometry."')) as g")[0]->g;
+        return DB::select("select ST_AsGeoJSON(ST_Centroid('" . $geometry . "')) as g")[0]->g;
     }
 }

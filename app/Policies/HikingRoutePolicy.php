@@ -45,7 +45,7 @@ class HikingRoutePolicy
      */
     public function delete(User $user, HikingRoute $hikingRoute): bool
     {
-        return false;
+        return true;
     }
 
     /**

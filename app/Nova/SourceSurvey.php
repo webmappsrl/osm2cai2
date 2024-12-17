@@ -2,24 +2,15 @@
 
 namespace App\Nova;
 
-use App\Enums\UgcValidatedStatus;
-use App\Enums\UgcWaterFlowValidatedStatus;
-use App\Enums\ValidatedStatusEnum;
-use App\Nova\AbstractValidationResource;
-use App\Nova\Actions\DownloadUgcCsv;
-use App\Nova\Filters\ValidatedFilter;
-use App\Nova\Filters\WaterFlowValidatedFilter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Textarea;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Wm\MapPointNova3\MapPointNova3;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Boolean;
+use App\Enums\ValidatedStatusEnum;
+use App\Nova\Filters\ValidatedFilter;
+use App\Nova\AbstractValidationResource;
+use App\Nova\Filters\WaterFlowValidatedFilter;
 
 class SourceSurvey extends AbstractValidationResource
 {
@@ -30,20 +21,31 @@ class SourceSurvey extends AbstractValidationResource
 
     public static function getLabel(): string
     {
-        return 'Acqua Sorgente';
+        return __('Acqua Sorgente');
     }
 
     public function fields(Request $request)
     {
         $fields = parent::fields($request);
-
-        $flowRateField = Text::make('Portata L/s', 'raw_data->flow_rate')->resolveUsing(function ($value) {
+        $monitoringDateField = Date::make(__('Monitoring Date'), function () {
+            return $this->getRegisteredAtAttribute();
+        })->sortable()->readonly();
+        $temperatureField = Text::make(__('Temperature °C'), 'raw_data->temperature');
+        $conductivityField = Text::make(__('Conductivity microS/cm'), 'raw_data->conductivity');
+        $flowRateVolumeField = Text::make('Flow Rate/Volume', 'raw_data->range_volume')->hideFromIndex();
+        $flowRateFillTimeField = Text::make('Flow Rate/Fill Time', 'raw_data->range_time')->hideFromIndex();
+        $hasPhotosField = Boolean::make(__('Has Photos'), function () {
+            return $this->ugc_media->isNotEmpty();
+        })->hideFromDetail();
+        $flowRateField = Text::make(__('Flow Rate L/s'), 'raw_data->flow_rate')->resolveUsing(function ($value) {
             return $this->calculateFlowRate();
-        })->readonly()->help('Questo dato viene calcolato automaticamente in base ai dati inseriti');
-        $waterFlowRateValidatedField = Select::make('Validazione portata', 'water_flow_rate_validated')->options($this->validatedStatusOptions());
+        })->readonly()->help(__('This data is automatically calculated based on the entered data'));
+        $waterFlowRateValidatedField = Select::make(__('Flow Rate Validation'), 'water_flow_rate_validated')->options($this->validatedStatusOptions());
+        $noteField = Text::make(__('Notes'), 'note')->hideFromIndex();
 
-        $flowRateField->panel = 'ACQUA SORGENTE';
-        $waterFlowRateValidatedField->panel = 'ACQUA SORGENTE';
+        //the following fields are added to the ACQUA SORGENTE panel
+        $flowRateField->panel = __('ACQUA SORGENTE');
+        $waterFlowRateValidatedField->panel = __('ACQUA SORGENTE');
 
         $tabIndex = array_search(\DKulyk\Nova\Tabs::class, array_map('get_class', $fields));
         if ($tabIndex !== false) {
@@ -52,7 +54,7 @@ class SourceSurvey extends AbstractValidationResource
             array_push($tab->data, $waterFlowRateValidatedField);
         }
 
-        return $fields;
+        return array_merge($fields, [$monitoringDateField, $temperatureField, $conductivityField, $hasPhotosField, $flowRateVolumeField, $flowRateFillTimeField, $noteField]);
     }
 
     public function filters(Request $request)
@@ -60,19 +62,6 @@ class SourceSurvey extends AbstractValidationResource
         return [
             (new ValidatedFilter),
             (new WaterFlowValidatedFilter),
-        ];
-    }
-
-    /**
-     * Get the actions available for the resource.
-     *
-     * @param Request $request
-     * @return array
-     */
-    public function actions(Request $request)
-    {
-        return [
-            (new DownloadUgcCsv($this)),
         ];
     }
 
@@ -130,11 +119,11 @@ class SourceSurvey extends AbstractValidationResource
     public static function getExportFields(): array
     {
         return array_merge(parent::getExportFields(), [
-            'raw_data->flow_rate' => 'Portata L/s',
-            'raw_data->conductivity' => 'Conducibilità microS/cm',
-            'raw_data->temperature' => 'Temperatura °C',
-            'water_flow_rate_validated' => 'Validazione portata',
-            'note' => 'Note',
+            'raw_data->flow_rate' => __('Flow Rate L/s'),
+            'raw_data->conductivity' => __('Conductivity microS/cm'),
+            'raw_data->temperature' => __('Temperature °C'),
+            'water_flow_rate_validated' => __('Flow Rate Validation'),
+            'note' => __('Notes'),
         ]);
     }
 }

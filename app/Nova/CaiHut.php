@@ -3,6 +3,8 @@
 namespace App\Nova;
 
 use App\Nova\Actions\CacheMiturApi;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Nova\Fields\BelongsTo as BelongsToField;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
@@ -61,6 +63,7 @@ class CaiHut extends Resource
             Textarea::make('Description'),
             Text::make('Owner'),
             Number::make('Elevation'),
+            BelongsToField::make('Region'),
             MapPoint::make('geometry')->withMeta([
                 'center' => [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
@@ -70,7 +73,7 @@ class CaiHut extends Resource
                 'defaultZoom' => 13,
             ])->hideFromIndex(),
             Text::make('Aws Cached Data', function () {
-                return '<a href="'.$this->getPublicAwsUrl('wmfemitur').'" target="_blank" style="text-decoration:underline;">'.$this->getPublicAwsUrl('wmfemitur').'</a>';
+                return '<a href="' . $this->getPublicAwsUrl('wmfemitur') . '" target="_blank" style="text-decoration:underline;">' . $this->getPublicAwsUrl('wmfemitur') . '</a>';
             })->onlyOnDetail()->asHtml(),
 
         ];
