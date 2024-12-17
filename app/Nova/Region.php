@@ -67,7 +67,7 @@ class Region extends Resource
             return $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
 
-        return $query;
+        return $query->ownedBy(auth()->user());
     }
 
     /**

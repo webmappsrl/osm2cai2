@@ -6,7 +6,7 @@ use Laravel\Nova\Filters\Filter;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class HikingRoutesClubFilter extends Filter
+class ClubFilter extends Filter
 {
     /**
      * The filter's component.

@@ -14,6 +14,7 @@ use App\Nova\Filters\RegionFilter;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\DownloadShape;
+use App\Nova\Filters\ProvinceFilter;
 use App\Nova\Actions\DownloadGeojson;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -70,13 +71,7 @@ class Province extends Resource
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
 
-        if (auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent')) {
-            return $query;
-        }
-
-        $ids = auth()->user()->provinces()->pluck('id');
-
-        return $query->whereIn('id', $ids);
+        return $query->ownedBy(auth()->user());
     }
 
     /**
@@ -202,34 +197,40 @@ class Province extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                $this->getSdaProvinceCard(1, $numbers[1]),
-                $this->getSdaProvinceCard(2, $numbers[2]),
-                $this->getSdaProvinceCard(3, $numbers[3]),
-                $this->getSdaProvinceCard(4, $numbers[4]),
+                $this->getSdaProvinceCard(1, $numbers[1], $request),
+                $this->getSdaProvinceCard(2, $numbers[2], $request),
+                $this->getSdaProvinceCard(3, $numbers[3], $request),
+                $this->getSdaProvinceCard(4, $numbers[4], $request),
             ];
         }
         return [];
     }
 
-    private function getSdaProvinceCard(int $sda, int $num): HtmlCard
+    private function getSdaProvinceCard(int $sda, int $num, NovaRequest $request): HtmlCard
     {
         $exploreUrl = '';
         if ($num > 0) {
-            $resourceId = request()->get('resourceId');
+            $resourceId = $request->get('resourceId');
 
-            //build filters array
-            $filters = [
-                ['App\Nova\Filters\RegionFilter' => ''],
-                ['App\Nova\Filters\HikingRoutesProvinceFilter' => $resourceId],
-                ['App\Nova\Filters\HikingRoutesAreaFilter' => ''],
-                ['App\Nova\Filters\HikingRoutesSectorFilter' => ''],
-                ['App\Nova\Filters\HikingRoutesClubFilter' => ''],
-            ];
+            // Get filters from HikingRoute resource
+            $hikingRouteResource = new \App\Nova\HikingRoute;
+            $availableFilters = collect($hikingRouteResource->filters($request))
+                ->map(function ($filter) {
+                    return [get_class($filter) => ''];
+                })
+                ->toArray();
 
-            //encode filters array in base64
-            $filter = base64_encode(json_encode($filters));
+            // Set the value only for the province filter
+            foreach ($availableFilters as &$filter) {
+                if (key($filter) === ProvinceFilter::class) {
+                    $filter[ProvinceFilter::class] = $resourceId;
+                }
+            }
 
-            //build url
+            // Encode filters to base64
+            $filter = base64_encode(json_encode($availableFilters));
+
+            // Build the URL
             $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
             $exploreUrl = $link;
         }

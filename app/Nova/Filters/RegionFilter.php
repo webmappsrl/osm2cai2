@@ -27,9 +27,18 @@ class RegionFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        if ($query->getModel() instanceof \App\Models\Province) {
+        $model = $query->getModel();
+
+        if ($model instanceof \App\Models\Province) {
             return $query->where('region_id', $value);
         }
+
+        if ($model instanceof \App\Models\Sector) {
+            return $query->whereHas('area.province', function ($query) use ($value) {
+                $query->where('region_id', $value);
+            });
+        }
+
         return $query->whereHas('regions', function ($query) use ($value) {
             $query->where('region_id', $value);
         });

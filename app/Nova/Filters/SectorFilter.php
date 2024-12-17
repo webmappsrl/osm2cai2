@@ -2,11 +2,11 @@
 
 namespace App\Nova\Filters;
 
-use App\Models\Province;
+use App\Models\Sector;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class HikingRoutesProvinceFilter extends Filter
+class SectorFilter extends Filter
 {
     /**
      * The filter's component.
@@ -15,7 +15,7 @@ class HikingRoutesProvinceFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Province';
+    public $name = 'Sector';
 
     /**
      * Apply the filter to the given query.
@@ -27,8 +27,8 @@ class HikingRoutesProvinceFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query->whereHas('provinces', function ($query) use ($value) {
-            $query->where('province_id', $value);
+        return $query->whereHas('sectors', function ($query) use ($value) {
+            $query->where('sector_id', $value);
         });
     }
 
@@ -42,13 +42,19 @@ class HikingRoutesProvinceFilter extends Filter
     {
         $options = [];
         if (auth()->user()->hasRole('Regional Referent')) {
-            $provinces = Province::where('region_id', auth()->user()->region->id)->orderBy('name')->get();
-            foreach ($provinces as $item) {
-                $options[$item->name] = $item->id;
+            $sectors_id = [];
+            foreach (auth()->user()->region->provinces as $province) {
+                foreach ($province->areas as $area) {
+                    $sectors_id = array_merge($sectors_id, $area->sectors->pluck('id')->toArray());
+                }
+            }
+            $sectors = Sector::whereIn('id', $sectors_id)->orderBy('full_code')->get();
+            foreach ($sectors as $item) {
+                $options[$item->full_code] = $item->id;
             }
         } else {
-            foreach (Province::orderBy('name')->get() as $item) {
-                $options[$item->name] = $item->id;
+            foreach (Sector::orderBy('full_code')->get() as $item) {
+                $options[$item->full_code] = $item->id;
             }
         }
         return $options;

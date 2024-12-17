@@ -39,19 +39,19 @@ class SectorsColumnsLens extends Lens
         return [
             Text::make(__('Codice'), 'name')->sortable(),
             Text::make(__('Name'), 'human_name')
-               ->sortable(),
+                ->sortable(),
             Text::make(__('Code'), 'code')->sortable(),
-            Text::make(__('Responsabili'),'manager'),
-            Number::make(__('Numero Atteso'),'num_expected'),
+            Text::make(__('Responsabili'), 'manager'),
+            Number::make(__('Numero Atteso'), 'num_expected'),
             Text::make(__('Full code'), 'full_code')->sortable(),
             Text::make(__('Region'), 'area_id', function ($value) {
                 return $this->area->province->region->name ?? '';
             }),
             Text::make(__('Province'), 'area_id', function () {
-                return $this->area->province->name;
+                return $this->area->province->name ?? '';
             }),
             Text::make(__('Area'), 'area_id', function () {
-                return $this->area->name;
+                return $this->area->name ?? '';
             }),
         ];
     }
@@ -88,62 +88,67 @@ class SectorsColumnsLens extends Lens
     {
         return parent::actions($request);
     }
-
 }
 
 
-class NoResponsabileSectorsColumnsLens extends SectorsColumnsLens {
+class NoResponsabileSectorsColumnsLens extends SectorsColumnsLens
+{
 
-    public function name(){
+    public function name()
+    {
         return 'Senza colonna resposabile';
     }
-    public function uriKey(){
+    public function uriKey()
+    {
         return 'no-resposabile';
     }
-    public function fields( $request )
+    public function fields($request)
     {
-        $fields = collect( parent::fields($request) );
-        return $fields->filter( function( $e ) {
+        $fields = collect(parent::fields($request));
+        return $fields->filter(function ($e) {
             return $e->attribute != 'manager';
-        }  )->all();
+        })->all();
     }
-
 }
 
-class NoNameSectorsColumnsLens extends SectorsColumnsLens {
+class NoNameSectorsColumnsLens extends SectorsColumnsLens
+{
 
-    public function name(){
+    public function name()
+    {
         return 'Senza colonna nome';
     }
-    public function uriKey(){
+    public function uriKey()
+    {
         return 'no-name';
     }
-    public function fields( $request )
+    public function fields($request)
     {
-        $fields = collect( parent::fields($request) );
-        return $fields->filter( function( $e ) {
+        $fields = collect(parent::fields($request));
+        return $fields->filter(function ($e) {
             return $e->attribute != 'name' && $e->attribute != 'human_name';
-        }  )->all();
+        })->all();
     }
-
 }
 
 
 
-class NoNumExpectedColumnsLens extends SectorsColumnsLens {
+class NoNumExpectedColumnsLens extends SectorsColumnsLens
+{
 
-    public function name(){
+    public function name()
+    {
         return 'Senza colonna numero atteso';
     }
-    public function uriKey(){
+    public function uriKey()
+    {
         return 'no-num-expected';
     }
-    public function fields( $request )
+    public function fields($request)
     {
-        $fields = collect( parent::fields($request) );
-        return $fields->filter( function( $e ) {
+        $fields = collect(parent::fields($request));
+        return $fields->filter(function ($e) {
             return $e->attribute != 'num_expected';
-        }  )->all();
+        })->all();
     }
-
 }

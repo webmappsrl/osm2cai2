@@ -109,6 +109,19 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     }
 
     /**
+     * Scope a query to only include models owned by a certain user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Model\User  $type
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOwnedBy($query, User $user)
+    {
+        $userModelId = $user->region ? $user->region->id : 0;
+        return $query->where('id', $userModelId);
+    }
+
+    /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
     public static function getOsmfeaturesEndpoint(): string

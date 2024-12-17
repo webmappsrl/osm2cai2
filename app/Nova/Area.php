@@ -60,9 +60,7 @@ class Area extends Resource
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
 
-        return $query->whereHas('users', function ($query) {
-            $query->where('users.id', auth()->id());
-        });
+        return $query->ownedBy(auth()->user());
     }
 
     /**

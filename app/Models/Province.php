@@ -148,4 +148,28 @@ class Province extends Model implements OsmfeaturesSyncableInterface
 
         return $result;
     }
+
+    /**
+     * Scope a query to only include provinces owned by a certain user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Model\User  $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOwnedBy($query, User $user)
+    {
+        // Verify region
+        if ($user->region) {
+            $query->whereHas('region', function ($q) use ($user) {
+                $q->where('id', $user->region->id);
+            });
+        }
+
+        // Verify provinces
+        if ($user->provinces->isNotEmpty()) {
+            $query->orWhereIn('id', $user->provinces->pluck('id'));
+        }
+
+        return $query;
+    }
 }

@@ -8,13 +8,12 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Lenses\Lens;
 use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Http\Requests\LensRequest;
-use App\Nova\Filters\HikingRoutesAreaFilter;
+use App\Nova\Filters\AreaFilter;
+use App\Nova\Filters\ClubFilter;
 use App\Nova\Filters\RegionFilter;
-use App\Nova\Filters\HikingRoutesSectorFilter;
-use App\Nova\Filters\HikingRoutesClubFilter;
-use App\Nova\Filters\HikingRoutesProvinceFilter;
-
+use App\Nova\Filters\SectorFilter;
+use App\Nova\Filters\ProvinceFilter;
+use Laravel\Nova\Http\Requests\LensRequest;
 
 class HikingRoutesStatusLens extends Lens
 {
@@ -124,18 +123,18 @@ class HikingRoutesStatusLens extends Lens
     {
         if (auth()->user()->hasRole('Regional Referent')) {
             return [
-                (new HikingRoutesProvinceFilter()),
-                (new HikingRoutesAreaFilter()),
-                (new HikingRoutesSectorFilter()),
-                (new HikingRoutesClubFilter()),
+                (new ProvinceFilter()),
+                (new AreaFilter()),
+                (new SectorFilter()),
+                (new ClubFilter()),
             ];
         } else {
             return [
                 (new RegionFilter()),
-                (new HikingRoutesProvinceFilter()),
-                (new HikingRoutesAreaFilter()),
-                (new HikingRoutesSectorFilter()),
-                (new HikingRoutesClubFilter()),
+                (new ProvinceFilter()),
+                (new AreaFilter()),
+                (new SectorFilter()),
+                (new ClubFilter()),
             ];
         }
     }

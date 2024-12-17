@@ -13,13 +13,17 @@ use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use App\Nova\Filters\SDAFilter;
 use App\Nova\Actions\ImportPois;
+use App\Nova\Filters\AreaFilter;
 use Laravel\Nova\Fields\Boolean;
 use App\Nova\Actions\CreateIssue;
 use App\Nova\Actions\OverpassMap;
 use App\Nova\Filters\ScoreFilter;
 use Laravel\Nova\Fields\Textarea;
+use App\Nova\Filters\RegionFilter;
+use App\Nova\Filters\SectorFilter;
 use Eminiarts\Tabs\Traits\HasTabs;
 use App\Nova\Actions\CacheMiturApi;
+use App\Nova\Filters\ProvinceFilter;
 use App\Nova\Cards\Osm2caiStatusCard;
 use App\Nova\Filters\CaiHutsHRFilter;
 use App\Nova\Actions\SectorRefactoring;
@@ -28,17 +32,13 @@ use App\Nova\Filters\DeletedOnOsmFilter;
 use App\Nova\Filters\CorrectGeometryFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Actions\PercorsoFavoritoAction;
-use App\Nova\Filters\HikingRoutesAreaFilter;
 use App\Nova\Lenses\HikingRoutesStatus0Lens;
 use App\Nova\Lenses\HikingRoutesStatus1Lens;
 use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use App\Nova\Actions\DeleteHikingRouteAction;
-use App\Nova\Filters\RegionFilter;
-use App\Nova\Filters\HikingRoutesSectorFilter;
 use App\Nova\Actions\ValidateHikingRouteAction;
-use App\Nova\Filters\HikingRoutesProvinceFilter;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\UploadValidationRawDataAction;
 use App\Nova\Actions\RevertValidateHikingRouteAction;
@@ -191,9 +191,9 @@ class HikingRoute extends OsmfeaturesResource
     public function filters(NovaRequest $request)
     {
         $regionalReferentFilters = [
-            (new HikingRoutesProvinceFilter()),
-            (new HikingRoutesAreaFilter()),
-            (new HikingRoutesSectorFilter()),
+            (new ProvinceFilter()),
+            (new AreaFilter()),
+            (new SectorFilter()),
             (new DeletedOnOsmFilter()),
             (new RegionFavoriteHikingRouteFilter()),
         ];
@@ -211,9 +211,9 @@ class HikingRoute extends OsmfeaturesResource
         }
         $specificFilters = [
             (new RegionFilter),
-            (new HikingRoutesProvinceFilter),
-            (new HikingRoutesAreaFilter),
-            (new HikingRoutesSectorFilter),
+            (new ProvinceFilter),
+            (new AreaFilter),
+            (new SectorFilter),
             (new DeletedOnOsmFilter),
             (new RegionFavoriteHikingRouteFilter),
             (new IssueStatusFilter),

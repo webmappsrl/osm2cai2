@@ -32,14 +32,14 @@ class Sector extends Model
         return $this->belongsTo(Area::class);
     }
 
-    public function users()
+    public function moderators()
     {
         return $this->belongsToMany(User::class);
     }
 
     public function hikingRoutes()
     {
-        return $this->belongsToMany(HikingRoute::class);
+        return $this->belongsToMany(HikingRoute::class, 'hiking_route_sector');
     }
 
     /**
@@ -57,6 +57,45 @@ class Sector extends Model
     {
         return $this->hikingRoutes();
     }
+
+    /**
+     * Scope a query to only include models owned by a certain user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Model\User  $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOwnedBy($query, User $user)
+    {
+        // Verify region
+        if ($user->region) {
+            $query->whereHas('area.province.region', function ($q) use ($user) {
+                $q->where('id', $user->region->id);
+            });
+        }
+
+        // Verify provinces
+        if ($user->provinces->isNotEmpty()) {
+            $query->orWhereHas('area.province', function ($q) use ($user) {
+                $q->whereIn('id', $user->provinces->pluck('id'));
+            });
+        }
+
+        // Verify areas
+        if ($user->areas->isNotEmpty()) {
+            $query->orWhereHas('area', function ($q) use ($user) {
+                $q->whereIn('id', $user->areas->pluck('id'));
+            });
+        }
+
+        // Verify sectors
+        if ($user->sectors->isNotEmpty()) {
+            $query->orWhereIn('id', $user->sectors->pluck('id'));
+        }
+
+        return $query;
+    }
+
 
     /**
      * Generates a complete GeoJSON representation of all hiking routes in the sector
@@ -102,7 +141,7 @@ class Sector extends Model
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 
