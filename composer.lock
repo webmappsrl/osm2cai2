@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "882f553dcc20ef88a946aa26617e6355",
+    "content-hash": "6f361ab421ee207ca8bedc08d7e5115d",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -293,25 +293,25 @@
         },
         {
             "name": "brick/math",
-            "version": "0.12.1",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "f510c0a40911935b77b86859eb5223d58d660df1"
+                "reference": "0ad82ce168c82ba30d1c01ec86116ab52f589478"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/f510c0a40911935b77b86859eb5223d58d660df1",
-                "reference": "f510c0a40911935b77b86859eb5223d58d660df1",
+                "url": "https://api.github.com/repos/brick/math/zipball/0ad82ce168c82ba30d1c01ec86116ab52f589478",
+                "reference": "0ad82ce168c82ba30d1c01ec86116ab52f589478",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.1"
+                "php": "^8.0"
             },
             "require-dev": {
                 "php-coveralls/php-coveralls": "^2.2",
-                "phpunit/phpunit": "^10.1",
-                "vimeo/psalm": "5.16.0"
+                "phpunit/phpunit": "^9.0",
+                "vimeo/psalm": "5.0.0"
             },
             "type": "library",
             "autoload": {
@@ -331,17 +331,12 @@
                 "arithmetic",
                 "bigdecimal",
                 "bignum",
-                "bignumber",
                 "brick",
-                "decimal",
-                "integer",
-                "math",
-                "mathematics",
-                "rational"
+                "math"
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.12.1"
+                "source": "https://github.com/brick/math/tree/0.11.0"
             },
             "funding": [
                 {
@@ -349,33 +344,34 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-11-29T23:19:16+00:00"
+            "time": "2023-01-15T23:15:59+00:00"
         },
         {
             "name": "brick/money",
-            "version": "0.10.0",
+            "version": "0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/money.git",
-                "reference": "08b0198a05c6eeac416486da053cbdc02ddff56c"
+                "reference": "25f484a347756b7f3fbe7ad63ed9ad2d87b20004"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/money/zipball/08b0198a05c6eeac416486da053cbdc02ddff56c",
-                "reference": "08b0198a05c6eeac416486da053cbdc02ddff56c",
+                "url": "https://api.github.com/repos/brick/money/zipball/25f484a347756b7f3fbe7ad63ed9ad2d87b20004",
+                "reference": "25f484a347756b7f3fbe7ad63ed9ad2d87b20004",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "~0.12.0",
-                "php": "^8.1"
+                "brick/math": "~0.10.1 || ~0.11.0",
+                "ext-json": "*",
+                "php": "^8.0"
             },
             "require-dev": {
-                "brick/varexporter": "~0.4.0",
+                "brick/varexporter": "~0.3.0",
                 "ext-dom": "*",
                 "ext-pdo": "*",
                 "php-coveralls/php-coveralls": "^2.2",
-                "phpunit/phpunit": "^10.1",
-                "vimeo/psalm": "5.26.1"
+                "phpunit/phpunit": "^9.4.3",
+                "vimeo/psalm": "5.14.1"
             },
             "suggest": {
                 "ext-intl": "Required to format Money objects"
@@ -398,7 +394,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/money/issues",
-                "source": "https://github.com/brick/money/tree/0.10.0"
+                "source": "https://github.com/brick/money/tree/0.8.1"
             },
             "funding": [
                 {
@@ -406,7 +402,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-10-12T21:33:29+00:00"
+            "time": "2023-09-23T21:17:11+00:00"
         },
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -2649,20 +2645,20 @@
         },
         {
             "name": "laravel/nova",
-            "version": "4.35.5",
+            "version": "4.33.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:laravel/nova.git",
-                "reference": "3ff66e8325fb6e19624c26b77084f25c6c803a0b"
+                "reference": "930edf8a6a04f45f3a85671ef276887c4ff45e5d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://nova.laravel.com/dist/laravel/nova/laravel-nova-3ff66e8325fb6e19624c26b77084f25c6c803a0b-zip-b8a291.zip",
-                "reference": "3ff66e8325fb6e19624c26b77084f25c6c803a0b",
-                "shasum": "b229f7175b1941d98ac2c106ceb2ec0adaa8a99f"
+                "url": "https://nova.laravel.com/dist/laravel/nova/laravel-nova-930edf8a6a04f45f3a85671ef276887c4ff45e5d-zip-a38dba.zip",
+                "reference": "930edf8a6a04f45f3a85671ef276887c4ff45e5d",
+                "shasum": "1086bb5c57ffed7defe061ea6f92bd8db4cb6d57"
             },
             "require": {
-                "brick/money": "^0.5|^0.6|^0.7|^0.8|^0.9|^0.10",
+                "brick/money": "^0.5.0|^0.6.0|^0.7.0|^0.8.0",
                 "doctrine/dbal": "^2.13.3|^3.1.2|^4.0",
                 "ext-json": "*",
                 "illuminate/support": "^8.83.4|^9.3.1|^10.0|^11.0",
@@ -2769,9 +2765,9 @@
                 "laravel"
             ],
             "support": {
-                "source": "https://github.com/laravel/nova/tree/v4.35.5"
+                "source": "https://github.com/laravel/nova/tree/v4.33.0"
             },
-            "time": "2024-11-21T14:25:52+00:00"
+            "time": "2024-03-12T13:13:51+00:00"
         },
         {
             "name": "laravel/prompts",
@@ -4623,20 +4619,20 @@
         },
         {
             "name": "nova-kit/nova-packages-tool",
-            "version": "v1.17.4",
+            "version": "v1.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nova-kit/nova-packages-tool.git",
-                "reference": "9d748ba50bfd708d132da01a76b605bdece01305"
+                "reference": "a1edba0116c8f92fda89bf7ee7ef6ae59912a585"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nova-kit/nova-packages-tool/zipball/9d748ba50bfd708d132da01a76b605bdece01305",
-                "reference": "9d748ba50bfd708d132da01a76b605bdece01305",
+                "url": "https://api.github.com/repos/nova-kit/nova-packages-tool/zipball/a1edba0116c8f92fda89bf7ee7ef6ae59912a585",
+                "reference": "a1edba0116c8f92fda89bf7ee7ef6ae59912a585",
                 "shasum": ""
             },
             "require": {
-                "laravel/nova": ">=4.35.5 <4.36.0",
+                "laravel/nova": ">=4.33.0 <4.34.0",
                 "php": "^7.3 || ^8.0"
             },
             "require-dev": {
@@ -4649,9 +4645,6 @@
                     "providers": [
                         "NovaKit\\NovaPackagesTool\\LaravelServiceProvider"
                     ]
-                },
-                "branch-alias": {
-                    "dev-develop": "2.x-dev"
                 }
             },
             "autoload": {
@@ -4671,10 +4664,10 @@
             ],
             "description": "Tool for Laravel Nova Packages Development",
             "support": {
-                "source": "https://github.com/nova-kit/nova-packages-tool/tree/v1.17.4"
+                "source": "https://github.com/nova-kit/nova-packages-tool/tree/v1.15.0"
             },
             "abandoned": "laravel/nova-devtool",
-            "time": "2024-11-22T11:45:29+00:00"
+            "time": "2024-03-12T14:24:28+00:00"
         },
         {
             "name": "nunomaduro/termwind",
@@ -4765,16 +4758,16 @@
         },
         {
             "name": "openspout/openspout",
-            "version": "v4.28.2",
+            "version": "v4.28.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openspout/openspout.git",
-                "reference": "d6dd654b5db502f28c5773edfa785b516745a142"
+                "reference": "12b5eddcc230a97a9a67a722ad75c247e1a16750"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openspout/openspout/zipball/d6dd654b5db502f28c5773edfa785b516745a142",
-                "reference": "d6dd654b5db502f28c5773edfa785b516745a142",
+                "url": "https://api.github.com/repos/openspout/openspout/zipball/12b5eddcc230a97a9a67a722ad75c247e1a16750",
+                "reference": "12b5eddcc230a97a9a67a722ad75c247e1a16750",
                 "shasum": ""
             },
             "require": {
@@ -4794,7 +4787,7 @@
                 "phpstan/phpstan": "^2.0.3",
                 "phpstan/phpstan-phpunit": "^2.0.1",
                 "phpstan/phpstan-strict-rules": "^2",
-                "phpunit/phpunit": "^11.4.4"
+                "phpunit/phpunit": "^11.5.0"
             },
             "suggest": {
                 "ext-iconv": "To handle non UTF-8 CSV files (if \"php-mbstring\" is not already installed or is too limited)",
@@ -4842,7 +4835,7 @@
             ],
             "support": {
                 "issues": "https://github.com/openspout/openspout/issues",
-                "source": "https://github.com/openspout/openspout/tree/v4.28.2"
+                "source": "https://github.com/openspout/openspout/tree/v4.28.3"
             },
             "funding": [
                 {
@@ -4854,7 +4847,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-12-06T06:17:37+00:00"
+            "time": "2024-12-17T11:28:11+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",

@@ -41,7 +41,7 @@
         "webmapp/wm-osmfeatures": "*",
         "wm/map-multi-linestring": "^0.0.10",
         "wm/map-multi-polygon": "v0.0.4",
-        "wm/map-point": "^0.0.9",
+        "wm/map-point": "v0.0.10",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },
