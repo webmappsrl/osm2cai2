@@ -29,7 +29,7 @@ class EcPoiPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->getTerritorialRole() !== 'unknown';
     }
 
     /**
@@ -37,7 +37,7 @@ class EcPoiPolicy
      */
     public function update(User $user, EcPoi $EcPoi): bool
     {
-        return false;
+        return $user->getTerritorialRole() !== 'unknown';
     }
 
     /**
@@ -45,7 +45,7 @@ class EcPoiPolicy
      */
     public function delete(User $user, EcPoi $EcPoi): bool
     {
-        return false;
+        return $user->getTerritorialRole() !== 'unknown';
     }
 
     /**
@@ -53,7 +53,7 @@ class EcPoiPolicy
      */
     public function restore(User $user, EcPoi $EcPoi): bool
     {
-        return false;
+        return $user->getTerritorialRole() !== 'unknown';
     }
 
     /**
@@ -61,6 +61,6 @@ class EcPoiPolicy
      */
     public function forceDelete(User $user, EcPoi $EcPoi): bool
     {
-        return false;
+        return $user->getTerritorialRole() !== 'unknown';
     }
 }
