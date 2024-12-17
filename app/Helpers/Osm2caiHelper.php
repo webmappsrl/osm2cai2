@@ -20,7 +20,7 @@ class Osm2caiHelper
         };
         $osmid = substr($id, 1);
 
-        return 'https://www.openstreetmap.org/' . $finalType . '/' . $osmid;
+        return 'https://www.openstreetmap.org/'.$finalType.'/'.$osmid;
     }
 
     /**
@@ -63,10 +63,10 @@ class Osm2caiHelper
      */
     public static function getOsmfeaturesDataForNovaDetail(string $data): string
     {
-        return cache()->remember('osmfeatures_data_' . md5($data), 60 * 60 * 24, function () use ($data) {
+        return cache()->remember('osmfeatures_data_'.md5($data), 60 * 60 * 24, function () use ($data) {
             $data = json_decode($data, true);
 
-            if (!is_array($data)) {
+            if (! is_array($data)) {
                 $data = json_decode($data, true);
             }
 
@@ -83,7 +83,6 @@ class Osm2caiHelper
             return json_encode($dataOrdered, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         });
     }
-
 
     /**
      * It returns RGB string for SAL color according to the following rules

@@ -99,7 +99,7 @@ class CalculateIntersectionsJob implements ShouldQueue
 
             DB::table($pivotTable)->insert($pivotRecords);
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections for model ' . $baseModel->getTable() . ': ' . $e->getMessage());
+            Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
             throw $e;
         }
     }
@@ -176,7 +176,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             $model = new $model();
         }
 
-        return Str::singular($model->getTable()) . '_id';
+        return Str::singular($model->getTable()).'_id';
     }
 
     /**
@@ -184,7 +184,7 @@ class CalculateIntersectionsJob implements ShouldQueue
      */
     private function calculateIntersectionPercentage($baseModel, $intersectingModel): float
     {
-        if (!$intersectingModel) {
+        if (! $intersectingModel) {
             throw new \Exception('Intersecting model not found');
         }
 
@@ -215,7 +215,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             ", [$intersectingModel->id, $baseModel->id, $intersectingModel->id]);
         } else {
             // case for multipolygons
-            return DB::select("
+            return DB::select('
                 WITH intersection AS (
                     SELECT ST_Intersection(
                         ST_Transform(?, 3857),
@@ -227,7 +227,7 @@ class CalculateIntersectionsJob implements ShouldQueue
                     THEN (ST_Area((SELECT geom FROM intersection)) / ST_Area(ST_Transform(?, 3857))) * 100
                     ELSE 0 
                 END as percentage
-            ", [
+            ', [
                 $baseModel->geometry,
                 $intersectingModel->geometry,
                 $baseModel->geometry,

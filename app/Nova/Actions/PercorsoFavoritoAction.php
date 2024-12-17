@@ -3,15 +3,15 @@
 namespace App\Nova\Actions;
 
 use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Actions\Action;
-use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Textarea;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\ActionFields;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\File;
 use Laravel\Nova\Fields\Image;
+use Laravel\Nova\Fields\Textarea;
 
 class PercorsoFavoritoAction extends Action
 {
@@ -48,6 +48,7 @@ class PercorsoFavoritoAction extends Action
         $id = $_REQUEST['resourceId'] ?? $_REQUEST['resources'] ?? null;
         $hr = \App\Models\HikingRoute::find(intval($id));
         $region_favorite = $hr->region_favorite ?? false;
+
         return [
             Boolean::make(__('Favorite Route'), 'favorite')
                 ->default($region_favorite ?? false),
@@ -55,7 +56,7 @@ class PercorsoFavoritoAction extends Action
                 ->help(__('For correct upload use files smaller than 2MB')),
             Textarea::make(__('Description'), 'description_cai_it')
                 ->rules('max:10000') // 10,000 characters limit
-                ->default(\App\Models\HikingRoute::find(intval($id))->description_cai_it ?? '')
+                ->default(\App\Models\HikingRoute::find(intval($id))->description_cai_it ?? ''),
         ];
     }
 }

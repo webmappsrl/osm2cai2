@@ -2,8 +2,8 @@
 
 namespace App\Nova\Filters;
 
-use Laravel\Nova\Filters\Filter;
 use Illuminate\Support\Facades\DB;
+use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class ClubFilter extends Filter
@@ -20,7 +20,7 @@ class ClubFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -35,7 +35,7 @@ class ClubFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function options(NovaRequest $request)

@@ -4,8 +4,8 @@ namespace App\Nova\Filters;
 
 use App\Models\Province;
 use Illuminate\Http\Request;
-use Laravel\Nova\Filters\Filter;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Nova\Filters\Filter;
 
 class ProvinceFilter extends Filter
 {
@@ -26,7 +26,7 @@ class ProvinceFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param mixed $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -38,13 +38,14 @@ class ProvinceFilter extends Filter
                 $query->where('province_id', $value);
             });
         }
+
         return $query->where('province_id', $value);
     }
 
     /**
      * Get the filter's available options.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function options(Request $request)
@@ -60,6 +61,7 @@ class ProvinceFilter extends Filter
                 $options[$item->name] = $item->id;
             }
         }
+
         return $options;
     }
 }

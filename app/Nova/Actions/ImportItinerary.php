@@ -2,19 +2,19 @@
 
 namespace App\Nova\Actions;
 
-use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\Text;
 use App\Http\Facades\OsmClient;
 use App\Models\Itinerary;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Actions\Action;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Fields\ActionFields;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Text;
 
 class ImportItinerary extends Action
 {
@@ -32,7 +32,7 @@ class ImportItinerary extends Action
         } else {
             return Action::danger(__('No IDs provided.'));
         }
-        if (!$fields['itinerary_name']) {
+        if (! $fields['itinerary_name']) {
             return Action::danger(__('No itinerary name provided.'));
         }
         $itinerary = Itinerary::firstOrCreate([
@@ -44,16 +44,19 @@ class ImportItinerary extends Action
                 $hikingRoutes = DB::table('hiking_routes')->whereIn('relation_id', $ids)->get();
                 $hikingRoutesIds = $hikingRoutes->pluck('id')->toArray();
                 $itinerary->hikingRoutes()->attach($hikingRoutesIds);
+
                 return Action::message(__('Itinerary created successfully!'));
-            } else if ($fields['import_source'] == 'OSM2CAI') {
+            } elseif ($fields['import_source'] == 'OSM2CAI') {
                 $hikingRoutes = DB::table('hiking_routes')->whereIn('id', $ids)->get();
                 $itinerary->hikingRoutes()->attach($ids);
+
                 return Action::message(__('Itinerary created successfully!'));
             } else {
                 return Action::danger(__('Invalid import source.'));
             }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
+
             return Action::danger(__('Error creating itinerary.'));
         }
     }
@@ -71,7 +74,7 @@ class ImportItinerary extends Action
                 ->help(__('Comma separated IDs e.g. 123,456,789')),
 
             Text::make(__('Itinerary Name'), 'itinerary_name')
-                ->help(__('Name of the itinerary to create'))
+                ->help(__('Name of the itinerary to create')),
         ];
     }
 }

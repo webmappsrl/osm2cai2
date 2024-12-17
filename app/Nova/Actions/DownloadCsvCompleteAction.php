@@ -19,14 +19,16 @@ class DownloadCsvCompleteAction extends Action
     }
 
     public $showOnDetail = true;
+
     public $showOnIndex = false;
+
     public $withoutConfirmation = true;
 
     /**
      * Perform the action on the given models.
      *
-     * @param \Laravel\Nova\Fields\ActionFields $fields
-     * @param \Illuminate\Support\Collection $models
+     * @param ActionFields $fields
+     * @param Collection $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -36,7 +38,7 @@ class DownloadCsvCompleteAction extends Action
         $id = $model->id;
         $name = $model->name;
 
-        return Action::redirect(url('api/csv/' . $type . '/' . $id));
+        return Action::redirect(url('api/csv/'.$type.'/'.$id));
     }
 
     /**

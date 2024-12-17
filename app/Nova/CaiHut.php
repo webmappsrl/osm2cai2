@@ -4,8 +4,8 @@ namespace App\Nova;
 
 use App\Nova\Actions\CacheMiturApi;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Laravel\Nova\Fields\BelongsTo as BelongsToField;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\BelongsTo as BelongsToField;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
@@ -73,7 +73,7 @@ class CaiHut extends Resource
                 'defaultZoom' => 13,
             ])->hideFromIndex(),
             Text::make('Aws Cached Data', function () {
-                return '<a href="' . $this->getPublicAwsUrl('wmfemitur') . '" target="_blank" style="text-decoration:underline;">' . $this->getPublicAwsUrl('wmfemitur') . '</a>';
+                return '<a href="'.$this->getPublicAwsUrl('wmfemitur').'" target="_blank" style="text-decoration:underline;">'.$this->getPublicAwsUrl('wmfemitur').'</a>';
             })->onlyOnDetail()->asHtml(),
 
         ];

@@ -96,7 +96,6 @@ class Sector extends Model
         return $query;
     }
 
-
     /**
      * Generates a complete GeoJSON representation of all hiking routes in the sector
      * that have a valid osm2cai_status (1-4).
@@ -141,7 +140,7 @@ class Sector extends Model
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 

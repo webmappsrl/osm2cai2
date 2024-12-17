@@ -118,6 +118,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     public function scopeOwnedBy($query, User $user)
     {
         $userModelId = $user->region ? $user->region->id : 0;
+
         return $query->where('id', $userModelId);
     }
 
@@ -155,7 +156,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Region ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Region '.$osmfeaturesId);
 
             return;
         }
@@ -167,7 +168,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Region ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Region '.$osmfeaturesId);
         }
 
         // Execute the update only if there are data to update
@@ -225,7 +226,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
                     'osm_id' => $osmfeaturesData['properties']['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
+                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,
 
@@ -275,9 +276,10 @@ class Region extends Model implements OsmfeaturesSyncableInterface
     {
         return $this->provinces();
     }
+
     /**
      * Get IDs of all child provinces.
-     * 
+     *
      * Alias method that calls provincesIds().
      *
      * @return array Array of province IDs belonging to this region
@@ -289,7 +291,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     /**
      * Get IDs of all provinces belonging to this region.
-     * 
+     *
      * Retrieves the IDs of all provinces associated with this region
      * through the provinces relationship.
      *
@@ -302,7 +304,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     /**
      * Get all area IDs associated with this region through its provinces.
-     * 
+     *
      * Iterates through all provinces belonging to this region and collects their area IDs.
      * The IDs are merged and duplicates are removed.
      *
@@ -320,7 +322,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     /**
      * Get all sector IDs associated with this region through its provinces.
-     * 
+     *
      * Iterates through all provinces belonging to this region and collects their sector IDs.
      * The IDs are merged and duplicates are removed.
      *
@@ -338,9 +340,9 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     /**
      * Assigns a CAI region code to this region based on its name.
-     * 
+     *
      * Iterates through the predefined region codes and names, checking if the region's name
-     * contains any of the predefined region names. When a match is found, assigns the 
+     * contains any of the predefined region names. When a match is found, assigns the
      * corresponding code and saves the model.
      *
      * The codes follow the CAI (Club Alpino Italiano) convention:
@@ -354,6 +356,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
             if (stripos($this->name, $name) !== false) {
                 $this->code = $code;
                 $this->saveQuietly();
+
                 return;
             }
         }

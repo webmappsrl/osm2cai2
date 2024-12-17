@@ -29,7 +29,6 @@ class Itinerary extends Resource
 
     public static $perPageViaRelationship = 50;
 
-
     public static function label()
     {
         return __('Itinerari');
@@ -44,11 +43,10 @@ class Itinerary extends Resource
         'id',
     ];
 
-
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function fields(Request $request)
@@ -69,6 +67,7 @@ class Itinerary extends Resource
                         $totalKm += $route->distance_comp;
                     }
                 }
+
                 return round($totalKm, 2);
             })->hideWhenCreating()->hideWhenUpdating(),
             BelongsToMany::make(__('Itinerari'), 'hikingRoutes', HikingRoute::class)->searchable(),
@@ -78,7 +77,7 @@ class Itinerary extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function cards(Request $request)
@@ -89,7 +88,7 @@ class Itinerary extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function filters(Request $request)
@@ -100,7 +99,7 @@ class Itinerary extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function lenses(Request $request)
@@ -111,7 +110,7 @@ class Itinerary extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return array
      */
     public function actions(Request $request)

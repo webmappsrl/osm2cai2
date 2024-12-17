@@ -13,20 +13,21 @@ class DownloadGeojsonCompleteAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
-
     public function __construct()
     {
         $this->name = __('Download routes geojson');
     }
 
     public $showOnDetail = true;
+
     public $showOnIndex = false;
+
     public $withoutConfirmation = true;
 
     /**
      * Perform the action on the given models.
      *
-     * @param \Laravel\Nova\Fields\ActionFields $fields
+     * @param ActionFields $fields
      * @param Collection $models
      *
      * @return mixed
@@ -38,7 +39,7 @@ class DownloadGeojsonCompleteAction extends Action
         $id = $model->id;
         $name = $model->name;
 
-        return Action::redirect(url('api/geojson-complete/' . $type . '/' . $id));
+        return Action::redirect(url('api/geojson-complete/'.$type.'/'.$id));
     }
 
     /**

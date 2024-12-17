@@ -73,7 +73,7 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Province ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Province '.$osmfeaturesId);
 
             return;
         }
@@ -84,7 +84,7 @@ class Province extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Province ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Province '.$osmfeaturesId);
         }
 
         // Execute the update only if there are data to update

@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             $user = User::factory()->create();
 
             // if the user already have the role, skip
-            if (!$user->hasRole('Administrator')) {
+            if (! $user->hasRole('Administrator')) {
                 $user->roles()->attach(Role::where('name', 'Administrator')->first());
             }
         }
@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Referente Nazionale']);
 
             // if the user already have the role, skip
-            if (!$user->hasRole('National Referent')) {
+            if (! $user->hasRole('National Referent')) {
                 $user->roles()->attach(Role::where('name', 'National Referent')->first());
             }
         }

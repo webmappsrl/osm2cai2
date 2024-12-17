@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\CheckHikingRouteExistenceOnOSM;
 use App\Models\HikingRoute;
 use App\Services\OsmService;
 use Illuminate\Console\Command;
-use App\Jobs\CheckHikingRouteExistenceOnOSM;
 
 class CheckHikingRoutesExistenceOnOsm extends Command
 {
@@ -41,9 +41,10 @@ class CheckHikingRoutesExistenceOnOsm extends Command
     public function handle()
     {
         HikingRoute::where('deleted_on_osm', false)->each(function ($hr) {
-            $this->info('dispatching job for hiking route ' . $hr->id);
+            $this->info('dispatching job for hiking route '.$hr->id);
             CheckHikingRouteExistenceOnOSM::dispatch($hr);
         });
+
         return 0;
     }
 }

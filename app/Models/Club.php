@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use App\Models\Region;
-use App\Models\HikingRoute;
-use App\Traits\AwsCacheable;
-use App\Models\MountainGroups;
-use App\Traits\SpatialDataTrait;
-use App\Traits\CsvableModelTrait;
 use App\Jobs\CacheMiturAbruzzoDataJob;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\HikingRoute;
+use App\Models\MountainGroups;
+use App\Models\Region;
+use App\Models\User;
+use App\Traits\AwsCacheable;
+use App\Traits\CsvableModelTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Club extends Model
 {

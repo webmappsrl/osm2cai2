@@ -2,22 +2,22 @@
 
 namespace App\Nova\Actions;
 
-use Exception;
-use Throwable;
 use App\Models\HikingRoute;
-use Illuminate\Http\Request;
-use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\File;
-use Imumz\LeafletMap\LeafletMap;
-use Laravel\Nova\Actions\Action;
 use App\Services\AreaModelService;
+use Exception;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Http\Request;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Imumz\LeafletMap\LeafletMap;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\File;
+use Throwable;
 
 class UploadSectorGeometryAction extends Action
 {
@@ -28,8 +28,8 @@ class UploadSectorGeometryAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function __construct()
@@ -41,8 +41,8 @@ class UploadSectorGeometryAction extends Action
     {
         $model = $models->first();
 
-        if (!$fields->geometry) {
-            return Action::danger(__("Unable to update geometry. Please provide a valid file."));
+        if (! $fields->geometry) {
+            return Action::danger(__('Unable to update geometry. Please provide a valid file.'));
         }
 
         $content = $fields->geometry->get();
@@ -61,7 +61,8 @@ class UploadSectorGeometryAction extends Action
             return Action::message(__('Geometry updated successfully!'));
         } catch (Throwable $t) {
             Log::error($t->getMessage());
-            return Action::danger(__("Unable to update geometry. Something went wrong: " . $t->getMessage()));
+
+            return Action::danger(__('Unable to update geometry. Something went wrong: '.$t->getMessage()));
         }
     }
 
@@ -73,7 +74,7 @@ class UploadSectorGeometryAction extends Action
     public function fields($request)
     {
         return [
-            File::make('Geometry')->help(__('Upload a gpx, kml or geojson file to update the sector geometry and update all technical data of the affected routes (routes in this sector + those within adjacent sectors)'))
+            File::make('Geometry')->help(__('Upload a gpx, kml or geojson file to update the sector geometry and update all technical data of the affected routes (routes in this sector + those within adjacent sectors)')),
         ];
     }
 }

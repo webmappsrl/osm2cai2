@@ -32,25 +32,28 @@ class RevertValidateHikingRouteAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
     {
         $user = auth()->user();
 
-        if (!$user || $user == null)
+        if (! $user || $user == null) {
             return Action::danger('User information not available');
+        }
 
         $roles = $user->getRoleNames()->toArray();
         $model = $models->first();
 
-        if ($model->osm2cai_status != 4)
+        if ($model->osm2cai_status != 4) {
             return Action::danger('SDA is not 4!');
+        }
 
-        if (!$user->canManageHikingRoute($model))
+        if (! $user->canManageHikingRoute($model)) {
             return Action::danger('You do not have permissions for this route');
+        }
 
         $sectors = $model->sectors;
         $areas = $model->areas;
@@ -62,11 +65,11 @@ class RevertValidateHikingRouteAction extends Action
             $authorized = true;
         } elseif (in_array('Regional Referent', $roles) && $model->regions->pluck('id')->contains(auth()->user()->region->id)) {
             $authorized = true;
-        } elseif (in_array('Local Referent', $roles) && (!$sectors->intersect($user->sectors)->isEmpty() || !$areas->intersect($user->areas)->isEmpty() || !$provinces->intersect($user->provinces)->isEmpty())) {
+        } elseif (in_array('Local Referent', $roles) && (! $sectors->intersect($user->sectors)->isEmpty() || ! $areas->intersect($user->areas)->isEmpty() || ! $provinces->intersect($user->provinces)->isEmpty())) {
             $authorized = true;
         }
 
-        if (!$authorized) {
+        if (! $authorized) {
             return Action::danger('You are not authorized to perform this action');
         }
 

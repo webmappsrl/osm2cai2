@@ -2,20 +2,20 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\Club;
-use App\Models\Region;
-use Illuminate\Bus\Queueable;
-use App\Models\MountainGroups;
-use App\Jobs\CheckNearbyHutsJob;
-use Laravel\Nova\Actions\Action;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\ActionFields;
 use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyHikingRoutesJob;
+use App\Jobs\CheckNearbyHutsJob;
 use App\Models\CaiHut;
+use App\Models\Club;
 use App\Models\HikingRoute;
-use Illuminate\Queue\InteractsWithQueue;
+use App\Models\MountainGroups;
+use App\Models\Region;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class CalculateIntersections extends Action
@@ -32,8 +32,8 @@ class CalculateIntersections extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -60,7 +60,7 @@ class CalculateIntersections extends Action
     /**
      * Get the fields available on the action.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)

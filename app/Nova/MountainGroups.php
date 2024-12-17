@@ -2,13 +2,13 @@
 
 namespace App\Nova;
 
+use App\Nova\Filters\RegionFilter;
 use Illuminate\Http\Request;
 use Imumz\Nova4FieldMap\Nova4FieldMap;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use App\Nova\Filters\RegionFilter;
 
 class MountainGroups extends Resource
 {
@@ -33,6 +33,7 @@ class MountainGroups extends Resource
     {
         return 'Gruppi Montuosi';
     }
+
     /**
      * The columns that should be searched.
      *
@@ -51,7 +52,6 @@ class MountainGroups extends Resource
      */
     public function fields(Request $request)
     {
-
         return [
             ID::make(__('ID'), 'id')->sortable(),
             Text::make('Nome', 'name')->sortable(),

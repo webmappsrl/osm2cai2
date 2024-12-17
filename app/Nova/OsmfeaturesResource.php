@@ -2,24 +2,24 @@
 
 namespace App\Nova;
 
-use Wm\MapPoint\MapPoint;
-use Laravel\Nova\Resource;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Filters\OsmFilter;
 use App\Nova\Filters\ScoreFilter;
-use App\Services\GeometryService;
-use Laravel\Nova\Fields\DateTime;
 use App\Nova\Filters\SourceFilter;
 use App\Nova\Filters\WebsiteFilter;
 use App\Nova\Filters\WikiDataFilter;
 use App\Nova\Filters\WikiMediaFilter;
 use App\Nova\Filters\WikiPediaFilter;
-use Wm\MapMultiPolygon\MapMultiPolygon;
+use App\Services\GeometryService;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Resource;
 use Wm\MapMultiLinestring\MapMultiLinestring;
+use Wm\MapMultiPolygon\MapMultiPolygon;
+use Wm\MapPoint\MapPoint;
 
 abstract class OsmfeaturesResource extends Resource
 {
@@ -75,9 +75,10 @@ abstract class OsmfeaturesResource extends Resource
             DateTime::make('Created At', 'created_at')->hideFromIndex(),
             DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
             Text::make('Osmfeatures ID', function () {
-                if (!$this->osmfeatures_id) {
+                if (! $this->osmfeatures_id) {
                     return '';
                 }
+
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
             Text::make('OSM Type', 'osmfeatures_data->properties->osm_type'),

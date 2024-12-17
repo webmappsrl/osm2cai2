@@ -8,14 +8,15 @@ use Illuminate\Auth\Access\Response;
 
 class SectorPolicy
 {
-
     private $allowedRoles = ['Administrator', 'National Referent'];
 
     private function hasAllowedRole(User $user): bool
     {
         $userRoles = $user->getRoleNames();
+
         return $userRoles->intersect($this->allowedRoles)->isNotEmpty();
     }
+
     /**
      * Determine whether the user can view any models.
      */
