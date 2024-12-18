@@ -16,7 +16,7 @@ class NaturalSpring extends Model
     protected static function booted()
     {
         static::saved(function ($spring) {
-            if ($spring->isDirty('geometry') && !$spring->wasRecentlyCreated) {
+            if ($spring->isDirty('geometry') && ! $spring->wasRecentlyCreated) {
                 CheckNearbyHikingRoutesJob::dispatch($spring, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
             }
         });
