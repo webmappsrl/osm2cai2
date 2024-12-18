@@ -33,7 +33,7 @@ class OneTimeImport extends Command
      *
      * @var string
      */
-    protected $description = 'Import all necessary data for OSM2CAI including legacy data, entities (hiking routes, mountain groups, POIs) and their relationships. This command can be run in steps using the --step option.';
+    protected $description = 'Import all necessary data for OSM2CAI including legacy data, entities (hiking routes, mountain groups, POIs) and their relationships.';
 
     public function __construct()
     {
