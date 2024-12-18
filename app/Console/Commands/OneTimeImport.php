@@ -47,8 +47,8 @@ class OneTimeImport extends Command
     {
         $this->info('Starting ' . env('APP_NAME') . ' one-time import...');
 
-        $this->importLegacyData();
         $this->importEntities();
+        $this->importLegacyData();
         $this->computeRelationships();
 
         $this->info('Import completed successfully!');
@@ -77,20 +77,19 @@ class OneTimeImport extends Command
         $this->info('=== Importing Entities ===');
 
         $entities = [
-            'itineraries',
-            'provinces',
             'areas',
             'sectors',
-            'cai_huts',
+            'sections',
             'mountain_groups',
+            'cai_huts',
             'natural_springs',
-            'sections'
+            'itineraries'
         ];
 
         foreach ($entities as $entity) {
-            $this->info("Importing {$entity}...");
+            $this->info("Dispatching jobs for {$entity}...");
             Artisan::call('osm2cai:sync', ['model' => $entity]);
-            $this->info("✓ {$entity} imported successfully");
+            $this->info("✓ {$entity} jobs dispatched successfully");
         }
 
         // Additional computations
