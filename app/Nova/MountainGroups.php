@@ -9,6 +9,7 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class MountainGroups extends Resource
 {
@@ -56,11 +57,10 @@ class MountainGroups extends Resource
             ID::make(__('ID'), 'id')->sortable(),
             Text::make('Nome', 'name')->sortable(),
             Textarea::make('Descrizione', 'description')->hideFromIndex(),
-            Nova4FieldMap::make('Mappa')
-                ->type('GeoJson')
-                ->geoJson($this->getEmptyGeojson())
-                ->zoom(9)
-                ->onlyOnDetail(),
+            MapMultiPolygon::make('Geometry')->withMeta([
+                'center' => ['42.795977075', '10.326813853'],
+                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+            ])->hideFromIndex(),
             Text::make('POI Generico', function () {
                 return $this->ecPois->count();
             })->sortable(),
