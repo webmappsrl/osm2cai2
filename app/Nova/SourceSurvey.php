@@ -2,15 +2,15 @@
 
 namespace App\Nova;
 
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Boolean;
 use App\Enums\ValidatedStatusEnum;
 use App\Nova\AbstractValidationResource;
 use App\Nova\Filters\ValidatedFilter;
 use App\Nova\Filters\WaterFlowValidatedFilter;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\Text;
 
 class SourceSurvey extends AbstractValidationResource
 {
