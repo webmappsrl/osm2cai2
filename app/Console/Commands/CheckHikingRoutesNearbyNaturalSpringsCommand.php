@@ -30,13 +30,13 @@ class CheckHikingRoutesNearbyNaturalSpringsCommand extends Command
         $buffer = config('osm2cai2.hiking_route_buffer');
 
         if ($this->argument('id')) {
-            CheckNearbyNaturalSpringsJob::dispatch($this->argument('id'), $buffer);
+            CheckNearbyNaturalSpringsJob::dispatch($this->argument('id'), $buffer)->onQueue('geometric-computations');
         } else {
             $hikingRoutes = DB::table('hiking_routes')->select(['id'])->get();
         }
 
         foreach ($hikingRoutes as $hikingRoute) {
-            CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, $buffer);
+            CheckNearbyNaturalSpringsJob::dispatch($hikingRoute->id, $buffer)->onQueue('geometric-computations');
         }
     }
 }
