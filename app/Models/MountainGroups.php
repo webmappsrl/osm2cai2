@@ -30,7 +30,7 @@ class MountainGroups extends Model
     {
         static::saved(function ($mountainGroup) {
             if ($mountainGroup->isDirty('geometry')) {
-                CalculateIntersectionsJob::dispatch($mountainGroup, Region::class)->onQueue('geometric-computations');
+                $mountainGroup->dispatchGeometricComputationsJobs();
             }
         });
 
@@ -64,5 +64,20 @@ class MountainGroups extends Model
     public function clubs()
     {
         return $this->belongsToMany(Club::class, 'mountain_group_club', 'mountain_group_id', 'club_id');
+    }
+
+    /**
+     * Dispatch jobs for geometric computations
+     *
+     * @param string $queue
+     * @return void
+     */
+    public function dispatchGeometricComputationsJobs(string $queue = 'geometric-computations'): void
+    {
+        CalculateIntersectionsJob::dispatch($this, Region::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, EcPoi::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, CaiHut::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, Club::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, HikingRoute::class)->onQueue($queue);
     }
 }
