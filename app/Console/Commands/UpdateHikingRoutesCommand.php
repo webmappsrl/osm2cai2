@@ -47,7 +47,7 @@ class UpdateHikingRoutesCommand extends Command
         // Converte la data nel formato richiesto dall'API
         $formattedUpdatedAt = Carbon::parse($latestUpdatedAt)->toIso8601String();
         $endpoint = HikingRoute::getOsmfeaturesEndpoint();
-        $apiUrl = $endpoint . 'list';
+        $apiUrl = $endpoint.'list';
 
         // Effettua la chiamata all'API con paginazione
         $page = 1;
@@ -59,7 +59,7 @@ class UpdateHikingRoutesCommand extends Command
             ]);
 
             if ($response->failed()) {
-                $errormsg = 'API request failed: ' . $response->body();
+                $errormsg = 'API request failed: '.$response->body();
                 $this->error($errormsg);
                 $logger->error($errormsg);
 
@@ -86,7 +86,7 @@ class UpdateHikingRoutesCommand extends Command
             $logger->info($logmsg);
 
             // Effettua la chiamata all'API per ottenere i dati dettagliati del singolo hiking route
-            $detailApiUrl = $endpoint . $osmfeaturesId;
+            $detailApiUrl = $endpoint.$osmfeaturesId;
             $detailResponse = Http::get($detailApiUrl);
 
             if ($detailResponse->failed()) {
@@ -105,7 +105,7 @@ class UpdateHikingRoutesCommand extends Command
                 $hikingRoute->update([
                     'osmfeatures_updated_at' => Carbon::parse($route['updated_at'])->toDateTimeString(),
                     'osmfeatures_data' => json_encode($hikingRouteData),
-                    'geometry' => DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($hikingRouteData['geometry']) . "'))")[0]->st_astext,
+                    'geometry' => DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($hikingRouteData['geometry'])."'))")[0]->st_astext,
                 ]);
                 $logMessage = "Hiking route with ID: $osmfeaturesId updated successfully.";
                 $this->info($logMessage);

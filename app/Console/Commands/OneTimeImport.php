@@ -2,22 +2,22 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\AssociateClubsToHikingRoutesCommand;
+use App\Console\Commands\CalculateRegionHikingRoutesIntersection;
+use App\Console\Commands\CheckHikingRoutesNearbyNaturalSpringsCommand;
+use App\Console\Commands\CheckNearbyCaiHuts;
+use App\Console\Commands\ComputeHikingRoutesTdh;
+use App\Console\Commands\ImportMunicipalityDataFromLegacyOsm2cai;
+use App\Console\Commands\Osm2caiSetExpectedValuesCommand;
+use App\Jobs\CalculateIntersectionsJob;
+use App\Jobs\CheckNearbyHutsJob;
 use App\Models\Club;
 use App\Models\EcPoi;
 use App\Models\HikingRoute;
 use App\Models\MountainGroups;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use App\Jobs\CalculateIntersectionsJob;
-use App\Jobs\CheckNearbyHutsJob;
 use Illuminate\Support\Facades\Artisan;
-use App\Console\Commands\CheckNearbyCaiHuts;
-use App\Console\Commands\ComputeHikingRoutesTdh;
-use App\Console\Commands\Osm2caiSetExpectedValuesCommand;
-use App\Console\Commands\AssociateClubsToHikingRoutesCommand;
-use App\Console\Commands\CalculateRegionHikingRoutesIntersection;
-use App\Console\Commands\ImportMunicipalityDataFromLegacyOsm2cai;
-use App\Console\Commands\CheckHikingRoutesNearbyNaturalSpringsCommand;
+use Illuminate\Support\Facades\Log;
 
 class OneTimeImport extends Command
 {
@@ -45,7 +45,7 @@ class OneTimeImport extends Command
      */
     public function handle()
     {
-        $this->info('Starting ' . env('APP_NAME') . ' one-time import...');
+        $this->info('Starting '.env('APP_NAME').' one-time import...');
 
         $this->importEntities();
         $this->importLegacyData();
@@ -62,13 +62,13 @@ class OneTimeImport extends Command
             ['command' => 'osm2cai:sync-users', 'description' => 'Syncing users from legacy OSM2CAI'],
             ['command' => 'osm2cai:associate-users-to-ec-pois', 'description' => 'Associating users to EC POIs'],
             ['command' => 'osm2cai:assign-region-code', 'description' => 'Assigning region codes'],
-            ['command' => 'osm2cai:import-municipality-data', 'description' => 'Importing municipality data']
+            ['command' => 'osm2cai:import-municipality-data', 'description' => 'Importing municipality data'],
         ];
 
         foreach ($commands as $cmd) {
-            $this->info('Running: ' . $cmd['description']);
+            $this->info('Running: '.$cmd['description']);
             Artisan::call($cmd['command']);
-            $this->info('✓ ' . $cmd['description'] . ' completed');
+            $this->info('✓ '.$cmd['description'].' completed');
         }
     }
 
@@ -83,7 +83,7 @@ class OneTimeImport extends Command
             'mountain_groups',
             'cai_huts',
             'natural_springs',
-            'itineraries'
+            'itineraries',
         ];
 
         foreach ($entities as $entity) {
