@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use App\Jobs\CacheMiturAbruzzoDataJob;
 use Illuminate\Database\Eloquent\Model;
 use App\Jobs\CheckNearbyHikingRoutesJob;
+use App\Console\Commands\CheckNearbyCaiHuts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
@@ -45,7 +46,7 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         static::saved(function ($ecPoi) {
             if ($ecPoi->isDirty('geometry')) {
                 CheckNearbyHikingRoutesJob::dispatch($ecPoi, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
-                CheckNearbyCaiHutsJob::dispatch($ecPoi, config('osm2cai.cai_hut_buffer'))->onQueue('geometric-computations');
+                CheckNearbyCaiHuts::dispatch($ecPoi, config('osm2cai.cai_hut_buffer'))->onQueue('geometric-computations');
             }
         });
 
