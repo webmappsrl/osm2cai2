@@ -65,7 +65,7 @@ class KmlControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/vnd.google-earth.kml+xml')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="regions_'.date('Ymd').'.kml"'
+                'attachment; filename="regions_' . date('Ymd') . '.kml"'
             );
 
         $this->assertStringContainsString('<?xml version="1.0" encoding="UTF-8"?>', $response->getContent());
@@ -96,7 +96,7 @@ class KmlControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/vnd.google-earth.kml+xml')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="sectors_'.date('Ymd').'.kml"'
+                'attachment; filename="sectors_' . date('Ymd') . '.kml"'
             );
 
         $this->assertStringContainsString('<?xml version="1.0" encoding="UTF-8"?>', $response->getContent());

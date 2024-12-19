@@ -51,7 +51,7 @@ class MiturAbruzzoApiTest extends TestCase
     public function testGeojsonStructureIsTheSameAsTheLegacyApi()
     {
         foreach ($this->legacyEndpoints as $model => $url) {
-            $geoJsonPath = $this->stubDirectory.'/'.$model.'.geojson';
+            $geoJsonPath = $this->stubDirectory . '/' . $model . '.geojson';
 
             // Check if the file exists, otherwise download it
             if (! Storage::exists($geoJsonPath)) {
@@ -89,7 +89,7 @@ class MiturAbruzzoApiTest extends TestCase
             $job = new CacheMiturAbruzzoDataJob(class_basename($modelInstance), $modelInstance->id, true);
             $job->handle();
 
-            $newApiResponse = json_decode(Storage::get($this->stubDirectory.'/aws/'.class_basename($modelInstance).'_'.$modelInstance->id.'.json'), true);
+            $newApiResponse = json_decode(Storage::get($this->stubDirectory . '/aws/' . class_basename($modelInstance) . '_' . $modelInstance->id . '.json'), true);
 
             $this->assertIsArray($newApiResponse);
             $this->assertNotEmpty($newApiResponse);
@@ -98,7 +98,7 @@ class MiturAbruzzoApiTest extends TestCase
             $this->assertGeoJsonStructureMatchesApi($geoJsonData, $newApiResponse);
 
             //after the test, delete the file in the stub directory
-            Storage::delete($this->stubDirectory.'/aws/'.class_basename($modelInstance).'_'.$modelInstance->id.'.json');
+            Storage::delete($this->stubDirectory . '/aws/' . class_basename($modelInstance) . '_' . $modelInstance->id . '.json');
         }
     }
 
