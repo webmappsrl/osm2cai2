@@ -15,13 +15,13 @@ use App\Models\UgcMedia;
 use App\Models\UgcPoi;
 use App\Models\UgcTrack;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ExportControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected function setUp(): void
     {
@@ -127,7 +127,7 @@ class ExportControllerTest extends TestCase
             $model = $modelClass::factory()->create();
         }
 
-        $response = $this->getJson($endpoint.'/'.$model->id);
+        $response = $this->getJson($endpoint . '/' . $model->id);
         $response->assertStatus(200);
 
         $data = $response->json();

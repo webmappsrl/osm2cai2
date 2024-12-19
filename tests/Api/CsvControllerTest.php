@@ -8,14 +8,14 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CsvControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $region;
 
@@ -109,7 +109,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_'.date('Ymd').'_regions_Test Region.csv"'
+                'attachment; filename="osm2cai_' . date('Ymd') . '_regions_Test Region.csv"'
             );
     }
 
@@ -137,7 +137,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_'.date('Ymd').'_provinces_Test Province.csv"'
+                'attachment; filename="osm2cai_' . date('Ymd') . '_provinces_Test Province.csv"'
             );
     }
 
@@ -149,7 +149,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_'.date('Ymd').'_areas_Test Area.csv"'
+                'attachment; filename="osm2cai_' . date('Ymd') . '_areas_Test Area.csv"'
             );
     }
 
@@ -161,7 +161,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_'.date('Ymd').'_sectors_Test Sector.csv"'
+                'attachment; filename="osm2cai_' . date('Ymd') . '_sectors_Test Sector.csv"'
             );
     }
 }

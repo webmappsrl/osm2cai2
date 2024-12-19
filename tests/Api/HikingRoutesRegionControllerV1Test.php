@@ -5,14 +5,14 @@ namespace Tests\Api;
 use App\Models\HikingRoute;
 use App\Models\Region;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class HikingRoutesRegionControllerV1Test extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected function setUp(): void
     {
@@ -131,7 +131,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
 
         // Esegui la richiesta
-        $response = $this->get('/api/v1/hiking-route/'.$hikingRoute->id);
+        $response = $this->get('/api/v1/hiking-route/' . $hikingRoute->id);
 
         // Verifica la risposta
         $response->assertStatus(200)
@@ -157,7 +157,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         DB::table('hiking_routes')->truncate();
 
         $nonExistentId = 999;
-        $response = $this->get('/api/v1/hiking-route/'.$nonExistentId);
+        $response = $this->get('/api/v1/hiking-route/' . $nonExistentId);
 
         $response->assertStatus(404)
             ->assertSee('No Hiking Route found with this id');
@@ -169,7 +169,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
 
         // Esegui la richiesta
-        $response = $this->get('/api/v1/hiking-route-osm/'.$hikingRoute->osmfeatures_data['properties']['osm_id']);
+        $response = $this->get('/api/v1/hiking-route-osm/' . $hikingRoute->osmfeatures_data['properties']['osm_id']);
 
         // Verifica la risposta
         $response->assertStatus(200)

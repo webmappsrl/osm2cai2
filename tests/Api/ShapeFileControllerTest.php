@@ -6,14 +6,14 @@ use App\Models\Area;
 use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ShapeFileControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $region;
 
@@ -77,7 +77,7 @@ class ShapeFileControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/zip')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename=test-region-'.date('Ymd').'.zip'
+                'attachment; filename=test-region-' . date('Ymd') . '.zip'
             );
 
         Storage::disk('public')->assertExists('shape_files/zip/Test_Region.zip');
@@ -107,7 +107,7 @@ class ShapeFileControllerTest extends TestCase
             ->assertHeader('Content-Type', 'application/zip')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename=test-sector-'.date('Ymd').'.zip'
+                'attachment; filename=test-sector-' . date('Ymd') . '.zip'
             );
 
         Storage::disk('public')->assertExists('shape_files/zip/Test_Sector.zip');

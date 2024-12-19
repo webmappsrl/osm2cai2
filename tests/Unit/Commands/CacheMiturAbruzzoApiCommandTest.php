@@ -5,14 +5,14 @@ namespace Tests\Unit\Commands;
 use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Models\HikingRoute;
 use App\Models\Region;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class CacheMiturAbruzzoApiCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected function setUp(): void
     {
