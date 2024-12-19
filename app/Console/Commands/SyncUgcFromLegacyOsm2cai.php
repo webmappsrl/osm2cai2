@@ -269,6 +269,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
             try {
                 $userId = $ugc->user_id;
                 $poiUser = $this->ensureUserExists($userId);
+                $poiValidator = $this->ensureUserExists($ugc->validator_id);
 
                 // Verifichiamo che la geometria sia valida e del tipo corretto
                 $geometryCheck = DB::connection('legacyosm2cai')
@@ -308,7 +309,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                         'validated' => $ugc->validated,
                         'water_flow_rate_validated' => $ugc->water_flow_rate_validated,
                         'validation_date' => $ugc->validation_date,
-                        'validator_id' => $ugc->validator_id,
+                        'validator_id' => $poiValidator->id ?? null, // id is the same as legacy (imported in command App\Console\Commands\SyncUsersFromLegacyOsm2cai)
                         'note' => $ugc->note,
                         'app_id' => $ugc->app_id,
                         'created_at' => $ugc->created_at,

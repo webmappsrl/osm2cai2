@@ -20,6 +20,10 @@ class GeometryService
 
     public function geojsonToGeometry($geojson)
     {
+        if (is_array($geojson)) {
+            $geojson = json_encode($geojson);
+        }
+
         return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('".$geojson."'))) as g ")[0]->g;
     }
 
@@ -84,37 +88,35 @@ class GeometryService
                     }
                 }
             } else {
-                $content = json_decode($text);
+                $content = json_decode($text, true);
                 $isJson = json_last_error() === JSON_ERROR_NONE;
                 if ($isJson) {
-                    $contentType = $content->type;
+                    $contentType = $content['type'];
                 }
             }
 
             if ($contentType) {
                 switch ($contentType) {
                     case 'GeometryCollection':
-                        foreach ($content->geometries as $item) {
-                            if ($item->type == 'LineString') {
+                        foreach ($content['geometries'] as $item) {
+                            if ($item['type'] == 'LineString') {
                                 $contentGeometry = $item;
                             }
                         }
                         break;
                     case 'FeatureCollection':
-                        $contentGeometry = $content->features[0]->geometry;
+                        $contentGeometry = $content['features'][0]['geometry'];
                         break;
                     case 'LineString':
                         $contentGeometry = $content;
                         break;
                     default:
-                        $contentGeometry = $content->geometry;
+                        $contentGeometry = $content['geometry'];
                         break;
                 }
-
-                $geometry = json_encode($contentGeometry);
             }
 
-            return $geometry;
+            return $contentGeometry;
         }
     }
 

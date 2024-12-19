@@ -124,7 +124,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $toPoint = $points['to'];
 
         //get the cai huts intersecting with the hiking route
-        $huts = json_decode($hikingRoute->nearby_cai_huts);
+        $huts = $hikingRoute->nearbyCaiHuts;
         $caiHuts = [];
         //transform the huts array into an associative array where the key is hut id and value is the hut updated_at
         if (! empty($huts)) {

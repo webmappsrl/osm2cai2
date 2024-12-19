@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
+use App\Models\HikingRoute;
 use App\Nova\Actions\downloadGeojson;
 use App\Nova\Actions\DownloadKml;
 use App\Nova\Actions\DownloadShape;
@@ -59,9 +60,7 @@ class Area extends Resource
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
 
-        return $query->whereHas('users', function ($query) {
-            $query->where('users.id', auth()->id());
-        });
+        return $query->ownedBy(auth()->user());
     }
 
     /**
@@ -99,10 +98,10 @@ class Area extends Resource
         if (! is_null($request['resourceId'])) {
             $area = \App\Models\Area::find($request['resourceId']);
             $tot = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
-            $hikingRoutes = $area->intersectings['hiking_routes'] ?? [];
+            $hikingRoutes = $area->hikingRoutes;
 
-            foreach ($hikingRoutes as $id => $updated_at) {
-                $hrStatus = HikingRoute::find($id)->osm2cai_status;
+            foreach ($hikingRoutes as $hr) {
+                $hrStatus = HikingRoute::find($hr->id)->osm2cai_status;
                 $tot[$hrStatus]++;
             }
 

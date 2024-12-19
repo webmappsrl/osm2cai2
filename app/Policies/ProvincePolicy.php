@@ -8,12 +8,21 @@ use Illuminate\Auth\Access\Response;
 
 class ProvincePolicy
 {
+    private $allowedRoles = ['Administrator', 'National Referent', 'Regional Referent'];
+
+    private function hasAllowedRole(User $user): bool
+    {
+        $userRoles = $user->getRoleNames();
+
+        return $userRoles->intersect($this->allowedRoles)->isNotEmpty();
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->hasAllowedRole($user);
     }
 
     /**
@@ -21,7 +30,10 @@ class ProvincePolicy
      */
     public function view(User $user, Province $province): bool
     {
-        return true;
+        $modelQuery = $province->newQuery();
+        $userModels = $modelQuery->ownedBy($user)->get('id');
+
+        return $this->hasAllowedRole($user) || $userModels->contains($province->id);
     }
 
     /**

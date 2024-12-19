@@ -20,9 +20,17 @@ class NaturalSpring extends Resource
     /**
      * The single value that should be used to represent the resource when being displayed.
      *
-     * @var string
+     * @return string
      */
-    public static $title = 'id';
+    public function title()
+    {
+        return $this->name;
+    }
+
+    public static function label()
+    {
+        return 'Database Acqua Sorgente';
+    }
 
     /**
      * The columns that should be searched.
@@ -30,7 +38,8 @@ class NaturalSpring extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id',
+        'name',
     ];
 
     /**
@@ -117,5 +126,20 @@ class NaturalSpring extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
+    }
+
+    public function authorizeToView(Request $request)
+    {
+        return auth()->user()->isValidatorForFormId('water');
+    }
+
+    public function authorizeToViewAny(Request $request)
+    {
+        return auth()->user()->isValidatorForFormId('water');
+    }
+
+    public static function availableForNavigation(Request $request)
+    {
+        return auth()->user()->isValidatorForFormId('water');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Nova\Dashboards;
 
 use App\Models\User;
+use App\Nova\Metrics\IssueStatusPartition;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Nova\Dashboard;
 
@@ -55,8 +56,8 @@ class Percorribilità extends Dashboard
                 $hikingRoutesSda34Collection = $hikingRoutesSda34Collection->merge($hikingRoutesSda34);
 
                 return [
-                    new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
+                    new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
+                    new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
                 ];
             }
             if ($areas) {
@@ -81,8 +82,8 @@ class Percorribilità extends Dashboard
                 $hikingRoutesSda34Collection = $hikingRoutesSda34Collection->merge($hikingRoutesSda34);
 
                 return [
-                    new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
+                    new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
+                    new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
                 ];
             }
             if ($provinces) {
@@ -107,8 +108,8 @@ class Percorribilità extends Dashboard
                 $hikingRoutesSda34Collection = $hikingRoutesSda34Collection->merge($hikingRoutesSda34);
 
                 return [
-                    new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
+                    new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
+                    new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
                 ];
             }
             if ($sectors) {
@@ -133,8 +134,8 @@ class Percorribilità extends Dashboard
                 $hikingRoutesSda34Collection = $hikingRoutesSda34Collection->merge($hikingRoutesSda34);
 
                 return [
-                    new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                    new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
+                    new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
+                    new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
                 ];
             }
         } else {
@@ -150,8 +151,8 @@ class Percorribilità extends Dashboard
             });
 
             return [
-                new \App\Nova\Metrics\Sda4IssueStatusPartition($hikingRoutesSda4),
-                new \App\Nova\Metrics\Sda3And4IssueStatusPartition($hikingRoutesSda34),
+                new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
+                new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
             ];
         }
     }

@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Console\Commands\CheckNearbyHikingRoutes;
 use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Jobs\CheckNearbyHikingRoutesJob;
+use App\Models\EcPoi;
+use App\Models\HikingRoute;
+use App\Models\MountainGroups;
 use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
@@ -59,11 +62,13 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
 
     protected static function booted()
     {
-        static::created(function ($caiHut) {
-            CheckNearbyHikingRoutesJob::dispatch($caiHut, config('osm2cai.hiking_route_buffer'));
+        static::saved(function ($caiHut) {
+            if ($caiHut->isDirty('geometry')) {
+                CheckNearbyHikingRoutesJob::dispatch($caiHut, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
+            }
         });
 
-        static::saved(function ($caiHut) {
+        static::updated(function ($caiHut) {
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('CaiHut', $caiHut->id);
             }
@@ -73,6 +78,21 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
     public function region()
     {
         return $this->belongsTo(Region::class);
+    }
+
+    public function mountainGroups()
+    {
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_cai_hut', 'cai_hut_id', 'mountain_group_id');
+    }
+
+    public function nearbyHikingRoutes()
+    {
+        return $this->belongsToMany(HikingRoute::class, 'hiking_route_cai_hut')->withPivot(['buffer']);
+    }
+
+    public function nearbyEcPois()
+    {
+        return $this->belongsToMany(EcPoi::class, 'ec_poi_cai_hut')->withPivot(['buffer']);
     }
 
     /**

@@ -3,7 +3,9 @@
 namespace App\Jobs;
 
 use App\Models\Area;
+use App\Models\HikingRoute;
 use App\Models\Province;
+use App\Models\Region;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -109,7 +111,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
                 Log::error('Failed to import Area with id: '.$data['id'].' '.$e->getMessage());
             }
         }
-        if ($modelInstance instanceof \App\Models\HikingRoute) {
+        if ($modelInstance instanceof HikingRoute) {
             try {
                 $this->importHikingRoutes($modelInstance, $data);
             } catch (Exception $e) {
@@ -128,7 +130,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
     private function importMountainGroups($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'intersectings', 'elevation_min', 'elevation_max', 'elevation_avg', 'elevation_stddev', 'slope_min', 'slope_max', 'slope_avg', 'slope_stddev'];
+        $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'elevation_min', 'elevation_max', 'elevation_avg', 'elevation_stddev', 'slope_min', 'slope_max', 'slope_avg', 'slope_stddev'];
 
         $data['intersectings'] = [
             'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
@@ -142,7 +144,6 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         }
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
         $intersect['aggregated_data'] = json_encode($intersect['aggregated_data']);
-        $intersect['intersectings'] = json_encode($intersect['intersectings']);
 
         foreach ($intersect as $key => $value) {
             $modelInstance->$key = $value;
@@ -200,7 +201,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
     private function importCaiHuts($modelInstance, $data)
     {
-        $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
+        $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'region_id'];
 
         if ($data['geometry'] !== null) {
             $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
@@ -208,6 +209,12 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
+            //associate region matching the code column in legacy database
+            if ($key === 'region_id') {
+                $legacyRegion = DB::connection('legacyosm2cai')->table('regions')->find($value);
+                $region = Region::where('code', $legacyRegion->code)->first();
+                $value = $region ? $region->id : null;
+            }
             $modelInstance->$key = $value;
         }
 
@@ -345,18 +352,82 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
     private function importItineraries($modelInstance, $data)
     {
-        $columnsToImport = ['name', 'edges', 'osm_id', 'ref', 'geometry'];
+        $columnsToImport = ['id', 'name', 'osm_id', 'ref', 'geometry'];
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
             $modelInstance->$key = $value;
         }
 
+        if ($data['edges'] !== null && isset($data['edges']) && ! empty($data['edges'])) {
+            $modelInstance->edges = $this->recalculateEdges($data['edges']);
+        }
+
         try {
             $modelInstance->save();
+            $this->syncHikingRoutes($modelInstance, $data['id']);
         } catch (\Exception $e) {
             Log::error('Failed to save Itinerary with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
+    }
+
+    private function recalculateEdges($edges)
+    {
+        // Get all legacy hiking route IDs from edges
+        $legacyIds = [];
+        foreach ($edges as $edge) {
+            $legacyIds = array_merge($legacyIds, $edge['next'], $edge['prev']);
+        }
+        $legacyIds = array_unique(array_filter($legacyIds));
+
+        // Get relation IDs for legacy hiking routes
+        $legacyHr = DB::connection('legacyosm2cai')->table('hiking_routes')
+            ->whereIn('id', $legacyIds)
+            ->get(['id', 'relation_id'])
+            ->keyBy('id');
+
+        // Map legacy IDs to current hiking route IDs
+        $mappedEdges = array_map(function ($edge) use ($legacyHr) {
+            return [
+                'next' => array_map(function ($id) use ($legacyHr) {
+                    if (! isset($legacyHr[$id])) {
+                        return null;
+                    }
+                    $osmId = 'R'.$legacyHr[$id]->relation_id;
+                    $hr = HikingRoute::where('osmfeatures_id', $osmId)->first();
+
+                    return $hr ? $hr->id : null;
+                }, $edge['next']),
+                'prev' => array_map(function ($id) use ($legacyHr) {
+                    if (! isset($legacyHr[$id])) {
+                        return null;
+                    }
+                    $osmId = 'R'.$legacyHr[$id]->relation_id;
+                    $hr = HikingRoute::where('osmfeatures_id', $osmId)->first();
+
+                    return $hr ? $hr->id : null;
+                }, $edge['prev']),
+            ];
+        }, $edges);
+
+        return json_encode($mappedEdges);
+    }
+
+    private function syncHikingRoutes($modelInstance, $itineraryId)
+    {
+        $pivotTable = DB::connection('legacyosm2cai')->table('hiking_route_itinerary')
+            ->where('itinerary_id', $itineraryId)->get();
+        $hrIds = $pivotTable->pluck('hiking_route_id')->toArray();
+        $legacyHr = DB::connection('legacyosm2cai')->table('hiking_routes')
+            ->whereIn('id', $hrIds)
+            ->get('relation_id')
+            ->toArray();
+        $hrIds = array_map(function ($hr) {
+            return 'R'.$hr->relation_id;
+        }, $legacyHr);
+        $hrs = HikingRoute::whereIn('osmfeatures_id', $hrIds)->get();
+
+        $modelInstance->hikingRoutes()->syncWithoutDetaching($hrs);
     }
 }

@@ -29,7 +29,7 @@ class ClubPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('Administrator');
     }
 
     /**
@@ -53,7 +53,7 @@ class ClubPolicy
      */
     public function restore(User $user, Club $club): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class ClubPolicy
      */
     public function forceDelete(User $user, Club $club): bool
     {
-        return false;
+        return true;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\EcPoi;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -76,5 +77,10 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
         }
 
         $model->update($updateData);
+    }
+
+    public function ecPois()
+    {
+        return $this->belongsToMany(EcPoi::class, 'ec_poi_municipality', 'municipality_id', 'ec_poi_id');
     }
 }

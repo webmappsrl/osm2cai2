@@ -5,6 +5,7 @@ namespace App\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Trait to get intersections with other models
@@ -20,6 +21,10 @@ trait GeoIntersectTrait
      */
     public function getIntersections(Model $model): Collection
     {
+        if (! $this->geometry || empty($this->geometry) || ! isset($this->geometry)) {
+            throw new \Exception('Model must have a geometry column');
+        }
+
         try {
             $intersectingIds = DB::table($model->getTable())
                 ->select('id')
@@ -29,8 +34,7 @@ trait GeoIntersectTrait
             return $model::whereIn('id', $intersectingIds)->get();
         } catch (\Exception $e) {
             Log::error('Error getting intersections for model '.$this->getTable().': '.$e->getMessage());
-
-            return collect();
+            throw $e;
         }
     }
 }

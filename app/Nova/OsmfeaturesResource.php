@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
+use App\Nova\Filters\OsmFilter;
 use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\SourceFilter;
 use App\Nova\Filters\WebsiteFilter;
@@ -74,8 +75,13 @@ abstract class OsmfeaturesResource extends Resource
             DateTime::make('Created At', 'created_at')->hideFromIndex(),
             DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
             Text::make('Osmfeatures ID', function () {
+                if (! $this->osmfeatures_id) {
+                    return '';
+                }
+
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
+            Text::make('OSM Type', 'osmfeatures_data->properties->osm_type'),
             DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
             Code::make('Osmfeatures Data', 'osmfeatures_data')
                 ->json()
@@ -101,6 +107,7 @@ abstract class OsmfeaturesResource extends Resource
     public function filters(NovaRequest $request)
     {
         return [
+            (new OsmFilter),
             (new ScoreFilter),
             (new WikiPediaFilter),
             (new WikiDataFilter),

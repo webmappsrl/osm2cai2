@@ -6,13 +6,15 @@ use App\Enums\IssuesStatusEnum;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
 
-class Sda4IssueStatusPartition extends Partition
+class IssueStatusPartition extends Partition
 {
     protected $hikingRoutes;
 
-    public function __construct(iterable $hikingRoutes)
+    public function __construct(iterable $hikingRoutes, string $name, string $uriKey)
     {
         $this->hikingRoutes = $hikingRoutes;
+        $this->name = $name;
+        $this->uriKey = $uriKey;
     }
 
     /**
@@ -51,8 +53,9 @@ class Sda4IssueStatusPartition extends Partition
                     break;
             }
         }
+        $issueStatus = array_map(fn ($status) => $status->value, $issueStatus);
 
-        $result = array_combine(array_keys($issueStatus), [$sconosciuto, $percorribile, $nonPercorribile, $percorribileParzialmente]);
+        $result = array_combine(array_values($issueStatus), [$sconosciuto, $percorribile, $nonPercorribile, $percorribileParzialmente]);
 
         return $this->result($result)->colors($colors);
     }
@@ -64,7 +67,7 @@ class Sda4IssueStatusPartition extends Partition
      */
     public function cacheFor()
     {
-        // return now()->addMinutes(5);
+        return now()->addDay();
     }
 
     /**
@@ -74,11 +77,11 @@ class Sda4IssueStatusPartition extends Partition
      */
     public function uriKey()
     {
-        return 'sda4-issue-status-partition';
+        return $this->uriKey;
     }
 
     public function name()
     {
-        return 'Percorribilità SDA 4';
+        return $this->name;
     }
 }

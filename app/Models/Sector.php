@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Jobs\CalculateIntersectionsJob;
+use App\Models\HikingRoute;
 use App\Models\User;
 use App\Traits\CsvableModelTrait;
 use App\Traits\IntersectingRouteStats;
@@ -16,19 +18,28 @@ class Sector extends Model
 
     protected $guarded = [];
 
+    protected static function booted()
+    {
+        static::saved(function ($sector) {
+            if ($sector->isDirty('geometry')) {
+                CalculateIntersectionsJob::dispatch($sector, HikingRoute::class)->onQueue('geometric-computations');
+            }
+        });
+    }
+
     public function area()
     {
         return $this->belongsTo(Area::class);
     }
 
-    public function users()
+    public function moderators()
     {
         return $this->belongsToMany(User::class);
     }
 
     public function hikingRoutes()
     {
-        return $this->belongsToMany(HikingRoute::class);
+        return $this->belongsToMany(HikingRoute::class, 'hiking_route_sector');
     }
 
     /**
@@ -45,6 +56,44 @@ class Sector extends Model
     public function children()
     {
         return $this->hikingRoutes();
+    }
+
+    /**
+     * Scope a query to only include models owned by a certain user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Model\User  $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOwnedBy($query, User $user)
+    {
+        // Verify region
+        if ($user->region) {
+            $query->whereHas('area.province.region', function ($q) use ($user) {
+                $q->where('id', $user->region->id);
+            });
+        }
+
+        // Verify provinces
+        if ($user->provinces->isNotEmpty()) {
+            $query->orWhereHas('area.province', function ($q) use ($user) {
+                $q->whereIn('id', $user->provinces->pluck('id'));
+            });
+        }
+
+        // Verify areas
+        if ($user->areas->isNotEmpty()) {
+            $query->orWhereHas('area', function ($q) use ($user) {
+                $q->whereIn('id', $user->areas->pluck('id'));
+            });
+        }
+
+        // Verify sectors
+        if ($user->sectors->isNotEmpty()) {
+            $query->orWhereIn('id', $user->sectors->pluck('id'));
+        }
+
+        return $query;
     }
 
     /**

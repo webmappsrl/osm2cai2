@@ -34,7 +34,7 @@ class UpdateHikingRoutesCommand extends Command
         $logger = Log::channel('hiking-routes-update');
 
         // Recupera il valore updated_at più recente dalla tabella hiking_routes
-        $latestUpdatedAt = HikingRoute::max('updated_at');
+        $latestUpdatedAt = HikingRoute::max('osmfeatures_updated_at');
 
         if (! $latestUpdatedAt) {
             $errormsg = 'No hiking routes found in the database.';
@@ -103,7 +103,7 @@ class UpdateHikingRoutesCommand extends Command
 
             if ($hikingRoute) {
                 $hikingRoute->update([
-                    'updated_at' => Carbon::parse($route['updated_at'])->toDateTimeString(),
+                    'osmfeatures_updated_at' => Carbon::parse($route['updated_at'])->toDateTimeString(),
                     'osmfeatures_data' => json_encode($hikingRouteData),
                     'geometry' => DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($hikingRouteData['geometry'])."'))")[0]->st_astext,
                 ]);

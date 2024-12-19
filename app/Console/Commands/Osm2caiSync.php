@@ -64,12 +64,13 @@ class Osm2caiSync extends Command
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
-        $batchSize = 1000;
+        $batchSize = 10000;
         $batch = [];
 
         foreach ($data as $id => $udpated_at) {
             $modelInstance = new $modelClass();
             if ($modelInstance->where('id', $id)->exists() && ! $modelInstance instanceof \App\Models\HikingRoute) {
+                $this->info('Skipping '.$id.' because it already exists');
                 $progressBar->advance();
                 continue;
             }
@@ -77,9 +78,11 @@ class Osm2caiSync extends Command
             $batch[] = new ImportElementFromOsm2caiJob($modelClass, $singleFeatureApi);
 
             if (count($batch) >= $batchSize) {
-                Bus::batch($batch)->dispatch();
+                foreach ($batch as $job) {
+                    dispatch($job);
+                }
                 $batch = [];
-                usleep(500000);
+                sleep(5);
             }
             $progressBar->advance();
         }
@@ -145,6 +148,8 @@ class Osm2caiSync extends Command
             case 'Sector':
                 return 'sectors';
             case 'Section':
+                return 'sections';
+            case 'Club':
                 return 'sections';
             case 'Itinerary':
                 return 'itineraries';

@@ -108,6 +108,49 @@ trait SpatialDataTrait
         return json_decode(GeometryService::getService()->getCentroid($geom), true)['coordinates'] ?? null;
     }
 
+    /**
+     * Get the geometry type of the model
+     *
+     * @return string
+     */
+    public function getGeometryType(): ?string
+    {
+        $type = DB::select('SELECT ST_GeometryType(geometry) as type FROM '.$this->getTable().' WHERE id = '.$this->id)[0]->type;
+
+        return $type;
+    }
+
+    /**
+     * Get the bounding box of the geometry.
+     *
+     * @return string
+     */
+    public function getBoundingBox(): string
+    {
+        // Ensure the model has a geometry column
+        if (! $this->geometry || empty($this->geometry)) {
+            throw new \Exception('Model must have a geometry column to calculate bounding box.');
+        }
+
+        //ensure the geometry is a polygon or multipolygon
+        if ($this->getGeometryType() !== 'ST_Polygon' && $this->getGeometryType() !== 'ST_MultiPolygon') {
+            throw new \Exception('Model must have a polygon or multipolygon geometry to calculate bounding box.');
+        }
+
+        // Get the bounding box
+        $boundingBox = DB::selectOne("
+        SELECT ST_AsText(ST_Envelope(geometry)) AS bbox
+        FROM {$this->getTable()}
+        WHERE id = ?
+    ", [$this->id]);
+
+        if ($boundingBox && $boundingBox->bbox) {
+            return $boundingBox->bbox; // Returns as WKT (e.g., "POLYGON((x1 y1, x2 y2, ...))")
+        }
+
+        throw new \Exception('Failed to calculate bounding box for geometry.');
+    }
+
     // ------------------------------
     // Related Data Utilities
     // ------------------------------

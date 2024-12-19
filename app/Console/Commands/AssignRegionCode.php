@@ -52,35 +52,8 @@ class AssignRegionCode extends Command
                 'Z' => 'Sardegna'
       */
 
-        $regionsCode = [
-            'A' => 'Friuli-Venezia Giulia',
-            'B' => 'Veneto',
-            'C' => 'Trentino-Alto Adige',
-            'D' => 'Lombardia',
-            'E' => 'Piemonte',
-            'F' => "Valle d'Aosta",
-            'G' => 'Liguria',
-            'H' => 'Emilia-Romagna',
-            'L' => 'Toscana',
-            'M' => 'Marche',
-            'N' => 'Umbria',
-            'O' => 'Lazio',
-            'P' => 'Abruzzo',
-            'Q' => 'Molise',
-            'S' => 'Campania',
-            'R' => 'Puglia',
-            'T' => 'Basilicata',
-            'U' => 'Calabria',
-            'V' => 'Sicilia',
-            'Z' => 'Sardegna',
-        ];
-
-        foreach ($regionsCode as $code => $name) {
-            $region = Region::where('name', 'LIKE', '%'.$name.'%')->first();
-            if ($region) {
-                $region->code = $code;
-                $region->save();
-            }
+        foreach (Region::all() as $region) {
+            $region->assignCode();
         }
     }
 }

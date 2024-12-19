@@ -2,6 +2,12 @@
 
 namespace App\Models;
 
+use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\CalculateIntersectionsJob;
+use App\Models\CaiHut;
+use App\Models\Club;
+use App\Models\HikingRoute;
+use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +29,12 @@ class MountainGroups extends Model
     protected static function booted()
     {
         static::saved(function ($mountainGroup) {
+            if ($mountainGroup->isDirty('geometry')) {
+                $mountainGroup->dispatchGeometricComputationsJobs();
+            }
+        });
+
+        static::updated(function ($mountainGroup) {
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('MountainGroups', $mountainGroup->id);
             }
@@ -32,5 +44,40 @@ class MountainGroups extends Model
     public function regions()
     {
         return $this->belongsToMany(Region::class, 'mountain_group_region', 'mountain_group_id', 'region_id');
+    }
+
+    public function ecPois()
+    {
+        return $this->belongsToMany(EcPoi::class, 'mountain_group_ec_poi', 'mountain_group_id', 'ec_poi_id');
+    }
+
+    public function caiHuts()
+    {
+        return $this->belongsToMany(CaiHut::class, 'mountain_group_cai_hut', 'mountain_group_id', 'cai_hut_id');
+    }
+
+    public function hikingRoutes()
+    {
+        return $this->belongsToMany(HikingRoute::class, 'mountain_group_hiking_route', 'mountain_group_id', 'hiking_route_id');
+    }
+
+    public function clubs()
+    {
+        return $this->belongsToMany(Club::class, 'mountain_group_club', 'mountain_group_id', 'club_id');
+    }
+
+    /**
+     * Dispatch jobs for geometric computations
+     *
+     * @param string $queue
+     * @return void
+     */
+    public function dispatchGeometricComputationsJobs(string $queue = 'geometric-computations'): void
+    {
+        CalculateIntersectionsJob::dispatch($this, Region::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, EcPoi::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, CaiHut::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, Club::class)->onQueue($queue);
+        CalculateIntersectionsJob::dispatch($this, HikingRoute::class)->onQueue($queue);
     }
 }

@@ -3,6 +3,10 @@
 namespace App\Models;
 
 use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\CheckNearbyHikingRoutesJob;
+use App\Jobs\CheckNearbyHutsJob;
+use App\Models\Club;
+use App\Models\Region;
 use App\Models\User;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
@@ -11,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 
@@ -27,16 +32,25 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         'type',
         'score',
         'user_id',
+        'tags',
     ];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
+        'tags' => 'array',
     ];
 
     protected static function booted()
     {
         static::saved(function ($ecPoi) {
+            if ($ecPoi->isDirty('geometry')) {
+                CheckNearbyHikingRoutesJob::dispatch($ecPoi, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
+                CheckNearbyHutsJob::dispatch($ecPoi, config('osm2cai.cai_hut_buffer'))->onQueue('geometric-computations');
+            }
+        });
+
+        static::updated(function ($ecPoi) {
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('EcPoi', $ecPoi->id);
             }
@@ -113,5 +127,30 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     public function region()
     {
         return $this->belongsTo(Region::class);
+    }
+
+    public function mountainGroups()
+    {
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_ec_poi', 'ec_poi_id', 'mountain_group_id');
+    }
+
+    public function clubs()
+    {
+        return $this->belongsToMany(Club::class, 'ec_poi_club', 'ec_poi_id', 'club_id');
+    }
+
+    public function nearbyCaiHuts()
+    {
+        return $this->belongsToMany(CaiHut::class, 'ec_poi_cai_hut', 'ec_poi_id', 'cai_hut_id')->withPivot(['buffer']);
+    }
+
+    public function nearbyHikingRoutes()
+    {
+        return $this->belongsToMany(HikingRoute::class, 'hiking_route_ec_poi', 'ec_poi_id', 'hiking_route_id')->withPivot(['buffer']);
+    }
+
+    public function municipalities()
+    {
+        return $this->belongsToMany(Municipality::class, 'ec_poi_municipality', 'ec_poi_id', 'municipality_id');
     }
 }

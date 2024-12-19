@@ -2,6 +2,7 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Models\Region;
 use Ericlagarda\NovaTextCard\TextCard;
 use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
@@ -22,7 +23,7 @@ class SALMiturAbruzzo extends Dashboard
      */
     public function cards()
     {
-        $regions = DB::table('regions')->get();
+        $regions = Region::all();
 
         $sumMountainGroups = DB::select('SELECT count(*) as count FROM mountain_groups')[0]->count;
         $sumEcPois = DB::select('SELECT count(*) as count FROM ec_pois')[0]->count;
@@ -43,7 +44,7 @@ class SALMiturAbruzzo extends Dashboard
         return [
             (new HtmlCard())
                 ->width('full')
-                ->view('nova.cards.sal-regions-table', [
+                ->view('nova.cards.sal-mitur-abruzzo-regions-table', [
                     'regions' => $regions,
                     'totals' => $totalsGlobal,
                 ])

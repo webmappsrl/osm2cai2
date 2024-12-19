@@ -310,7 +310,7 @@ class Main extends Dashboard
             // Calcolo del SAL
             if ($att > 0) {
                 $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $att;
-                $sal = min($sal, 1); // Assicura che SAL non superi il 100%
+                $sal = min($sal, 1);
                 $salDisplay = number_format($sal * 100, 2).' %';
             } else {
                 $sal = 0;

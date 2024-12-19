@@ -13,12 +13,11 @@
     <tbody>
         @foreach ($regions as $region)
             @php
-                $regionIntersections = $region->intersectings;
-                $regionMountainGroupsCount = count($regionIntersections['mountain_groups'] ?? []);
-                $regionEcPoisCount = count($regionIntersections['ec_pois'] ?? []);
-                $regionCaiHutsCount = count($regionIntersections['cai_huts'] ?? []);
-                $regionHikingRoutesCount = count($regionIntersections['hiking_routes'] ?? []);
-                $regionClubsCount = count($regionIntersections['clubs'] ?? []);
+                $regionMountainGroupsCount = count($region->mountainGroups);
+                $regionEcPoisCount = count($region->ecPois);
+                $regionCaiHutsCount = count($region->caiHuts);
+                $regionHikingRoutesCount = count($region->hikingRoutes);
+                $regionClubsCount = count($region->clubs);
                 $regionPoiTotal = $regionEcPoisCount + $regionHikingRoutesCount;
             @endphp
             <tr class="border-b">

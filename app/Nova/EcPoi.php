@@ -3,6 +3,9 @@
 namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
+use App\Nova\Actions\CacheMiturApi;
+use App\Nova\Actions\CalculateIntersections;
+use App\Nova\Filters\EcPoiTypeFIlter;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -35,6 +38,13 @@ class EcPoi extends OsmfeaturesResource
         'osmfeatures_id',
     ];
 
+    public static function label()
+    {
+        $label = 'Punti di Interesse';
+
+        return __($label);
+    }
+
     /**
      * Get the fields displayed by the resource.
      *
@@ -49,6 +59,32 @@ class EcPoi extends OsmfeaturesResource
             Text::make('Score', 'score')->displayUsing(function ($value) {
                 return Osm2caiHelper::getScoreAsStars($value);
             })->sortable(),
+            BelongsTo::make('Region')->sortable()->filterable()->searchable(),
         ]);
+    }
+
+    public function filters(NovaRequest $request)
+    {
+        $filters = parent::filters($request);
+        $filters[] = (new EcPoiTypeFIlter);
+
+        return $filters;
+    }
+
+    public function actions(NovaRequest $request)
+    {
+        $actions = parent::actions($request);
+        $actions[] = (new CalculateIntersections('EcPoi'))->canSee(function () {
+            return auth()->user()->hasRole('Administrator');
+        })->canRun(function () {
+            return auth()->user()->hasRole('Administrator');
+        });
+        $actions[] = (new CacheMiturApi('EcPoi'))->canSee(function () {
+            return auth()->user()->hasRole('Administrator');
+        })->canRun(function () {
+            return auth()->user()->hasRole('Administrator');
+        });
+
+        return $actions;
     }
 }

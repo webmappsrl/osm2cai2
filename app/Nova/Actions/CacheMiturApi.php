@@ -16,9 +16,12 @@ class CacheMiturApi extends Action
 
     protected $class;
 
+    public $name;
+
     public function __construct(string $class)
     {
         $this->class = $class;
+        $this->name = __('CACHE MITUR API');
     }
 
     /**
@@ -30,6 +33,9 @@ class CacheMiturApi extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        if (! app()->environment('production')) {
+            return Action::danger('This action is only available in production');
+        }
         foreach ($models as $model) {
             CacheMiturAbruzzoDataJob::dispatch($this->class, $model->id);
         }

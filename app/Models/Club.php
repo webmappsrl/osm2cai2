@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Models\HikingRoute;
+use App\Models\MountainGroups;
 use App\Models\Region;
 use App\Models\User;
 use App\Traits\AwsCacheable;
@@ -37,7 +38,7 @@ class Club extends Model
 
     protected static function booted()
     {
-        static::saved(function ($club) {
+        static::updated(function ($club) {
             if (app()->environment('production')) {
                 CacheMiturAbruzzoDataJob::dispatch('Club', $club->id);
             }
@@ -52,6 +53,11 @@ class Club extends Model
     public function hikingRoutes()
     {
         return $this->belongsToMany(HikingRoute::class, 'hiking_route_club');
+    }
+
+    public function mountainGroups()
+    {
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_club', 'club_id', 'mountain_group_id');
     }
 
     public function users()

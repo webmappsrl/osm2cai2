@@ -63,19 +63,25 @@ class Osm2caiHelper
      */
     public static function getOsmfeaturesDataForNovaDetail(string $data): string
     {
-        $data = json_decode($data, true);
-        while (! is_array($data)) {
+        return cache()->remember('osmfeatures_data_'.md5($data), 60 * 60 * 24, function () use ($data) {
             $data = json_decode($data, true);
-        }
 
-        //now is type, geometry and properties, i want properties before geometry
-        $dataOrdered = [
-            'type' => $data['type'],
-            'properties' => $data['properties'],
-            'geometry' => $data['geometry'],
-        ];
+            if (! is_array($data)) {
+                $data = json_decode($data, true);
+            }
 
-        return json_encode($dataOrdered, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return '';
+            }
+
+            $dataOrdered = [
+                'type' => $data['type'] ?? '',
+                'properties' => $data['properties'] ?? [],
+                'geometry' => $data['geometry'] ?? [],
+            ];
+
+            return json_encode($dataOrdered, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        });
     }
 
     /**

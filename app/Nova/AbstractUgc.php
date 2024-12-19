@@ -3,8 +3,9 @@
 namespace App\Nova;
 
 use App\Enums\ValidatedStatusEnum;
-use App\Models\UgcTrack;
-use App\Nova\Filters\DateFilter;
+use App\Nova\Actions\DeleteUgcMedia;
+use App\Nova\Actions\DownloadFeatureCollection;
+use App\Nova\Actions\UploadAndAssociateUgcMedia;
 use App\Nova\Filters\RelatedUGCFilter;
 use App\Nova\Filters\UgcAppIdFilter;
 use App\Nova\Filters\ValidatedFilter;
@@ -16,7 +17,6 @@ use Idez\DateRangeFilter\Enums\Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
@@ -57,11 +57,16 @@ abstract class AbstractUgc extends Resource
     {
         $novaFields = [
             ID::make(__('ID'), 'id')->sortable()->readonly(),
-            Text::make('User', function () {
+            Text::make('User', function () use ($request) {
                 if ($this->user_id) {
+                    if (auth()->user()->isValidatorForFormId($this->form_id)) {
+                        //add the email of the user next to the name for validator
+                        return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.' ('.$this->user->email.')'.'</a>';
+                    }
+
                     return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.'</a>';
                 } else {
-                    return $this->user_no_match ?? 'N/A';
+                    return $this->user->email ?? 'N/A';
                 }
             })->asHtml(),
             BelongsTo::make('User', 'user', User::class)
@@ -70,8 +75,7 @@ abstract class AbstractUgc extends Resource
                 ->hideWhenCreating()
                 ->hideFromIndex()
                 ->hideFromDetail(),
-            HasMany::make('Ugc Media', 'ugc_media', UgcMedia::class),
-            Select::make('Validated', 'validated')
+            Select::make(__('Validated'), 'validated')
                 ->options($this->validatedStatusOptions())
                 ->default(ValidatedStatusEnum::NOT_VALIDATED->value)
                 ->canSee(function ($request) {
@@ -93,10 +97,8 @@ abstract class AbstractUgc extends Resource
                         $model->validation_date = null;
                     }
                 })->onlyOnForms(),
-            Text::make('Validation Status', function () {
-                return $this->validated;
-            }),
-            DateTime::make('Validation Date', 'validation_date')
+            Text::make(__('Validation Status'), 'validated'),
+            DateTime::make(__('Validation Date'), 'validation_date')
                 ->onlyOnDetail(),
             Text::make('Validator', function () {
                 if ($this->validator_id) {
@@ -105,29 +107,29 @@ abstract class AbstractUgc extends Resource
                     return null;
                 }
             })->onlyOnDetail(),
-            Text::make('App ID', 'app_id')
+            Text::make(__('App ID'), 'app_id')
                 ->onlyOnDetail(),
-            DateTime::make('Registered At', 'registered_at')
-                ->readonly(),
-            DateTime::make('Updated At')
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+            DateTime::make(__('Registered At'), 'registered_at')
+                ->readonly()
+                ->onlyOnDetail(),
+            DateTime::make(__('Updated At'))
+                ->onlyOnDetail()
                 ->sortable(),
-            Text::make('Geohub ID', 'geohub_id')
+            Text::make(__('Geohub ID'), 'geohub_id')
                 ->onlyOnDetail(),
-            Text::make('Gallery', function () {
+            Text::make(__('Gallery'), function () {
                 $images = $this->ugc_media;
                 if (empty($images)) {
                     return 'N/A';
                 }
-                $html = '<div style="display: flex; flex-wrap: wrap;">';
+                $html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px;">';
                 foreach ($images as $image) {
                     $url = $image->getUrl();
-                    $html .= '<div style="margin: 5px; text-align: center;">';
-                    $html .= '<a href="'.$url.'" target="_blank">';
-                    $html .= '<img src="'.$url.'" width="100" height="100" style="object-fit: cover;">';
+                    $html .= '<div style="margin: 5px; text-align: center; min-width: 100px;">';
+                    $html .= '<a href="'.$url.'" target="_blank" style="display: block;">';
+                    $html .= '<img src="'.$url.'" width="100" height="100" style="object-fit: cover; display: block; border: 1px solid #ddd; border-radius: 4px;">';
                     $html .= '</a>';
-                    $html .= '<p style="color: lightgray;">ID: '.$image->id.'</p>';
+                    $html .= '<p style="margin-top: 5px; color: #666; font-size: 12px;">ID: '.$image->id.'</p>';
                     $html .= '</div>';
                 }
                 $html .= '</div>';
@@ -175,27 +177,33 @@ abstract class AbstractUgc extends Resource
 
     public function actions(Request $request)
     {
-        return [ //TODO: handle media with spatie media library (??)
+        return [
+            (new UploadAndAssociateUgcMedia())->canSee(function ($request) {
+                if ($this->user_id) {
+                    return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatusEnum::NOT_VALIDATED->value;
+                }
 
-            // (new UploadAndAssociateUgcMedia())->canSee(function ($request) {
-            //     if ($this->user_id)
-            //         return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatu::NotValidated;
-            //     return $request->has('resources');
-            // })
-            //     ->canRun(function ($request) {
-            //         return true;
-            //     })
-            //     ->confirmText('Sei sicuro di voler caricare questa immagine?')
-            //     ->confirmButtonText('Carica')
-            //     ->cancelButtonText('Annulla'),
-            // (new DeleteUgcMedia($this->model()))->canSee(function ($request) {
-            //     if ($this->user_id)
-            //         return auth()->user()->id == $this->user_id && $this->validated === ValidatedStat::NotValidated;
-            //     return $request->has('resources');
-            // }),
-            // (new DownloadFeatureCollection())->canSee(function ($request) {
-            //     return true;
-            // }),
+                return $request->has('resources');
+            })
+                ->canRun(function ($request) {
+                    return true;
+                })
+                ->confirmText('Sei sicuro di voler caricare questa immagine?')
+                ->confirmButtonText('Carica')
+                ->cancelButtonText('Annulla'),
+            (new DeleteUgcMedia($this->model()))->canSee(function ($request) {
+                if ($this->user_id) {
+                    return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatusEnum::NOT_VALIDATED->value;
+                }
+
+                return $request->has('resources');
+            }),
+            (new DownloadFeatureCollection())->canSee(function ($request) {
+                return true;
+            })
+                ->canRun(function ($request) {
+                    return true;
+                }),
         ];
     }
 
@@ -206,18 +214,5 @@ abstract class AbstractUgc extends Resource
      *
      * @return array
      */
-    public static function getExportFields(): array
-    {
-        return [
-            'id' => 'ID',
-            'user->name' => 'Nome utente',
-            'user->email' => 'Email utente',
-            'registered_at' => 'Data di acquisizione',
-            'raw_data->latitude' => 'Latitudine',
-            'raw_data->longitude' => 'Longitudine',
-            'validated' => 'Stato di validazione',
-            'validation_date' => 'Data di validazione',
-            'app_id' => 'App ID',
-        ];
-    }
+    abstract public static function getExportFields(): array;
 }
