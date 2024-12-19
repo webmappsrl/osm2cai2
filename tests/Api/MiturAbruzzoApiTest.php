@@ -3,7 +3,7 @@
 namespace Tests\Api;
 
 use App\Jobs\CacheMiturAbruzzoDataJob;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 class MiturAbruzzoApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     /**
      * Legacy api samples data to test.

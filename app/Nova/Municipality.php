@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
+use App\Nova\Filters\ScoreFilter;
 use App\Nova\OsmfeaturesResource;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
@@ -59,8 +60,11 @@ class Municipality extends OsmfeaturesResource
     public function filters(NovaRequest $request)
     {
         $parentFilters = parent::filters($request);
-        //remove scorefilter
-        unset($parentFilters[0]);
+        foreach ($parentFilters as $key => $filter) {
+            if ($filter instanceof ScoreFilter) {
+                unset($parentFilters[$key]);
+            }
+        }
 
         return $parentFilters;
     }
