@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.17.0](https://github.com/webmappsrl/osm2cai2/compare/v1.16.0...v1.17.0) (2024-12-19)
+
+
+### Features
+
+* added almost all elements to login with the cas system ([7509ba6](https://github.com/webmappsrl/osm2cai2/commit/7509ba666e9218eb290753806fcbf4b2d35704a6))
+* configured log viewer ([a1d089c](https://github.com/webmappsrl/osm2cai2/commit/a1d089cc64071572d261ef59f66b10f36e7da57d))
+* dashboards OC: 4224 ([#79](https://github.com/webmappsrl/osm2cai2/issues/79)) ([ce5cfc6](https://github.com/webmappsrl/osm2cai2/commit/ce5cfc6b8c1ee5691af47d1ad82921a4cd0a15b2))
+* e2e tests setup OC:4057 ([#65](https://github.com/webmappsrl/osm2cai2/issues/65)) ([f3e8b61](https://github.com/webmappsrl/osm2cai2/commit/f3e8b615f0ebfc4705757b7c297cc9b74c14c7b7))
+* Main Update ([#89](https://github.com/webmappsrl/osm2cai2/issues/89)) ([b8c36e0](https://github.com/webmappsrl/osm2cai2/commit/b8c36e0877b5a179331ac474061856b47189cb35))
+* Permessi Utente OC:4228 ([#78](https://github.com/webmappsrl/osm2cai2/issues/78)) ([3cc9988](https://github.com/webmappsrl/osm2cai2/commit/3cc998865c3e8e815abe81e32e5ec3fd8ab2357f))
+* sync ugc from legacy osm2cai OC: 3470 ([#71](https://github.com/webmappsrl/osm2cai2/issues/71)) ([8dc5b63](https://github.com/webmappsrl/osm2cai2/commit/8dc5b633afccacb5a63cdae95c93e543eff5292f))
+* update nova Login.vue oc: 4227 ([99ad919](https://github.com/webmappsrl/osm2cai2/commit/99ad91937dca7bca625be94824ab2e6e5a4c3823))
+* update the wm-package oc: 4227 ([e3e494d](https://github.com/webmappsrl/osm2cai2/commit/e3e494d7930656742cef3ccc8dca3aa6d905d12b))
+
+
+### Bug Fixes
+
+* cas auth oc: 4227 ([08d545b](https://github.com/webmappsrl/osm2cai2/commit/08d545bc310923d6fc388cb955d0b588a798fd39))
+* deploy prod workflow ([b0512d9](https://github.com/webmappsrl/osm2cai2/commit/b0512d9947b41820d7b35001da203009f236ae8d))
+* dev deploy scripts to inherit secrets ([b08bd77](https://github.com/webmappsrl/osm2cai2/commit/b08bd77ebc0ba8be405d7090f790c0df60c69ab9))
+* geojson controller test ([ae6973f](https://github.com/webmappsrl/osm2cai2/commit/ae6973f903bafff0a2672a5155b6f3c07a3d3440))
+* geojson controller test ([84a4383](https://github.com/webmappsrl/osm2cai2/commit/84a43833142500d121fcdee68b04e7b1967f7406))
+* gitmodules file ([e5875a0](https://github.com/webmappsrl/osm2cai2/commit/e5875a04c3ea67786d45b9c90cd01b34047daba6))
+* submodules dependencies in tests workflow ([3ef7036](https://github.com/webmappsrl/osm2cai2/commit/3ef7036928f9ff2311644f46fc738cfb52168b17))
+
+
+### Miscellaneous Chores
+
+* Add submodules for wm-osmfeatures and wm-package ([8a517db](https://github.com/webmappsrl/osm2cai2/commit/8a517db8b687990fe151b6b183bd4bc04c394e41))
+* fixes and performance improvements ([#91](https://github.com/webmappsrl/osm2cai2/issues/91)) ([c251f2a](https://github.com/webmappsrl/osm2cai2/commit/c251f2ab98c040f9b6e392d9cadb0fd62fcb5b08))
+* installed log viewer package ([2b23ffc](https://github.com/webmappsrl/osm2cai2/commit/2b23ffc76f8f4cbafa326bbf96a6a054bdc5fab3))
+* recalculate intersections job now extends basejob class from wm-package ([425493c](https://github.com/webmappsrl/osm2cai2/commit/425493cdf6257bab95c62fd9f255c0ce29514ba0))
+* updated docker config for horizon and redis ([35bdbe6](https://github.com/webmappsrl/osm2cai2/commit/35bdbe6ec0d06018036f6961141896356e15ebd0))
+* updated packages as submodules ([81cc03e](https://github.com/webmappsrl/osm2cai2/commit/81cc03e701ddb9ef7d4c037370c77613388657b6))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
