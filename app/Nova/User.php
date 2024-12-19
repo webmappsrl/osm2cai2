@@ -26,8 +26,6 @@ class User extends AbstractUser
      */
     public static $model = \App\Models\User::class;
 
-
-
     /**
      * Get the fields displayed by the resource.
      *
@@ -62,10 +60,11 @@ class User extends AbstractUser
                 ->sortable(),
 
         ];
+
         return [
             ...array_slice($baseFields, 0, 5),
             ...$relationFields,
-            ...array_slice($baseFields, 4)
+            ...array_slice($baseFields, 4),
         ];
     }
 
