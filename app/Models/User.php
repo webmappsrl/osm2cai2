@@ -15,6 +15,7 @@ use Wm\WmPackage\Models\User as WmUser;
 
 class User extends WmUser
 {
+
     /**
      * The attributes that are mass assignable.
      *
@@ -28,6 +29,7 @@ class User extends WmUser
         'club_cai_code',
         'phone',
     ];
+
 
     public function EcPois()
     {
