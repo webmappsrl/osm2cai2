@@ -191,7 +191,6 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         foreach ($intersect as $key => $value) {
             //associate region matching the code column in legacy database
             if ($key === 'region_id') {
-              
                 $legacyRegion = $legacyDbConnection->table('regions')->find($value);
                 $region = Region::where('code', $legacyRegion->code)->first();
                 $value = $region ? $region->id : null;
