@@ -34,7 +34,7 @@ class Osm2caiSync extends Command
 
         if ($modelClass === null) {
             $this->error('Model class not found');
-            Log::error('Model' . $modelClass . ' class not found');
+            Log::error('Model'.$modelClass.' class not found');
 
             return;
         }
@@ -51,8 +51,8 @@ class Osm2caiSync extends Command
             $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
             $response = Http::get($listApi);
             if ($response->failed() || $response->json() === null) {
-                $this->error('Failed to retrieve data from API: ' . $listApi);
-                Log::error('Failed to retrieve data from API: ' . $listApi . ' ' . $response->body());
+                $this->error('Failed to retrieve data from API: '.$listApi);
+                Log::error('Failed to retrieve data from API: '.$listApi.' '.$response->body());
 
                 return;
             }
@@ -60,7 +60,7 @@ class Osm2caiSync extends Command
 
         $listData = $listResponse->json();
 
-        $this->info('Dispatching ' . count($data) . ' jobs for ' . $model . ' model');
+        $this->info('Dispatching '.count($data).' jobs for '.$model.' model');
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
@@ -70,7 +70,7 @@ class Osm2caiSync extends Command
         foreach ($listData as $id => $udpated_at) {
             $modelInstance = new $modelClass();
             if ($modelInstance->where('id', $id)->exists() && ! $modelInstance instanceof \App\Models\HikingRoute) {
-                $this->info('Skipping ' . $id . ' because it already exists');
+                $this->info('Skipping '.$id.' because it already exists');
                 $progressBar->advance();
                 continue;
             }
@@ -118,12 +118,12 @@ class Osm2caiSync extends Command
     private function parseModelClass($model)
     {
         $model = str_replace('_', '', ucwords($model, '_'));
-        $modelClass = 'App\\Models\\' . $model;
+        $modelClass = 'App\\Models\\'.$model;
 
         if (! class_exists($modelClass)) {
             //remove final 's' from model name
             $modelName = substr($model, 0, -1);
-            $modelClass = 'App\\Models\\' . $modelName;
+            $modelClass = 'App\\Models\\'.$modelName;
             if (! class_exists($modelClass)) {
                 //rename section model to club
                 if ($model === 'Sections') {
