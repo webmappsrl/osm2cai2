@@ -124,7 +124,8 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
     {
         $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'elevation_min', 'elevation_max', 'elevation_avg', 'elevation_stddev', 'slope_min', 'slope_max', 'slope_avg', 'slope_stddev'];
 
-        $data['geometry'] = $this->prepareGeometry($data['geometry']);
+        $data['geometry'] = $this->
+          ($data['geometry']);
 
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
         $intersect['aggregated_data'] = json_encode($intersect['aggregated_data']);
@@ -191,6 +192,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         foreach ($intersect as $key => $value) {
             //associate region matching the code column in legacy database
             if ($key === 'region_id') {
+
                 $legacyRegion = $legacyDbConnection->table('regions')->find($value);
                 $region = Region::where('code', $legacyRegion->code)->first();
                 $value = $region ? $region->id : null;
@@ -408,6 +410,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $modelInstance->hikingRoutes()->syncWithoutDetaching($hrs);
     }
 
+
     private function prepareGeometry(array $geometry)
     {
         if ($geometry !== null) {
@@ -416,4 +419,5 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
         return $geometry;
     }
+
 }
