@@ -64,7 +64,7 @@ class Osm2caiSync extends Command
         $progressBar = $this->output->createProgressBar(count($data));
         $progressBar->start();
 
-        $batchSize = 1000;
+        $batchSize = 10000;
         $batch = [];
 
         foreach ($data as $id => $udpated_at) {
