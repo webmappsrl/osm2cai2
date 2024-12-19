@@ -2,16 +2,17 @@
 
 namespace App\Nova;
 
-use App\Helpers\Osm2caiHelper;
-use App\Nova\OsmfeaturesResource;
+use Laravel\Nova\Panel;
+use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Panel;
+use App\Helpers\Osm2caiHelper;
+use App\Nova\Filters\ScoreFilter;
+use App\Nova\OsmfeaturesResource;
+use Laravel\Nova\Fields\DateTime;
 use Wm\MapMultiPolygon\MapMultiPolygon;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Municipality extends OsmfeaturesResource
 {
@@ -59,8 +60,11 @@ class Municipality extends OsmfeaturesResource
     public function filters(NovaRequest $request)
     {
         $parentFilters = parent::filters($request);
-        //remove scorefilter
-        unset($parentFilters[0]);
+        foreach ($parentFilters as $key => $filter) {
+            if ($filter instanceof ScoreFilter) {
+                unset($parentFilters[$key]);
+            }
+        }
 
         return $parentFilters;
     }

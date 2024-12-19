@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Jobs\ImportElementFromOsm2caiJob;
 use Illuminate\Console\Command;
-use Illuminate\Support\DomParser;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +34,7 @@ class Osm2caiSync extends Command
 
         if ($modelClass === null) {
             $this->error('Model class not found');
-            Log::error('Model'.$modelClass.' class not found');
+            Log::error('Model' . $modelClass . ' class not found');
 
             return;
         }
@@ -43,39 +42,58 @@ class Osm2caiSync extends Command
         $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
 
         //perform the request to the API
-        $response = Http::get($listApi);
+        $listResponse = Http::get($listApi);
 
-        if ($response->failed() || $response->json() === null) {
+        if ($listResponse->failed() || $listResponse->json() === null) {
             //renaming the model to match the API endpoint
             $model = $this->mapModelToendPoint($model);
+
             $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
-            $response = Http::get($listApi);
-            if ($response->failed() || $response->json() === null) {
-                $this->error('Failed to retrieve data from API: '.$listApi);
-                Log::error('Failed to retrieve data from API: '.$listApi.' '.$response->body());
+
+            $listResponse = Http::get($listApi);
+            if ($listResponse->failed() || $listResponse->json() === null) {
+                $this->error('Failed to retrieve data from API: ' . $listApi);
+                Log::error('Failed to retrieve data from API: ' . $listApi . ' ' . $listResponse->body());
 
                 return;
             }
         }
 
-        $data = $response->json();
+        $listData = $listResponse->json();
 
-        $this->info('Dispatching '.count($data).' jobs for '.$model.' model');
-        $progressBar = $this->output->createProgressBar(count($data));
+        $this->info('Dispatching ' . count($listData) . ' jobs for ' . $model . ' model');
+        $progressBar = $this->output->createProgressBar(count($listData));
         $progressBar->start();
 
         $batchSize = 10000;
         $batch = [];
 
-        foreach ($data as $id => $udpated_at) {
+        foreach ($listData as $id => $udpated_at) {
             $modelInstance = new $modelClass();
             if ($modelInstance->where('id', $id)->exists() && ! $modelInstance instanceof \App\Models\HikingRoute) {
-                $this->info('Skipping '.$id.' because it already exists');
+                $this->info('Skipping ' . $id . ' because it already exists');
                 $progressBar->advance();
                 continue;
             }
             $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
-            $batch[] = new ImportElementFromOsm2caiJob($modelClass, $singleFeatureApi);
+
+            $singleFeatureResponse = Http::get($singleFeatureApi);
+
+            if ($singleFeatureResponse->failed()) {
+                Log::error('Failed to retrieve data from OSM2CAI API' . $singleFeatureResponse->body());
+
+                return;
+            }
+
+            $singleFeatureData = $singleFeatureResponse->json();
+
+            if (empty($singleFeatureData)) {
+                $this->info('Skipping ' . $id . ' because it is empty');
+                $progressBar->advance();
+                continue;
+            }
+
+            $batch[] = new ImportElementFromOsm2caiJob($modelClass, $singleFeatureData);
 
             if (count($batch) >= $batchSize) {
                 foreach ($batch as $job) {
@@ -101,12 +119,12 @@ class Osm2caiSync extends Command
     private function parseModelClass($model)
     {
         $model = str_replace('_', '', ucwords($model, '_'));
-        $modelClass = 'App\\Models\\'.$model;
+        $modelClass = 'App\\Models\\' . $model;
 
         if (! class_exists($modelClass)) {
             //remove final 's' from model name
             $modelName = substr($model, 0, -1);
-            $modelClass = 'App\\Models\\'.$modelName;
+            $modelClass = 'App\\Models\\' . $modelName;
             if (! class_exists($modelClass)) {
                 //rename section model to club
                 if ($model === 'Sections') {

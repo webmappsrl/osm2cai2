@@ -103,8 +103,8 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
             case Region::class:
                 return $this->buildRegionGeojson($model);
             default:
-                $this->logger()->error('Unsupported model type: '.get_class($model));
-                throw new \Exception('Unsupported model type: '.get_class($model));
+                $this->logger()->error('Unsupported model type: ' . get_class($model));
+                throw new \Exception('Unsupported model type: ' . get_class($model));
         }
     }
 
@@ -215,7 +215,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
 
     protected function buildMountainGroupGeojson($mountainGroup): array
     {
-        $regions = $mountainGroup->getIntersections(new Region())->pluck('name')->implode(', ');
+        $regions = $mountainGroup->regions->pluck('name')->implode(', ');
         $provinces = $mountainGroup->getIntersections(new Province())->pluck('name')->implode(', ');
         $municipalities = $mountainGroup->getIntersections(new Municipality())->pluck('comune')->implode(', ');
 
@@ -247,10 +247,10 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $properties['slope_stddev'] = $mountainGroup->slope_stddev ?? '';
 
         //TODO: check IDs are correct or recalculate the intersections
-        $properties['section_ids'] = $mountainGroup->getIntersections(new Club())->pluck('updated_at', 'id')->toArray();
-        $properties['hiking_routes'] = $mountainGroup->getIntersections(new HikingRoute())->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray();
-        $properties['ec_pois'] = $mountainGroup->getIntersections(new EcPoi())->pluck('updated_at', 'id')->toArray();
-        $properties['cai_huts'] = $mountainGroup->getIntersections(new CaiHut())->pluck('updated_at', 'id')->toArray();
+        $properties['section_ids'] = $mountainGroup->clubs->pluck('updated_at', 'id')->toArray();
+        $properties['hiking_routes'] = $mountainGroup->hikingRoutes->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray();
+        $properties['ec_pois'] = $mountainGroup->ecPois->pluck('updated_at', 'id')->toArray();
+        $properties['cai_huts'] = $mountainGroup->caiHuts->pluck('updated_at', 'id')->toArray();
 
         $geojson['properties'] = $properties;
         $geojson['geometry'] = $mountainGroup->getGeometryGeojson();
@@ -331,7 +331,7 @@ SQL;
             $type = $osmfeaturesData['class'];
         }
         if (isset($osmfeaturesData['subclass'])) {
-            $type .= '/'.$osmfeaturesData['subclass'];
+            $type .= '/' . $osmfeaturesData['subclass'];
         }
 
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
@@ -403,7 +403,7 @@ SQL;
         $this->logger()->info("Start caching hut $hut->id");
 
         //get the mountain groups for the hut based on the geometry intersection
-        $mountainGroups = $hut->getIntersections(new MountainGroups())->first();
+        $mountainGroups = $hut->mountainGroups->first();
 
         //get the pois in a 1km buffer from the hut
         $pois = $hut->getElementsInBuffer(new EcPoi(), 1000);
