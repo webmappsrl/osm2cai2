@@ -21,17 +21,17 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
-    protected $apiUrl;
+    protected $data;
 
     protected $modelClass;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $modelClass, string $apiUrl)
+    public function __construct(string $modelClass, array $data)
     {
         $this->modelClass = $modelClass;
-        $this->apiUrl = $apiUrl;
+        $this->data = $data;
     }
 
     /**
@@ -39,28 +39,20 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $response = Http::get($this->apiUrl);
-
-        if ($response->failed()) {
-            Log::error('Failed to retrieve data from OSM2CAI API'.$response->body());
-
-            return;
-        }
-
-        $data = $response->json();
-
         $modelInstance = new $this->modelClass();
 
-        if ($modelInstance->where('id', $data['id'])->exists()) {
-            Log::info($modelInstance.' with id: '.$data['id'].' already imported, skipping');
+        $legacyDbConnection = DB::connection('legacyosm2cai');
+
+        if ($modelInstance->where('id', $this->data['id'])->exists()) {
+            Log::info($modelInstance.' with id: '.$this->data['id'].' already imported, skipping');
 
             return;
         }
 
-        $this->performImport($modelInstance, $data);
+        $this->performImport($modelInstance, $this->data, $legacyDbConnection);
     }
 
-    private function performImport($modelInstance, $data)
+    private function performImport($modelInstance, $data, $legacyDbConnection)
     {
         if ($modelInstance instanceof \App\Models\MountainGroups) {
             try {
@@ -85,7 +77,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         }
         if ($modelInstance instanceof \App\Models\CaiHut) {
             try {
-                $this->importCaiHuts($modelInstance, $data);
+                $this->importCaiHuts($modelInstance, $data, $legacyDbConnection);
             } catch (\Exception $e) {
                 Log::error('Failed to import Cai Hut with id: '.$data['id'].' '.$e->getMessage());
             }
@@ -99,21 +91,21 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         }
         if ($modelInstance instanceof \App\Models\Sector) {
             try {
-                $this->importSectors($modelInstance, $data);
+                $this->importSectors($modelInstance, $data, $legacyDbConnection);
             } catch (\Exception $e) {
                 Log::error('Failed to import Sector with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof Area) {
             try {
-                $this->importAreas($modelInstance, $data);
+                $this->importAreas($modelInstance, $data, $legacyDbConnection);
             } catch (\Exception $e) {
                 Log::error('Failed to import Area with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof HikingRoute) {
             try {
-                $this->importHikingRoutes($modelInstance, $data);
+                $this->importHikingRoutes($modelInstance, $data, $legacyDbConnection);
             } catch (Exception $e) {
                 Log::error('Failed to import Hiking Route with id: '.$data['id'].' '.$e->getMessage());
             }
@@ -132,16 +124,8 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
     {
         $columnsToImport = ['id', 'name', 'description', 'geometry', 'aggregated_data', 'elevation_min', 'elevation_max', 'elevation_avg', 'elevation_stddev', 'slope_min', 'slope_max', 'slope_avg', 'slope_stddev'];
 
-        $data['intersectings'] = [
-            'hiking_routes' => json_decode($data['hiking_routes_intersecting'], true),
-            'clubs' => json_decode($data['sections_intersecting'], true),
-            'huts' => json_decode($data['huts_intersecting']),
-            'ec_pois' => json_decode($data['ec_pois_intersecting'], true),
-        ];
+        $data['geometry'] = $this->prepareGeometry($data['geometry']);
 
-        if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
-        }
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
         $intersect['aggregated_data'] = json_encode($intersect['aggregated_data']);
 
@@ -161,9 +145,8 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
     {
         $columnsToImport = ['id', 'name', 'geometry', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
 
-        if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
-        }
+        $data['geometry'] = $this->prepareGeometry($data['geometry']);
+
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
@@ -182,9 +165,8 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
     {
         $columnsToImport = ['id', 'code', 'loc_ref', 'source', 'source_ref', 'source_code', 'name', 'region', 'province', 'municipality', 'operator', 'type', 'volume', 'time', 'mass_flow_rate', 'temperature', 'conductivity', 'survey_date', 'lat', 'lon', 'elevation', 'note', 'geometry'];
 
-        if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
-        }
+        $data['geometry'] = $this->prepareGeometry($data['geometry']);
+
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
@@ -199,19 +181,17 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         }
     }
 
-    private function importCaiHuts($modelInstance, $data)
+    private function importCaiHuts($modelInstance, $data, $legacyDbConnection)
     {
         $columnsToImport = ['id', 'name', 'second_name', 'description', 'elevation', 'owner', 'geometry', 'type', 'type_custodial', 'company_management_property', 'addr_street', 'addr_housenumber', 'addr_postcode', 'addr_city', 'ref_vatin', 'phone', 'fax', 'email', 'email_pec', 'website', 'facebook_contact', 'municipality_geo', 'province_geo', 'site_geo', 'opening', 'acqua_in_rifugio_serviced', 'acqua_calda_service', 'acqua_esterno_service', 'posti_letto_invernali_service', 'posti_totali_service', 'ristorante_service', 'activities', 'necessary_equipment', 'rates', 'payment_credit_cards', 'accessibilitá_ai_disabili_service', 'gallery', 'rule', 'map', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'region_id'];
 
-        if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
-        }
+        $data['geometry'] = $this->prepareGeometry($data['geometry']);
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
             //associate region matching the code column in legacy database
             if ($key === 'region_id') {
-                $legacyRegion = DB::connection('legacyosm2cai')->table('regions')->find($value);
+                $legacyRegion = $legacyDbConnection->table('regions')->find($value);
                 $region = Region::where('code', $legacyRegion->code)->first();
                 $value = $region ? $region->id : null;
             }
@@ -245,9 +225,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             'wheelchair',
         ];
 
-        if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
-        }
+        $data['geometry'] = $this->prepareGeometry($data['geometry']);
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
@@ -262,16 +240,14 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         }
     }
 
-    private function importSectors($modelInstance, $data)
+    private function importSectors($modelInstance, $data, $legacyDbConnection)
     {
         $columnsToImport = ['id', 'name', 'geometry', 'code', 'full_code', 'num_expected', 'human_name', 'manager', 'area_id'];
 
-        if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326))");
-        }
+        $data['geometry'] = $this->prepareGeometry($data['geometry']);
 
         if ($data['area_id'] !== null) {
-            $legacyArea = DB::connection('legacyosm2cai')->table('areas')->find($data['area_id']);
+            $legacyArea = $legacyDbConnection->table('areas')->find($data['area_id']);
             $area = Area::where('full_code', $legacyArea->full_code)->first();
             $data['area_id'] = $area->id ?? null;
         }
@@ -289,20 +265,23 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         }
     }
 
-    private function importAreas($modelInstance, $data)
+    private function importAreas($modelInstance, $data, $legacyDbConnection)
     {
         $columnsToImport = ['id', 'code', 'name', 'geometry', 'full_code', 'num_expected', 'province_id'];
 
-        if ($data['geometry'] !== null) {
-            $data['geometry'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry'])."'), 4326)");
-        }
+        $data['geometry'] = $this->prepareGeometry($data['geometry']);
+
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
+
+        $legacyProvince = $legacyDbConnection
+            ->table('provinces')
+            ->where('id', $data['province_id'])
+            ->first();
 
         foreach ($intersect as $key => $value) {
             if ($key === 'province_id') {
                 //get the code from province table in legacy osm2cai
-                $province = DB::connection('legacyosm2cai')->table('provinces')->find($value);
-                $provinceCode = $province->code;
+                $provinceCode = $legacyProvince->code;
                 //search for the corresponding province in the province table
                 $province = Province::where('osmfeatures_data->properties->osm_tags->short_name', $provinceCode)
                     ->orWhere('osmfeatures_data->properties->osm_tags->ref', $provinceCode)
@@ -320,14 +299,12 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         }
     }
 
-    private function importHikingRoutes($modelInstance, $data)
+    private function importHikingRoutes($modelInstance, $data, $legacyDbConnection)
     {
         $columnsToImport = ['osm2cai_status', 'validation_date', 'geometry_raw_data', 'region_favorite', 'region_favorite_publication_date', 'issues_last_update', 'issues_user_id', 'issues_cronology', 'issues_description', 'description_cai_it'];
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
-        if ($data['geometry_raw_data'] !== null) {
-            $data['geometry_raw_data'] = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($data['geometry_raw_data'])."'), 4326)");
-        }
+        $data['geometry_raw_data'] = $this->prepareGeometry($data['geometry_raw_data']);
 
         $hr = $modelInstance->where('osmfeatures_id', 'R'.$data['relation_id'])->first();
         if (! $hr) {
@@ -429,5 +406,14 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $hrs = HikingRoute::whereIn('osmfeatures_id', $hrIds)->get();
 
         $modelInstance->hikingRoutes()->syncWithoutDetaching($hrs);
+    }
+
+    private function prepareGeometry(array $geometry)
+    {
+        if ($geometry !== null) {
+            $geometry = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($geometry)."'), 4326)");
+        }
+
+        return $geometry;
     }
 }

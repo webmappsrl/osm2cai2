@@ -6,13 +6,13 @@ use App\Models\Area;
 use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class KmlControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $region;
 
