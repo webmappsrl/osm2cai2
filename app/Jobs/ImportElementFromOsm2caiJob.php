@@ -25,7 +25,6 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
     protected $modelClass;
 
-
     /**
      * Create a new job instance.
      */
@@ -45,7 +44,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $legacyDbConnection = DB::connection('legacyosm2cai');
 
         if ($modelInstance->where('id', $this->data['id'])->exists()) {
-            Log::info($modelInstance . ' with id: ' . $this->data['id'] . ' already imported, skipping');
+            Log::info($modelInstance.' with id: '.$this->data['id'].' already imported, skipping');
 
             return;
         }
@@ -59,56 +58,56 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             try {
                 $this->importMountainGroups($modelInstance, $data);
             } catch (\Exception $e) {
-                Log::error('Failed to import Mountain Group with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Mountain Group with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof \App\Models\EcPoi) {
             try {
                 $this->importEcPois($modelInstance, $data);
             } catch (\Exception $e) {
-                Log::error('Failed to import Ec Poi with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Ec Poi with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof \App\Models\NaturalSpring) {
             try {
                 $this->importNaturalSprings($modelInstance, $data);
             } catch (\Exception $e) {
-                Log::error('Failed to import Natural Spring with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Natural Spring with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof \App\Models\CaiHut) {
             try {
                 $this->importCaiHuts($modelInstance, $data, $legacyDbConnection);
             } catch (\Exception $e) {
-                Log::error('Failed to import Cai Hut with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Cai Hut with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof \App\Models\Club) {
             try {
                 $this->importClubs($modelInstance, $data);
             } catch (\Exception $e) {
-                Log::error('Failed to import Club with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Club with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof \App\Models\Sector) {
             try {
                 $this->importSectors($modelInstance, $data, $legacyDbConnection);
             } catch (\Exception $e) {
-                Log::error('Failed to import Sector with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Sector with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof Area) {
             try {
                 $this->importAreas($modelInstance, $data, $legacyDbConnection);
             } catch (\Exception $e) {
-                Log::error('Failed to import Area with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Area with id: '.$data['id'].' '.$e->getMessage());
             }
         }
         if ($modelInstance instanceof HikingRoute) {
             try {
                 $this->importHikingRoutes($modelInstance, $data, $legacyDbConnection);
             } catch (Exception $e) {
-                Log::error('Failed to import Hiking Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Hiking Route with id: '.$data['id'].' '.$e->getMessage());
             }
         }
 
@@ -116,7 +115,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             try {
                 $this->importItineraries($modelInstance, $data);
             } catch (\Exception $e) {
-                Log::error('Failed to import Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
+                Log::error('Failed to import Itinerary with id: '.$data['id'].' '.$e->getMessage());
             }
         }
     }
@@ -137,7 +136,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save mountain group with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save mountain group with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -157,7 +156,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Ec Poi with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Ec Poi with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -177,7 +176,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save natural spring with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save natural spring with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -202,7 +201,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save huts with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save huts with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -236,7 +235,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Club with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Club with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -261,7 +260,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Sector with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Sector with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -295,7 +294,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $modelInstance->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Area with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Area with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -307,11 +306,11 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
         $data['geometry_raw_data'] = $this->prepareGeometry($data['geometry_raw_data']);
 
-        $hr = $modelInstance->where('osmfeatures_id', 'R' . $data['relation_id'])->first();
+        $hr = $modelInstance->where('osmfeatures_id', 'R'.$data['relation_id'])->first();
         if (! $hr) {
             // Write to a .txt file instead of using a log channel (error when configuring dedicated log channel)
             $logFilePath = storage_path('logs/hiking_routes_not_found.txt');
-            $message = 'Hiking route not found: https://osm2cai.cai.it/resources/hiking-routes/' . $data['id'] . PHP_EOL;
+            $message = 'Hiking route not found: https://osm2cai.cai.it/resources/hiking-routes/'.$data['id'].PHP_EOL;
             File::append($logFilePath, $message);
 
             return;
@@ -324,7 +323,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         try {
             $hr->save();
         } catch (\Exception $e) {
-            Log::error('Failed to save Hiking_Route with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Hiking_Route with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 
@@ -345,7 +344,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             $modelInstance->save();
             $this->syncHikingRoutes($modelInstance, $data['id']);
         } catch (\Exception $e) {
-            Log::error('Failed to save Itinerary with id: ' . $data['id'] . ' ' . $e->getMessage());
+            Log::error('Failed to save Itinerary with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -372,7 +371,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
                     if (! isset($legacyHr[$id])) {
                         return null;
                     }
-                    $osmId = 'R' . $legacyHr[$id]->relation_id;
+                    $osmId = 'R'.$legacyHr[$id]->relation_id;
                     $hr = HikingRoute::where('osmfeatures_id', $osmId)->first();
 
                     return $hr ? $hr->id : null;
@@ -381,7 +380,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
                     if (! isset($legacyHr[$id])) {
                         return null;
                     }
-                    $osmId = 'R' . $legacyHr[$id]->relation_id;
+                    $osmId = 'R'.$legacyHr[$id]->relation_id;
                     $hr = HikingRoute::where('osmfeatures_id', $osmId)->first();
 
                     return $hr ? $hr->id : null;
@@ -402,7 +401,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             ->get('relation_id')
             ->toArray();
         $hrIds = array_map(function ($hr) {
-            return 'R' . $hr->relation_id;
+            return 'R'.$hr->relation_id;
         }, $legacyHr);
         $hrs = HikingRoute::whereIn('osmfeatures_id', $hrIds)->get();
 
@@ -412,7 +411,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
     private function prepareGeometry(array $geometry)
     {
         if ($geometry !== null) {
-            $geometry = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('" . json_encode($geometry) . "'), 4326)");
+            $geometry = DB::raw("ST_SetSRID(ST_GeomFromGeoJSON('".json_encode($geometry)."'), 4326)");
         }
 
         return $geometry;

@@ -44,7 +44,7 @@ class HikingRouteControllerV2Test extends TestCase
             'issues_description' => '',
             'issues_last_update' => now(),
             'tdh' => [
-                'gpx_url' => url('/api/v2/hiking-routes/' . $id . '.gpx'),
+                'gpx_url' => url('/api/v2/hiking-routes/'.$id.'.gpx'),
                 'cai_scale_string' => 'E',
                 'cai_scale_description' => 'Easy',
                 'from' => 'Test Start',
@@ -111,7 +111,7 @@ class HikingRouteControllerV2Test extends TestCase
             'region_id' => $region->id,
         ]);
 
-        $response = $this->get('/api/v2/hiking-routes/region/' . $region->code . '/' . $hikingRoute->osm2cai_status);
+        $response = $this->get('/api/v2/hiking-routes/region/'.$region->code.'/'.$hikingRoute->osm2cai_status);
 
         $response->assertStatus(200)
             ->assertJson([$hikingRoute->id]);
@@ -127,7 +127,7 @@ class HikingRouteControllerV2Test extends TestCase
             'region_id' => $region->id,
         ]);
 
-        $response = $this->get('/api/v2/hiking-routes-osm/region/' . $region->code . '/' . $hikingRoute->osm2cai_status);
+        $response = $this->get('/api/v2/hiking-routes-osm/region/'.$region->code.'/'.$hikingRoute->osm2cai_status);
 
         $osmId = (string) $hikingRoute->osmfeatures_data['properties']['osm_id'];
 
@@ -142,7 +142,7 @@ class HikingRouteControllerV2Test extends TestCase
     {
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
 
-        $response = $this->get('/api/v2/hiking-route/' . $hikingRoute->id);
+        $response = $this->get('/api/v2/hiking-route/'.$hikingRoute->id);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -171,7 +171,7 @@ class HikingRouteControllerV2Test extends TestCase
     {
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
 
-        $response = $this->get('/api/v2/hiking-route-tdh/' . $hikingRoute->id);
+        $response = $this->get('/api/v2/hiking-route-tdh/'.$hikingRoute->id);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -226,7 +226,7 @@ class HikingRouteControllerV2Test extends TestCase
     {
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
 
-        $response = $this->get('/api/v2/hiking-route-osm/' . $hikingRoute->osmfeatures_data['properties']['osm_id']);
+        $response = $this->get('/api/v2/hiking-route-osm/'.$hikingRoute->osmfeatures_data['properties']['osm_id']);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -281,7 +281,7 @@ class HikingRouteControllerV2Test extends TestCase
             ->where('id', $hikingRoute->id)
             ->update(['geometry' => null]);
 
-        $response = $this->get('/api/v2/hiking-route/' . $hikingRoute->id);
+        $response = $this->get('/api/v2/hiking-route/'.$hikingRoute->id);
 
         $response->assertStatus(404)
             ->assertSee('No geometry found for this Hiking Route');
@@ -340,7 +340,7 @@ class HikingRouteControllerV2Test extends TestCase
     {
         $region = $this->createTestRegion('L');
 
-        $response = $this->get('/api/v2/hiking-routes/region/' . $region->code . '/4');
+        $response = $this->get('/api/v2/hiking-routes/region/'.$region->code.'/4');
 
         $response->assertStatus(404);
     }
@@ -349,7 +349,7 @@ class HikingRouteControllerV2Test extends TestCase
     {
         $region = $this->createTestRegion('L');
 
-        $response = $this->get('/api/v2/hiking-routes-osm/region/' . $region->code . '/4');
+        $response = $this->get('/api/v2/hiking-routes-osm/region/'.$region->code.'/4');
 
         $response->assertStatus(200)
             ->assertJson([]);
@@ -379,7 +379,7 @@ class HikingRouteControllerV2Test extends TestCase
             ->where('id', $hikingRoute->id)
             ->update(['osmfeatures_data' => ['invalid_data']]);
 
-        $response = $this->get('/api/v2/hiking-route/' . $hikingRoute->id);
+        $response = $this->get('/api/v2/hiking-route/'.$hikingRoute->id);
 
         $response->assertStatus(500)
             ->assertSee('Error processing Hiking Route');
@@ -393,7 +393,7 @@ class HikingRouteControllerV2Test extends TestCase
             ->where('id', $hikingRoute->id)
             ->update(['osmfeatures_data' => ['invalid_data']]);
 
-        $response = $this->get('/api/v2/hiking-route-osm/' . $hikingRoute->osmfeatures_data['properties']['osm_id']);
+        $response = $this->get('/api/v2/hiking-route-osm/'.$hikingRoute->osmfeatures_data['properties']['osm_id']);
 
         $response->assertStatus(404)
             ->assertSee('No Hiking Route found with this id');
