@@ -129,7 +129,7 @@ class HikingRouteController extends Controller
         // Check if region exists
         $region = Region::where('code', $region_code)->first();
         if (! $region) {
-            return response(['error' => 'Region not found with code '.$region_code], 404);
+            return response(['error' => 'Region not found with code ' . $region_code], 404);
         }
 
         // Get hiking routes for region and status
@@ -138,7 +138,7 @@ class HikingRouteController extends Controller
         })->whereIn('osm2cai_status', $sda)->get();
 
         if ($list->isEmpty()) {
-            return response(['error' => 'No hiking routes found for region '.$region_code.' and SDA '.implode(',', $sda)], 404);
+            return response(['error' => 'No hiking routes found for region ' . $region_code . ' and SDA ' . implode(',', $sda)], 404);
         }
 
         $list = $list->pluck('id')->toArray();
@@ -198,7 +198,7 @@ class HikingRouteController extends Controller
     {
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw('ST_within(geometry,ST_MakeEnvelope('.$bounding_box.', 4326))')
+            ->whereRaw('ST_within(geometry,ST_MakeEnvelope(' . $bounding_box . ', 4326))')
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
         $data = [];
@@ -349,7 +349,7 @@ class HikingRouteController extends Controller
     {
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw('ST_within(geometry,ST_MakeEnvelope('.$bounding_box.', 4326))')
+            ->whereRaw('ST_within(geometry,ST_MakeEnvelope(' . $bounding_box . ', 4326))')
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
         $data = [];
@@ -411,7 +411,7 @@ class HikingRouteController extends Controller
     public function collectionByBoundingBox(string $bounding_box, string $sda)
     {
         $boundingBox = explode(',', $bounding_box);
-        $area = DB::select('select ST_Area(ST_MakeEnvelope('.$bounding_box.', 4326)) as area')[0]->area;
+        $area = DB::select('select ST_Area(ST_MakeEnvelope(' . $bounding_box . ', 4326)) as area')[0]->area;
         if ($area > 0.1) {
             return response(['error' => 'Bounding box is too large'], 500, ['Content-type' => 'application/json']);
         } else {
@@ -761,7 +761,7 @@ class HikingRouteController extends Controller
                 'from' => $osmfeaturesProperties['from'] ?? null,
                 'to' => $osmfeaturesProperties['to'] ?? null,
                 'ref' => $osmfeaturesProperties['ref'] ?? null,
-                'public_page' => url('/hiking-route/id/'.$hikingRoute->id),
+                'public_page' => url('/hiking-route/id/' . $hikingRoute->id),
                 'sda' => $hikingRoute->osm2cai_status,
                 'issues_status' => $hikingRoute->issues_status ?? '',
                 'issues_description' => $hikingRoute->issues_description ?? '',
@@ -857,7 +857,7 @@ class HikingRouteController extends Controller
                             'from' => $osmProperties['from'] ?? null,
                             'to' => $osmProperties['to'] ?? null,
                             'ref' => $osmProperties['ref'] ?? null,
-                            'public_page' => url('/hiking-route/id/'.$item->id),
+                            'public_page' => url('/hiking-route/id/' . $item->id),
                             'sda' => $item->osm2cai_status,
                             'validation_date' => $item->validation_date,
                             'network' => $osmProperties['network'] ?? null,
@@ -874,7 +874,7 @@ class HikingRouteController extends Controller
 
             return json_encode($featureCollection);
         } catch (Exception $e) {
-            throw new Exception('Error creating GeoJSON collection: '.$e->getMessage());
+            throw new Exception('Error creating GeoJSON collection: ' . $e->getMessage());
         }
     }
 }
