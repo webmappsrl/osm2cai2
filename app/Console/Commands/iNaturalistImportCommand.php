@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\UgcPoi;
 use App\Models\UgcMedia;
+use App\Models\UgcPoi;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -12,14 +12,20 @@ use Illuminate\Support\Facades\Log;
 class iNaturalistImportCommand extends Command
 {
     protected $signature = 'osm2cai:inaturalist-import {ids?*} {--file= : File path containing IDs}';
+
     protected $description = 'Import UGC POIs from iNaturalist';
 
     // Constants definition
     protected const INATURALIST_EMAIL = 'inaturalist@webmapp.it';
+
     protected const INATURALIST_NAME = 'iNaturalist';
+
     protected const DEFAULT_PASSWORD = 'inaturalist123';
+
     protected const DEFAULT_TYPE = 'poi';
+
     protected const BASE_OBSERVATION_URL = 'https://www.inaturalist.org/observations/';
+
     protected $ancestorIds = [47126 => 'Flora', 1 => 'Fauna'];
 
     public function handle()
@@ -28,6 +34,7 @@ class iNaturalistImportCommand extends Command
 
         if (empty($ids)) {
             $this->error('No IDs provided.');
+
             return 1;
         }
 
@@ -38,6 +45,7 @@ class iNaturalistImportCommand extends Command
         }
 
         $this->info('Import completed.');
+
         return 0;
     }
 
@@ -86,18 +94,19 @@ class iNaturalistImportCommand extends Command
     private function importObservation(int $id): void
     {
         $data = $this->fetchObservationData($id);
-        if (!$data) {
-            $this->logObservationError($id, "Observation not found.");
+        if (! $data) {
+            $this->logObservationError($id, 'Observation not found.');
+
             return;
         }
 
         $ancestor = $this->getObservationType($data, $id);
-        if (!$ancestor) {
+        if (! $ancestor) {
             return;
         }
 
         $geometry = $this->getObservationGeometry($data, $id);
-        if (!$geometry) {
+        if (! $geometry) {
             return;
         }
 
@@ -115,7 +124,8 @@ class iNaturalistImportCommand extends Command
         $response = Http::get("https://api.inaturalist.org/v1/observations/{$id}");
 
         if ($response->failed()) {
-            $this->logObservationError($id, "Error retrieving observation");
+            $this->logObservationError($id, 'Error retrieving observation');
+
             return null;
         }
 
@@ -145,8 +155,8 @@ class iNaturalistImportCommand extends Command
     {
         $ancestor = $this->ancestorIds[$data['taxon']['ancestor_ids'][1] ?? null] ?? null;
 
-        if (!$ancestor) {
-            $this->logObservationError($id, "Acquisition type not found");
+        if (! $ancestor) {
+            $this->logObservationError($id, 'Acquisition type not found');
         }
 
         return $ancestor;
@@ -163,12 +173,14 @@ class iNaturalistImportCommand extends Command
     {
         $geojson = $data['geojson'] ?? null;
 
-        if (!$geojson) {
-            $this->logObservationError($id, "Geographic coordinates not available");
+        if (! $geojson) {
+            $this->logObservationError($id, 'Geographic coordinates not available');
+
             return null;
         }
 
         $geojsonString = json_encode($geojson);
+
         return DB::raw("ST_GeomFromGeoJSON('{$geojsonString}')");
     }
 
@@ -182,7 +194,7 @@ class iNaturalistImportCommand extends Command
      */
     private function saveObservation(array $data, string $ancestor, $geometry, int $id): void
     {
-        $observationUri = $data['uri'] ?? self::BASE_OBSERVATION_URL . $id;
+        $observationUri = $data['uri'] ?? self::BASE_OBSERVATION_URL.$id;
         $description = $this->buildDescription($data, $observationUri);
         $rawData = $this->buildRawData($data, $ancestor, $observationUri);
 
@@ -196,7 +208,7 @@ class iNaturalistImportCommand extends Command
                 'type' => $ancestor,
                 'form_id' => self::DEFAULT_TYPE,
                 'raw_data' => $rawData,
-                'user_id' => $iNaturalistUserId
+                'user_id' => $iNaturalistUserId,
             ]
         );
 
@@ -214,7 +226,8 @@ class iNaturalistImportCommand extends Command
     private function buildDescription(array $data, string $observationUri): string
     {
         $description = $data['description'] ?? '';
-        return $description . "\nsource: " . $observationUri;
+
+        return $description."\nsource: ".$observationUri;
     }
 
     /**
@@ -239,7 +252,7 @@ class iNaturalistImportCommand extends Command
             'longitude' => $longitude,
             'app_id' => self::INATURALIST_NAME,
             'form_id' => self::DEFAULT_TYPE,
-            'uri' => $observationUri
+            'uri' => $observationUri,
         ];
     }
 
