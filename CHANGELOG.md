@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.17.0](https://github.com/webmappsrl/osm2cai2/compare/v1.16.0...v1.17.0) (2024-12-20)
+
+
+### Features
+
+* added almost all elements to login with the cas system ([7509ba6](https://github.com/webmappsrl/osm2cai2/commit/7509ba666e9218eb290753806fcbf4b2d35704a6))
+* dashboards OC: 4224 ([#79](https://github.com/webmappsrl/osm2cai2/issues/79)) ([ce5cfc6](https://github.com/webmappsrl/osm2cai2/commit/ce5cfc6b8c1ee5691af47d1ad82921a4cd0a15b2))
+* enable xdebug code coverage feature oc:4354 ([51af95e](https://github.com/webmappsrl/osm2cai2/commit/51af95ef9f8cba145ea620304dc6b0e15b13c12d))
+* Main Update ([#89](https://github.com/webmappsrl/osm2cai2/issues/89)) ([b8c36e0](https://github.com/webmappsrl/osm2cai2/commit/b8c36e0877b5a179331ac474061856b47189cb35))
+* Permessi Utente OC:4228 ([#78](https://github.com/webmappsrl/osm2cai2/issues/78)) ([3cc9988](https://github.com/webmappsrl/osm2cai2/commit/3cc998865c3e8e815abe81e32e5ec3fd8ab2357f))
+* Rifinimento Risorse Nova OC: 4366 ([#85](https://github.com/webmappsrl/osm2cai2/issues/85)) ([862aafa](https://github.com/webmappsrl/osm2cai2/commit/862aafa4e131ff0f422ecb19297b009bb472873e))
+* sync ugc from legacy osm2cai OC: 3470 ([#71](https://github.com/webmappsrl/osm2cai2/issues/71)) ([8dc5b63](https://github.com/webmappsrl/osm2cai2/commit/8dc5b633afccacb5a63cdae95c93e543eff5292f))
+* update nova Login.vue oc: 4227 ([99ad919](https://github.com/webmappsrl/osm2cai2/commit/99ad91937dca7bca625be94824ab2e6e5a4c3823))
+* update the wm-package oc: 4227 ([e3e494d](https://github.com/webmappsrl/osm2cai2/commit/e3e494d7930656742cef3ccc8dca3aa6d905d12b))
+* user model abstraction over wm-package oc: 4498 ([#86](https://github.com/webmappsrl/osm2cai2/issues/86)) ([5a6a4bb](https://github.com/webmappsrl/osm2cai2/commit/5a6a4bb7111c1a148728f60ed17c80bf3c4cad24))
+
+
+### Bug Fixes
+
+* cas auth oc: 4227 ([08d545b](https://github.com/webmappsrl/osm2cai2/commit/08d545bc310923d6fc388cb955d0b588a798fd39))
+* dev deploy scripts to inherit secrets ([b08bd77](https://github.com/webmappsrl/osm2cai2/commit/b08bd77ebc0ba8be405d7090f790c0df60c69ab9))
+* geojson controller test ([ae6973f](https://github.com/webmappsrl/osm2cai2/commit/ae6973f903bafff0a2672a5155b6f3c07a3d3440))
+* geojson controller test ([84a4383](https://github.com/webmappsrl/osm2cai2/commit/84a43833142500d121fcdee68b04e7b1967f7406))
+
+
+### Miscellaneous Chores
+
+* fixes and performance improvements ([#90](https://github.com/webmappsrl/osm2cai2/issues/90)) ([373eb96](https://github.com/webmappsrl/osm2cai2/commit/373eb96c02220ce6df9aaa362680e3bae3aab8a6))
+* fixes and performance improvements ([#91](https://github.com/webmappsrl/osm2cai2/issues/91)) ([c251f2a](https://github.com/webmappsrl/osm2cai2/commit/c251f2ab98c040f9b6e392d9cadb0fd62fcb5b08))
+* Horizon setting fixes and Inaturalist Import command ([#94](https://github.com/webmappsrl/osm2cai2/issues/94)) ([6f7b41f](https://github.com/webmappsrl/osm2cai2/commit/6f7b41f83c31cb8a8574f9cc04970e664990d899))
+* import command wrapper OC:4369 ([#87](https://github.com/webmappsrl/osm2cai2/issues/87)) ([04791b9](https://github.com/webmappsrl/osm2cai2/commit/04791b9099a08fd2157633f0088a7bb013071f5a))
+* increased job batch size in osm2cai import command ([#88](https://github.com/webmappsrl/osm2cai2/issues/88)) ([7f83a71](https://github.com/webmappsrl/osm2cai2/commit/7f83a7140e0174c495318d5ff8a8ded0ae91c05b))
+* rifinitura modelli laravel OC:4367 ([#84](https://github.com/webmappsrl/osm2cai2/issues/84)) ([e29efb7](https://github.com/webmappsrl/osm2cai2/commit/e29efb7418e4db652455890bae6958f8f0a8529f))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
