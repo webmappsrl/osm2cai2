@@ -2,7 +2,7 @@
 
 namespace App\Nova\Dashboards;
 
-use App\Helpers\Osm2CaiHelper;
+use App\Helpers\Osm2caiHelper;
 use App\Models\Sector;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +71,7 @@ class SectorsDashboard extends Dashboard
                 'tot4' => $item->tot4,
                 'num_expected' => $item->num_expected,
                 'sal' => $sal,
-                'sal_color' => Osm2CaiHelper::getSalColor($sal),
+                'sal_color' => Osm2caiHelper::getSalColor($sal),
             ];
         });
 

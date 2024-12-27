@@ -2,7 +2,7 @@
 
 namespace App\Helpers\Nova;
 
-use App\Helpers\Osm2CaiHelper;
+use App\Helpers\Osm2caiHelper;
 use App\Models\HikingRoute;
 use App\Models\Region;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +22,7 @@ class DashboardCardsHelper
             ->width('1/4')
             ->view('nova.cards.sal-nazionale', [
                 'sal' => $sal,
-                'backgroundColor' => Osm2CaiHelper::getSalColor($sal),
+                'backgroundColor' => Osm2caiHelper::getSalColor($sal),
             ])
             ->center()
             ->withBasicStyles();
@@ -69,7 +69,6 @@ class DashboardCardsHelper
     public function getNoPermissionsCard()
     {
         return (new HtmlCard())
-            ->forceFullWidth()
             ->view('nova.cards.no-permissions-card')
             ->center()
             ->withBasicStyles();
