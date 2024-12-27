@@ -311,7 +311,7 @@ class Main extends Dashboard
             if ($att > 0) {
                 $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $att;
                 $sal = min($sal, 1);
-                $salDisplay = number_format($sal * 100, 2).' %';
+                $salDisplay = number_format($sal * 100, 2) . ' %';
             } else {
                 $sal = 0;
                 $salDisplay = 'N/A';
@@ -327,7 +327,7 @@ class Main extends Dashboard
                 new Cell((string) $tot4),
                 new Cell((string) $tot),
                 new Cell((string) $att),
-                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.$salDisplay.'</div>'),
+                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . $salDisplay . '</div>'),
             );
             $data[] = $row;
         }
@@ -364,7 +364,7 @@ class Main extends Dashboard
         $result = (($percorribile + $percorribileParzialmente + $nonPercorribile) / count($hikingRoutes)) * 100;
         $result = round($result, 2);
 
-        return strval($result).'%';
+        return strval($result) . '%';
     }
 
     private function getSdaRegionalCard(int $sda, int $num): HtmlCard
@@ -375,7 +375,7 @@ class Main extends Dashboard
                 'sda' => $sda,
                 'num' => $num,
                 'backgroundColor' => Osm2caiHelper::getSdaColor($sda),
-                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens'),
+                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens'),
             ])
             ->center()
             ->withBasicStyles();
@@ -427,8 +427,8 @@ class Main extends Dashboard
                 new Cell($item->tot4),
                 new Cell($tot),
                 new Cell($item->num_expected ?? 0),
-                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
-                new Cell('<a href="/resources/'.($childrenTable == 'regions' ? 'region' : $childrenTable).'/'.$item->id.'">[VIEW]</a>'),
+                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
+                new Cell('<a href="/resources/' . ($childrenTable == 'regions' ? 'region' : $childrenTable) . '/' . $item->id . '">[VIEW]</a>'),
             );
             $data[] = $row;
         }
