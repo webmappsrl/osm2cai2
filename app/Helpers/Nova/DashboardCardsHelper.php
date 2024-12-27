@@ -69,7 +69,6 @@ class DashboardCardsHelper
     public function getNoPermissionsCard()
     {
         return (new HtmlCard())
-            ->forceFullWidth()
             ->view('nova.cards.no-permissions-card')
             ->center()
             ->withBasicStyles();
