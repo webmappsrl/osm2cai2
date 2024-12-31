@@ -166,7 +166,7 @@ class Area extends Resource
             $filter = base64_encode(json_encode([
                 ['class' => HikingRoutesAreaFilter::class, 'value' => $resourceId],
             ]));
-            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+            $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
         return (new HtmlCard())
