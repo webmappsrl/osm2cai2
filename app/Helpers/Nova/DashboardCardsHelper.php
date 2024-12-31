@@ -21,7 +21,7 @@ class DashboardCardsHelper
         return (new HtmlCard())
             ->width('1/4')
             ->view('nova.cards.sal-nazionale', [
-                'sal' => $sal,
+                'sal' => number_format($sal * 100, 2),
                 'backgroundColor' => Osm2caiHelper::getSalColor($sal),
             ])
             ->center()
@@ -32,7 +32,8 @@ class DashboardCardsHelper
     {
         $tot = DB::table('hiking_routes')
             ->whereIn('osm2cai_status', [3, 4])
-            ->selectRaw('SUM((tdh->\'distance\')::float) as total')
+            ->whereNotNull('osmfeatures_data->properties->distance')
+            ->selectRaw('COALESCE(SUM(NULLIF(REGEXP_REPLACE(TRIM(BOTH \'"\' FROM (osmfeatures_data->\'properties\'->\'distance\')::text), \'[^0-9.]+\', \'\', \'g\'), \'\')::float), 0) as total')
             ->first();
 
         $formatted = floatval($tot->total);
@@ -51,7 +52,8 @@ class DashboardCardsHelper
     {
         $tot = DB::table('hiking_routes')
             ->where('osm2cai_status', 4)
-            ->selectRaw('SUM((tdh->\'distance\')::float) as total')
+            ->whereNotNull('osmfeatures_data->properties->distance')
+            ->selectRaw('COALESCE(SUM(NULLIF(REGEXP_REPLACE(TRIM(BOTH \'"\' FROM (osmfeatures_data->\'properties\'->\'distance\')::text), \'[^0-9.]+\', \'\', \'g\'), \'\')::float), 0) as total')
             ->first();
 
         $formatted = floatval($tot->total);
