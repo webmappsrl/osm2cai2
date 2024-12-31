@@ -3,7 +3,7 @@
 namespace App\Nova\Dashboards;
 
 use App\Helpers\Nova\DashboardCardsHelper;
-use App\Helpers\Osm2CaiHelper;
+use App\Helpers\Osm2caiHelper;
 use App\Nova\Metrics\TotalAreasCount;
 // use App\Services\CardsService;
 use App\Nova\Metrics\TotalProvincesCount;
@@ -50,7 +50,7 @@ class ItalyDashboard extends Dashboard
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[1],
                     'sda' => 1,
-                    'backgroundColor' => Osm2CaiHelper::getSdaColor(1),
+                    'backgroundColor' => Osm2caiHelper::getSdaColor(1),
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -59,7 +59,7 @@ class ItalyDashboard extends Dashboard
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[2],
                     'sda' => 2,
-                    'backgroundColor' => Osm2CaiHelper::getSdaColor(2),
+                    'backgroundColor' => Osm2caiHelper::getSdaColor(2),
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -68,7 +68,7 @@ class ItalyDashboard extends Dashboard
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[3],
                     'sda' => 3,
-                    'backgroundColor' => Osm2CaiHelper::getSdaColor(3),
+                    'backgroundColor' => Osm2caiHelper::getSdaColor(3),
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -77,7 +77,7 @@ class ItalyDashboard extends Dashboard
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[4],
                     'sda' => 4,
-                    'backgroundColor' => Osm2CaiHelper::getSdaColor(4),
+                    'backgroundColor' => Osm2caiHelper::getSdaColor(4),
                 ])
                 ->center()
                 ->withBasicStyles(),
