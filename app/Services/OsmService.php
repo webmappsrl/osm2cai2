@@ -99,7 +99,7 @@ class OsmService
      */
     public function hikingRouteExists($relationId)
     {
-        return $this->http::head('https://www.openstreetmap.org/api/0.6/relation/'.intval($relationId))->ok();
+        return $this->http::head('https://www.openstreetmap.org/api/0.6/relation/' . intval($relationId))->ok();
     }
 
     /**
@@ -111,7 +111,7 @@ class OsmService
     public function getHikingRoute($relationId)
     {
         $return = false;
-        $response = $this->http::get('https://www.openstreetmap.org/api/0.6/relation/'.intval($relationId));
+        $response = $this->http::get('https://www.openstreetmap.org/api/0.6/relation/' . intval($relationId));
         if ($response->ok()) {
             $allowedKeys = $this->getRelationApiFieldsKey();
             $xml = $response->body();
@@ -119,7 +119,7 @@ class OsmService
             foreach ($relation->tag as $tag) {
                 $key = str_replace(':', '_', (string) $tag['k']);
                 if (in_array($key, $allowedKeys)) {
-                    $return[$key.'_osm'] = (string) $tag['v'];
+                    $return[$key . '_osm'] = (string) $tag['v'];
                     $return[$key] = (string) $tag['v'];
                 }
             }
@@ -132,7 +132,7 @@ class OsmService
     public function getHikingRouteGeojson($relationId)
     {
         $return = false;
-        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/'.intval($relationId).'/geometry/geojson');
+        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/' . intval($relationId) . '/geometry/geojson');
         if ($response->ok()) {
             $return = $response->body();
         }
@@ -143,7 +143,7 @@ class OsmService
     public function getHikingRouteGpx($relationId)
     {
         $return = false;
-        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/'.intval($relationId).'/geometry/gpx');
+        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/' . intval($relationId) . '/geometry/gpx');
         if ($response->ok()) {
             $return = $response->body();
         }
@@ -210,7 +210,7 @@ class OsmService
         $model->geometry_osm = $osmGeo;
         foreach ($this->getRelationApiFieldsKey() as $attribute) {
             $key = $attribute;
-            $key_osm = $attribute.'_osm';
+            $key_osm = $attribute . '_osm';
             if (isset($osmHr[$key])) {
                 $model->$key = $osmHr[$key];
             } else {

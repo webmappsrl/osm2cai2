@@ -26,7 +26,7 @@ class TotalProvincesCount extends Value
      */
     public function calculate(NovaRequest $request)
     {
-        return $this->result(Province::all()->count());
+        return $this->result(Province::all('id')->count());
     }
 
     /**
@@ -46,7 +46,7 @@ class TotalProvincesCount extends Value
      */
     public function cacheFor()
     {
-        return now()->addDays(1);
+        return now()->addMinutes(60 * 24);
     }
 
     /**

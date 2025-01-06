@@ -9,12 +9,6 @@
         },
         "version": "1.0.0"
     },
-    "servers": [
-        {
-            "url": "http://localhost:8008",
-            "description": "API Server"
-        }
-    ],
     "paths": {
         "/ecpois/bb/{bounding_box}/{type}": {
             "get": {
