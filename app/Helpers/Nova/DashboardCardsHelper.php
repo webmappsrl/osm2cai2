@@ -28,44 +28,43 @@ class DashboardCardsHelper
             ->withBasicStyles();
     }
 
-    public function getTotalKmSda3Sda4Card()
+    private function getTotalKmCard($status, $label)
     {
-        $tot = DB::table('hiking_routes')
-            ->whereIn('osm2cai_status', [3, 4])
-            ->whereNotNull('osmfeatures_data->properties->distance')
-            ->selectRaw('COALESCE(SUM(NULLIF(REGEXP_REPLACE(TRIM(BOTH \'"\' FROM (osmfeatures_data->\'properties\'->\'distance\')::text), \'[^0-9.]+\', \'\', \'g\'), \'\')::float), 0) as total')
-            ->first();
+        $query = DB::table('hiking_routes')
+            ->selectRaw('
+                COALESCE(
+                    SUM(ST_Length(geometry::geography) / 1000), 
+                    0
+                ) as total
+            ');
 
-        $formatted = floatval($tot->total);
+        if (is_array($status)) {
+            $query->whereIn('osm2cai_status', $status);
+        } else {
+            $query->where('osm2cai_status', $status);
+        }
+
+        $tot = $query->first();
+        $formatted = number_format(floatval($tot->total), 2);
 
         return (new HtmlCard())
             ->width('1/4')
             ->view('nova.cards.total-km', [
                 'total' => $formatted,
-                'label' => 'Totale km #sda3 e #sda4',
+                'label' => $label,
             ])
             ->center()
             ->withBasicStyles();
     }
 
+    public function getTotalKmSda3Sda4Card()
+    {
+        return $this->getTotalKmCard([3, 4], 'Totale km #sda3 e #sda4');
+    }
+
     public function getTotalKmSda4Card()
     {
-        $tot = DB::table('hiking_routes')
-            ->where('osm2cai_status', 4)
-            ->whereNotNull('osmfeatures_data->properties->distance')
-            ->selectRaw('COALESCE(SUM(NULLIF(REGEXP_REPLACE(TRIM(BOTH \'"\' FROM (osmfeatures_data->\'properties\'->\'distance\')::text), \'[^0-9.]+\', \'\', \'g\'), \'\')::float), 0) as total')
-            ->first();
-
-        $formatted = floatval($tot->total);
-
-        return (new HtmlCard())
-            ->width('1/4')
-            ->view('nova.cards.total-km', [
-                'total' => $formatted,
-                'label' => 'Totale km #sda4',
-            ])
-            ->center()
-            ->withBasicStyles();
+        return $this->getTotalKmCard(4, 'Totale km #sda4');
     }
 
     public function getNoPermissionsCard()
