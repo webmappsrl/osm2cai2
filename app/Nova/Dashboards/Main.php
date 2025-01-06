@@ -320,7 +320,7 @@ class Main extends Dashboard
             $sal_color = Osm2caiHelper::getSalColor($sal);
 
             $row = new Row(
-                new Cell($region->name ?? 'Sconosciuto'),
+                new Cell($region->name . ($region->code ? ' (' . $region->code . ')' : '')),
                 new Cell((string) $tot1),
                 new Cell((string) $tot2),
                 new Cell((string) $tot3),
