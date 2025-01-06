@@ -27,7 +27,7 @@ class TotalSectorsCount extends Value
      */
     public function calculate(NovaRequest $request)
     {
-        return $this->result(Sector::all()->count())->format('0');
+        return $this->result(Sector::all('id')->count());
     }
 
     /**
@@ -47,7 +47,7 @@ class TotalSectorsCount extends Value
      */
     public function cacheFor()
     {
-        return now()->addDays(1);
+        return now()->addMinutes(60 * 24);
     }
 
     /**

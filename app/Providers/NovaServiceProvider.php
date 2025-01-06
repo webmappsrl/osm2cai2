@@ -36,6 +36,7 @@ use App\Nova\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\Nova;
@@ -56,9 +57,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::mainMenu(function (Request $request) {
             return [
-                // Dashboard
-                MenuSection::make('Dashboard', [
-                    MenuItem::link('Riepilogo nazionale', '/dashboards/italy-dashboard')
+                MenuSection::dashboard(Main::class)->icon('home'),
+                MenuGroup::make('', [
+                    MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')
                         ->canSee(function () {
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
                         }),
@@ -97,7 +98,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         ->canSee(function () {
                             return auth()->user()->hasRole('Regional Referent');
                         }),
-                ])->icon('chart-bar')->collapsable(),
+                ]),
 
                 // Rete Escursionistica
                 MenuSection::make('Rete Escursionistica', [
@@ -147,11 +148,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Tools
                 MenuSection::make('Tools', [
-                    MenuItem::link('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521'),
-                    MenuItem::link('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map'),
-                    MenuItem::link('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map'),
-                    MenuItem::link('API', '/api/documentation'),
-                    MenuItem::link('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai'),
+                    MenuItem::link('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
+                    MenuItem::link('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::link('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::link('API', '/api/documentation')->openInNewTab(),
+                    MenuItem::link('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin

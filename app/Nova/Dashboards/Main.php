@@ -29,7 +29,7 @@ class Main extends Dashboard
 
     public function name()
     {
-        return __('Dashboard');
+        return __('Main Dashboard');
     }
 
     /**
@@ -278,7 +278,7 @@ class Main extends Dashboard
 
         $data = [];
         foreach ($regions as $region) {
-            $hikingRoutes = $region->intersectings['hiking_routes'] ?? [];
+            $hikingRoutes = $region->hikingRoutes()->get();
             $att = $region->num_expected ?? 0;
 
             $tot1 = 0;
@@ -286,7 +286,7 @@ class Main extends Dashboard
             $tot3 = 0;
             $tot4 = 0;
 
-            if (is_array($hikingRoutes)) {
+            if ($hikingRoutes->count() > 0) {
                 foreach ($hikingRoutes as $route) {
                     switch ($route['osm2cai_status'] ?? 0) {
                         case 1:
@@ -320,7 +320,7 @@ class Main extends Dashboard
             $sal_color = Osm2caiHelper::getSalColor($sal);
 
             $row = new Row(
-                new Cell($region->name ?? 'Sconosciuto'),
+                new Cell($region->name.($region->code ? ' ('.$region->code.')' : '')),
                 new Cell((string) $tot1),
                 new Cell((string) $tot2),
                 new Cell((string) $tot3),

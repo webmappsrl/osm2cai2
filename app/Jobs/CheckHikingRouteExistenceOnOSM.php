@@ -32,7 +32,7 @@ class CheckHikingRouteExistenceOnOSM implements ShouldQueue
      */
     public function handle(): void
     {
-        if ($this->service->hikingRouteExists($this->hr->relation_id) === false) {
+        if ($this->service->hikingRouteExists($this->hr->osmfeatures_data['properties']['osm_id']) === false) {
             $this->hr->deleted_on_osm = true;
             $this->hr->saveQuietly();
         }
