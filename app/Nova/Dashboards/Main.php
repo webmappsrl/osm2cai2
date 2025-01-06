@@ -29,7 +29,7 @@ class Main extends Dashboard
 
     public function name()
     {
-        return __('Dashboard');
+        return __('Main Dashboard');
     }
 
     /**
