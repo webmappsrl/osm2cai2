@@ -32,7 +32,7 @@ class SetHrOsm2caiStatus4Command extends Command
 
         //get all the legacy hiking routes with osm2cai_status = 4 (only relation_id and osm2cai_status)
         $legacyHikingRoutes = $legacyConnection->table('hiking_routes')->select('relation_id')->where('osm2cai_status', 4)->get();
-        $this->info('Found ' . count($legacyHikingRoutes) . ' hiking routes with osm2cai_status 4');
+        $this->info('Found '.count($legacyHikingRoutes).' hiking routes with osm2cai_status 4');
 
         $progressBar = $this->output->createProgressBar(count($legacyHikingRoutes));
         $jobsDispatched = 0;
@@ -40,7 +40,7 @@ class SetHrOsm2caiStatus4Command extends Command
 
         //for each hiking route, check if the relation_id exists in the osmfeatures table
         foreach ($legacyHikingRoutes as $legacyHikingRoute) {
-            $osmfeaturesId = 'R' . $legacyHikingRoute->relation_id;
+            $osmfeaturesId = 'R'.$legacyHikingRoute->relation_id;
             $hikingRoute = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();
             if ($hikingRoute) {
                 $hikingRoute->osm2cai_status = 4;
@@ -48,23 +48,23 @@ class SetHrOsm2caiStatus4Command extends Command
             } else {
                 dispatch(new OsmfeaturesSyncJob($osmfeaturesId, HikingRoute::class));
                 $jobsDispatched++;
-                $notFoundHikingRoutes[] = "https://www.openstreetmap.org/relation/" . $legacyHikingRoute->relation_id;
+                $notFoundHikingRoutes[] = 'https://www.openstreetmap.org/relation/'.$legacyHikingRoute->relation_id;
             }
             $progressBar->advance();
         }
         $progressBar->finish();
 
         // Write not found hiking routes to file
-        if (!empty($notFoundHikingRoutes)) {
+        if (! empty($notFoundHikingRoutes)) {
             file_put_contents(
                 storage_path('not_found_hiking_routes_status_4.txt'),
-                implode("\n", $notFoundHikingRoutes) . "\n"
+                implode("\n", $notFoundHikingRoutes)."\n"
             );
         }
 
         $this->info("\nSync jobs dispatched for missing hiking routes: $jobsDispatched");
-        if (!empty($notFoundHikingRoutes)) {
-            $this->info("List of not found hiking routes written to: " . storage_path('not_found_hiking_routes_status_4.txt'));
+        if (! empty($notFoundHikingRoutes)) {
+            $this->info('List of not found hiking routes written to: '.storage_path('not_found_hiking_routes_status_4.txt'));
         }
     }
 }

@@ -100,7 +100,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         }),
                 ]),
 
-
                 // Rete Escursionistica
                 MenuSection::make('Rete Escursionistica', [
                     MenuSection::make('Sentieri', [
