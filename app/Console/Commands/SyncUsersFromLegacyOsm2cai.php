@@ -28,18 +28,21 @@ class SyncUsersFromLegacyOsm2cai extends Command
         foreach ($legacyUsers as $legacyUser) {
             $this->info('Importing user: '.$legacyUser->email);
 
-            $user = User::updateOrCreate(
-                ['email' => $legacyUser->email],
-                [
-                    'id' => $legacyUser->id,
-                    'name' => $legacyUser->name,
-                    'email_verified_at' => $legacyUser->email_verified_at,
-                    'password' => $legacyUser->password,
-                    'remember_token' => $legacyUser->remember_token,
-                    'created_at' => $legacyUser->created_at,
-                    'updated_at' => now(),
-                ]
-            );
+            $user = User::where('email', $legacyUser->email)->first();
+
+            if (! $user) {
+                $user = new User();
+            }
+            $user->id = $legacyUser->id;
+            $user->email = $legacyUser->email;
+            $user->phone = $legacyUser->phone;
+            $user->name = $legacyUser->name;
+            $user->email_verified_at = $legacyUser->email_verified_at;
+            $user->password = $legacyUser->password;
+            $user->remember_token = $legacyUser->remember_token;
+            $user->created_at = $legacyUser->created_at;
+            $user->updated_at = now();
+            $user->savequietly();
 
             $this->assignRolesAndPermissions($user, $legacyUser);
             $this->syncTerritorialRelations($user, $legacyUser);
