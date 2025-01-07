@@ -26,11 +26,11 @@ class SyncUsersFromLegacyOsm2cai extends Command
         Artisan::call('db:seed');
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: ' . $legacyUser->email);
+            $this->info('Importing user: '.$legacyUser->email);
 
             $user = User::where('email', $legacyUser->email)->first();
 
-            if (!$user) {
+            if (! $user) {
                 $user = new User();
             }
             $user->id = $legacyUser->id;
@@ -43,7 +43,6 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $user->created_at = $legacyUser->created_at;
             $user->updated_at = now();
             $user->savequietly();
-
 
             $this->assignRolesAndPermissions($user, $legacyUser);
             $this->syncTerritorialRelations($user, $legacyUser);
