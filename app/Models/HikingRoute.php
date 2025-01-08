@@ -52,8 +52,8 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         'osmfeatures_data',
         'osmfeatures_updated_at',
         'tdh',
-        'nearby_cai_huts',
-        'nearby_natural_springs',
+        'region_favorite',
+        'feature_image',
     ];
 
     protected $casts = [
@@ -116,6 +116,25 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
     }
 
     /**
+     * Getter for the distance_comp field in km
+     *
+     * @return float|null
+     */
+    public function getDistanceCompAttribute(): ?float
+    {
+        if (!$this->geometry) {
+            return null;
+        }
+
+        $result = DB::selectOne(
+            'SELECT ST_Length(geometry, true) AS distance FROM hiking_routes WHERE id = ?',
+            [$this->id]
+        );
+
+        return $result ? $result->distance / 1000 : null;
+    }
+
+    /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
     public static function getOsmfeaturesEndpoint(): string
@@ -149,7 +168,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for HikingRoute '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for HikingRoute ' . $osmfeaturesId);
 
             return;
         }
@@ -162,7 +181,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
             if (isset($osmfeaturesData['properties']['osm2cai_status']) && $osmfeaturesData['properties']['osm2cai_status'] !== null) {
                 if ($model->osm2cai_status !== $osmfeaturesData['properties']['osm2cai_status']) {
                     $updateData['osm2cai_status'] = $osmfeaturesData['properties']['osm2cai_status'];
-                    Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute '.$osmfeaturesId);
+                    Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute ' . $osmfeaturesId);
                 }
             }
         }
@@ -187,11 +206,11 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         }
         $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
         $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
-        $osmLink = 'https://www.openstreetmap.org/relation/'.$osmId;
-        $wmt = 'https://hiking.waymarkedtrails.org/#route?id='.$osmId;
-        $analyzer = 'https://ra.osmsurround.org/analyzeRelation?relationId='.$osmId.'&noCache=true&_noCache=on';
+        $osmLink = 'https://www.openstreetmap.org/relation/' . $osmId;
+        $wmt = 'https://hiking.waymarkedtrails.org/#route?id=' . $osmId;
+        $analyzer = 'https://ra.osmsurround.org/analyzeRelation?relationId=' . $osmId . '&noCache=true&_noCache=on';
         $endpoint = 'https://geohub.webmapp.it/api/osf/track/osm2cai/';
-        $api = $endpoint.$this->id;
+        $api = $endpoint . $this->id;
 
         $headers = get_headers($api);
         $statusLine = $headers[0];
@@ -201,8 +220,8 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
             $data = json_decode(file_get_contents($api), true);
             if (! empty($data)) {
                 if ($data['properties']['id'] !== null) {
-                    $infomontLink .= '?track='.$data['properties']['id'];
-                    $osm2caiLink .= '?track='.$data['properties']['id'];
+                    $infomontLink .= '?track=' . $data['properties']['id'];
+                    $osm2caiLink .= '?track=' . $data['properties']['id'];
                 }
             }
         }
@@ -360,7 +379,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         if (count($this->sectors) > 0) {
             $sectors = [];
             foreach ($this->sectors as $sector) {
-                $sectors[] = $sector->full_code.'('.number_format($sector->pivot->percentage * 100, 2).'%)';
+                $sectors[] = $sector->full_code . '(' . number_format($sector->pivot->percentage * 100, 2) . '%)';
             }
             $s = implode('; ', $sectors);
         }
@@ -458,7 +477,7 @@ SQL;
             if (count($res) > 0) {
                 $info['city_from'] = $res[0]->comune;
                 $info['city_from_istat'] = $res[0]->istat;
-                $info['region_from'] = config('osm2cai.region_istat_name.'.$res[0]->cod_reg);
+                $info['region_from'] = config('osm2cai.region_istat_name.' . $res[0]->cod_reg);
                 $info['region_from_istat'] = $res[0]->cod_reg;
 
                 if (empty($info['from'])) {
@@ -466,7 +485,7 @@ SQL;
                 }
             }
         } catch (\Throwable $th) {
-            Log::error("HikingRoute::getFromInfo: ERROR on query: $query (ID:$this->id), ".$th->getMessage());
+            Log::error("HikingRoute::getFromInfo: ERROR on query: $query (ID:$this->id), " . $th->getMessage());
         }
 
         return $info;
@@ -515,7 +534,7 @@ SQL;
             if (count($res) > 0) {
                 $info['city_to'] = $res[0]->comune;
                 $info['city_to_istat'] = $res[0]->istat;
-                $info['region_to'] = config('osm2cai.region_istat_name.'.$res[0]->cod_reg);
+                $info['region_to'] = config('osm2cai.region_istat_name.' . $res[0]->cod_reg);
                 $info['region_to_istat'] = $res[0]->cod_reg;
 
                 if (empty($info['to'])) {
@@ -523,7 +542,7 @@ SQL;
                 }
             }
         } catch (\Throwable $th) {
-            Log::error("HikingRoute::getToInfo: ERROR on query: $query (ID:$this->id), ".$th->getMessage());
+            Log::error("HikingRoute::getToInfo: ERROR on query: $query (ID:$this->id), " . $th->getMessage());
         }
 
         return $info;
@@ -543,7 +562,7 @@ SQL;
     public function getTechInfoFromDem(): array
     {
         $info = [
-            'gpx_url' => url('/api/v2/hiking-routes/'.$this->id.'.gpx'),
+            'gpx_url' => url('/api/v2/hiking-routes/' . $this->id . '.gpx'),
             'distance' => 'Unknown',
             'ascent' => 'Unknown',
             'descent' => 'Unknown',
@@ -570,11 +589,11 @@ SQL;
             $info['duration_backward'] = $info['duration_backward_hiking'];
             unset($info['duration_forward_hiking'], $info['duration_backward_hiking']);
             unset($info['duration_forward_bike'], $info['duration_backward_bike']);
-            $info['gpx_url'] = url('/api/v2/hiking-routes/'.$this->id.'.gpx');
+            $info['gpx_url'] = url('/api/v2/hiking-routes/' . $this->id . '.gpx');
         } else {
             $errorCode = $response->status();
             $errorBody = $response->body();
-            Log::error($this->id."UpdateEcTrack3DDemJob: FAILED: Error {$errorCode}: {$errorBody}");
+            Log::error($this->id . "UpdateEcTrack3DDemJob: FAILED: Error {$errorCode}: {$errorBody}");
         }
 
         return $info;
@@ -705,22 +724,22 @@ SQL;
             ];
         } elseif (! empty($this->osmfeatures_data['properties']['ref'])) {
             $v = [
-                'it' => 'Sentiero '.$this->osmfeatures_data['properties']['ref'],
-                'en' => 'Path '.$this->osmfeatures_data['properties']['ref'],
-                'es' => 'Camino '.$this->osmfeatures_data['properties']['ref'],
-                'de' => 'Weg '.$this->osmfeatures_data['properties']['ref'],
-                'fr' => 'Chemin '.$this->osmfeatures_data['properties']['ref'],
-                'pt' => 'Caminho '.$this->ref,
+                'it' => 'Sentiero ' . $this->osmfeatures_data['properties']['ref'],
+                'en' => 'Path ' . $this->osmfeatures_data['properties']['ref'],
+                'es' => 'Camino ' . $this->osmfeatures_data['properties']['ref'],
+                'de' => 'Weg ' . $this->osmfeatures_data['properties']['ref'],
+                'fr' => 'Chemin ' . $this->osmfeatures_data['properties']['ref'],
+                'pt' => 'Caminho ' . $this->ref,
             ];
         } else {
             $info = $this->getFromInfo();
             $v = [
-                'it' => 'Sentiero del Comune di '.$info['city_from'],
-                'en' => 'Path in the municipality of '.$info['city_from'],
-                'es' => 'Camino en el municipio de '.$info['city_from'],
-                'de' => 'Weg in der Gemeinde '.$info['city_from'],
-                'fr' => 'Chemin dans la municipalité de '.$info['city_from'],
-                'pt' => 'Caminho no município de '.$info['city_from'],
+                'it' => 'Sentiero del Comune di ' . $info['city_from'],
+                'en' => 'Path in the municipality of ' . $info['city_from'],
+                'es' => 'Camino en el municipio de ' . $info['city_from'],
+                'de' => 'Weg in der Gemeinde ' . $info['city_from'],
+                'fr' => 'Chemin dans la municipalité de ' . $info['city_from'],
+                'pt' => 'Caminho no município de ' . $info['city_from'],
             ];
         }
 
@@ -768,13 +787,13 @@ SQL;
         $refSuffix = substr($ref, 1);
 
         if ($refLength === 3) {
-            return $mainSector->full_code.$refSuffix.'0';
+            return $mainSector->full_code . $refSuffix . '0';
         }
 
         if ($refLength === 4) {
-            return $mainSector->full_code.$refSuffix;
+            return $mainSector->full_code . $refSuffix;
         }
 
-        return $mainSector->full_code.'????';
+        return $mainSector->full_code . '????';
     }
 }

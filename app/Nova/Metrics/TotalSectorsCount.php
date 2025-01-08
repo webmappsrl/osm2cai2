@@ -27,7 +27,7 @@ class TotalSectorsCount extends Value
      */
     public function calculate(NovaRequest $request)
     {
-        return $this->result(Sector::all('id')->count());
+        return $this->result(Sector::count())->format('0,0');
     }
 
     /**

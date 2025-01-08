@@ -30,22 +30,28 @@ class DashboardCardsHelper
 
     private function getTotalKmCard($status, $label)
     {
-        $query = DB::table('hiking_routes')
-            ->selectRaw('
-                COALESCE(
-                    SUM(ST_Length(geometry::geography) / 1000), 
-                    0
-                ) as total
-            ');
+        $cacheKey = is_array($status) ? 'total_km_' . implode('_', $status) : 'total_km_' . $status;
 
-        if (is_array($status)) {
-            $query->whereIn('osm2cai_status', $status);
-        } else {
-            $query->where('osm2cai_status', $status);
-        }
+        $total = cache()->remember($cacheKey, now()->addDay(), function () use ($status) {
+            $query = DB::table('hiking_routes')
+                ->selectRaw('
+                    COALESCE(
+                        SUM(ST_Length(geometry::geography) / 1000), 
+                        0
+                    ) as total
+                ');
 
-        $tot = $query->first();
-        $formatted = number_format(floatval($tot->total), 2);
+            if (is_array($status)) {
+                $query->whereIn('osm2cai_status', $status);
+            } else {
+                $query->where('osm2cai_status', $status);
+            }
+
+            $tot = $query->first();
+            return round(floatval($tot->total), 2);
+        });
+
+        $formatted = number_format($total, 2, ',', '.');
 
         return (new HtmlCard())
             ->width('1/4')
