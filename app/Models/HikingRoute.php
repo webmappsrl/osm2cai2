@@ -52,8 +52,8 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         'osmfeatures_data',
         'osmfeatures_updated_at',
         'tdh',
-        'nearby_cai_huts',
-        'nearby_natural_springs',
+        'region_favorite',
+        'feature_image',
     ];
 
     protected $casts = [
@@ -113,6 +113,25 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
 
         //else compute it
         return $this->getRefReiCompAttribute();
+    }
+
+    /**
+     * Getter for the distance_comp field in km
+     *
+     * @return float|null
+     */
+    public function getDistanceCompAttribute(): ?float
+    {
+        if (! $this->geometry) {
+            return null;
+        }
+
+        $result = DB::selectOne(
+            'SELECT ST_Length(geometry, true) AS distance FROM hiking_routes WHERE id = ?',
+            [$this->id]
+        );
+
+        return $result ? $result->distance / 1000 : null;
     }
 
     /**
