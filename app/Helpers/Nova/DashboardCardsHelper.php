@@ -48,7 +48,7 @@ class DashboardCardsHelper
             }
 
             $tot = $query->first();
-            return floatval($tot->total);
+            return round(floatval($tot->total), 2);
         });
 
         $formatted = number_format($total, 2, ',', '.');

@@ -52,8 +52,8 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         'osmfeatures_data',
         'osmfeatures_updated_at',
         'tdh',
-        'nearby_cai_huts',
-        'nearby_natural_springs',
+        'region_favorite',
+        'feature_image',
     ];
 
     protected $casts = [
