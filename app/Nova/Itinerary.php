@@ -61,9 +61,7 @@ class Itinerary extends Resource
                 $hikingRoutes = $this->hikingRoutes()->get();
                 $totalKm = 0;
                 foreach ($hikingRoutes as $route) {
-                    if ($route->distance) {
-                        $totalKm += $route->distance;
-                    } else {
+                    if ($route->distance_comp !== null) {
                         $totalKm += $route->distance_comp;
                     }
                 }
