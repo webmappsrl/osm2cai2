@@ -17,9 +17,10 @@ class CacheMiturAbruzzoApiCommand extends Command
 
     public function handle()
     {
-        if (!App::environment('production')) {
-            if (!$this->confirm('This command is meant to be run in production. By continuing, you will update cached file on AWS S3 with your local data. Do you wish to continue?')) {
+        if (! App::environment('production')) {
+            if (! $this->confirm('This command is meant to be run in production. By continuing, you will update cached file on AWS S3 with your local data. Do you wish to continue?')) {
                 $this->info('Command cancelled.');
+
                 return;
             }
         }
@@ -60,8 +61,8 @@ class CacheMiturAbruzzoApiCommand extends Command
             try {
                 CacheMiturAbruzzoDataJob::dispatch($className, $model->id);
             } catch (\Exception $e) {
-                Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
-                $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
+                Log::error("Failed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
+                $this->error("\nFailed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
             }
 
             $bar->advance();
