@@ -38,6 +38,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
         ]); // should not be processed
 
         $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
+            ->expectsConfirmation('Do you wish to continue?', 'yes')
             ->expectsOutput('Processing 2 HikingRoute')
             ->assertSuccessful();
 
@@ -56,6 +57,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
             'model' => 'HikingRoute',
             'id' => $route->id,
         ])
+            ->expectsConfirmation('Do you wish to continue?', 'yes')
             ->expectsOutput('Processing 1 HikingRoute')
             ->assertSuccessful();
 
@@ -66,6 +68,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     public function it_shows_error_when_no_hiking_routes_found()
     {
         $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
+            ->expectsConfirmation('Do you wish to continue?', 'yes')
             ->expectsOutput('No hiking routes found with osm2cai_status 4')
             ->assertSuccessful();
 
@@ -78,6 +81,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
         Region::factory()->count(3)->create();
 
         $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'Region'])
+            ->expectsConfirmation('Do you wish to continue?', 'yes')
             ->expectsOutput('Processing 3 Region')
             ->assertSuccessful();
 
@@ -88,6 +92,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     public function it_shows_error_for_invalid_model()
     {
         $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'InvalidModel'])
+            ->expectsConfirmation('Do you wish to continue?', 'yes')
             ->expectsOutput('Target class [App\Models\InvalidModel] does not exist.')
             ->assertSuccessful();
 
