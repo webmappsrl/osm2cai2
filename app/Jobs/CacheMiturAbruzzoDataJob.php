@@ -103,8 +103,8 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
             case Region::class:
                 return $this->buildRegionGeojson($model);
             default:
-                $this->logger()->error('Unsupported model type: '.get_class($model));
-                throw new \Exception('Unsupported model type: '.get_class($model));
+                $this->logger()->error('Unsupported model type: ' . get_class($model));
+                throw new \Exception('Unsupported model type: ' . get_class($model));
         }
     }
 
@@ -205,7 +205,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
 
         $properties['section_ids'] = $clubsIds ?? [];
         $properties['cai_huts'] = $caiHuts;
-        $properties['pois'] = count($pois) > 0 ? $pois->pluck('updated_at', 'id')->toArray() : [];
+        $properties['pois'] = count($pois) > 0 ? $pois : [];
 
         $geojson['properties'] = $properties;
         $geojson['geometry'] = $geometry;
@@ -331,7 +331,7 @@ SQL;
             $type = $osmfeaturesData['class'];
         }
         if (isset($osmfeaturesData['subclass'])) {
-            $type .= '/'.$osmfeaturesData['subclass'];
+            $type .= '/' . $osmfeaturesData['subclass'];
         }
 
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
