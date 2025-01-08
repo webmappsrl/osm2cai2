@@ -30,7 +30,7 @@ class DashboardCardsHelper
 
     private function getTotalKmCard($status, $label)
     {
-        $cacheKey = is_array($status) ? 'total_km_' . implode('_', $status) : 'total_km_' . $status;
+        $cacheKey = is_array($status) ? 'total_km_'.implode('_', $status) : 'total_km_'.$status;
 
         $total = cache()->remember($cacheKey, now()->addDay(), function () use ($status) {
             $query = DB::table('hiking_routes')
@@ -48,6 +48,7 @@ class DashboardCardsHelper
             }
 
             $tot = $query->first();
+
             return round(floatval($tot->total), 2);
         });
 
