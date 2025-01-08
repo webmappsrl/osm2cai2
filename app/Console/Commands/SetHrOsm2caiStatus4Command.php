@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\HikingRoute;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Jobs\OsmfeaturesSyncJob;
 
 class SetHrOsm2caiStatus4Command extends Command
@@ -44,7 +45,7 @@ class SetHrOsm2caiStatus4Command extends Command
             $hikingRoute = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();
             if ($hikingRoute) {
                 $hikingRoute->osm2cai_status = 4;
-                $hikingRoute->save();
+                $hikingRoute->saveQuietly();
             } else {
                 dispatch(new OsmfeaturesSyncJob($osmfeaturesId, HikingRoute::class));
                 $jobsDispatched++;
@@ -66,5 +67,6 @@ class SetHrOsm2caiStatus4Command extends Command
         if (! empty($notFoundHikingRoutes)) {
             $this->info('List of not found hiking routes written to: '.storage_path('not_found_hiking_routes_status_4.txt'));
         }
+        Log::info('SetHrOsm2caiStatus4Command finished');
     }
 }

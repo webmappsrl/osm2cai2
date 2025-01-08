@@ -205,7 +205,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
 
         $properties['section_ids'] = $clubsIds ?? [];
         $properties['cai_huts'] = $caiHuts;
-        $properties['pois'] = count($pois) > 0 ? $pois->pluck('updated_at', 'id')->toArray() : [];
+        $properties['pois'] = count($pois) > 0 ? $pois : [];
 
         $geojson['properties'] = $properties;
         $geojson['geometry'] = $geometry;

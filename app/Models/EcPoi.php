@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Jobs\CacheMiturAbruzzoDataJob;
+use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyHikingRoutesJob;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Models\Club;
+use App\Models\MountainGroups;
 use App\Models\Region;
 use App\Models\User;
 use App\Traits\AwsCacheable;
@@ -45,6 +47,8 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     {
         static::saved(function ($ecPoi) {
             if ($ecPoi->isDirty('geometry')) {
+                CalculateIntersectionsJob::dispatch($ecPoi, Club::class)->onQueue('geometric-computations');
+                CalculateIntersectionsJob::dispatch($ecPoi, MountainGroups::class)->onQueue('geometric-computations');
                 CheckNearbyHikingRoutesJob::dispatch($ecPoi, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
                 CheckNearbyHutsJob::dispatch($ecPoi, config('osm2cai.cai_hut_buffer'))->onQueue('geometric-computations');
             }

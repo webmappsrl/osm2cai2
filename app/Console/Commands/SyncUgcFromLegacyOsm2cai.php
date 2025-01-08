@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class SyncUgcFromLegacyOsm2cai extends Command
@@ -26,6 +27,22 @@ class SyncUgcFromLegacyOsm2cai extends Command
      * @var string
      */
     protected $description = 'Sync UGC from legacy OSM2CAI';
+
+    /**
+     * Legacy database connection
+     */
+    private $legacyDb;
+
+    /**
+     * Cache for users to avoid multiple DB queries
+     */
+    private $userCache = [];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->legacyDb = DB::connection('legacyosm2cai');
+    }
 
     /**
      * Execute the console command.
@@ -53,6 +70,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
         if (isset($importMethods[$model])) {
             $this->{$importMethods[$model]}();
         }
+
+        Log::info('SyncUgcFromLegacyOsm2caiCommand finished');
     }
 
     /**
@@ -79,13 +98,18 @@ class SyncUgcFromLegacyOsm2cai extends Command
             return null;
         }
 
-        $legacyUser = DB::connection('legacyosm2cai')
-            ->table('users')
+        // Check cache first
+        if (isset($this->userCache[$userId])) {
+            return $this->userCache[$userId];
+        }
+
+        $legacyUser = $this->legacyDb->table('users')
             ->where('id', $userId)
             ->first();
 
         if (! $legacyUser) {
             $this->error('User not found: '.$userId ?? 'empty user_id');
+            $this->userCache[$userId] = null;
 
             return null;
         }
@@ -94,6 +118,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
         if (! $user) {
             $user = $this->createUser($legacyUser);
         }
+
+        // Cache the result
+        $this->userCache[$userId] = $user;
 
         return $user;
     }
@@ -110,6 +137,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
         $user->id = $legacyUser->id;
         $user->name = $legacyUser->name;
         $user->email = $legacyUser->email;
+        $user->phone = $legacyUser->phone;
         $user->password = $legacyUser->password;
         $user->remember_token = $legacyUser->remember_token;
         $user->created_at = $legacyUser->created_at;
@@ -130,7 +158,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private function importUgcMedia(): void
     {
-        $legacyMedia = DB::connection('legacyosm2cai')->table('ugc_media')->get();
+        $legacyMedia = $this->legacyDb->table('ugc_media')->get();
 
         foreach ($legacyMedia as $media) {
             $userId = $media->user_id;
@@ -138,7 +166,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
             $ugcTrackId = null;
             $mediaUser = $this->ensureUserExists($userId);
 
-            $poiRelation = DB::connection('legacyosm2cai')
+            $poiRelation = $this->legacyDb
                 ->table('ugc_media_ugc_poi')
                 ->where('ugc_media_id', $media->id)
                 ->first();
@@ -150,7 +178,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 }
             }
 
-            $trackRelation = DB::connection('legacyosm2cai')
+            $trackRelation = $this->legacyDb
                 ->table('ugc_media_ugc_track')
                 ->where('ugc_media_id', $media->id)
                 ->first();
@@ -174,13 +202,27 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 }
             }
 
+            // Check geometry type and calculate centroid if needed (there is one media with type linestring https://osm2cai.cai.it/resources/ugc-medias/5270)
+            $geometry = $media->geometry;
+            if ($geometry) {
+                $geometryType = $this->legacyDb
+                    ->selectOne('SELECT ST_GeometryType(?) as type', [$geometry])
+                    ->type;
+
+                if ($geometryType !== 'ST_Point') {
+                    $geometry = $this->legacyDb
+                        ->selectOne('SELECT ST_AsEWKT(ST_Centroid(?)) as centroid', [$geometry])
+                        ->centroid;
+                }
+            }
+
             UgcMedia::updateOrCreate(['geohub_id' => $media->geohub_id], [
                 'id' => $media->id,
                 'created_at' => $media->created_at,
                 'updated_at' => now(),
                 'name' => $media->name,
                 'description' => $media->description,
-                'geometry' => $media->geometry,
+                'geometry' => $geometry,
                 'user_id' => $mediaUser->id ?? null,
                 'ugc_poi_id' => $ugcPoiId,
                 'ugc_track_id' => $ugcTrackId,
@@ -199,7 +241,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private function importUgcTracks(): void
     {
-        $legacyTracks = DB::connection('legacyosm2cai')->table('ugc_tracks')->get();
+        $legacyTracks = $this->legacyDb->table('ugc_tracks')->get();
 
         foreach ($legacyTracks as $track) {
             try {
@@ -207,7 +249,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $trackUser = $this->ensureUserExists($userId);
 
                 // Verifichiamo che la geometria sia valida e del tipo corretto
-                $geometryCheck = DB::connection('legacyosm2cai')
+                $geometryCheck = $this->legacyDb
                     ->selectOne(
                         "
                         SELECT ST_AsEWKT(
@@ -263,7 +305,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private function importUgcPois(): void
     {
-        $legacyUgc = DB::connection('legacyosm2cai')->table('ugc_pois')->get();
+        $legacyUgc = $this->legacyDb->table('ugc_pois')->get();
 
         foreach ($legacyUgc as $ugc) {
             try {
@@ -272,7 +314,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $poiValidator = $this->ensureUserExists($ugc->validator_id);
 
                 // Verifichiamo che la geometria sia valida e del tipo corretto
-                $geometryCheck = DB::connection('legacyosm2cai')
+                $geometryCheck = $this->legacyDb
                     ->selectOne(
                         "
                         SELECT ST_AsEWKT(

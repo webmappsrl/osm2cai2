@@ -38,7 +38,7 @@ class ComputeTdhJob implements ShouldQueue
             $newTdh = $hikingRoute->computeTdh();
             if ($newTdh !== $hikingRoute->tdh) {
                 $hikingRoute->tdh = $newTdh;
-                $hikingRoute->save();
+                $hikingRoute->saveQuietly();
             }
         }
     }
