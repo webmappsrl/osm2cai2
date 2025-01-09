@@ -38,6 +38,11 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private $userCache = [];
 
+    /**
+     * Log for invalid geometries
+     */
+    private $invalidGeometriesLog = [];
+
     public function __construct()
     {
         parent::__construct();
@@ -51,6 +56,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     public function handle(): void
     {
+        $this->invalidGeometriesLog = [];
+
         $model = $this->option('model');
         $importMethods = [
             'pois' => 'importUgcPois',
@@ -62,13 +69,19 @@ class SyncUgcFromLegacyOsm2cai extends Command
             $this->importAll();
         }
         if (! in_array($model, ['pois', 'tracks', 'media'])) {
-            $this->error('Invalid model: '.$model);
+            $this->error('Invalid model: ' . $model);
 
             return;
         }
 
         if (isset($importMethods[$model])) {
             $this->{$importMethods[$model]}();
+        }
+
+        if (!empty($this->invalidGeometriesLog)) {
+            $content = implode("\n", $this->invalidGeometriesLog);
+            Storage::put('invalid_geometries_ugc.txt', $content);
+            $this->info('Invalid geometries have been logged to invalid_geometries_ugc.txt');
         }
 
         Log::info('SyncUgcFromLegacyOsm2caiCommand finished');
@@ -108,7 +121,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
             ->first();
 
         if (! $legacyUser) {
-            $this->error('User not found: '.$userId ?? 'empty user_id');
+            $this->error('User not found: ' . $userId ?? 'empty user_id');
             $this->userCache[$userId] = null;
 
             return null;
@@ -145,7 +158,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
         try {
             $user->save();
         } catch (\Exception $e) {
-            $this->error('Error importing user: '.$e->getMessage());
+            $this->error('Error importing user: ' . $e->getMessage());
         }
 
         return $user;
@@ -190,12 +203,12 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 }
             }
 
-            $this->info('Importing UGC media: '.$media->id);
+            $this->info('Importing UGC media: ' . $media->id);
             $imageUrl = strpos($media->relative_url, 'http') === 0 ? $media->relative_url : "https://osm2cai.cai.it/storage/{$media->relative_url}";
 
             if (! str_starts_with($imageUrl, 'https://geohub.webmapp.it/')) {
                 $imageContent = Http::get($imageUrl)->body();
-                $imagePath = 'ugc-media/'.basename($media->relative_url);
+                $imagePath = 'ugc-media/' . basename($media->relative_url);
                 //check if the image already exists
                 if (! Storage::disk('public')->exists($imagePath)) {
                     Storage::disk('public')->put($imagePath, $imageContent);
@@ -210,14 +223,16 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ->type;
 
                 if ($geometryType !== 'ST_Point') {
-                    $geometry = $this->legacyDb
-                        ->selectOne('SELECT ST_AsEWKT(ST_Centroid(?)) as centroid', [$geometry])
-                        ->centroid;
+                    $this->invalidGeometriesLog[] = sprintf(
+                        "UGC_MEDIA ID: %d - Invalid geometry type: %s",
+                        $media->id,
+                        $geometryType
+                    );
                 }
             }
 
-            UgcMedia::updateOrCreate(['geohub_id' => $media->geohub_id], [
-                'id' => $media->id,
+            UgcMedia::updateOrCreate(['id' => $media->id], [
+                'geohub_id' => $media->geohub_id,
                 'created_at' => $media->created_at,
                 'updated_at' => now(),
                 'name' => $media->name,
@@ -248,7 +263,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $userId = $track->user_id;
                 $trackUser = $this->ensureUserExists($userId);
 
-                // Verifichiamo che la geometria sia valida e del tipo corretto
+                // Check if geometry is valid and of the correct type
                 $geometryCheck = $this->legacyDb
                     ->selectOne(
                         "
@@ -266,16 +281,20 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     );
 
                 if (! $geometryCheck || ! $geometryCheck->geometry) {
+                    $this->invalidGeometriesLog[] = sprintf(
+                        "UGC_TRACK ID: %d - Invalid or unsupported geometry",
+                        $track->id
+                    );
                     $this->warn("Invalid or unsupported geometry for track ID: {$track->id}. Skipping...");
                     continue;
                 }
 
-                $this->info('Importing UGC track: '.$track->id);
+                $this->info('Importing UGC track: ' . $track->id);
 
                 UgcTrack::updateOrCreate(
-                    ['geohub_id' => $track->geohub_id],
+                    ['id' => $track->id],
                     [
-                        'id' => $track->id,
+                        'geohub_id' => $track->geohub_id,
                         'created_at' => $track->created_at,
                         'updated_at' => now(),
                         'name' => $track->name,
@@ -292,7 +311,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
             } catch (\Exception $e) {
-                $this->error("Error importing track ID {$track->id}: ".$e->getMessage());
+                $this->error("Error importing track ID {$track->id}: " . $e->getMessage());
                 continue;
             }
         }
@@ -313,7 +332,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $poiUser = $this->ensureUserExists($userId);
                 $poiValidator = $this->ensureUserExists($ugc->validator_id);
 
-                // Verifichiamo che la geometria sia valida e del tipo corretto
+                // Check if geometry is valid and of the correct type
                 $geometryCheck = $this->legacyDb
                     ->selectOne(
                         "
@@ -331,16 +350,20 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     );
 
                 if (! $geometryCheck || ! $geometryCheck->geometry) {
+                    $this->invalidGeometriesLog[] = sprintf(
+                        "UGC_POI ID: %d - Invalid or unsupported geometry",
+                        $ugc->id
+                    );
                     $this->warn("Invalid or unsupported geometry for POI ID: {$ugc->id}. Skipping...");
                     continue;
                 }
 
-                $this->info('Importing UGC POI: '.$ugc->id);
+                $this->info('Importing UGC POI: ' . $ugc->id);
 
                 UgcPoi::updateOrCreate(
-                    ['geohub_id' => $ugc->geohub_id],
+                    ['id' => $ugc->id],
                     [
-                        'id' => $ugc->id,
+                        'geohub_id' => $ugc->geohub_id,
                         'user_id' => $poiUser->id ?? null,
                         'name' => $ugc->name,
                         'description' => $ugc->description,
@@ -359,7 +382,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
             } catch (\Exception $e) {
-                $this->error("Error importing POI ID {$ugc->id}: ".$e->getMessage());
+                $this->error("Error importing POI ID {$ugc->id}: " . $e->getMessage());
                 continue;
             }
         }

@@ -99,7 +99,7 @@ class CalculateIntersectionsJob implements ShouldQueue
 
             DB::table($pivotTable)->insert($pivotRecords);
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
+            Log::error('Error recalculating intersections for model ' . $baseModel->getTable() . ': ' . $e->getMessage());
             throw $e;
         }
     }
@@ -164,7 +164,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             return $tables[$intersectingModelTable][$baseModelTable];
         }
 
-        throw new \Exception("No pivot table found for {$baseTable} and {$intersectingTable}");
+        throw new \Exception("No pivot table found for {$baseModelTable} and {$intersectingModelTable}");
     }
 
     /**
@@ -176,7 +176,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             $model = new $model();
         }
 
-        return Str::singular($model->getTable()).'_id';
+        return Str::singular($model->getTable()) . '_id';
     }
 
     /**
