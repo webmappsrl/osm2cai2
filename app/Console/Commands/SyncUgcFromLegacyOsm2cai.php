@@ -231,8 +231,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 }
             }
 
-            UgcMedia::updateOrCreate(['geohub_id' => $media->geohub_id], [
-                'id' => $media->id,
+            UgcMedia::updateOrCreate(['id' => $media->id], [
+                'geohub_id' => $media->geohub_id,
                 'created_at' => $media->created_at,
                 'updated_at' => now(),
                 'name' => $media->name,
@@ -292,9 +292,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $this->info('Importing UGC track: ' . $track->id);
 
                 UgcTrack::updateOrCreate(
-                    ['geohub_id' => $track->geohub_id],
+                    ['id' => $track->id],
                     [
-                        'id' => $track->id,
+                        'geohub_id' => $track->geohub_id,
                         'created_at' => $track->created_at,
                         'updated_at' => now(),
                         'name' => $track->name,
@@ -361,9 +361,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $this->info('Importing UGC POI: ' . $ugc->id);
 
                 UgcPoi::updateOrCreate(
-                    ['geohub_id' => $ugc->geohub_id],
+                    ['id' => $ugc->id],
                     [
-                        'id' => $ugc->id,
+                        'geohub_id' => $ugc->geohub_id,
                         'user_id' => $poiUser->id ?? null,
                         'name' => $ugc->name,
                         'description' => $ugc->description,
