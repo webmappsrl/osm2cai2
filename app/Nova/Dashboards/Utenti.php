@@ -31,7 +31,7 @@ class Utenti extends Dashboard
             return DB::select("
                 SELECT u.id AS user_id, u.name AS user_name, COUNT(DISTINCT hr.id) AS numero_validazioni
                 FROM users u
-                JOIN hiking_routes hr ON u.id = hr.user_id
+                JOIN hiking_routes hr ON u.id = hr.validator_id
                 WHERE hr.osm2cai_status = '4'
                 GROUP BY u.id, u.name
                 ORDER BY numero_validazioni DESC
