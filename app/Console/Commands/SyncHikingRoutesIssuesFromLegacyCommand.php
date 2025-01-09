@@ -35,14 +35,14 @@ class SyncHikingRoutesIssuesFromLegacyCommand extends Command
             ->whereNotNull('issues_user_id')
             ->get();
 
-        $this->info('Found ' . count($legacyHikingRoutes) . ' hiking routes with issues to import');
+        $this->info('Found '.count($legacyHikingRoutes).' hiking routes with issues to import');
 
         $progressBar = $this->output->createProgressBar(count($legacyHikingRoutes));
         $updated = 0;
         $notFound = [];
 
         foreach ($legacyHikingRoutes as $legacyHr) {
-            $osmfeaturesId = 'R' . $legacyHr->relation_id;
+            $osmfeaturesId = 'R'.$legacyHr->relation_id;
 
             // Find corresponding hiking route in current database
             $currentHr = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();
@@ -58,7 +58,7 @@ class SyncHikingRoutesIssuesFromLegacyCommand extends Command
                     ]);
                     $updated++;
                 } catch (\Exception $e) {
-                    Log::error('Error updating hiking route ' . $osmfeaturesId . ': ' . $e->getMessage());
+                    Log::error('Error updating hiking route '.$osmfeaturesId.': '.$e->getMessage());
                     $notFound[] = $osmfeaturesId;
                 }
             } else {
@@ -70,7 +70,7 @@ class SyncHikingRoutesIssuesFromLegacyCommand extends Command
 
         $progressBar->finish();
 
-        $this->info("\nSuccessfully updated: " . $updated . " hiking routes");
-        $this->info("Hiking routes not found: " . count($notFound));
+        $this->info("\nSuccessfully updated: ".$updated.' hiking routes');
+        $this->info('Hiking routes not found: '.count($notFound));
     }
 }

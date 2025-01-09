@@ -31,7 +31,7 @@ class UserDistributionByRole extends Partition
             'Referente di Zona' => $this->users['Local Referent'] ?? 0,
             'Responsabile di Sezione' => $this->users['Club Manager'] ?? 0,
             'Responsabile Itinerario' => $this->users['Itinerary Manager'] ?? 0,
-            'Guest' => $this->users['Guest'] ?? 0
+            'Guest' => $this->users['Guest'] ?? 0,
         ];
 
         return $this->result($formattedResults);

@@ -41,7 +41,7 @@ class Utenti extends Dashboard
                     'Region' => DB::table('users')->whereNotNull('region_id')->count(),
                     'Province' => DB::table('province_user')->distinct('user_id')->count('user_id'),
                     'Area' => DB::table('area_user')->distinct('user_id')->count('user_id'),
-                    'Sector' => DB::table('sector_user')->distinct('user_id')->count('user_id')
+                    'Sector' => DB::table('sector_user')->distinct('user_id')->count('user_id'),
                 ];
         });
 

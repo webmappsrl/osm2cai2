@@ -81,7 +81,7 @@ class ValidateHikingRouteAction extends Action
         $model->update([
             'validator_id' => $user->id,
             'validation_date' => $date,
-            'osm2cai_status' => 4
+            'osm2cai_status' => 4,
         ]);
     }
 }

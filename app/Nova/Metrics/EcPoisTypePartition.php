@@ -3,9 +3,9 @@
 namespace App\Nova\Metrics;
 
 use App\Models\EcPoi;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Metrics\PartitionResult;
-use Laravel\Nova\Http\Requests\NovaRequest;
 
 class EcPoisTypePartition extends Partition
 {

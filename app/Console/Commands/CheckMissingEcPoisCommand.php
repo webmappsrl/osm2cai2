@@ -53,7 +53,7 @@ class CheckMissingEcPoisCommand extends Command
             );
 
             $this->info('Completed! Missing IDs have been saved to storage/app/public/missing_ec_pois.txt');
-            $this->info('Number of missing IDs found: ' . count($missingIds));
+            $this->info('Number of missing IDs found: '.count($missingIds));
         } else {
             $this->info('No missing IDs found.');
         }

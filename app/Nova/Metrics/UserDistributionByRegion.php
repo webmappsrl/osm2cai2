@@ -4,8 +4,8 @@ namespace App\Nova\Metrics;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Metrics\Partition;
 
 class UserDistributionByRegion extends Partition
 {

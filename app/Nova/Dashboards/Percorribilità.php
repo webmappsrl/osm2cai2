@@ -2,8 +2,8 @@
 
 namespace App\Nova\Dashboards;
 
-use App\Models\User;
 use App\Models\HikingRoute;
+use App\Models\User;
 use App\Nova\Metrics\IssueStatusPartition;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Nova\Dashboard;
@@ -40,17 +40,17 @@ class Percorribilità extends Dashboard
 
     /**
      * Get hiking routes filtered by status and user's territory
-     * 
+     *
      * @param int|array $status
      * @return \Illuminate\Database\Eloquent\Collection
      */
     protected function getHikingRoutes($status)
     {
-        $cacheKey = is_array($status) ? 'hikingRoutesSda' . implode('', $status) : 'hikingRoutesSda' . $status;
+        $cacheKey = is_array($status) ? 'hikingRoutesSda'.implode('', $status) : 'hikingRoutesSda'.$status;
 
         //add user id to cache key to avoid conflicts between users
         if ($this->user) {
-            $cacheKey .= '_user_' . $this->user->id;
+            $cacheKey .= '_user_'.$this->user->id;
         }
 
         //increase cache time to 1 hour instead of 1 minute because data doesn't change frequently
@@ -68,32 +68,28 @@ class Percorribilità extends Dashboard
                     if ($this->user->region) {
                         $q->orWhereHas(
                             'regions',
-                            fn($query) =>
-                            $query->where('regions.id', $this->user->region->id)
+                            fn ($query) => $query->where('regions.id', $this->user->region->id)
                         );
                     }
 
                     if ($this->user->area->count()) {
                         $q->orWhereHas(
                             'areas',
-                            fn($query) =>
-                            $query->whereIn('areas.id', $this->user->area->pluck('id'))
+                            fn ($query) => $query->whereIn('areas.id', $this->user->area->pluck('id'))
                         );
                     }
 
                     if ($this->user->provinces->count()) {
                         $q->orWhereHas(
                             'provinces',
-                            fn($query) =>
-                            $query->whereIn('provinces.id', $this->user->provinces->pluck('id'))
+                            fn ($query) => $query->whereIn('provinces.id', $this->user->provinces->pluck('id'))
                         );
                     }
 
                     if ($this->user->sectors->count()) {
                         $q->orWhereHas(
                             'sectors',
-                            fn($query) =>
-                            $query->whereIn('sectors.id', $this->user->sectors->pluck('id'))
+                            fn ($query) => $query->whereIn('sectors.id', $this->user->sectors->pluck('id'))
                         );
                     }
                 });

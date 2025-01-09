@@ -35,11 +35,11 @@ class SyncHikingRoutesValidatorFromLegacyCommand extends Command
             ->whereNotNull('user_id')
             ->get();
 
-        $this->info('Found ' . count($legacyHikingRoutes) . ' hiking routes to update');
+        $this->info('Found '.count($legacyHikingRoutes).' hiking routes to update');
         $progressBar = $this->output->createProgressBar(count($legacyHikingRoutes));
 
         foreach ($legacyHikingRoutes as $legacyHr) {
-            $osmfeaturesId = 'R' . $legacyHr->relation_id;
+            $osmfeaturesId = 'R'.$legacyHr->relation_id;
 
             // Find the corresponding record in the current database
             $hikingRoute = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();
@@ -47,7 +47,7 @@ class SyncHikingRoutesValidatorFromLegacyCommand extends Command
             if ($hikingRoute) {
                 $hikingRoute->updateQuietly([
                     'validator_id' => $legacyHr->user_id,
-                    'validation_date' => $legacyHr->validation_date
+                    'validation_date' => $legacyHr->validation_date,
                 ]);
 
                 $logMessage = "Updated route {$osmfeaturesId} with validator_id {$legacyHr->user_id}";

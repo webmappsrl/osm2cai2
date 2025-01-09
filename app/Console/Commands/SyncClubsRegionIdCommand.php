@@ -19,7 +19,7 @@ class SyncClubsRegionIdCommand extends Command
         $legacyConnection = DB::connection('legacyosm2cai');
         $legacySections = $legacyConnection->table('sections')->whereNotNull('region_id')->get();
 
-        $this->info('Found ' . $legacySections->count() . ' sections in legacy database');
+        $this->info('Found '.$legacySections->count().' sections in legacy database');
         $progressBar = $this->output->createProgressBar($legacySections->count());
 
         $updated = 0;
@@ -30,7 +30,7 @@ class SyncClubsRegionIdCommand extends Command
                 // Find current Club using osmfeatures_id
                 $currentClub = Club::where('name', $legacySection->name)->first();
 
-                if (!$currentClub) {
+                if (! $currentClub) {
                     $errors[] = "Club not found with name: {$legacySection->name}";
                     continue;
                 }
@@ -40,7 +40,7 @@ class SyncClubsRegionIdCommand extends Command
                     ->where('id', $legacySection->region_id)
                     ->first();
 
-                if (!$legacyRegion) {
+                if (! $legacyRegion) {
                     $errors[] = "Legacy region not found with ID: {$legacySection->region_id}";
                     continue;
                 }
@@ -48,7 +48,7 @@ class SyncClubsRegionIdCommand extends Command
                 // Find current region using code
                 $currentRegion = Region::where('code', $legacyRegion->code)->first();
 
-                if (!$currentRegion) {
+                if (! $currentRegion) {
                     $errors[] = "Current region not found with code: {$legacyRegion->code}";
                     continue;
                 }
@@ -58,7 +58,7 @@ class SyncClubsRegionIdCommand extends Command
                 $currentClub->saveQuietly();
                 $updated++;
             } catch (\Exception $e) {
-                $errors[] = "Error processing section {$legacySection->id}: " . $e->getMessage();
+                $errors[] = "Error processing section {$legacySection->id}: ".$e->getMessage();
             }
 
             $progressBar->advance();
@@ -70,7 +70,7 @@ class SyncClubsRegionIdCommand extends Command
         $this->info("Successfully updated: $updated Clubs");
 
         if (count($errors) > 0) {
-            $this->error("Errors encountered: " . count($errors));
+            $this->error('Errors encountered: '.count($errors));
             foreach ($errors as $error) {
                 Log::error($error);
             }

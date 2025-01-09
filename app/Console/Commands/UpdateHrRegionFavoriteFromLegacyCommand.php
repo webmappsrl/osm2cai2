@@ -34,8 +34,7 @@ class UpdateHrRegionFavoriteFromLegacyCommand extends Command
         $legacyHr = $legacyConnection->table('hiking_routes')->where('region_favorite', true)->get();
 
         foreach ($legacyHr as $lhr) {
-
-            $osmfeaturesId = 'R' . $lhr->relation_id;
+            $osmfeaturesId = 'R'.$lhr->relation_id;
             $newHr = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();
             if ($newHr) {
                 $newHr->updateQuietly(['region_favorite' => true]);
