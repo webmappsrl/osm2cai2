@@ -3,6 +3,7 @@
 namespace App\Nova\Metrics;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
 
@@ -23,33 +24,27 @@ class UserDistributionByRegion extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        $keys = ['Regione', 'Provincia', 'Area', 'Settore', 'Sconosciuto'];
-        $regionUsers = 0;
-        $provinceUsers = 0;
-        $areaUsers = 0;
-        $sectorUsers = 0;
-        $unknownUsers = 0;
+        // Calcola gli utenti sconosciuti
+        $this->users['Unknown'] = DB::table('users')
+            ->whereNull('region_id')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('province_user')
+                    ->whereRaw('province_user.user_id = users.id');
+            })
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('area_user')
+                    ->whereRaw('area_user.user_id = users.id');
+            })
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('sector_user')
+                    ->whereRaw('sector_user.user_id = users.id');
+            })
+            ->count();
 
-        foreach ($this->users as $user) {
-            if ($user->region_id !== null) {
-                $regionUsers++;
-            }
-            if (count($user->provinces) > 0) {
-                $provinceUsers++;
-            }
-            if (count($user->areas) > 0) {
-                $areaUsers++;
-            }
-            if (count($user->sectors) > 0) {
-                $sectorUsers++;
-            }
-            if ($user->region_id === null && count($user->provinces) == 0 && count($user->areas) == 0 && count($user->sectors) == 0) {
-                $unknownUsers++;
-            }
-        }
-        $result = array_combine($keys, [$regionUsers, $provinceUsers, $areaUsers, $sectorUsers, $unknownUsers]);
-
-        return $this->result($result);
+        return $this->result($this->users);
     }
 
     /**

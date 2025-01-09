@@ -78,9 +78,10 @@ class ValidateHikingRouteAction extends Action
 
     private function validateSDA(HikingRoute $model, User $user, Carbon $date)
     {
-        $model->validation_date = $date;
-        $model->user_id = $user->id;
-        $model->osm2cai_status = 4;
-        $model->save();
+        $model->update([
+            'validator_id' => $user->id,
+            'validation_date' => $date,
+            'osm2cai_status' => 4,
+        ]);
     }
 }

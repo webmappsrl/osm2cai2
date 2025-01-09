@@ -67,7 +67,7 @@ class IssueStatusPartition extends Partition
      */
     public function cacheFor()
     {
-        return now()->addDay();
+        return now()->addMinutes(60 * 24);
     }
 
     /**

@@ -24,36 +24,17 @@ class UserDistributionByRole extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        $keys = ['Superadmin', 'Referente Nazionale', 'Referente Regionale', 'Referente di Zona', 'Sconosciuto'];
-        $adminUsers = 0;
-        $nationalUsers = 0;
-        $regionalUsers = 0;
-        $localUsers = 0;
-        $unknownUsers = 0;
+        $formattedResults = [
+            'Superadmin' => $this->users['Administrator'] ?? 0,
+            'Referente Nazionale' => $this->users['National Referent'] ?? 0,
+            'Referente Regionale' => $this->users['Regional Referent'] ?? 0,
+            'Referente di Zona' => $this->users['Local Referent'] ?? 0,
+            'Responsabile di Sezione' => $this->users['Club Manager'] ?? 0,
+            'Responsabile Itinerario' => $this->users['Itinerary Manager'] ?? 0,
+            'Guest' => $this->users['Guest'] ?? 0,
+        ];
 
-        foreach ($this->users as $user) {
-            $role = $user->getRoleNames()->first();
-
-            switch ($role) {
-                case 'Administrator':
-                    $adminUsers++;
-                    break;
-                case 'National Referent':
-                    $nationalUsers++;
-                    break;
-                case 'Regional Referent':
-                    $regionalUsers++;
-                    break;
-                case 'Local Referent':
-                    $localUsers++;
-                    break;
-                default:
-                    $unknownUsers++;
-            }
-        }
-        $result = array_combine($keys, [$adminUsers, $nationalUsers, $regionalUsers, $localUsers, $unknownUsers]);
-
-        return $this->result($result);
+        return $this->result($formattedResults);
     }
 
     /**

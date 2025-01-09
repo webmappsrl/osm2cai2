@@ -65,12 +65,12 @@ class Osm2caiSync extends Command
         $progressBar = $this->output->createProgressBar(count($listData));
         $progressBar->start();
 
-        $batchSize = 10000;
+        $batchSize = 1000;
         $batch = [];
 
         foreach ($listData as $id => $udpated_at) {
             $modelInstance = new $modelClass();
-            if ($modelInstance->where('id', $id)->exists() && ! $modelInstance instanceof \App\Models\HikingRoute) {
+            if ($modelInstance->where('id', $id)->exists()) {
                 $this->info('Skipping '.$id.' because it already exists');
                 $progressBar->advance();
                 continue;

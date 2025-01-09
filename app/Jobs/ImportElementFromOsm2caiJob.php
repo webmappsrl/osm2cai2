@@ -61,13 +61,6 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
                 Log::error('Failed to import Mountain Group with id: '.$data['id'].' '.$e->getMessage());
             }
         }
-        if ($modelInstance instanceof \App\Models\EcPoi) {
-            try {
-                $this->importEcPois($modelInstance, $data);
-            } catch (\Exception $e) {
-                Log::error('Failed to import Ec Poi with id: '.$data['id'].' '.$e->getMessage());
-            }
-        }
         if ($modelInstance instanceof \App\Models\NaturalSpring) {
             try {
                 $this->importNaturalSprings($modelInstance, $data);
@@ -103,14 +96,6 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
                 Log::error('Failed to import Area with id: '.$data['id'].' '.$e->getMessage());
             }
         }
-        if ($modelInstance instanceof HikingRoute) {
-            try {
-                $this->importHikingRoutes($modelInstance, $data, $legacyDbConnection);
-            } catch (Exception $e) {
-                Log::error('Failed to import Hiking Route with id: '.$data['id'].' '.$e->getMessage());
-            }
-        }
-
         if ($modelInstance instanceof \App\Models\Itinerary) {
             try {
                 $this->importItineraries($modelInstance, $data);
@@ -137,26 +122,6 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
             $modelInstance->save();
         } catch (\Exception $e) {
             Log::error('Failed to save mountain group with id: '.$data['id'].' '.$e->getMessage());
-            throw $e;
-        }
-    }
-
-    private function importEcPois($modelInstance, $data)
-    {
-        $columnsToImport = ['id', 'name', 'geometry', 'osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at'];
-
-        $data['geometry'] = $this->prepareGeometry($data['geometry']);
-
-        $intersect = array_intersect_key($data, array_flip($columnsToImport));
-
-        foreach ($intersect as $key => $value) {
-            $modelInstance->$key = $value;
-        }
-
-        try {
-            $modelInstance->save();
-        } catch (\Exception $e) {
-            Log::error('Failed to save Ec Poi with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
         }
     }
@@ -296,34 +261,6 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Failed to save Area with id: '.$data['id'].' '.$e->getMessage());
             throw $e;
-        }
-    }
-
-    private function importHikingRoutes($modelInstance, $data, $legacyDbConnection)
-    {
-        $columnsToImport = ['osm2cai_status', 'validation_date', 'geometry_raw_data', 'region_favorite', 'region_favorite_publication_date', 'issues_last_update', 'issues_user_id', 'issues_cronology', 'issues_description', 'description_cai_it'];
-        $intersect = array_intersect_key($data, array_flip($columnsToImport));
-
-        $data['geometry_raw_data'] = $this->prepareGeometry($data['geometry_raw_data']);
-
-        $hr = $modelInstance->where('osmfeatures_id', 'R'.$data['relation_id'])->first();
-        if (! $hr) {
-            // Write to a .txt file instead of using a log channel (error when configuring dedicated log channel)
-            $logFilePath = storage_path('logs/hiking_routes_not_found.txt');
-            $message = 'Hiking route not found: https://osm2cai.cai.it/resources/hiking-routes/'.$data['id'].PHP_EOL;
-            File::append($logFilePath, $message);
-
-            return;
-        }
-
-        foreach ($intersect as $key => $value) {
-            $hr->$key = $value;
-        }
-
-        try {
-            $hr->save();
-        } catch (\Exception $e) {
-            Log::error('Failed to save Hiking_Route with id: '.$data['id'].' '.$e->getMessage());
         }
     }
 

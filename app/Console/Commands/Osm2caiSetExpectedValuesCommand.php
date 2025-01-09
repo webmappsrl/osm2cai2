@@ -46,8 +46,8 @@ class Osm2caiSetExpectedValuesCommand extends Command
     public function handle()
     {
         Region::where('name', 'Abruzzo')->first()->updateQuietly(['num_expected' => 449]);
-        Region::where('name', 'Basilicata')->first()->updateQuietly(['num_expected' => 26]);
-        Region::where('name', 'Calabria')->first()->updateQuietly(['num_expected' => 234]);
+        Region::where('name', 'Basilicata')->first()->updateQuietly(['num_expected' => 200]);
+        Region::where('name', 'Calabria')->first()->updateQuietly(['num_expected' => 357]);
         Region::where('name', 'Campania')->first()->updateQuietly(['num_expected' => 559]);
         Region::where('name', 'Emilia-Romagna')->first()->updateQuietly(['num_expected' => 1253]);
         Region::where('name', 'Friuli-Venezia Giulia')->first()->updateQuietly(['num_expected' => 645]);
@@ -55,15 +55,15 @@ class Osm2caiSetExpectedValuesCommand extends Command
         Region::where('name', 'Liguria')->first()->updateQuietly(['num_expected' => 806]);
         Region::where('name', 'Lombardia')->first()->updateQuietly(['num_expected' => 3784]);
         Region::where('name', 'Marche')->first()->updateQuietly(['num_expected' => 602]);
-        Region::where('name', 'Molise')->first()->updateQuietly(['num_expected' => 27]);
-        Region::where('name', 'Piemonte')->first()->updateQuietly(['num_expected' => 4635]);
-        Region::where('name', 'Puglia')->first()->updateQuietly(['num_expected' => 60]);
-        Region::where('name', 'Sardigna/Sardegna')->first()->updateQuietly(['num_expected' => 292]);
-        Region::where('name', 'Sicilia')->first()->updateQuietly(['num_expected' => 330]);
-        Region::where('name', 'Toscana')->first()->updateQuietly(['num_expected' => 2610]);
-        Region::where('name', 'Trentino-Alto Adige/Südtirol')->first()->updateQuietly(['num_expected' => 5162]);
+        Region::where('name', 'Molise')->first()->updateQuietly(['num_expected' => 35]);
+        Region::where('name', 'Piemonte')->first()->updateQuietly(['num_expected' => 4642]);
+        Region::where('name', 'Puglia')->first()->updateQuietly(['num_expected' => 64]);
+        Region::where('name', 'Sardigna/Sardegna')->first()->updateQuietly(['num_expected' => 445]);
+        Region::where('name', 'Sicilia')->first()->updateQuietly(['num_expected' => 444]);
+        Region::where('name', 'Toscana')->first()->updateQuietly(['num_expected' => 2684]);
+        Region::where('name', 'Trentino-Alto Adige/Südtirol')->first()->updateQuietly(['num_expected' => 4947]);
         Region::where('name', 'Umbria')->first()->updateQuietly(['num_expected' => 444]);
-        Region::where('name', 'Valle d\'Aosta / Vallée d\'Aoste')->first()->updateQuietly(['num_expected' => 1118]);
+        Region::where('name', 'Valle d\'Aosta / Vallée d\'Aoste')->first()->updateQuietly(['num_expected' => 1070]);
         Region::where('name', 'Veneto')->first()->updateQuietly(['num_expected' => 984]);
 
         $this->setProvinceExpectedValues();

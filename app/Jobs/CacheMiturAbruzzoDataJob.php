@@ -129,7 +129,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         //transform the huts array into an associative array where the key is hut id and value is the hut updated_at
         if (! empty($huts)) {
             foreach ($huts as $hut) {
-                $caiHuts[$hut] = CaiHut::find($hut)->updated_at;
+                $caiHuts[$hut->id] = $hut->updated_at;
             }
         }
 

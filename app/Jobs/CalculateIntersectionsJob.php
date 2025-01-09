@@ -164,7 +164,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             return $tables[$intersectingModelTable][$baseModelTable];
         }
 
-        throw new \Exception("No pivot table found for {$baseTable} and {$intersectingTable}");
+        throw new \Exception("No pivot table found for {$baseModelTable} and {$intersectingModelTable}");
     }
 
     /**

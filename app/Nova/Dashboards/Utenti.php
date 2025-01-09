@@ -23,15 +23,33 @@ class Utenti extends Dashboard
      */
     public function cards()
     {
-        $users = Cache::remember('users', 60, function () {
-            return \App\Models\User::all();
+        $usersByRole = Cache::remember('usersByRole', 60, function () {
+            return
+                DB::table('users')
+                ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->select('roles.name', DB::raw('count(*) as count'))
+                ->groupBy('roles.name')
+                ->get()
+                ->pluck('count', 'name')
+                ->toArray();
+        });
+
+        $usersByRegion = Cache::remember('usersByRegion', 60, function () {
+            return
+                [
+                    'Region' => DB::table('users')->whereNotNull('region_id')->count(),
+                    'Province' => DB::table('province_user')->distinct('user_id')->count('user_id'),
+                    'Area' => DB::table('area_user')->distinct('user_id')->count('user_id'),
+                    'Sector' => DB::table('sector_user')->distinct('user_id')->count('user_id'),
+                ];
         });
 
         $mostActiveUsers = Cache::remember('mostActiveUsers', 60, function () {
             return DB::select("
                 SELECT u.id AS user_id, u.name AS user_name, COUNT(DISTINCT hr.id) AS numero_validazioni
                 FROM users u
-                JOIN hiking_routes hr ON u.id = hr.user_id
+                JOIN hiking_routes hr ON u.id = hr.validator_id
                 WHERE hr.osm2cai_status = '4'
                 GROUP BY u.id, u.name
                 ORDER BY numero_validazioni DESC
@@ -41,8 +59,8 @@ class Utenti extends Dashboard
 
         return [
             new \App\Nova\Metrics\TotalUsers,
-            new \App\Nova\Metrics\UserDistributionByRole($users),
-            new \App\Nova\Metrics\UserDistributionByRegion($users),
+            new \App\Nova\Metrics\UserDistributionByRole($usersByRole),
+            new \App\Nova\Metrics\UserDistributionByRegion($usersByRegion),
             (new HtmlCard())
                 ->width('1/2')
                 ->view('nova.cards.most-active-users', ['users' => $mostActiveUsers])
