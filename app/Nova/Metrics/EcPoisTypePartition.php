@@ -2,8 +2,10 @@
 
 namespace App\Nova\Metrics;
 
-use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Models\EcPoi;
 use Laravel\Nova\Metrics\Partition;
+use Laravel\Nova\Metrics\PartitionResult;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class EcPoisTypePartition extends Partition
 {
@@ -17,9 +19,9 @@ class EcPoisTypePartition extends Partition
      * @param  NovaRequest  $request
      * @return mixed
      */
-    public function calculate(NovaRequest $request)
+    public function calculate(NovaRequest $request): PartitionResult
     {
-        return $this->count($request, \App\Models\EcPoi::class, 'type')
+        return $this->count($request, EcPoi::class, 'type')
             ->label(function ($value) {
                 return $value;
             });
@@ -32,7 +34,7 @@ class EcPoisTypePartition extends Partition
      */
     public function cacheFor()
     {
-        // return now()->addMinutes(5);
+        return now()->addMinutes(60 * 24);
     }
 
     /**
