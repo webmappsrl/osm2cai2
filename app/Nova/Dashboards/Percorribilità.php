@@ -48,7 +48,13 @@ class Percorribilità extends Dashboard
     {
         $cacheKey = is_array($status) ? 'hikingRoutesSda' . implode('', $status) : 'hikingRoutesSda' . $status;
 
-        return Cache::remember($cacheKey, 60, function () use ($status) {
+        //add user id to cache key to avoid conflicts between users
+        if ($this->user) {
+            $cacheKey .= '_user_' . $this->user->id;
+        }
+
+        //increase cache time to 1 hour instead of 1 minute because data doesn't change frequently
+        return Cache::remember($cacheKey, 3600, function () use ($status) {
             $query = HikingRoute::select('issues_status');
 
             if (is_array($status)) {
