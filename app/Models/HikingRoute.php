@@ -61,6 +61,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         'issues_chronology',
         'issues_user_id',
         'issues_description'
+
     ];
 
     protected $casts = [
@@ -129,7 +130,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
      */
     public function getDistanceCompAttribute(): ?float
     {
-        if (!$this->geometry) {
+        if (! $this->geometry) {
             return null;
         }
 
