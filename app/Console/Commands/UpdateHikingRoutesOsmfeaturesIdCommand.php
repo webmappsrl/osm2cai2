@@ -6,7 +6,7 @@ use App\Models\HikingRoute;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
-class UpdateHikingRouteOsmfeaturesIdCommand extends Command
+class UpdateHikingRoutesOsmfeaturesIdCommand extends Command
 {
     protected $signature = 'osm2cai:update-osmfeatures-id';
 
@@ -31,7 +31,7 @@ class UpdateHikingRouteOsmfeaturesIdCommand extends Command
 
                 if (isset($osmData['properties']['osm_id'])) {
                     $osmId = $osmData['properties']['osm_id'];
-                    $newOsmfeaturesId = 'R' . $osmId;
+                    $newOsmfeaturesId = 'R'.$osmId;
 
                     $route->osmfeatures_id = $newOsmfeaturesId;
                     $route->save();
@@ -42,7 +42,7 @@ class UpdateHikingRouteOsmfeaturesIdCommand extends Command
                     $errors++;
                 }
             } catch (\Exception $e) {
-                $logger->error("Error updating route {$route->id}: " . $e->getMessage());
+                $logger->error("Error updating route {$route->id}: ".$e->getMessage());
                 $errors++;
             }
 
@@ -52,7 +52,7 @@ class UpdateHikingRouteOsmfeaturesIdCommand extends Command
         $bar->finish();
 
         $this->newLine();
-        $this->info("Update completed:");
+        $this->info('Update completed:');
         $this->info("- Updated routes: {$updated}");
         $this->info("- Errors: {$errors}");
 
