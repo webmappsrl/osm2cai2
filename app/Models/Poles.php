@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Poles extends Model implements OsmfeaturesSyncableInterface

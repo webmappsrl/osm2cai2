@@ -31,13 +31,11 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedia
 {
     use HasFactory;
-    use OsmfeaturesImportableTrait;
     use OsmfeaturesSyncableTrait;
     use TagsMappingTrait;
     use OsmfeaturesGeometryUpdateTrait;

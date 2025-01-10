@@ -16,11 +16,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 
 class CaiHut extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, SpatialDataTrait, OsmfeaturesImportableTrait, OsmfeaturesGeometryUpdateTrait, AwsCacheable;
+    use HasFactory, SpatialDataTrait, OsmfeaturesGeometryUpdateTrait, AwsCacheable;
 
     protected $fillable = [
         'osmfeatures_id',
