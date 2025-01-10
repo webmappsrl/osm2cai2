@@ -16,11 +16,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 
 class CaiHut extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, SpatialDataTrait, OsmfeaturesImportableTrait, OsmfeaturesGeometryUpdateTrait, AwsCacheable;
+    use HasFactory, SpatialDataTrait, OsmfeaturesGeometryUpdateTrait, AwsCacheable;
 
     protected $fillable = [
         'osmfeatures_id',
@@ -129,7 +128,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData || empty($osmfeaturesData)) {
-            Log::channel('wm-osmfeatures')->info('No data found for CaiHut '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for CaiHut ' . $osmfeaturesId);
 
             return;
         }
@@ -141,7 +140,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
             if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
                 $updateData['name'] = $osmfeaturesData['properties']['name'];
             } elseif ($osmfeaturesData['properties']['name'] === null) {
-                Log::channel('wm-osmfeatures')->info('No name found for CaiHut '.$osmfeaturesId);
+                Log::channel('wm-osmfeatures')->info('No name found for CaiHut ' . $osmfeaturesId);
             }
         }
 

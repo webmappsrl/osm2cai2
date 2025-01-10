@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Poles extends Model implements OsmfeaturesSyncableInterface
@@ -68,7 +67,7 @@ class Poles extends Model implements OsmfeaturesSyncableInterface
         }
 
         if (! $model->osmfeatures_data) {
-            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole ' . $osmfeaturesId);
 
             return;
         }
@@ -76,21 +75,21 @@ class Poles extends Model implements OsmfeaturesSyncableInterface
 
         //format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Pole ' . $osmfeaturesId);
             $geometry = null;
         }
         $properties = $osmfeaturesData['properties'];
         if (! $properties) {
-            Log::channel('wm-osmfeatures')->info('No properties found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No properties found for Pole ' . $osmfeaturesId);
 
             return;
         }
 
         if ($properties['ref'] === null || $properties['ref'] === '') {
-            Log::channel('wm-osmfeatures')->info('No ref found for Pole '.$osmfeaturesId);
-            $ref = 'noname('.$osmfeaturesId.')';
+            Log::channel('wm-osmfeatures')->info('No ref found for Pole ' . $osmfeaturesId);
+            $ref = 'noname(' . $osmfeaturesId . ')';
         } else {
             $ref = $properties['ref'];
         }
