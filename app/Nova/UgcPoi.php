@@ -3,14 +3,15 @@
 namespace App\Nova;
 
 use App\Nova\AbstractUgc;
-use App\Nova\Actions\DownloadUgcCsv;
-use App\Nova\Filters\UgcFormIdFilter;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\Text;
 use Wm\MapPoint\MapPoint;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Select;
+use App\Nova\Actions\DownloadUgcCsv;
+use Illuminate\Support\Facades\Http;
+use App\Nova\Filters\UgcFormIdFilter;
+use Illuminate\Support\Facades\Cache;
 
 class UgcPoi extends AbstractUgc
 {
@@ -54,11 +55,11 @@ class UgcPoi extends AbstractUgc
     public static function applySearch($query, $search)
     {
         return $query->where(function ($query) use ($search) {
-            $query->where('name', 'like', '%'.$search.'%')
-                ->orWhere('id', 'like', '%'.$search.'%')
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('id', 'like', '%' . $search . '%')
                 ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', '%'.$search.'%')
-                        ->orWhere('email', 'like', '%'.$search.'%');
+                    $query->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
                 });
         });
     }
@@ -112,6 +113,7 @@ class UgcPoi extends AbstractUgc
                 'defaultZoom' => 10,
                 'defaultCenter' => [43.7125, 10.4013],
             ])->hideFromIndex(),
+            Number::make('Elevation', 'raw_data->position->altitude')->step(.0000000000001)->hideFromIndex(),
             $this->getCodeField('Form data', ['id', 'form_id', 'waypointtype', 'key', 'date', 'title']),
             $this->getCodeField('Device data', ['position', 'displayPosition', 'city', 'date']),
             $this->getCodeField('Nominatim'),
@@ -192,7 +194,7 @@ class UgcPoi extends AbstractUgc
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/'.$resource->id.'/edit';
+        return '/resources/ugc-pois/' . $resource->id . '/edit';
     }
 
     /**
@@ -234,8 +236,8 @@ class UgcPoi extends AbstractUgc
             'user->name' => 'Nome utente',
             'user->email' => 'Email utente',
             'registered_at' => 'Data di acquisizione',
-            'raw_data->latitude' => 'Latitudine',
-            'raw_data->longitude' => 'Longitudine',
+            'raw_data->position->latitude' => 'Latitudine',
+            'raw_data->position->longitude' => 'Longitudine',
             'validated' => 'Stato di validazione',
             'validation_date' => 'Data di validazione',
             'app_id' => 'App ID',

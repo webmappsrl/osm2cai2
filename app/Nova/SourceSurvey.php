@@ -2,15 +2,14 @@
 
 namespace App\Nova;
 
-use App\Enums\ValidatedStatusEnum;
-use App\Nova\AbstractValidationResource;
-use App\Nova\Filters\ValidatedFilter;
-use App\Nova\Filters\WaterFlowValidatedFilter;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Boolean;
+use App\Enums\ValidatedStatusEnum;
+use App\Nova\Filters\ValidatedFilter;
+use App\Nova\AbstractValidationResource;
+use App\Nova\Filters\WaterFlowValidatedFilter;
 
 class SourceSurvey extends AbstractValidationResource
 {
@@ -27,13 +26,6 @@ class SourceSurvey extends AbstractValidationResource
     public function fields(Request $request)
     {
         $fields = parent::fields($request);
-        $monitoringDateField = Date::make(__('Monitoring Date'), function () {
-            return $this->getRegisteredAtAttribute();
-        })->sortable()->readonly();
-        $temperatureField = Text::make(__('Temperature °C'), 'raw_data->temperature');
-        $conductivityField = Text::make(__('Conductivity microS/cm'), 'raw_data->conductivity');
-        $flowRateVolumeField = Text::make('Flow Rate/Volume', 'raw_data->range_volume')->hideFromIndex();
-        $flowRateFillTimeField = Text::make('Flow Rate/Fill Time', 'raw_data->range_time')->hideFromIndex();
         $hasPhotosField = Boolean::make(__('Has Photos'), function () {
             return $this->ugc_media->isNotEmpty();
         })->hideFromDetail();
@@ -41,7 +33,6 @@ class SourceSurvey extends AbstractValidationResource
             return $this->calculateFlowRate();
         })->readonly()->help(__('This data is automatically calculated based on the entered data'));
         $waterFlowRateValidatedField = Select::make(__('Flow Rate Validation'), 'water_flow_rate_validated')->options($this->validatedStatusOptions());
-        $noteField = Text::make(__('Notes'), 'note')->hideFromIndex();
 
         //the following fields are added to the ACQUA SORGENTE panel
         $flowRateField->panel = __('ACQUA SORGENTE');
@@ -54,7 +45,7 @@ class SourceSurvey extends AbstractValidationResource
             array_push($tab->data, $waterFlowRateValidatedField);
         }
 
-        return array_merge($fields, [$monitoringDateField, $temperatureField, $conductivityField, $hasPhotosField, $flowRateVolumeField, $flowRateFillTimeField, $noteField]);
+        return array_merge($fields, [$hasPhotosField]);
     }
 
     public function filters(Request $request)

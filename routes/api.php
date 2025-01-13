@@ -43,8 +43,10 @@ Route::prefix('kml')->name('kml.')->group(function () {
 });
 Route::prefix('geojson')->name('geojson.')->group(function () {
     Route::get('/{modelType}/{id}', [GeojsonController::class, 'download']);
-    Route::get('/ugcpoi/{ids}', [UgcPoiController::class, 'geojson'])->name('ugcpoi');
-    Route::get('/ugctrack/{ids}', [UgcTrackController::class, 'geojson'])->name('ugctrack');
+    Route::prefix('ugc')->name('ugc.')->group(function () {
+        Route::get('/ugcpoi/{ids}', [UgcPoiController::class, 'geojson'])->name('ugcpoi');
+        Route::get('/ugctrack/{ids}', [UgcTrackController::class, 'geojson'])->name('ugctrack');
+    });
 });
 
 Route::prefix('geojson-complete')->name('geojson_complete.')->group(function () {

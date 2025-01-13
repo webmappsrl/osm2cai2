@@ -20,51 +20,51 @@ class DeleteUgcMedia extends Action
 
     public $showOnTableRow = true;
 
-    public $model;
+    protected $model;
 
     public function __construct($model = null)
     {
         $this->model = $model;
-
-        if (! is_null($resourceId = request('resourceId'))) {
-            //get base class name
-            $modelClass = class_basename($this->model);
-            $this->model = app('App\Models\\'.$modelClass)->find($resourceId);
-            $this->name = __('Delete Image');
-        }
+        $this->name = __('Delete Image');
     }
 
     public function handle(ActionFields $fields, Collection $models)
     {
-        $ugcPoi = $models->first();
+        $model = $models->first();
 
-        if (auth()->user()->id !== $ugcPoi->user_id) {
-            return Action::danger(__('You are not authorized to delete images for this UgcPoi.'));
+        if (auth()->user()->id !== $model->user_id) {
+            return Action::danger(__('You are not authorized to delete images for this resource.'));
         }
 
         $ugcMediaId = $fields->ugc_media_id;
 
         $ugcMedia = \App\Models\UgcMedia::find($ugcMediaId);
-        if (! $ugcMedia) {
+        if (!$ugcMedia) {
             return Action::danger(__('Image not found.'));
         }
 
         try {
             Storage::disk('public')->delete($ugcMedia->relative_url);
 
+            // Dissociare l'immagine sia da ugc_poi che da ugc_track
             $ugcMedia->ugc_poi()->dissociate();
+            $ugcMedia->ugc_track()->dissociate();
             $ugcMedia->save();
 
             $ugcMedia->delete();
 
             return Action::message(__('Image deleted successfully!'));
         } catch (\Exception $e) {
-            return Action::danger(__('Error while deleting image: ').$e->getMessage());
+            return Action::danger(__('Error while deleting image: ') . $e->getMessage());
         }
     }
 
     public function fields(NovaRequest $request)
     {
+        if (!$this->model) {
+            return [];
+        }
+
         $medias = $this->model->ugc_media()->get();
         $options = $medias->pluck('id', 'id');
 
