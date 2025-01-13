@@ -60,7 +60,7 @@ class UploadAndAssociateUgcMedia extends Action
             $geometry = $model->geometry;
             $newUgcMedia = \App\Models\UgcMedia::create([
                 'name' => $ugcMedia->getClientOriginalName(),
-                'relative_url' => 'ugc-media/'.basename($path),
+                'relative_url' => 'ugc-media/' . basename($path),
                 'user_id' => auth()->user()->id,
                 'geometry' => $geometry,
                 'app_id' => 'osm2cai',
@@ -69,7 +69,7 @@ class UploadAndAssociateUgcMedia extends Action
 
             return Action::message(__('Image uploaded and associated successfully!'));
         } catch (\Exception $e) {
-            return Action::danger(__('Error during image upload: ').$e->getMessage());
+            return Action::danger(__('Error during image upload: ') . $e->getMessage());
         }
     }
 
@@ -82,7 +82,7 @@ class UploadAndAssociateUgcMedia extends Action
                 ->store(function ($request, $model) {
                     return $request->file('ugc-media')->store('ugc-media', 'public');
                 })
-                ->help(__('Upload an image to associate with the POI. Allowed size: max 10MB')),
+                ->help(__('Upload an image to associate with the POI. Allowed size: max 10MB. Allowed formats: jpg, jpeg, png')),
         ];
     }
 }
