@@ -103,8 +103,8 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
             case Region::class:
                 return $this->buildRegionGeojson($model);
             default:
-                $this->logger()->error('Unsupported model type: '.get_class($model));
-                throw new \Exception('Unsupported model type: '.get_class($model));
+                $this->logger()->error('Unsupported model type: ' . get_class($model));
+                throw new \Exception('Unsupported model type: ' . get_class($model));
         }
     }
 
@@ -330,7 +330,7 @@ SQL;
             $type = $osmfeaturesData['class'];
         }
         if (isset($osmfeaturesData['subclass'])) {
-            $type .= '/'.$osmfeaturesData['subclass'];
+            $type .= '/' . $osmfeaturesData['subclass'];
         }
 
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
@@ -403,7 +403,7 @@ SQL;
         $this->logger()->info("Start caching hut $hut->id");
 
         //get the mountain groups for the hut based on the geometry intersection
-        $mountainGroups = $hut->getIntersections(new MountainGroup())->first();
+        $mountainGroups = $hut->getIntersections(new MountainGroups())->first();
 
         //get the pois in a 1km buffer from the hut
         $pois = $hut->getElementsInBuffer(new EcPoi(), 1000);
