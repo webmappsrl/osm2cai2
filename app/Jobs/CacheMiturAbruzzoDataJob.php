@@ -110,8 +110,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
 
     protected function buildHikingRouteGeojson($hikingRoute): array
     {
-        $ecPoiModel = new EcPoi();
-        $intersectingPois = $hikingRoute->getIntersections($ecPoiModel);
+        $intersectingPois = $hikingRoute->getIntersections(new EcPoi());
 
         $pois = $intersectingPois->pluck('updated_at', 'id')->toArray();
 
@@ -124,7 +123,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $toPoint = $points['to'];
 
         //get the cai huts intersecting with the hiking route
-        $huts = $hikingRoute->nearbyCaiHuts;
+        $huts = $hikingRoute->getElementsInBuffer(new CaiHut(), config('osm2cai.hiking_route_buffer'));
         $caiHuts = [];
         //transform the huts array into an associative array where the key is hut id and value is the hut updated_at
         if (! empty($huts)) {
@@ -134,7 +133,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         }
 
         //get the sections associated with the hiking route
-        $clubsIds = $hikingRoute->clubs->pluck('updated_at', 'id')->toArray();
+        $clubsIds = $hikingRoute->getIntersections(new Club())->pluck('updated_at', 'id')->toArray();
 
         // get the abstract from the hiking route and get only it description
         $abstract = $hikingRoute->tdh['abstract']['it'] ?? '';
@@ -372,7 +371,7 @@ SQL;
         $this->logger()->info("Start caching region $region->name");
 
         //get the mountain groups for the region
-        $mountainGroups = $region->mountainGroups;
+        $mountainGroups = $region->getIntersections(new MountainGroup());
         //format the date
         $mountainGroups = $mountainGroups->mapWithKeys(function ($mountainGroup) {
             $formattedDate = $mountainGroup->updated_at ? $mountainGroup->updated_at->toIso8601String() : null;
@@ -403,7 +402,7 @@ SQL;
         $this->logger()->info("Start caching hut $hut->id");
 
         //get the mountain groups for the hut based on the geometry intersection
-        $mountainGroups = $hut->mountainGroups->first();
+        $mountainGroups = $hut->getIntersections(new MountainGroup())->first();
 
         //get the pois in a 1km buffer from the hut
         $pois = $hut->getElementsInBuffer(new EcPoi(), 1000);
