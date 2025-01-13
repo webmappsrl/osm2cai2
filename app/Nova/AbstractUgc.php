@@ -89,7 +89,7 @@ abstract class AbstractUgc extends Resource
                     $model->$attribute = $isValidated;
                     // logic to track validator and validation date
 
-                    if ($isValidated == ValidatedStatusEnum::VALID) {
+                    if ($isValidated == ValidatedStatusEnum::VALID->value) {
                         $model->validator_id = $request->user()->id;
                         $model->validation_date = now();
                     } else {
@@ -97,7 +97,9 @@ abstract class AbstractUgc extends Resource
                         $model->validation_date = null;
                     }
                 })->onlyOnForms(),
-            Text::make(__('Validation Status'), 'validated'),
+            Text::make(__('Validation Status'), 'validated')
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             DateTime::make(__('Validation Date'), 'validation_date')
                 ->onlyOnDetail(),
             Text::make('Validator', function () {
@@ -109,12 +111,14 @@ abstract class AbstractUgc extends Resource
             })->onlyOnDetail(),
             Text::make(__('App ID'), 'app_id')
                 ->onlyOnDetail(),
-            DateTime::make(__('Registered At'), 'registered_at')
-                ->readonly()
-                ->onlyOnDetail(),
+            DateTime::make(__('Registered At'), function () {
+                return $this->getRegisteredAtAttribute();
+            })
+                ->readonly(),
             DateTime::make(__('Updated At'))
-                ->onlyOnDetail()
-                ->sortable(),
+                ->sortable()
+                ->hideWhenUpdating()
+                ->hideWhenCreating(),
             Text::make(__('Geohub ID'), 'geohub_id')
                 ->onlyOnDetail(),
             Text::make(__('Gallery'), function () {
@@ -188,16 +192,21 @@ abstract class AbstractUgc extends Resource
                 ->canRun(function ($request) {
                     return true;
                 })
-                ->confirmText('Sei sicuro di voler caricare questa immagine?')
-                ->confirmButtonText('Carica')
-                ->cancelButtonText('Annulla'),
+                ->confirmText(__('Are you sure you want to upload this image?'))
+                ->confirmButtonText(__('Upload'))
+                ->cancelButtonText(__('Cancel'))
+                ->onlyOnDetail(),
             (new DeleteUgcMedia($this->model()))->canSee(function ($request) {
                 if ($this->user_id) {
                     return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatusEnum::NOT_VALIDATED->value;
                 }
 
                 return $request->has('resources');
-            }),
+            })
+                ->confirmText(__('Are you sure you want to delete this image?'))
+                ->confirmButtonText(__('Delete'))
+                ->cancelButtonText(__('Cancel'))
+                ->onlyOnDetail(),
             (new DownloadFeatureCollection())->canSee(function ($request) {
                 return true;
             })

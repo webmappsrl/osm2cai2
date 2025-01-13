@@ -34,7 +34,7 @@ class DownloadFeatureCollection extends Action
             $modelIds[] = $model->id;
         }
 
-        return Action::redirect(url('api/geojson/'.$className.'/'.implode(',', $modelIds)));
+        return Action::redirect(url('api/geojson/ugc/'.$className.'/'.implode(',', $modelIds)));
     }
 
     /**

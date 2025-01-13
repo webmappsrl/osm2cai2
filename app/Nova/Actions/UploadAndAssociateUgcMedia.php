@@ -82,7 +82,7 @@ class UploadAndAssociateUgcMedia extends Action
                 ->store(function ($request, $model) {
                     return $request->file('ugc-media')->store('ugc-media', 'public');
                 })
-                ->help(__('Upload an image to associate with the POI. Allowed size: max 10MB')),
+                ->help(__('Upload an image to associate with the POI. Allowed size: max 10MB. Allowed formats: jpg, jpeg, png')),
         ];
     }
 }
