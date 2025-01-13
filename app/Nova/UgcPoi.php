@@ -3,15 +3,15 @@
 namespace App\Nova;
 
 use App\Nova\AbstractUgc;
-use Wm\MapPoint\MapPoint;
+use App\Nova\Actions\DownloadUgcCsv;
+use App\Nova\Filters\UgcFormIdFilter;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
-use App\Nova\Actions\DownloadUgcCsv;
-use Illuminate\Support\Facades\Http;
-use App\Nova\Filters\UgcFormIdFilter;
-use Illuminate\Support\Facades\Cache;
+use Laravel\Nova\Fields\Text;
+use Wm\MapPoint\MapPoint;
 
 class UgcPoi extends AbstractUgc
 {
@@ -55,11 +55,11 @@ class UgcPoi extends AbstractUgc
     public static function applySearch($query, $search)
     {
         return $query->where(function ($query) use ($search) {
-            $query->where('name', 'like', '%' . $search . '%')
-                ->orWhere('id', 'like', '%' . $search . '%')
+            $query->where('name', 'like', '%'.$search.'%')
+                ->orWhere('id', 'like', '%'.$search.'%')
                 ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%');
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%');
                 });
         });
     }
@@ -194,7 +194,7 @@ class UgcPoi extends AbstractUgc
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/' . $resource->id . '/edit';
+        return '/resources/ugc-pois/'.$resource->id.'/edit';
     }
 
     /**

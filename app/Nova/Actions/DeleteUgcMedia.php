@@ -39,7 +39,7 @@ class DeleteUgcMedia extends Action
         $ugcMediaId = $fields->ugc_media_id;
 
         $ugcMedia = \App\Models\UgcMedia::find($ugcMediaId);
-        if (!$ugcMedia) {
+        if (! $ugcMedia) {
             return Action::danger(__('Image not found.'));
         }
 
@@ -55,13 +55,13 @@ class DeleteUgcMedia extends Action
 
             return Action::message(__('Image deleted successfully!'));
         } catch (\Exception $e) {
-            return Action::danger(__('Error while deleting image: ') . $e->getMessage());
+            return Action::danger(__('Error while deleting image: ').$e->getMessage());
         }
     }
 
     public function fields(NovaRequest $request)
     {
-        if (!$this->model) {
+        if (! $this->model) {
             return [];
         }
 

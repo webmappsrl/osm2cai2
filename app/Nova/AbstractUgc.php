@@ -44,7 +44,7 @@ abstract class AbstractUgc extends Resource
      */
     public function validatedStatusOptions()
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
     }
 
     /**
@@ -61,10 +61,10 @@ abstract class AbstractUgc extends Resource
                 if ($this->user_id) {
                     if (auth()->user()->isValidatorForFormId($this->form_id)) {
                         //add the email of the user next to the name for validator
-                        return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/' . $this->user_id . '">' . $this->user->name . ' (' . $this->user->email . ')' . '</a>';
+                        return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.' ('.$this->user->email.')'.'</a>';
                     }
 
-                    return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/' . $this->user_id . '">' . $this->user->name . '</a>';
+                    return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.'</a>';
                 } else {
                     return $this->user->email ?? 'N/A';
                 }
@@ -130,10 +130,10 @@ abstract class AbstractUgc extends Resource
                 foreach ($images as $image) {
                     $url = $image->getUrl();
                     $html .= '<div style="margin: 5px; text-align: center; min-width: 100px;">';
-                    $html .= '<a href="' . $url . '" target="_blank" style="display: block;">';
-                    $html .= '<img src="' . $url . '" width="100" height="100" style="object-fit: cover; display: block; border: 1px solid #ddd; border-radius: 4px;">';
+                    $html .= '<a href="'.$url.'" target="_blank" style="display: block;">';
+                    $html .= '<img src="'.$url.'" width="100" height="100" style="object-fit: cover; display: block; border: 1px solid #ddd; border-radius: 4px;">';
                     $html .= '</a>';
-                    $html .= '<p style="margin-top: 5px; color: #666; font-size: 12px;">ID: ' . $image->id . '</p>';
+                    $html .= '<p style="margin-top: 5px; color: #666; font-size: 12px;">ID: '.$image->id.'</p>';
                     $html .= '</div>';
                 }
                 $html .= '</div>';
