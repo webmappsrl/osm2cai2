@@ -54,11 +54,11 @@ class UgcPoi extends AbstractUgc
     public static function applySearch($query, $search)
     {
         return $query->where(function ($query) use ($search) {
-            $query->where('name', 'like', '%'.$search.'%')
-                ->orWhere('id', 'like', '%'.$search.'%')
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('id', 'like', '%' . $search . '%')
                 ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', '%'.$search.'%')
-                        ->orWhere('email', 'like', '%'.$search.'%');
+                    $query->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
                 });
         });
     }
@@ -192,7 +192,7 @@ class UgcPoi extends AbstractUgc
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/'.$resource->id.'/edit';
+        return '/resources/ugc-pois/' . $resource->id . '/edit';
     }
 
     /**
@@ -234,8 +234,8 @@ class UgcPoi extends AbstractUgc
             'user->name' => 'Nome utente',
             'user->email' => 'Email utente',
             'registered_at' => 'Data di acquisizione',
-            'raw_data->latitude' => 'Latitudine',
-            'raw_data->longitude' => 'Longitudine',
+            'raw_data->position->latitude' => 'Latitudine',
+            'raw_data->position->longitude' => 'Longitudine',
             'validated' => 'Stato di validazione',
             'validation_date' => 'Data di validazione',
             'app_id' => 'App ID',
