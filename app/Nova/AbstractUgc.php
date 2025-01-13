@@ -188,9 +188,9 @@ abstract class AbstractUgc extends Resource
                 ->canRun(function ($request) {
                     return true;
                 })
-                ->confirmText('Sei sicuro di voler caricare questa immagine?')
-                ->confirmButtonText('Carica')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to upload this image?'))
+                ->confirmButtonText(__('Upload'))
+                ->cancelButtonText(__('Cancel'))
                 ->onlyOnDetail(),
             (new DeleteUgcMedia($this->model()))->canSee(function ($request) {
                 if ($this->user_id) {
@@ -198,7 +198,11 @@ abstract class AbstractUgc extends Resource
                 }
 
                 return $request->has('resources');
-            }),
+            })
+                ->confirmText(__('Are you sure you want to delete this image?'))
+                ->confirmButtonText(__('Delete'))
+                ->cancelButtonText(__('Cancel'))
+                ->onlyOnDetail(),
             (new DownloadFeatureCollection())->canSee(function ($request) {
                 return true;
             })

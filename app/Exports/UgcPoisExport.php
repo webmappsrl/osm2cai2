@@ -51,16 +51,34 @@ class UgcPoisExport implements FromCollection, WithHeadings, WithStyles
 
     protected function getFieldValue($model, $field)
     {
+        //handle null values for latitude and longitude
+        if ($field === 'raw_data->position->latitude') {
+            $value = $this->getNestedValue($model, ['raw_data', 'position', 'latitude']);
+            return $value ?? $model->getLatitude() ?? 'N/A';
+        }
+
+        if ($field === 'raw_data->position->longitude') {
+            $value = $this->getNestedValue($model, ['raw_data', 'position', 'longitude']);
+            return $value ?? $model->getLongitude() ?? 'N/A';
+        }
+
         if (strpos($field, '->') !== false) {
             $parts = explode('->', $field);
-            $value = $model;
-            foreach ($parts as $part) {
-                $value = $value[$part] ?? $value->$part ?? null;
-            }
-
-            return $value ?? 'N/A';
+            return $this->getNestedValue($model, $parts) ?? 'N/A';
         }
 
         return $model->$field ?? 'N/A';
+    }
+
+    protected function getNestedValue($model, array $parts)
+    {
+        $value = $model;
+        foreach ($parts as $part) {
+            $value = $value[$part] ?? $value->$part ?? null;
+            if (is_null($value)) {
+                return null;
+            }
+        }
+        return $value;
     }
 }
