@@ -372,6 +372,7 @@ SQL;
 
         //get the mountain groups for the region
         $mountainGroups = $region->getIntersections(new MountainGroups());
+      
         //format the date
         $mountainGroups = $mountainGroups->mapWithKeys(function ($mountainGroup) {
             $formattedDate = $mountainGroup->updated_at ? $mountainGroup->updated_at->toIso8601String() : null;
