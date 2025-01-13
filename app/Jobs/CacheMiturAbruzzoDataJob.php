@@ -371,7 +371,8 @@ SQL;
         $this->logger()->info("Start caching region $region->name");
 
         //get the mountain groups for the region
-        $mountainGroups = $region->getIntersections(new MountainGroup());
+        $mountainGroups = $region->getIntersections(new MountainGroups());
+
         //format the date
         $mountainGroups = $mountainGroups->mapWithKeys(function ($mountainGroup) {
             $formattedDate = $mountainGroup->updated_at ? $mountainGroup->updated_at->toIso8601String() : null;
