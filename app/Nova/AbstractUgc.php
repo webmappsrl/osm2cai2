@@ -89,7 +89,7 @@ abstract class AbstractUgc extends Resource
                     $model->$attribute = $isValidated;
                     // logic to track validator and validation date
 
-                    if ($isValidated == ValidatedStatusEnum::VALID) {
+                    if ($isValidated == ValidatedStatusEnum::VALID->value) {
                         $model->validator_id = $request->user()->id;
                         $model->validation_date = now();
                     } else {
@@ -111,10 +111,14 @@ abstract class AbstractUgc extends Resource
             })->onlyOnDetail(),
             Text::make(__('App ID'), 'app_id')
                 ->onlyOnDetail(),
-            DateTime::make(__('Registered At'), 'registered_at')
+            DateTime::make(__('Registered At'), function () {
+                return $this->getRegisteredAtAttribute();
+            })
                 ->readonly(),
             DateTime::make(__('Updated At'))
-                ->sortable(),
+                ->sortable()
+                ->hideWhenUpdating()
+                ->hideWhenCreating(),
             Text::make(__('Geohub ID'), 'geohub_id')
                 ->onlyOnDetail(),
             Text::make(__('Gallery'), function () {
