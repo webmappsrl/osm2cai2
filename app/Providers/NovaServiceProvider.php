@@ -55,6 +55,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         $this->getFooter();
 
+        Nova::style('custom-fields-css', public_path('css/custom-nova.css'));
+
         Nova::mainMenu(function (Request $request) {
             return [
                 MenuSection::dashboard(Main::class)->icon('home'),
