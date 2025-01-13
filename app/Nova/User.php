@@ -16,8 +16,14 @@ use Spatie\Permission\Models\Permission;
 use Vyuldashev\NovaPermission\PermissionBooleanGroup;
 use Vyuldashev\NovaPermission\RoleBooleanGroup;
 use Wm\WmPackage\Nova\AbstractUser;
+use App\Nova\Filters\UserTypeFilter;
+use App\Nova\Filters\RegionFilter;
+use App\Nova\Filters\AreaFilter;
+use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Filters\SectorFilter;
 
 class User extends AbstractUser
+
 {
     /**
      * The model the resource corresponds to.
@@ -37,32 +43,49 @@ class User extends AbstractUser
         $baseFields = parent::fields($request);
 
         $relationFields = [
-            BelongsToMany::make('Provinces', 'provinces', Province::class)
-                ->searchable()
-                ->sortable(),
+            Text::make('Phone')
+                ->sortable()
+                ->rules('max:255'),
+                
+            BelongsToMany::make('Provinces', 'provinces', Province::class),
 
-            BelongsToMany::make('Areas', 'areas', Area::class)
-                ->searchable()
-                ->sortable(),
+            Text::make("Provinces", function () {
+                return $this->provinces->pluck('name')->join(', ');
+            })->onlyOnIndex(),
 
-            BelongsToMany::make('Sectors', 'sectors', Sector::class)
-                ->searchable()
-                ->sortable(),
+            BelongsToMany::make('Areas', 'areas', Area::class),
+
+            Text::make("Areas", function () {
+                return $this->areas->pluck('name')->join(', ');
+            })->onlyOnIndex(),
+
+            BelongsToMany::make('Sectors', 'sectors', Sector::class),
+
+            Text::make("Sectors", function () {
+                return $this->sectors->pluck('name')->join(', ');
+            })->onlyOnIndex(),
 
             BelongsTo::make('Region', 'region', Region::class)
                 ->searchable()
                 ->nullable()
                 ->sortable(),
 
-            BelongsTo::make('Club', 'club', Club::class)
+            BelongsTo::make('Club Member', 'club', Club::class)
+                ->searchable()
+                ->nullable()
+                ->sortable()
+                ->hideFromIndex(),
+
+            BelongsTo::make('Managed Club', 'managedClub', Club::class)
                 ->searchable()
                 ->nullable()
                 ->sortable(),
 
+
         ];
 
         return [
-            ...array_slice($baseFields, 0, 5),
+            ...array_slice($baseFields, 2, 2),
             ...$relationFields,
             ...array_slice($baseFields, 4),
         ];
@@ -87,7 +110,13 @@ class User extends AbstractUser
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new UserTypeFilter,
+            new RegionFilter,
+            new AreaFilter,
+            new ProvinceFilter,
+            new SectorFilter
+        ];
     }
 
     /**
