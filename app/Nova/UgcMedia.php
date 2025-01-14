@@ -108,7 +108,7 @@ class UgcMedia extends Resource
                 })
                 ->asHtml()
                 ->required(),
-            MapPoint::make('geometry')->withMeta([
+            MapPoint::make('Map','geometry')->withMeta([
                 'center' => [43.7125, 10.4013],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                 'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
@@ -116,7 +116,7 @@ class UgcMedia extends Resource
                 'maxZoom' => 14,
                 'defaultZoom' => 10,
                 'defaultCenter' => [43.7125, 10.4013],
-            ])->hideFromIndex(),
+            ])->onlyOnDetail(),
         ];
     }
 
