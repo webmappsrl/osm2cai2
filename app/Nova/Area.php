@@ -106,12 +106,17 @@ class Area extends Resource
             }
 
             $sal = $area->getSal();
+            $managers = $area->sectors->pluck('manager')->unique()->toArray();
+            //remove null values
+            $managers = array_filter($managers, function ($value) {
+                return $value !== null;
+            });
 
             return [
                 (new HtmlCard())
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
-                        'value' => $area->manager,
+                        'value' => implode(', ', $managers),
                         'label' => 'Responsabili di settore',
                     ])
                     ->center()
@@ -166,7 +171,7 @@ class Area extends Resource
             $filter = base64_encode(json_encode([
                 ['class' => HikingRoutesAreaFilter::class, 'value' => $resourceId],
             ]));
-            $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
         return (new HtmlCard())
