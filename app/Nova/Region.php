@@ -78,11 +78,11 @@ class Region extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $provincesCount = cache()->remember('region_'.$this->id.'_provinces_count', 60 * 60 * 24, function () {
+        $provincesCount = cache()->remember('region_' . $this->id . '_provinces_count', 60 * 60 * 24, function () {
             return count($this->provinces);
         });
 
-        $areasCount = cache()->remember('region_'.$this->id.'_areas_count', 60 * 60 * 24, function () {
+        $areasCount = cache()->remember('region_' . $this->id . '_areas_count', 60 * 60 * 24, function () {
             $count = 0;
             foreach ($this->provinces as $province) {
                 $count += count($province->areas);
@@ -91,7 +91,7 @@ class Region extends Resource
             return $count;
         });
 
-        $sectorsCount = cache()->remember('region_'.$this->id.'_sectors_count', 60 * 60 * 24, function () {
+        $sectorsCount = cache()->remember('region_' . $this->id . '_sectors_count', 60 * 60 * 24, function () {
             $count = 0;
             foreach ($this->provinces as $province) {
                 foreach ($province->areas as $area) {
@@ -102,23 +102,23 @@ class Region extends Resource
             return $count;
         });
 
-        $hikingRoutes4Count = cache()->remember('region_'.$this->id.'_hiking_routes_4_count', 60 * 60 * 24, function () {
+        $hikingRoutes4Count = cache()->remember('region_' . $this->id . '_hiking_routes_4_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 4)->count();
         });
 
-        $hikingRoutes3Count = cache()->remember('region_'.$this->id.'_hiking_routes_3_count', 60 * 60 * 24, function () {
+        $hikingRoutes3Count = cache()->remember('region_' . $this->id . '_hiking_routes_3_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 3)->count();
         });
 
-        $hikingRoutes2Count = cache()->remember('region_'.$this->id.'_hiking_routes_2_count', 60 * 60 * 24, function () {
+        $hikingRoutes2Count = cache()->remember('region_' . $this->id . '_hiking_routes_2_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 2)->count();
         });
 
-        $hikingRoutes1Count = cache()->remember('region_'.$this->id.'_hiking_routes_1_count', 60 * 60 * 24, function () {
+        $hikingRoutes1Count = cache()->remember('region_' . $this->id . '_hiking_routes_1_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 1)->count();
         });
 
-        $hikingRoutes0Count = cache()->remember('region_'.$this->id.'_hiking_routes_0_count', 60 * 60 * 24, function () {
+        $hikingRoutes0Count = cache()->remember('region_' . $this->id . '_hiking_routes_0_count', 60 * 60 * 24, function () {
             return $this->hikingRoutes()->where('osm2cai_status', '=', 0)->count();
         });
 
@@ -205,13 +205,13 @@ class Region extends Resource
         return [
             (new DownloadGeojson)->canRun(function ($request) {
                 return true;
-            }),
+            })->showInline(),
             (new DownloadShape)->canRun(function ($request) {
                 return true;
-            }),
+            })->showInline(),
             (new DownloadKml)->canRun(function ($request) {
                 return true;
-            }),
+            })->showInline(),
             (new DownloadGeojsonCompleteAction)->canRun(function ($request) {
                 return true;
             })->showInline(),
@@ -222,7 +222,7 @@ class Region extends Resource
                 return $request->user()->hasRole('Administrator');
             })->canRun(function ($request) {
                 return $request->user()->hasRole('Administrator');
-            }),
+            })->showInline(),
 
         ];
     }
