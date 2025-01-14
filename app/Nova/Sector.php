@@ -150,7 +150,7 @@ class Sector extends Resource
                 (new HtmlCard())
                     ->width('1/4')
                     ->view('nova.cards.sector-manager-card', [
-                        'manager' => $sector->manager,
+                        'manager' => $sector->moderators->pluck('name')->implode(', '),
                     ])
                     ->center()
                     ->withBasicStyles()

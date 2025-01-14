@@ -2,12 +2,27 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Nova;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
+use App\Helpers\Osm2caiHelper;
 use App\Enums\IssuesStatusEnum;
+use App\Nova\Filters\ClubFilter;
+use Laravel\Nova\Fields\HasMany;
+use App\Models\Club as ModelsClub;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Fields\BelongsTo;
+use App\Nova\Actions\CacheMiturApi;
+use App\Nova\Actions\DownloadGeojson;
+use App\Nova\Metrics\ClubSalPercorsi;
+use App\Nova\Actions\AddMembersToClub;
+use Laravel\Nova\Fields\BelongsToMany;
+use App\Nova\Actions\AssignClubManager;
+use App\Nova\Metrics\ClubSalPercorribilità;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\DownloadCsvCompleteAction;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
 
 class Club extends Resource
 {
@@ -76,11 +91,25 @@ class Club extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            Text::make('Codice CAI', 'cai_code')
+            Text::make('CAI code', 'cai_code')
                 ->sortable()
                 ->rules('required', 'max:255'),
             BelongsTo::make('Region', 'region', Region::class)
                 ->searchable(),
+            Text::make('Club\'s managers', function () {
+                $clubManagers = $this->managerUsers()->get();
+                $clubManagerString = '';
+                foreach ($clubManagers as $clubManager) {
+                    $clubManagerString .= "<a href='/resources/users/{$clubManager->id}'>{$clubManager->name}</a>";
+                    if (strlen($clubManagerString) > 40) {
+                        $clubManagerString .= "<br>";
+                    }
+                }
+                return $clubManagerString ? rtrim($clubManagerString, ', ') : '/';
+            })->asHtml(),
+            HasMany::make('Club\'s members', 'users', User::class)->onlyOnDetail(),
+            BelongsToMany::make('Club\'s hiking routes', 'hikingRoutes', HikingRoute::class)
+                ->help(__('Only national referents can add hiking routes to the club')),
             Text::make('SDA1', function () use ($hikingRoutesSDA1) {
                 return $hikingRoutesSDA1->count();
             })->onlyOnIndex()
@@ -130,7 +159,92 @@ class Club extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [];
+        $clubId = $request->resourceId;
+
+        $club = ModelsClub::where('id', $clubId)->first();
+        $hr = $club ?  $club->hikingRoutes()->get() : [];
+        if (!auth()->user()->hasRole('Administrator') && auth()->user()->club_id != null && auth()->user()->region_id != null) {
+            $userClub = ModelsClub::where('id', auth()->user()->club_id)->first();
+            $numbers[1] = $userClub->hikingRoutes()->where('osm2cai_status', 1)->count();
+            $numbers[2] = $userClub->hikingRoutes()->where('osm2cai_status', 2)->count();
+            $numbers[3] = $userClub->hikingRoutes()->where('osm2cai_status', 3)->count();
+            $numbers[4] = $userClub->hikingRoutes()->where('osm2cai_status', 4)->count();
+        } else {
+            $values = DB::table('hiking_routes')
+                ->join('hiking_route_club', 'hiking_routes.id', '=', 'hiking_route_club.hiking_route_id')
+                ->where('hiking_route_club.club_id', $clubId)
+                ->select('hiking_routes.osm2cai_status', DB::raw('count(*) as num'))
+                ->groupBy('hiking_routes.osm2cai_status')
+                ->get();
+
+            $numbers = [];
+            $numbers[1] = 0;
+            $numbers[2] = 0;
+            $numbers[3] = 0;
+            $numbers[4] = 0;
+
+            if (count($values) > 0) {
+                foreach ($values as $value) {
+                    $numbers[$value->osm2cai_status] = $value->num;
+                }
+            }
+        }
+
+        $tot = array_sum($numbers);
+
+
+
+        $cards = [
+            $this->getSdaClubCard(1, $numbers[1], $request),
+            $this->getSdaClubCard(2, $numbers[2], $request),
+            $this->getSdaClubCard(3, $numbers[3], $request),
+            $this->getSdaClubCard(4, $numbers[4], $request),
+            (new ClubSalPercorribilità($hr))->onlyOnDetail()->width('1/4'),
+            (new ClubSalPercorsi($hr))->onlyOnDetail()->width('1/4'),
+            (new HtmlCard())->width('1/4')
+                ->view('nova.cards.club-total-hr-card', [
+                    'total' => $hr->count(),
+                ])->center()
+                ->withBasicStyles()
+                ->onlyOnDetail(),
+        ];
+
+        if (count($hr) > 0) {
+            $cards[] = (new HtmlCard())
+                ->width('1/4')
+                ->view('nova.cards.club-distance-card', [
+                    'totalDistance' => $hr->sum('osmfeatures_data->properties->distance'),
+                ])
+                ->center()
+                ->withBasicStyles()
+                ->onlyOnDetail();
+        }
+
+        return $cards;
+    }
+
+    private function getSdaClubCard(int $sda, int $num, NovaRequest $request): HtmlCard
+    {
+        $exploreUrl = '';
+        if ($num > 0) {
+            $resourceId = $request->get('resourceId');
+            $filter = base64_encode(json_encode([
+                ['class' => ClubFilter::class, 'value' => $resourceId],
+            ]));
+            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+        }
+
+        return (new HtmlCard())
+            ->width('1/4')
+            ->view('nova.cards.club-sda-card', [
+                'sda' => $sda,
+                'num' => $num,
+                'backgroundColor' => Osm2caiHelper::getSdaColor($sda),
+                'exploreUrl' => $exploreUrl,
+            ])
+            ->center()
+            ->withBasicStyles()
+            ->onlyOnDetail();
     }
 
     /**
@@ -161,8 +275,48 @@ class Club extends Resource
      * @param  NovaRequest  $request
      * @return array
      */
-    public function actions(NovaRequest $request)
+    public function actions(Request $request): array
     {
-        return [];
+        return [
+            (new AssignClubManager())
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(function ($request) {
+                    return true;
+                }),
+            (new AddMembersToClub())
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(function ($request) {
+                    return true;
+                }),
+            (new DownloadGeojson())->canSee(function ($request) {
+                return true;
+            })->canRun(function ($request) {
+                return true;
+            })->showInline(),
+            (new DownloadCsvCompleteAction)->canSee(function ($request) {
+                return true;
+            })->canRun(function ($request) {
+                return true;
+            })->showInline(),
+            (new CacheMiturApi('Club'))->canSee(function ($request) {
+                return $request->user()->hasRole('Administrator');
+            })->canRun(function ($request) {
+                return $request->user()->hasRole('Administrator');
+            }),
+        ];
+    }
+
+    public function authorizedToAttachAny(NovaRequest $request, $model)
+    {
+        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent');
+    }
+
+    public function authorizedToDetach(NovaRequest $request, $model, $relationship)
+    {
+        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent');
     }
 }
