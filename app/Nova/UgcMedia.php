@@ -90,12 +90,14 @@ class UgcMedia extends Resource
             BelongsTo::make('Ugc Poi', 'ugc_poi')
                 ->searchable()
                 ->sortable()
-                ->nullable(),
+                ->nullable()
+                ->hideFromIndex(),
             BelongsTo::make('Ugc Track', 'ugc_track')
                 ->searchable()
                 ->sortable()
-                ->nullable(),
-            Textarea::make('Tassonomie Where', 'taxonomy_wheres')
+                ->nullable()
+                ->hideFromIndex(),
+            Text::make('Tassonomie Where', 'taxonomy_wheres')
                 ->sortable(),
             Text::make('Relative URL', 'relative_url')
                 ->hideFromIndex()
