@@ -16,6 +16,9 @@ class DownloadShape extends Action
 
     public $name = 'Download Shape';
 
+    public $showOnDetail = true;
+    public $showOnIndex = false;
+    public $showOnTableRow = true;
     public $withoutConfirmation = true;
 
     /**
@@ -33,7 +36,7 @@ class DownloadShape extends Action
         $modelType = str_replace('App\Models\\', '', $modelType);
 
         foreach ($models as $model) {
-            return Action::redirect(url('/api/shapefile/'.$modelType.'/'.$model->id));
+            return Action::redirect(url('/api/shapefile/' . $modelType . '/' . $model->id));
         }
     }
 
