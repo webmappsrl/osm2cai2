@@ -63,7 +63,7 @@ class ValidateHikingRouteAction extends Action
 
         $this->validateSDA($model, $user, $date);
 
-        return Action::message('SDA validated successfully');
+        return Action::redirect($model->id);
     }
 
     /**

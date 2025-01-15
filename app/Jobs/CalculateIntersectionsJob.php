@@ -46,7 +46,9 @@ class CalculateIntersectionsJob implements ShouldQueue
     public function handle()
     {
         $baseModel = $this->baseModel;
-        $intersectingModelClass = 'App\\Models\\' . $this->intersectingModelClass;
+        $intersectingModelClass = str_starts_with($this->intersectingModelClass, 'App\\Models\\')
+            ? $this->intersectingModelClass
+            : 'App\\Models\\' . $this->intersectingModelClass;
         $intersectingModelInstance = new $intersectingModelClass(); //create a new instance of the intersecting model
 
         // Check if models are different

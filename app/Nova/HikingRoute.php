@@ -168,16 +168,10 @@ class HikingRoute extends OsmfeaturesResource
         if ($request->resourceId) {
             // Access current model via resource ID
             $hr = HikingRouteModel::find($request->resourceId);
-            $osmfeaturesData = $hr->osmfeatures_data;
             $linksCardData = $hr->getDataForNovaLinksCard();
-            if (is_string($osmfeaturesData)) {
-                $osmfeaturesData = json_decode($osmfeaturesData, true);
-            }
-
-            $refCardData = $osmfeaturesData['properties']['osm_tags'];
 
             return [
-                (new RefCard($refCardData))->onlyOnDetail(),
+                (new RefCard($hr))->onlyOnDetail(),
                 (new LinksCard($linksCardData))->onlyOnDetail(),
                 (new Osm2caiStatusCard($hr))->onlyOnDetail(),
             ];
