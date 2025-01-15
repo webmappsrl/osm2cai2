@@ -2,16 +2,17 @@
 
 namespace Tests\Api;
 
+use Tests\TestCase;
 use App\Models\Area;
-use App\Models\HikingRoute;
-use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use App\Models\Province;
+use App\Models\HikingRoute;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Tests\TestCase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class CsvControllerTest extends TestCase
 {
@@ -28,6 +29,8 @@ class CsvControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Artisan::call('wm-osmfeatures:initialize-tables', ['--table' => 'hiking_routes']);
 
         $this->region = Region::factory()->create([
             'name' => 'Test Region',
