@@ -39,7 +39,7 @@ class OverpassMap extends Action
     {
         $overpassQuery = urlencode($fields->overpass_query);
 
-        return Action::openInNewTab('https://overpass-turbo.eu/map.html?Q='.$overpassQuery);
+        return Action::openInNewTab('https://overpass-turbo.eu/map.html?Q=' . $overpassQuery);
     }
 
     /**
@@ -60,23 +60,23 @@ class OverpassMap extends Action
 (
 (
 (
-rel('.$relationId.');node(around:1000)["amenity"~"monastery|place_of_worship|ruins"];
-rel('.$relationId.');node(around:1000)["historic"~"castle|archaeological_site|tower|city_gate|ruins"];
-rel('.$relationId.');node(around:1000)["building"~"castle|monastery|ruins|tower"];
-rel('.$relationId.');node(around:1000)["religion"="christian"];
-rel('.$relationId.');node(around:1000)["man_made"="tower"];
+rel(' . $relationId . ');node(around:1000)["amenity"~"monastery|place_of_worship|ruins"];
+rel(' . $relationId . ');node(around:1000)["historic"~"castle|archaeological_site|tower|city_gate|ruins"];
+rel(' . $relationId . ');node(around:1000)["building"~"castle|monastery|ruins|tower"];
+rel(' . $relationId . ');node(around:1000)["religion"="christian"];
+rel(' . $relationId . ');node(around:1000)["man_made"="tower"];
 );
-rel('.$relationId.');way(around:1000)["amenity"~"monastery|place_of_worship|ruins"];
-rel('.$relationId.');way(around:1000)["historic"~"castle|archaeological_site|tower|city_gate|ruins"];
-rel('.$relationId.');way(around:1000)["building"~"castle|monastery|ruins|tower"];
-rel('.$relationId.');way(around:1000)["religion"="christian"];
-rel('.$relationId.');way(around:1000)["man_made"="tower"];
+rel(' . $relationId . ');way(around:1000)["amenity"~"monastery|place_of_worship|ruins"];
+rel(' . $relationId . ');way(around:1000)["historic"~"castle|archaeological_site|tower|city_gate|ruins"];
+rel(' . $relationId . ');way(around:1000)["building"~"castle|monastery|ruins|tower"];
+rel(' . $relationId . ');way(around:1000)["religion"="christian"];
+rel(' . $relationId . ');way(around:1000)["man_made"="tower"];
 );
-rel('.$relationId.');rel(around:1000)["amenity"~"monastery|place_of_worship|ruins"];
-rel('.$relationId.');rel(around:1000)["historic"~"castle|archaeological_site|tower|city_gate|ruins"];
-rel('.$relationId.');rel(around:1000)["building"~"castle|monastery|ruins|tower"];
-rel('.$relationId.');rel(around:1000)["religion"="christian"];
-rel('.$relationId.');rel(around:1000)["man_made"="tower"];
+rel(' . $relationId . ');rel(around:1000)["amenity"~"monastery|place_of_worship|ruins"];
+rel(' . $relationId . ');rel(around:1000)["historic"~"castle|archaeological_site|tower|city_gate|ruins"];
+rel(' . $relationId . ');rel(around:1000)["building"~"castle|monastery|ruins|tower"];
+rel(' . $relationId . ');rel(around:1000)["religion"="christian"];
+rel(' . $relationId . ');rel(around:1000)["man_made"="tower"];
 );
 (._;>;);
 out;
@@ -88,7 +88,7 @@ out;
         return [
             Textarea::make(__('Overpass Query'), 'overpass_query')
                 ->rows(15)
-                ->help(__('Enter the Overpass query to execute. You can test the query at https://overpass-turbo.eu/'))
+                ->help(__('Enter the Overpass query to execute. You can test the query at <a href="https://overpass-turbo.eu/" target="_blank">https://overpass-turbo.eu/</a>'))
                 ->default($query),
         ];
     }

@@ -378,6 +378,9 @@ class HikingRoute extends OsmfeaturesResource
 
                     //can only see if admin, itinerary manager or national referent
                     return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                })
+                ->canRun(function ($request, $user) {
+                    return true;
                 }),
             (new ImportPois($this->model()))
                 ->onlyOnDetail('true')
@@ -389,6 +392,9 @@ class HikingRoute extends OsmfeaturesResource
 
                     //can only see if admin, itinerary manager or national referent
                     return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                })
+                ->canRun(function ($request, $user) {
+                    return true;
                 }),
         ];
     }
