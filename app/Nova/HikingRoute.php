@@ -143,12 +143,14 @@ class HikingRoute extends OsmfeaturesResource
         $orderedFields = array_values($allFieldsAssoc);
 
         return array_merge($orderedFields, [
-            Boolean::make(__('Geometry Correctness'), 'geometry_check')->onlyOnDetail(),
+            Boolean::make(__('Geometry Correctness'), 'is_geometry_correct')->onlyOnDetail(),
             Boolean::make(__('REI Ref Consistency'), function () {
                 return $this->osmfeatures_data['properties']['ref_REI'] == $this->ref_rei;
             })->onlyOnDetail(),
             Boolean::make(__('Geometry Sync'), function () {
-                return $this->geometry == $this->osmfeatures_data['geometry'];
+                $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
+                $geom = json_decode($geojson, true);
+                return $geom == $this->osmfeatures_data['geometry'];
             })->onlyOnDetail(),
         ], $this->getTabs());
     }
