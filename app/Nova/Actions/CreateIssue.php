@@ -31,7 +31,7 @@ class CreateIssue extends Action
             $this->model = HikingRoute::find($resourceId);
         }
 
-        $this->name = __('WALKABILITY ISSUE');
+        $this->name = __('ACCESSIBILITY ISSUE');
     }
 
     /**
