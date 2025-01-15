@@ -6,10 +6,10 @@ use App\Models\User;
 use App\Models\EcPoi;
 use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
-use App\Models\HikingRoute as HikingRouteModel;
 use App\Nova\Cards\RefCard;
 use Illuminate\Support\Arr;
 use App\Nova\Cards\LinksCard;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use App\Nova\Filters\SDAFilter;
@@ -39,6 +39,7 @@ use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use App\Nova\Actions\DeleteHikingRouteAction;
+use App\Models\HikingRoute as HikingRouteModel;
 use App\Nova\Actions\ValidateHikingRouteAction;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\UploadValidationRawDataAction;
@@ -645,7 +646,9 @@ class HikingRoute extends OsmfeaturesResource
                     ? '<a style="color:blue;" href="' . url('/resources/users/' . $user->id) . '" target="_blank">' . $user->name . '</a>'
                     : 'No user';
             })->hideFromIndex()->asHtml(),
-            Text::make(__('Accessibility History'), 'issues_chronology')->onlyOnDetail(),
+            Code::make(__('Accessibility History'), 'issues_chronology')
+                ->json()
+                ->onlyOnDetail(),
         ];
     }
 
