@@ -2,48 +2,49 @@
 
 namespace App\Nova;
 
-use App\Models\EcPoi;
 use App\Models\User;
-use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
-use App\Nova\Actions\CacheMiturApi;
-use App\Nova\Actions\CreateIssue;
-use App\Nova\Actions\DeleteHikingRouteAction;
-use App\Nova\Actions\ImportPois;
-use App\Nova\Actions\OverpassMap;
-use App\Nova\Actions\PercorsoFavoritoAction;
-use App\Nova\Actions\RevertValidateHikingRouteAction;
-use App\Nova\Actions\SectorRefactoring;
-use App\Nova\Actions\UploadValidationRawDataAction;
-use App\Nova\Actions\ValidateHikingRouteAction;
-use App\Nova\Cards\LinksCard;
-use App\Nova\Cards\Osm2caiStatusCard;
+use App\Models\EcPoi;
+use Eminiarts\Tabs\Tab;
+use Eminiarts\Tabs\Tabs;
+use App\Models\HikingRoute as HikingRouteModel;
 use App\Nova\Cards\RefCard;
-use App\Nova\Filters\AreaFilter;
-use App\Nova\Filters\CaiHutsHRFilter;
-use App\Nova\Filters\CorrectGeometryFilter;
-use App\Nova\Filters\DeletedOnOsmFilter;
-use App\Nova\Filters\IssueStatusFilter;
-use App\Nova\Filters\ProvinceFilter;
-use App\Nova\Filters\RegionFavoriteHikingRouteFilter;
-use App\Nova\Filters\RegionFilter;
-use App\Nova\Filters\ScoreFilter;
+use Illuminate\Support\Arr;
+use App\Nova\Cards\LinksCard;
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\Text;
 use App\Nova\Filters\SDAFilter;
+use App\Nova\Actions\ImportPois;
+use App\Nova\Filters\AreaFilter;
+use Laravel\Nova\Fields\Boolean;
+use App\Nova\Actions\CreateIssue;
+use App\Nova\Actions\OverpassMap;
+use App\Nova\Filters\ScoreFilter;
+use Laravel\Nova\Fields\Textarea;
+use App\Nova\Filters\RegionFilter;
 use App\Nova\Filters\SectorFilter;
+use Eminiarts\Tabs\Traits\HasTabs;
+use App\Nova\Actions\CacheMiturApi;
+use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Cards\Osm2caiStatusCard;
+use App\Nova\Filters\CaiHutsHRFilter;
+use App\Nova\Actions\SectorRefactoring;
+use App\Nova\Filters\IssueStatusFilter;
+use App\Nova\Filters\DeletedOnOsmFilter;
+use App\Nova\Filters\CorrectGeometryFilter;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\PercorsoFavoritoAction;
 use App\Nova\Lenses\HikingRoutesStatus0Lens;
 use App\Nova\Lenses\HikingRoutesStatus1Lens;
 use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
+use App\Nova\Actions\DeleteHikingRouteAction;
+use App\Nova\Actions\ValidateHikingRouteAction;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
-use Eminiarts\Tabs\Tab;
-use Eminiarts\Tabs\Tabs;
-use Eminiarts\Tabs\Traits\HasTabs;
-use Illuminate\Support\Arr;
-use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Textarea;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\UploadValidationRawDataAction;
+use App\Nova\Actions\RevertValidateHikingRouteAction;
+use App\Nova\Filters\RegionFavoriteHikingRouteFilter;
+use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 
 class HikingRoute extends OsmfeaturesResource
 {
@@ -163,7 +164,7 @@ class HikingRoute extends OsmfeaturesResource
         // Check if resource ID is present in request
         if ($request->resourceId) {
             // Access current model via resource ID
-            $hr = \App\Models\HikingRoute::find($request->resourceId);
+            $hr = HikingRouteModel::find($request->resourceId);
             $osmfeaturesData = $hr->osmfeatures_data;
             $linksCardData = $hr->getDataForNovaLinksCard();
             if (is_string($osmfeaturesData)) {
@@ -175,7 +176,7 @@ class HikingRoute extends OsmfeaturesResource
             return [
                 (new RefCard($refCardData))->onlyOnDetail(),
                 (new LinksCard($linksCardData))->onlyOnDetail(),
-                (new Osm2caiStatusCard($hr->osm2cai_status))->onlyOnDetail(),
+                (new Osm2caiStatusCard($hr))->onlyOnDetail(),
             ];
         }
 

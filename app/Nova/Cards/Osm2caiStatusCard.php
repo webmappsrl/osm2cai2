@@ -2,15 +2,16 @@
 
 namespace App\Nova\Cards;
 
+use App\Models\HikingRoute;
 use Abordage\HtmlCard\HtmlCard;
 
 class Osm2caiStatusCard extends HtmlCard
 {
-    private $osm2caiStatus;
+    private $hr;
 
-    public function __construct(string|int|null $osm2caiStatus)
+    public function __construct(HikingRoute $hr)
     {
-        $this->osm2caiStatus = $osm2caiStatus;
+        $this->hr = $hr;
         parent::__construct();
     }
 
@@ -34,10 +35,12 @@ class Osm2caiStatusCard extends HtmlCard
      */
     public function content(): string
     {
-        $status = $this->osm2caiStatus ?? '';
+        $status = $this->hr->osm2cai_status ?? '';
+        $validationDate = $this->hr->validation_date ?? '';
+        $validator = $this->hr->validator->name ?? '';
 
         return <<<HTML
-      <h1 class='text-4xl'>$status</h1><h3 class='text-lg text-gray-400'>Stato di Accatastamento</h3> <p text-gray-200>Data di validazione : TBI </p><p text-gray-200>Validatore : TBI </p>
+      <h1 class='text-4xl'>$status</h1><h3 class='text-lg text-gray-400'>Stato di Accatastamento</h3> <p text-gray-200>Data di validazione : $validationDate </p><p text-gray-200>Validatore : $validator </p>
       HTML;
     }
 }
