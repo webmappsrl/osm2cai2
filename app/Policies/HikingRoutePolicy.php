@@ -37,7 +37,7 @@ class HikingRoutePolicy
      */
     public function update(User $user, HikingRoute $hikingRoute): bool
     {
-        return true;
+        return false;
     }
 
     /**

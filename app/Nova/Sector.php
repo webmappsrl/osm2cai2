@@ -88,7 +88,9 @@ class Sector extends Resource
                 ->help('Modifica il nome del settore')->required()
                 ->rules('max:254'),
             Text::make(__('Code'), 'code')->sortable()->required()->rules('max:1'),
-            Text::make(__('Responsabili'), 'manager')->hideFromIndex(),
+            Text::make(__('Responsabili'), function () {
+                return $this->moderators->pluck('name')->implode(', ');
+            })->onlyOnIndex(),
             Number::make(__('Numero Atteso'), 'num_expected')->required(),
             Text::make(__('Full code'), 'full_code')->readonly(),
             Text::make(__('Region'), 'area_id', function () {
@@ -100,7 +102,7 @@ class Sector extends Resource
             Text::make(__('Area'), 'area_id', function () {
                 return $this->area->name ?? '';
             })->hideWhenUpdating()->hideWhenCreating(),
-            BelongsToMany::make('Users', 'moderators')
+            BelongsToMany::make('Referenti Sentieristica', 'moderators', User::class)
                 ->searchable(),
             BelongsTo::make('Area')->onlyOnForms(),
             File::make('Geometry')->store(function (Request $request, $model) {
@@ -109,7 +111,7 @@ class Sector extends Resource
             MapMultiPolygon::make('geometry')->withMeta([
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-            ])->hideFromIndex(),
+            ])->onlyOnDetail(),
         ];
     }
 
@@ -148,7 +150,7 @@ class Sector extends Resource
                 (new HtmlCard())
                     ->width('1/4')
                     ->view('nova.cards.sector-manager-card', [
-                        'manager' => $sector->manager,
+                        'manager' => $sector->moderators->pluck('name')->implode(', '),
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -219,7 +221,7 @@ class Sector extends Resource
             $filter = base64_encode(json_encode($availableFilters));
 
             // Build the URL
-            $link = trim(Nova::path(), '/').'/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens?hiking-routes_filter='.$filter;
+            $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
             $exploreUrl = $link;
         }
 
@@ -281,15 +283,26 @@ class Sector extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            (new DownloadGeojson())->canRun(function ($request) {
+            (new DownloadGeojson())->canSee(function ($request) {
                 return true;
-            }),
-            (new DownloadShape())->canRun(function ($request) {
+            })->canRun(function ($request) {
                 return true;
-            }),
-            (new DownloadKml())->canRun(function ($request) {
+            })->showInline(),
+            (new DownloadShape())->canSee(function ($request) {
                 return true;
-            }),
+            })->canRun(function ($request) {
+                return true;
+            })->showInline(),
+            (new DownloadKml())->canSee(function ($request) {
+                return true;
+            })->canRun(function ($request) {
+                return true;
+            })->showInline(),
+            (new DownloadCsvCompleteAction)->canSee(function ($request) {
+                return true;
+            })->canRun(function ($request) {
+                return true;
+            })->showInline(),
             (new BulkSectorsModeratorAssignAction)->canSee(function ($request) {
                 $rolesAllowed = ['Administrator', 'National Referent', 'Regional Referent'];
 
@@ -309,9 +322,6 @@ class Sector extends Resource
                 }),
             (new DownloadCsvCompleteAction)->canRun(function ($request, $zone) {
                 return true;
-            }),
-            (new SectorAssignModerator)->canRun(function ($request, $user) {
-                return auth()->user()->hasRole('Regional Referent') || auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent');
             }),
         ];
     }

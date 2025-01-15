@@ -15,7 +15,7 @@ class IssueStatusFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Walkability Status';
+    public $name = 'Accessibility Status';
 
     /**
      * Apply the filter to the given query.

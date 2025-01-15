@@ -16,6 +16,9 @@ class DownloadKml extends Action
 
     public $name = 'Download KML';
 
+    public $showOnDetail = true;
+    public $showOnIndex = false;
+    public $showOnTableRow = true;
     public $withoutConfirmation = true;
 
     /**
@@ -32,7 +35,7 @@ class DownloadKml extends Action
         //trim app\models
         $modelType = str_replace('App\Models\\', '', $modelType);
 
-        return Action::redirect(url('/api/kml/'.$modelType.'/'.$models->first()->id));
+        return Action::redirect(url('/api/kml/' . $modelType . '/' . $models->first()->id));
     }
 
     /**

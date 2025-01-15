@@ -28,29 +28,42 @@ class ImportItinerary extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         if ($fields['ids']) {
-            $ids = explode(',', $fields->ids);
+            $ids = explode(',', str_replace(' ', '', $fields->ids));
         } else {
             return Action::danger(__('No IDs provided.'));
         }
         if (! $fields['itinerary_name']) {
             return Action::danger(__('No itinerary name provided.'));
         }
-        $itinerary = Itinerary::firstOrCreate([
-            'name' => $fields->itinerary_name,
-        ]);
 
         try {
             if ($fields['import_source'] == 'OSM') {
-                $hikingRoutes = DB::table('hiking_routes')->whereIn('relation_id', $ids)->get();
+                $osmfeaturesIds = array_map(function ($id) {
+                    return 'R' . $id;
+                }, $ids);
+                $hikingRoutes = DB::table('hiking_routes')->whereIn('osmfeatures_id', $osmfeaturesIds)->get();
                 $hikingRoutesIds = $hikingRoutes->pluck('id')->toArray();
-                $itinerary->hikingRoutes()->attach($hikingRoutesIds);
 
-                return Action::message(__('Itinerary created successfully!'));
+                if (count($hikingRoutesIds) > 0) {
+                    $itinerary = Itinerary::firstOrCreate([
+                        'name' => $fields->itinerary_name,
+                    ]);
+                    $itinerary->hikingRoutes()->attach($hikingRoutesIds);
+                    return Action::message(__('Itinerary created successfully!'));
+                } else {
+                    return Action::danger(__('No hiking routes found with the provided IDs.'));
+                }
             } elseif ($fields['import_source'] == 'OSM2CAI') {
                 $hikingRoutes = DB::table('hiking_routes')->whereIn('id', $ids)->get();
-                $itinerary->hikingRoutes()->attach($ids);
-
-                return Action::message(__('Itinerary created successfully!'));
+                if (count($hikingRoutes) > 0) {
+                    $itinerary = Itinerary::firstOrCreate([
+                        'name' => $fields->itinerary_name,
+                    ]);
+                    $itinerary->hikingRoutes()->attach($ids);
+                    return Action::message(__('Itinerary created successfully!'));
+                } else {
+                    return Action::danger(__('No hiking routes found with the provided IDs.'));
+                }
             } else {
                 return Action::danger(__('Invalid import source.'));
             }

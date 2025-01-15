@@ -16,26 +16,26 @@ class DownloadGeojsonZip extends Action
 {
     use Queueable;
 
-    public $name = 'Download Geojson ZIP';
+    public $name = 'Download Geojson';
 
     public function handle(ActionFields $fields, Collection $models)
     {
         $zip = new ZipArchive;
-        $zipFileName = 'OSM2CAI_ugctracks_'.now()->format('Ymd').'.zip';
-        $zipPath = storage_path('app/public/'.$zipFileName);
+        $zipFileName = 'OSM2CAI_ugctracks_' . now()->format('Ymd') . '.zip';
+        $zipPath = storage_path('app/public/' . $zipFileName);
 
         if ($zip->open($zipPath, ZipArchive::CREATE) === true) {
             foreach ($models as $model) {
                 $geojson = $model->getGeojson();
-                $filePath = 'ugctracks/'.$model->id.'.geojson';
+                $filePath = 'ugctracks/' . $model->id . '.geojson';
                 Storage::disk('public')->put($filePath, json_encode($geojson));
-                $zip->addFile(storage_path('app/public/'.$filePath), $model->id.'.geojson');
+                $zip->addFile(storage_path('app/public/' . $filePath), $model->id . '.geojson');
             }
             $zip->close();
 
             // Pulizia dei file temporanei
             foreach ($models as $model) {
-                Storage::disk('public')->delete('ugctracks/'.$model->id.'.geojson');
+                Storage::disk('public')->delete('ugctracks/' . $model->id . '.geojson');
             }
 
             return Action::download(Storage::disk('public')->url($zipFileName), $zipFileName);

@@ -14,8 +14,12 @@ class DownloadGeojson extends Action
 {
     use InteractsWithQueue, Queueable;
 
+
     public $name = 'Download GeoJSON';
 
+    public $showOnDetail = true;
+    public $showOnIndex = false;
+    public $showOnTableRow = true;
     public $withoutConfirmation = true;
 
     /**
@@ -34,7 +38,7 @@ class DownloadGeojson extends Action
 
         //redirect to the download url api
         foreach ($models as $model) {
-            return Action::redirect(url('/api/geojson/'.$modelType.'/'.$model->id));
+            return Action::redirect(url('/api/geojson/' . $modelType . '/' . $model->id));
         }
     }
 

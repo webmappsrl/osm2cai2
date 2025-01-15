@@ -93,7 +93,7 @@ class RevertValidateHikingRouteAction extends Action
         if ($model->osm2cai_status == 4) {
             $model->osm2cai_status = 3;
             $model->validation_date = null;
-            $model->user_id = null;
+            $model->validator_id = null;
             $model->save();
         }
     }

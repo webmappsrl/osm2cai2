@@ -115,10 +115,10 @@ class Itinerary extends Resource
     {
         return [
             (new Actions\GenerateItineraryEdgesAction)->canSee(function ($request) {
-                return $request->user()->is_administrator || $request->user()->is_itinerary_manager;
-            }),
+                return $request->user()->hasRole('Administrator') || $request->user()->hasRole('Itinerary Manager');
+            })->showInline(),
             (new Actions\ImportItinerary)->standalone()->canSee(function ($request) {
-                return $request->user()->is_administrator || $request->user()->is_itinerary_manager;
+                return $request->user()->hasRole('Administrator') || $request->user()->hasRole('Itinerary Manager');
             }),
         ];
     }

@@ -41,17 +41,17 @@ class CalculateIntersections extends Action
         foreach ($models as $model) {
             switch ($this->class) {
                 case 'EcPoi':
-                    CalculateIntersectionsJob::dispatch($model, Club::class);
-                    CalculateIntersectionsJob::dispatch($model, MountainGroups::class);
-                    CheckNearbyHikingRoutesJob::dispatch($model, 250);
-                    CheckNearbyHutsJob::dispatch($model, 250);
+                    CalculateIntersectionsJob::dispatch($model, Club::class)->onQueue('geometric-computations');
+                    CalculateIntersectionsJob::dispatch($model, MountainGroups::class)->onQueue('geometric-computations');
+                    CheckNearbyHikingRoutesJob::dispatch($model, 250)->onQueue('geometric-computations');
+                    CheckNearbyHutsJob::dispatch($model, 250)->onQueue('geometric-computations');
                     break;
                 case 'MountainGroups':
-                    CalculateIntersectionsJob::dispatch($model, Club::class);
-                    CalculateIntersectionsJob::dispatch($model, Region::class);
-                    CalculateIntersectionsJob::dispatch($model, CaiHut::class);
-                    CalculateIntersectionsJob::dispatch($model, HikingRoute::class);
-                    CalculateIntersectionsJob::dispatch($model, EcPoi::class);
+                    CalculateIntersectionsJob::dispatch($model, Club::class)->onQueue('geometric-computations');
+                    CalculateIntersectionsJob::dispatch($model, Region::class)->onQueue('geometric-computations');
+                    CalculateIntersectionsJob::dispatch($model, CaiHut::class)->onQueue('geometric-computations');
+                    CalculateIntersectionsJob::dispatch($model, HikingRoute::class)->onQueue('geometric-computations');
+                    CalculateIntersectionsJob::dispatch($model, EcPoi::class)->onQueue('geometric-computations');
                     break;
             }
         }
