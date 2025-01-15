@@ -57,7 +57,7 @@ class ValidateHikingRouteAction extends Action
             return Action::danger('Upload a GPX first!');
         }
 
-        if (! $model->geometry_check) {
+        if (! $model->is_geometry_correct) {
             return Action::danger('Geometry is not correct');
         }
 
