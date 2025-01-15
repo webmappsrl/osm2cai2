@@ -16,7 +16,7 @@ class BulkSectorsModeratorAssignAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = 'Associa moderatore';
+    public $name = 'Associa Referente Sentieristica';
 
     /**
      * Perform the action on the given models.
@@ -29,12 +29,12 @@ class BulkSectorsModeratorAssignAction extends Action
     {
         $userId = $fields->get('user');
         $models->map(function ($model) use ($userId) {
-            if (! $model->users->contains($userId)) {
-                $model->users()->attach($userId);
+            if (! $model->moderators->contains($userId)) {
+                $model->moderators()->attach($userId);
             }
         });
 
-        return Action::message('Moderatori assegnati correttamente!');
+        return Action::message('Referenti Sentieristica assegnati correttamente!');
     }
 
     /**

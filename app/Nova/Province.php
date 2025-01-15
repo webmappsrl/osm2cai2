@@ -281,13 +281,19 @@ class Province extends Resource
         return [
             (new DownloadGeojson())->canRun(function ($request, $zone) {
                 return true;
-            }),
+            })->canSee(function ($request) {
+                return true;
+            })->showInline(),
             (new DownloadShape())->canRun(function ($request, $zone) {
                 return true;
-            }),
+            })->canSee(function ($request) {
+                return true;
+            })->showInline(),
             (new DownloadKml())->canRun(function ($request, $zone) {
                 return true;
-            }),
+            })->canSee(function ($request) {
+                return true;
+            })->showInline(),
         ];
     }
 }

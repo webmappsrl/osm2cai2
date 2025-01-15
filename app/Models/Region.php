@@ -225,7 +225,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                     'created_at' => $hikingRoute->created_at,
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
-                    'osm_id' => $osmfeaturesData['properties']['osm_id'],
+                    'osm_id' => $osmfeaturesDataProperties['osm_id'],
                     'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
                     'survey_date' => $osmfeaturesDataProperties['survey_date'],
                     'accessibility' => $hikingRoute->issues_status,

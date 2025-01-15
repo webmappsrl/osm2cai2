@@ -22,6 +22,8 @@ class DownloadCsvCompleteAction extends Action
 
     public $showOnIndex = false;
 
+    public $showOnTableRow = true;
+
     public $withoutConfirmation = true;
 
     /**

@@ -106,12 +106,17 @@ class Area extends Resource
             }
 
             $sal = $area->getSal();
+            $managers = $area->sectors->pluck('manager')->unique()->toArray();
+            //remove null values
+            $managers = array_filter($managers, function ($value) {
+                return $value !== null;
+            });
 
             return [
                 (new HtmlCard())
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
-                        'value' => $area->manager,
+                        'value' => implode(', ', $managers),
                         'label' => 'Responsabili di settore',
                     ])
                     ->center()

@@ -86,7 +86,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         });
 
         static::updated(function ($hikingRoute) {
-            if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
+            if ($hikingRoute->osm2cai_status == 4 && $hikingRoute->isDirty('geometry') && app()->environment('production')) {
                 ComputeTdhJob::dispatch($hikingRoute->id);
                 CacheMiturAbruzzoDataJob::dispatch('HikingRoute', $hikingRoute->id);
             }

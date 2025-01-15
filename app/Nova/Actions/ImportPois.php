@@ -25,13 +25,12 @@ class ImportPois extends Action
     public function __construct($model = null)
     {
         $this->model = $model;
+        $this->name = __('IMPORT POIS');
 
         if (! is_null($resourceId = request('resourceId'))) {
             $this->model = HikingRoute::find($resourceId);
         }
     }
-
-    public $name = 'IMPORT POIS';
 
     /**
      * Perform the action on the given models.
@@ -57,7 +56,7 @@ class ImportPois extends Action
             $baseUrl = "https://api.openstreetmap.org/api/0.6/$type/$id";
             $urlTail = $type === 'node' ? '.json' : '/full.json';
             $url = $baseUrl.$urlTail;
-            $abort = Action::danger("$type con ID $id non trovato. Per favore verifica l'ID e riprova.");
+            $abort = Action::danger(__("$type with ID $id not found. Please verify the ID and try again."));
 
             try {
                 $response = Http::get($url);
@@ -112,7 +111,7 @@ class ImportPois extends Action
             }
         }
 
-        return Action::message('Import completato');
+        return Action::message(__('Import completed'));
     }
 
     private function parseOsmIds($osm_ids_string)
@@ -157,7 +156,10 @@ class ImportPois extends Action
 
     private function validateOsmId($osmId, $index)
     {
-        $dangerMessage = "ID $osmId non valido alla posizione ".($index + 1)."'. Per favore verifica l'ID e riprova. Assicurati che dopo ogni ID ci sia una virgola e non mettere la virgola dopo l'ultimo ID.";
+        $dangerMessage = __('Invalid ID :osmId at position :index. Please verify the ID and try again. Make sure there is a comma after each ID and no comma after the last ID.', [
+            'osmId' => $osmId,
+            'index' => $index + 1,
+        ]);
         if (strpos($osmId, '/') === false) {
             return Action::danger($dangerMessage);
         }
@@ -179,7 +181,7 @@ class ImportPois extends Action
     public function fields($request)
     {
         return [
-            Textarea::make('OSM IDs', 'osm_ids')->help('Inserisci gli ID OSM separati da virgola. Esempio: node/123456,way/123456,relation/123456'),
+            Textarea::make(__('OSM IDs'), 'osm_ids')->help(__('Enter OSM IDs separated by commas. Example: node/123456,way/123456,relation/123456')),
         ];
     }
 }

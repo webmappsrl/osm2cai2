@@ -16,6 +16,12 @@ class DownloadGeojson extends Action
 
     public $name = 'Download GeoJSON';
 
+    public $showOnDetail = true;
+
+    public $showOnIndex = false;
+
+    public $showOnTableRow = true;
+
     public $withoutConfirmation = true;
 
     /**

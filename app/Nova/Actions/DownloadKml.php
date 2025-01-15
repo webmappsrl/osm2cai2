@@ -16,6 +16,12 @@ class DownloadKml extends Action
 
     public $name = 'Download KML';
 
+    public $showOnDetail = true;
+
+    public $showOnIndex = false;
+
+    public $showOnTableRow = true;
+
     public $withoutConfirmation = true;
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Models\EcPoi;
+use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\User;
 use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 use App\Nova\Actions\CacheMiturApi;
@@ -40,6 +41,7 @@ use Eminiarts\Tabs\Tabs;
 use Eminiarts\Tabs\Traits\HasTabs;
 use Illuminate\Support\Arr;
 use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
@@ -52,9 +54,9 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\HikingRoute>
+     * @var class-string<HikingRouteModel>
      */
-    public static $model = \App\Models\HikingRoute::class;
+    public static $model = HikingRouteModel::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -111,7 +113,7 @@ class HikingRoute extends OsmfeaturesResource
         // Define desired field order
         $order = [
             'Osmfeatures ID' => __('Osmfeatures ID'),
-            'percorribilita' => __('Walkability'),
+            'percorribilita' => __('Accessibility'),
             'legenda' => __('Legend'),
             'geometry' => __('Geometry'),
             'correttezza_geometria' => __('Geometry Correctness'),
@@ -142,12 +144,15 @@ class HikingRoute extends OsmfeaturesResource
         $orderedFields = array_values($allFieldsAssoc);
 
         return array_merge($orderedFields, [
-            Boolean::make(__('Geometry Correctness'), 'geometry_check')->onlyOnDetail(),
+            Boolean::make(__('Geometry Correctness'), 'is_geometry_correct')->onlyOnDetail(),
             Boolean::make(__('REI Ref Consistency'), function () {
                 return $this->osmfeatures_data['properties']['ref_REI'] == $this->ref_rei;
             })->onlyOnDetail(),
             Boolean::make(__('Geometry Sync'), function () {
-                return $this->geometry == $this->osmfeatures_data['geometry'];
+                $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
+                $geom = json_decode($geojson, true);
+
+                return $geom == $this->osmfeatures_data['geometry'];
             })->onlyOnDetail(),
         ], $this->getTabs());
     }
@@ -163,19 +168,13 @@ class HikingRoute extends OsmfeaturesResource
         // Check if resource ID is present in request
         if ($request->resourceId) {
             // Access current model via resource ID
-            $hr = \App\Models\HikingRoute::find($request->resourceId);
-            $osmfeaturesData = $hr->osmfeatures_data;
+            $hr = HikingRouteModel::find($request->resourceId);
             $linksCardData = $hr->getDataForNovaLinksCard();
-            if (is_string($osmfeaturesData)) {
-                $osmfeaturesData = json_decode($osmfeaturesData, true);
-            }
-
-            $refCardData = $osmfeaturesData['properties']['osm_tags'];
 
             return [
-                (new RefCard($refCardData))->onlyOnDetail(),
+                (new RefCard($hr))->onlyOnDetail(),
                 (new LinksCard($linksCardData))->onlyOnDetail(),
-                (new Osm2caiStatusCard($hr->osm2cai_status))->onlyOnDetail(),
+                (new Osm2caiStatusCard($hr))->onlyOnDetail(),
             ];
         }
 
@@ -350,9 +349,7 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText('Confermo')
                 ->cancelButtonText('Annulla')
                 ->canSee(function ($request) {
-                    $u = auth()->user();
-
-                    return $u->is_administrator || $u->is_national_referent;
+                    return auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent');
                 })
                 ->canRun(
                     function ($request, $user) {
@@ -364,10 +361,7 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText('Confermo')
                 ->cancelButtonText('Annulla')
                 ->canSee(function ($request) {
-                    $u = auth()->user();
-
-                    //can only see if the getTerritorialRole is not unknown
-                    return $u->getTerritorialRole() != 'unknown';
+                    return auth()->user()->getTerritorialRole() != 'unknown';
                 })
                 ->canRun(
                     function ($request, $user) {
@@ -385,6 +379,9 @@ class HikingRoute extends OsmfeaturesResource
 
                     //can only see if admin, itinerary manager or national referent
                     return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                })
+                ->canRun(function ($request, $user) {
+                    return true;
                 }),
             (new ImportPois($this->model()))
                 ->onlyOnDetail('true')
@@ -396,6 +393,9 @@ class HikingRoute extends OsmfeaturesResource
 
                     //can only see if admin, itinerary manager or national referent
                     return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                })
+                ->canRun(function ($request, $user) {
+                    return true;
                 }),
         ];
     }
@@ -459,7 +459,7 @@ class HikingRoute extends OsmfeaturesResource
             })->onlyOnIndex(),
             Text::make(__('REF'), 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
             Text::make(__('REI Code'), 'ref_rei')->hideFromDetail(),
-            Text::make(__('Walkability'), 'issues_status')->hideFromDetail(),
+            Text::make(__('Accessibility'), 'issues_status')->hideFromDetail(),
             Text::make(__('Last Survey'), 'osmfeatures_data->properties->survey_date')->hideFromDetail(),
         ];
 
@@ -642,7 +642,9 @@ class HikingRoute extends OsmfeaturesResource
                     ? '<a style="color:blue;" href="'.url('/resources/users/'.$user->id).'" target="_blank">'.$user->name.'</a>'
                     : 'No user';
             })->hideFromIndex()->asHtml(),
-            Text::make(__('Walkability History'), 'issues_chronology')->onlyOnDetail(),
+            Code::make(__('Accessibility History'), 'issues_chronology')
+                ->json()
+                ->onlyOnDetail(),
         ];
     }
 

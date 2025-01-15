@@ -9,6 +9,7 @@ use App\Models\Region;
 use App\Models\Sector;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -28,6 +29,8 @@ class CsvControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Artisan::call('wm-osmfeatures:initialize-tables', ['--table' => 'hiking_routes']);
 
         $this->region = Region::factory()->create([
             'name' => 'Test Region',
@@ -87,6 +90,7 @@ class CsvControllerTest extends TestCase
 
         return HikingRoute::factory()->create([
             'osm2cai_status' => $status,
+            'osmfeatures_id' => 'R'.$osmId,
             'osmfeatures_data' => [
                 'properties' => [
                     'osm_id' => $osmId,

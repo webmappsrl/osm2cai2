@@ -16,7 +16,7 @@ class DownloadGeojsonZip extends Action
 {
     use Queueable;
 
-    public $name = 'Download Geojson ZIP';
+    public $name = 'Download Geojson';
 
     public function handle(ActionFields $fields, Collection $models)
     {

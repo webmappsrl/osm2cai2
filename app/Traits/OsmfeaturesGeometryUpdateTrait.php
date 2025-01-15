@@ -24,7 +24,6 @@ trait OsmfeaturesGeometryUpdateTrait
 
         //if model geometry is null, set the new geometry
         if ($model->geometry === null) {
-            $model->geometry = $newGeometry;
             $updateData['geometry'] = DB::raw("ST_GeomFromText('$newGeometry')");
             Log::channel('wm-osmfeatures')->info('Geometry updated for '.class_basename($model).' '.$osmfeaturesId);
 

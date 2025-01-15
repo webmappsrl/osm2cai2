@@ -205,13 +205,13 @@ class Region extends Resource
         return [
             (new DownloadGeojson)->canRun(function ($request) {
                 return true;
-            }),
+            })->showInline(),
             (new DownloadShape)->canRun(function ($request) {
                 return true;
-            }),
+            })->showInline(),
             (new DownloadKml)->canRun(function ($request) {
                 return true;
-            }),
+            })->showInline(),
             (new DownloadGeojsonCompleteAction)->canRun(function ($request) {
                 return true;
             })->showInline(),
@@ -222,7 +222,7 @@ class Region extends Resource
                 return $request->user()->hasRole('Administrator');
             })->canRun(function ($request) {
                 return $request->user()->hasRole('Administrator');
-            }),
+            })->showInline(),
 
         ];
     }

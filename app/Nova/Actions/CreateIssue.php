@@ -31,7 +31,7 @@ class CreateIssue extends Action
             $this->model = HikingRoute::find($resourceId);
         }
 
-        $this->name = __('WALKABILITY ISSUE');
+        $this->name = __('ACCESSIBILITY ISSUE');
     }
 
     /**
@@ -56,10 +56,11 @@ class CreateIssue extends Action
             $chronology[] = [
                 'issues_status' => $hikingRoute->issues_status,
                 'issues_description' => $hikingRoute->issues_description,
-                'issues_last_update' => $hikingRoute->issues_last_update,
+                'issues_last_update' => now(),
                 'issues_user' => $user->name ?? $hikingRoute->issues_user->name,
             ];
             $hikingRoute->issues_chronology = $chronology;
+            $hikingRoute->issues_last_update = now();
             $hikingRoute->saveQuietly();
         }
     }
@@ -71,9 +72,15 @@ class CreateIssue extends Action
      */
     public function fields($request)
     {
+        $options = [];
+
+        foreach (IssuesStatusEnum::cases() as $status) {
+            $options[$status->value] = $status->value;
+        }
+
         return [
             Select::make(__('Issues Status'), 'issues_status')
-                ->options(IssuesStatusEnum::cases())
+                ->options($options)
                 ->displayUsingLabels()
                 ->rules('required')
                 ->default($this->model->issues_status ?? null),

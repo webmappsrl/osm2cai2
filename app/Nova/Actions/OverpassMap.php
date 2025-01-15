@@ -88,7 +88,7 @@ out;
         return [
             Textarea::make(__('Overpass Query'), 'overpass_query')
                 ->rows(15)
-                ->help(__('Enter the Overpass query to execute. You can test the query at https://overpass-turbo.eu/'))
+                ->help(__('Enter the Overpass query to execute. You can test the query at <a href="https://overpass-turbo.eu/" target="_blank">https://overpass-turbo.eu/</a>'))
                 ->default($query),
         ];
     }
