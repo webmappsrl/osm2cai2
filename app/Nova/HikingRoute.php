@@ -348,9 +348,7 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText('Confermo')
                 ->cancelButtonText('Annulla')
                 ->canSee(function ($request) {
-                    $u = auth()->user();
-
-                    return $u->is_administrator || $u->is_national_referent;
+                    return auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent');
                 })
                 ->canRun(
                     function ($request, $user) {
@@ -362,10 +360,7 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText('Confermo')
                 ->cancelButtonText('Annulla')
                 ->canSee(function ($request) {
-                    $u = auth()->user();
-
-                    //can only see if the getTerritorialRole is not unknown
-                    return $u->getTerritorialRole() != 'unknown';
+                    return auth()->user()->getTerritorialRole() != 'unknown';
                 })
                 ->canRun(
                     function ($request, $user) {

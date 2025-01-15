@@ -30,7 +30,7 @@ class AddRegionFavoritePublicationDateToHikingRouteAction extends Action
     {
         foreach ($models as $model) {
             $model->region_favorite_publication_date = $fields['publication_date'];
-            $model->save();
+            $model->saveQuietly();
         }
     }
 
