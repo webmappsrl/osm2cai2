@@ -48,7 +48,7 @@ class CalculateIntersectionsJob implements ShouldQueue
         $baseModel = $this->baseModel;
         $intersectingModelClass = str_starts_with($this->intersectingModelClass, 'App\\Models\\')
             ? $this->intersectingModelClass
-            : 'App\\Models\\' . $this->intersectingModelClass;
+            : 'App\\Models\\'.$this->intersectingModelClass;
         $intersectingModelInstance = new $intersectingModelClass(); //create a new instance of the intersecting model
 
         // Check if models are different
@@ -102,7 +102,7 @@ class CalculateIntersectionsJob implements ShouldQueue
 
             DB::table($pivotTable)->insert($pivotRecords);
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections for model ' . $baseModel->getTable() . ': ' . $e->getMessage());
+            Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
             throw $e;
         }
     }
@@ -179,7 +179,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             $model = new $model();
         }
 
-        return Str::singular($model->getTable()) . '_id';
+        return Str::singular($model->getTable()).'_id';
     }
 
     /**

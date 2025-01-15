@@ -2,10 +2,10 @@
 
 namespace App\Traits;
 
-use App\Models\Club;
-use App\Models\User;
-use App\Models\Section;
 use App\Helpers\Osm2caiHelper;
+use App\Models\Club;
+use App\Models\Section;
+use App\Models\User;
 
 trait CsvableModelTrait
 {
@@ -27,11 +27,11 @@ trait CsvableModelTrait
             'ultimo aggiornamento percorribilità',
             'ultimo aggiornamento effettuato da',
             'codice sezione',
-            'nome sezione'
+            'nome sezione',
         ];
 
         // Start with headers
-        $line = implode(',', $headers) . PHP_EOL;
+        $line = implode(',', $headers).PHP_EOL;
 
         if (count($this->hikingRoutes->whereIn('osm2cai_status', [1, 2, 3, 4]))) {
             foreach ($this->hikingRoutes->whereIn('osm2cai_status', [1, 2, 3, 4]) as $hr) {
@@ -50,19 +50,19 @@ trait CsvableModelTrait
                     $osmfeaturesDataProperties['cai_scale'] ?? '',
                     $osmfeaturesDataProperties['ref_REI'] ?? '',
                     Osm2caiHelper::getOpenstreetmapUrl($hr->osmfeatures_id) ?? '',
-                    url('/resources/hiking-routes/' . $hr->id),
+                    url('/resources/hiking-routes/'.$hr->id),
                     $hr->issues_status,
                     $hr->issues_last_update,
                     $user->name ?? '',
                     $osmfeaturesDataProperties['source_ref'] ?? '',
-                    $sectionName ?? ''
+                    $sectionName ?? '',
                 ];
 
                 // Add row with data
                 $line .= implode(',', array_map(function ($value) {
                     // Handle commas in values
-                    return '"' . str_replace('"', '""', $value) . '"';
-                }, $data)) . PHP_EOL;
+                    return '"'.str_replace('"', '""', $value).'"';
+                }, $data)).PHP_EOL;
             }
         }
 

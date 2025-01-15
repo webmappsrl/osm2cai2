@@ -2,17 +2,17 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
 use App\Models\Area;
+use App\Models\HikingRoute;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
-use App\Models\HikingRoute;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 class CsvControllerTest extends TestCase
 {
@@ -90,7 +90,7 @@ class CsvControllerTest extends TestCase
 
         return HikingRoute::factory()->create([
             'osm2cai_status' => $status,
-            'osmfeatures_id' => 'R' . $osmId,
+            'osmfeatures_id' => 'R'.$osmId,
             'osmfeatures_data' => [
                 'properties' => [
                     'osm_id' => $osmId,
@@ -113,7 +113,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_regions_Test Region.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_regions_Test Region.csv"'
             );
     }
 
@@ -141,7 +141,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_provinces_Test Province.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_provinces_Test Province.csv"'
             );
     }
 
@@ -153,7 +153,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_areas_Test Area.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_areas_Test Area.csv"'
             );
     }
 
@@ -165,7 +165,7 @@ class CsvControllerTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->assertHeader(
                 'Content-Disposition',
-                'attachment; filename="osm2cai_' . date('Ymd') . '_sectors_Test Sector.csv"'
+                'attachment; filename="osm2cai_'.date('Ymd').'_sectors_Test Sector.csv"'
             );
     }
 }

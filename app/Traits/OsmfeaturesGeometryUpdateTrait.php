@@ -12,7 +12,7 @@ trait OsmfeaturesGeometryUpdateTrait
         $updateData = [];
 
         if (! isset($osmfeaturesData['geometry'])) {
-            Log::channel('wm-osmfeatures')->info('No geometry found for ' . class_basename($model) . ' ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for '.class_basename($model).' '.$osmfeaturesId);
 
             return $updateData;
         }
@@ -25,7 +25,7 @@ trait OsmfeaturesGeometryUpdateTrait
         //if model geometry is null, set the new geometry
         if ($model->geometry === null) {
             $updateData['geometry'] = DB::raw("ST_GeomFromText('$newGeometry')");
-            Log::channel('wm-osmfeatures')->info('Geometry updated for ' . class_basename($model) . ' ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Geometry updated for '.class_basename($model).' '.$osmfeaturesId);
 
             return $updateData;
         }
@@ -44,9 +44,9 @@ trait OsmfeaturesGeometryUpdateTrait
         // Update the geometry only if it has changed
         if ($geometryChanged) {
             $updateData['geometry'] = DB::raw("ST_GeomFromText('$newGeometry')");
-            Log::channel('wm-osmfeatures')->info('Geometry updated for ' . class_basename($model) . ' ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Geometry updated for '.class_basename($model).' '.$osmfeaturesId);
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry change for ' . class_basename($model) . ' ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry change for '.class_basename($model).' '.$osmfeaturesId);
         }
 
         return $updateData;

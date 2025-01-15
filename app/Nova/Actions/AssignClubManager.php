@@ -4,12 +4,12 @@ namespace App\Nova\Actions;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Actions\Action;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class AssignClubManager extends Action
@@ -26,15 +26,15 @@ class AssignClubManager extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param  ActionFields  $fields
+     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
     {
         $user = auth()->user();
         foreach ($models as $model) {
-            if (!$this->userCanManageClub($user, $model)) {
+            if (! $this->userCanManageClub($user, $model)) {
                 return Action::danger(__('You are not authorized to modify this club'));
             }
             $user = User::find($fields->clubManager);
@@ -48,7 +48,7 @@ class AssignClubManager extends Action
 
     private function userCanManageClub($user, $club)
     {
-        return $user->hasRole('Administrator') || $user->hasRole('National referent') || ($user->hasRole('Regional referent') && $user->region_id == $section->region_id) || (!is_null($user->managedClub) && $user->managedClub->id == $section->id);
+        return $user->hasRole('Administrator') || $user->hasRole('National referent') || ($user->hasRole('Regional referent') && $user->region_id == $section->region_id) || (! is_null($user->managedClub) && $user->managedClub->id == $section->id);
     }
 
     /**

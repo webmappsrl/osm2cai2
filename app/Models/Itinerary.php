@@ -41,43 +41,43 @@ class Itinerary extends Model
         foreach ($this->hikingRoutes as $hikingRoute) {
             // Recupera la geometria come WKT
             $geometry = DB::table('hiking_routes')
-                ->selectRaw("ST_AsText(geometry) AS wkt")
+                ->selectRaw('ST_AsText(geometry) AS wkt')
                 ->where('id', $hikingRoute->id)
                 ->value('wkt');
 
-            if (!$geometry) {
+            if (! $geometry) {
                 continue; // Salta se la geometria non è valida
             }
 
             // Verifica il tipo di geometria
-            $geometryType = DB::selectOne("
+            $geometryType = DB::selectOne('
             SELECT ST_GeometryType(ST_GeomFromText(?, 4326)) AS type
-        ", [$geometry])->type;
+        ', [$geometry])->type;
 
             if ($geometryType === 'ST_MultiLineString') {
-                $geometry = DB::selectOne("
+                $geometry = DB::selectOne('
                 SELECT ST_AsText(ST_LineMerge(ST_GeomFromText(?, 4326))) AS wkt
-            ", [$geometry])->wkt;
+            ', [$geometry])->wkt;
             }
 
             // Estrai i punti iniziale e finale
-            $startPoint = DB::selectOne("
+            $startPoint = DB::selectOne('
             SELECT ST_AsText(ST_StartPoint(ST_GeomFromText(?, 4326))) AS wkt
-        ", [$geometry])->wkt;
+        ', [$geometry])->wkt;
 
-            $endPoint = DB::selectOne("
+            $endPoint = DB::selectOne('
             SELECT ST_AsText(ST_EndPoint(ST_GeomFromText(?, 4326))) AS wkt
-        ", [$geometry])->wkt;
+        ', [$geometry])->wkt;
 
             // Trova percorsi adiacenti
             $nextHikingRoute = HikingRoute::whereIn('id', $hikingRoutesIds)
                 ->where('id', '<>', $hikingRoute->id)
-                ->whereRaw("ST_DWithin(ST_SetSRID(geometry, 4326), ST_GeomFromText(?, 4326), 0.005)", [$endPoint])
+                ->whereRaw('ST_DWithin(ST_SetSRID(geometry, 4326), ST_GeomFromText(?, 4326), 0.005)', [$endPoint])
                 ->get();
 
             $previousHikingRoute = HikingRoute::whereIn('id', $hikingRoutesIds)
                 ->where('id', '<>', $hikingRoute->id)
-                ->whereRaw("ST_DWithin(ST_SetSRID(geometry, 4326), ST_GeomFromText(?, 4326), 0.005)", [$startPoint])
+                ->whereRaw('ST_DWithin(ST_SetSRID(geometry, 4326), ST_GeomFromText(?, 4326), 0.005)', [$startPoint])
                 ->get();
 
             $edges[$hikingRoute->id]['prev'] = $previousHikingRoute->pluck('id')->toArray();
@@ -86,7 +86,6 @@ class Itinerary extends Model
 
         return $edges;
     }
-
 
     /**
      * create the json for the itinerary

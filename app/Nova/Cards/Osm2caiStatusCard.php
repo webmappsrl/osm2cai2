@@ -2,8 +2,8 @@
 
 namespace App\Nova\Cards;
 
-use App\Models\HikingRoute;
 use Abordage\HtmlCard\HtmlCard;
+use App\Models\HikingRoute;
 
 class Osm2caiStatusCard extends HtmlCard
 {

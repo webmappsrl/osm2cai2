@@ -39,7 +39,7 @@ class ImportItinerary extends Action
         try {
             if ($fields['import_source'] == 'OSM') {
                 $osmfeaturesIds = array_map(function ($id) {
-                    return 'R' . $id;
+                    return 'R'.$id;
                 }, $ids);
                 $hikingRoutes = DB::table('hiking_routes')->whereIn('osmfeatures_id', $osmfeaturesIds)->get();
                 $hikingRoutesIds = $hikingRoutes->pluck('id')->toArray();
@@ -49,6 +49,7 @@ class ImportItinerary extends Action
                         'name' => $fields->itinerary_name,
                     ]);
                     $itinerary->hikingRoutes()->attach($hikingRoutesIds);
+
                     return Action::message(__('Itinerary created successfully!'));
                 } else {
                     return Action::danger(__('No hiking routes found with the provided IDs.'));
@@ -60,6 +61,7 @@ class ImportItinerary extends Action
                         'name' => $fields->itinerary_name,
                     ]);
                     $itinerary->hikingRoutes()->attach($ids);
+
                     return Action::message(__('Itinerary created successfully!'));
                 } else {
                     return Action::danger(__('No hiking routes found with the provided IDs.'));

@@ -7,21 +7,22 @@ use Laravel\Nova\Metrics\Partition;
 
 class ClubSalPercorsi extends Partition
 {
-
     public function name()
     {
         return __('Club hiking routes SAL');
     }
+
     protected $hikingRoutes;
 
     public function __construct(iterable $hikingRoutes = [])
     {
         $this->hikingRoutes = $hikingRoutes;
     }
+
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -39,8 +40,6 @@ class ClubSalPercorsi extends Partition
             'SDA3' => '#1E3888',
             'SDA4' => '#47AC34',
         ];
-
-
 
         foreach ($this->hikingRoutes as $hr) {
             switch ($hr->osm2cai_status) {
@@ -61,8 +60,8 @@ class ClubSalPercorsi extends Partition
             }
         }
 
-
         $result = array_combine($statuses, [$sda0, $sda1, $sda2, $sda3, $sda4]);
+
         return $this->result($result)->colors($colors);
     }
 

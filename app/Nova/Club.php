@@ -2,36 +2,36 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Nova;
-use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
-use App\Helpers\Osm2caiHelper;
 use App\Enums\IssuesStatusEnum;
-use App\Nova\Filters\ClubFilter;
-use Laravel\Nova\Fields\HasMany;
+use App\Helpers\Osm2caiHelper;
 use App\Models\Club as ModelsClub;
-use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Fields\BelongsTo;
-use App\Nova\Actions\CacheMiturApi;
-use App\Nova\Actions\DownloadGeojson;
-use App\Nova\Metrics\ClubSalPercorsi;
 use App\Nova\Actions\AddMembersToClub;
-use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Actions\AssignClubManager;
-use App\Nova\Metrics\ClubSalPercorribilità;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\DownloadCsvCompleteAction;
+use App\Nova\Actions\DownloadGeojson;
+use App\Nova\Filters\ClubFilter;
+use App\Nova\Metrics\ClubSalPercorribilità;
+use App\Nova\Metrics\ClubSalPercorsi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
 
 class Club extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Club>
+     * @var class-string<ModelsClub>
      */
-    public static $model = \App\Models\Club::class;
+    public static $model = ModelsClub::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -67,21 +67,21 @@ class Club extends Resource
         $hikingRoutes = $this->hikingRoutes;
 
         //define the hiking routes for each osm2cai status
-        $hikingRoutesSDA1 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 1);
-        $hikingRoutesSDA2 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 2);
-        $hikingRoutesSDA3 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 3);
-        $hikingRoutesSDA4 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 4);
+        $hikingRoutesSDA1 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 1);
+        $hikingRoutesSDA2 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 2);
+        $hikingRoutesSDA3 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 3);
+        $hikingRoutesSDA4 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 4);
 
         //define the hikingroutes for each issue status
-        $hikingRoutesSPS = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Unknown);
-        $hikingRoutesSPP = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Open);
-        $hikingRouteSPPP = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::PartiallyClosed);
-        $hikingRoutesSPNP = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Closed);
+        $hikingRoutesSPS = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Unknown);
+        $hikingRoutesSPP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Open);
+        $hikingRouteSPPP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::PartiallyClosed);
+        $hikingRoutesSPNP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Closed);
 
         return [
             ID::make()->sortable()
                 ->hideFromIndex(),
-            Text::make('Nome', 'name',)
+            Text::make('Nome', 'name', )
                 ->sortable()
                 ->rules('required', 'max:255')
                 ->displayUsing(function ($name, $a, $b) {
@@ -102,9 +102,10 @@ class Club extends Resource
                 foreach ($clubManagers as $clubManager) {
                     $clubManagerString .= "<a href='/resources/users/{$clubManager->id}'>{$clubManager->name}</a>";
                     if (strlen($clubManagerString) > 40) {
-                        $clubManagerString .= "<br>";
+                        $clubManagerString .= '<br>';
                     }
                 }
+
                 return $clubManagerString ? rtrim($clubManagerString, ', ') : '/';
             })->asHtml(),
             HasMany::make('Club\'s members', 'users', User::class)->onlyOnDetail(),
@@ -162,8 +163,8 @@ class Club extends Resource
         $clubId = $request->resourceId;
 
         $club = ModelsClub::where('id', $clubId)->first();
-        $hr = $club ?  $club->hikingRoutes()->get() : [];
-        if (!auth()->user()->hasRole('Administrator') && auth()->user()->club_id != null && auth()->user()->region_id != null) {
+        $hr = $club ? $club->hikingRoutes()->get() : [];
+        if (! auth()->user()->hasRole('Administrator') && auth()->user()->club_id != null && auth()->user()->region_id != null) {
             $userClub = ModelsClub::where('id', auth()->user()->club_id)->first();
             $numbers[1] = $userClub->hikingRoutes()->where('osm2cai_status', 1)->count();
             $numbers[2] = $userClub->hikingRoutes()->where('osm2cai_status', 2)->count();
@@ -191,8 +192,6 @@ class Club extends Resource
         }
 
         $tot = array_sum($numbers);
-
-
 
         $cards = [
             $this->getSdaClubCard(1, $numbers[1], $request),
@@ -231,7 +230,7 @@ class Club extends Resource
             $filter = base64_encode(json_encode([
                 ['class' => ClubFilter::class, 'value' => $resourceId],
             ]));
-            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+            $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
         return (new HtmlCard())

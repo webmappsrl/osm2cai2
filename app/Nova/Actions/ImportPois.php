@@ -55,7 +55,7 @@ class ImportPois extends Action
             $id = $typeAndId[1];
             $baseUrl = "https://api.openstreetmap.org/api/0.6/$type/$id";
             $urlTail = $type === 'node' ? '.json' : '/full.json';
-            $url = $baseUrl . $urlTail;
+            $url = $baseUrl.$urlTail;
             $abort = Action::danger(__("$type with ID $id not found. Please verify the ID and try again."));
 
             try {
@@ -89,8 +89,8 @@ class ImportPois extends Action
                             $coordinates[] = [$element['lon'], $element['lat']];
                         }
                     } else {
-                        $poi = EcPoi::updateOrCreate(['osmfeatures_id' => $osmType . $element['id']], [
-                            'name' => $element['tags']['name'] ?? $element['tags']['name:it'] ?? 'no name (' . $type . '/' . $element['id'] . ')',
+                        $poi = EcPoi::updateOrCreate(['osmfeatures_id' => $osmType.$element['id']], [
+                            'name' => $element['tags']['name'] ?? $element['tags']['name:it'] ?? 'no name ('.$type.'/'.$element['id'].')',
                             'geometry' => null,
                             'tags' => $element['tags'] ?? null,
                             'user_id' => auth()->user()->id,
@@ -124,11 +124,11 @@ class ImportPois extends Action
     private function importPoi($data, $osmType)
     {
         $osmId = $data['id'];
-        $name = $data['name'] ?? $data['tags']['name'] ?? $data['tags']['name:it'] ?? 'no name (' . $data['id'] . ')';
+        $name = $data['name'] ?? $data['tags']['name'] ?? $data['tags']['name:it'] ?? 'no name ('.$data['id'].')';
         $geometry = DB::raw("ST_SetSRID(ST_MakePoint({$data['lon']}, {$data['lat']}), 4326)");
         $tags = $data['tags'] ?? null;
 
-        $poi = EcPoi::updateOrCreate(['osmfeatures_id' => $osmType . $osmId], [
+        $poi = EcPoi::updateOrCreate(['osmfeatures_id' => $osmType.$osmId], [
             'name' => $name,
             'geometry' => $geometry,
             'tags' => $tags,
@@ -156,9 +156,9 @@ class ImportPois extends Action
 
     private function validateOsmId($osmId, $index)
     {
-        $dangerMessage = __("Invalid ID :osmId at position :index. Please verify the ID and try again. Make sure there is a comma after each ID and no comma after the last ID.", [
+        $dangerMessage = __('Invalid ID :osmId at position :index. Please verify the ID and try again. Make sure there is a comma after each ID and no comma after the last ID.', [
             'osmId' => $osmId,
-            'index' => $index + 1
+            'index' => $index + 1,
         ]);
         if (strpos($osmId, '/') === false) {
             return Action::danger($dangerMessage);
