@@ -55,9 +55,9 @@ class ExportControllerTest extends TestCase
             )->create();
         } elseif ($modelClass === Club::class) {
             $modelClass::factory()->count(3)->sequence(
-                ['name' => 'Club 1', 'cai_code' => '9200001'],
-                ['name' => 'Club 2', 'cai_code' => '9200002'],
-                ['name' => 'Club 3', 'cai_code' => '9200003']
+                ['name' => 'Club 1', 'cai_code' => '92'],
+                ['name' => 'Club 2', 'cai_code' => '93'],
+                ['name' => 'Club 3', 'cai_code' => '94']
             )->create();
         } elseif ($modelClass === MountainGroups::class) {
             $modelClass::factory()->count(3)->sequence(
@@ -114,7 +114,7 @@ class ExportControllerTest extends TestCase
                 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}',
             ]);
         } elseif ($modelClass === Club::class) {
-            $model = $modelClass::factory()->create(['name' => 'Test Club', 'cai_code' => '9200001']);
+            $model = $modelClass::factory()->create(['name' => 'Test Club', 'cai_code' => '95']);
         } elseif ($modelClass === MountainGroups::class) {
             $model = $modelClass::factory()->create(['name' => 'Test Mountain Group', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}']);
         } elseif ($modelClass === CaiHut::class) {
