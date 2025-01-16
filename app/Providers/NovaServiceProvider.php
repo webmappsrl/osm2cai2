@@ -153,6 +153,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::link('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
                     MenuItem::link('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
                     MenuItem::link('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::externalLink('LoScarpone-Export', route('loscarpone-export'))->openInNewTab(),
                     MenuItem::link('API', '/api/documentation')->openInNewTab(),
                     MenuItem::link('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),

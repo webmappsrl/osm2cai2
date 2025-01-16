@@ -190,7 +190,7 @@ class GeojsonController extends Controller
                 'relation_id' => $osmfeaturesDataProperties['osm_id'] ?? '',
                 'ref' => $resource->ref ?? '',
                 'source_ref' => $osmfeaturesDataProperties['source_ref'] ?? '',
-                'difficulty' => $resource->cai_scale ?? '',
+                'difficulty' => $osmfeaturesDataProperties['cai_scale'] ?? '',
                 'from' => $osmfeaturesDataProperties['from'] ?? '',
                 'to' => $osmfeaturesDataProperties['to'] ?? '',
                 'regions' => $regions,

@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
@@ -58,6 +59,21 @@ class UploadAndAssociateUgcMedia extends Action
             $path = $ugcMedia->store('ugc-media', 'public');
 
             $geometry = $model->geometry;
+
+            // Decode HEXWKB and determine the geometry type
+            $geometryType = DB::selectOne("
+                SELECT ST_GeometryType(ST_GeomFromEWKB(decode(?, 'hex'))) AS type
+            ", [$geometry]);
+
+            // Process geometry if more complex than a point
+            if ($geometryType->type === 'ST_MultiLineString' || $geometryType->type === 'ST_LineString') {
+                // Calculate centroid for MultiLineString
+                $centroid = DB::selectOne("
+                    SELECT ST_AsText(ST_Centroid(ST_GeomFromEWKB(decode(?, 'hex')))) AS center
+                ", [$geometry]);
+                $geometry = $centroid->center; // Convert to WKT for storage
+            }
+
             $newUgcMedia = \App\Models\UgcMedia::create([
                 'name' => $ugcMedia->getClientOriginalName(),
                 'relative_url' => 'ugc-media/'.basename($path),
