@@ -21,7 +21,7 @@ class UmapControllerTest extends TestCase
 
     public function test_pois_endpoint_returns_correct_structure()
     {
-        $poi = UgcPoi::factory()->create([
+        $poi = UgcPoi::factory()->createQuietly([
             'form_id' => 'poi',
             'geohub_id' => '123',
             'geometry' => DB::raw('ST_GeomFromGeoJSON(\'{"type":"Point","coordinates":[10,10]}\')'),
