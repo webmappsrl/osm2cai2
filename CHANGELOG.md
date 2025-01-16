@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.16.1](https://github.com/webmappsrl/osm2cai2/compare/v1.16.0...v1.16.1) (2025-01-16)
+
+
+### Bug Fixes
+
+* added missing class ([c3a7c93](https://github.com/webmappsrl/osm2cai2/commit/c3a7c93a570a5dcbbbfd2cc0a7d6ec13291dd101))
+* fixed cache mitur abruzzo test ([#102](https://github.com/webmappsrl/osm2cai2/issues/102)) ([190dab2](https://github.com/webmappsrl/osm2cai2/commit/190dab2a74952b50cc103704cefc74fe9eda69c9))
+* hide create and add another button in nova interface ([0a8614d](https://github.com/webmappsrl/osm2cai2/commit/0a8614da61d8176fb6f724270ca89fff76c7f278))
+* hide create&delete button on nova resource ([1d49d40](https://github.com/webmappsrl/osm2cai2/commit/1d49d40ab2868df3b7f64e0b95a023bcc069de69))
+* hide create&delete button on nova resources ([#112](https://github.com/webmappsrl/osm2cai2/issues/112)) ([479004f](https://github.com/webmappsrl/osm2cai2/commit/479004f5aa3a16573e3ab155d824b09c5e95b773))
+* hide the create & add another button in nova resource ([#111](https://github.com/webmappsrl/osm2cai2/issues/111)) ([857b55b](https://github.com/webmappsrl/osm2cai2/commit/857b55be4d0bd8332317207f4a61f5d230af919d))
+* minor fixes and logs added ([#101](https://github.com/webmappsrl/osm2cai2/issues/101)) ([5629c1e](https://github.com/webmappsrl/osm2cai2/commit/5629c1efe1ce5b9f3dd07241332d516f33966f0f))
+* removed unused trait ([0a61716](https://github.com/webmappsrl/osm2cai2/commit/0a6171692372f511d8c8e3e2ea3ac243b496d4c2))
+* removed unused traits ([#107](https://github.com/webmappsrl/osm2cai2/issues/107)) ([3366abf](https://github.com/webmappsrl/osm2cai2/commit/3366abf04e53b90ceeae47df344ab9dd8512656a))
+* typo ([9fc1ed4](https://github.com/webmappsrl/osm2cai2/commit/9fc1ed4901e30947e0fb198e054836bca878dae7))
+* typo ([5fea719](https://github.com/webmappsrl/osm2cai2/commit/5fea71986ac30ce04e4176b6b700bfadfd1470e9))
+* typo ([6787336](https://github.com/webmappsrl/osm2cai2/commit/678733607f92bdcf6b202994caff4f4c7fd8b496))
+
+
+### Miscellaneous Chores
+
+* Collaudo osm2cai2 dashboards ([#103](https://github.com/webmappsrl/osm2cai2/issues/103)) ([5138a60](https://github.com/webmappsrl/osm2cai2/commit/5138a60535f6d7b329172755e2bf7157d08b724e))
+* collaudo osm2cai2 tools OC: 4693 ([#120](https://github.com/webmappsrl/osm2cai2/issues/120)) ([1f5d095](https://github.com/webmappsrl/osm2cai2/commit/1f5d095e0fbca6861e853d9ee48eeb6c54980079))
+* Collaudo osm2cai2 tools OC:4693 ([#119](https://github.com/webmappsrl/osm2cai2/issues/119)) ([2691fb8](https://github.com/webmappsrl/osm2cai2/commit/2691fb8cc7b43d322b698db677867e01c82b958b))
+* Collaudo Validazioni OC:4658 ([#109](https://github.com/webmappsrl/osm2cai2/issues/109)) ([643cb1d](https://github.com/webmappsrl/osm2cai2/commit/643cb1d4975977dbb2602bcf3b13d5bf1ffe8545))
+* improved geometric relationships calculation in cache mitur abruzzo job ([98e3c9f](https://github.com/webmappsrl/osm2cai2/commit/98e3c9fe028a0a0489ba9942a1a902223b19be3b))
+* percorsi favoriti dashboard data fix ([#104](https://github.com/webmappsrl/osm2cai2/issues/104)) ([36ab764](https://github.com/webmappsrl/osm2cai2/commit/36ab764c6a648b85ba2ae1e85d385a4ddfc0a684))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
