@@ -60,7 +60,7 @@ class EcPoi extends OsmfeaturesResource
             BelongsTo::make('User')->sortable()->filterable()->searchable(),
             Text::make('Score', 'score')->displayUsing(function ($value) {
                 return Osm2caiHelper::getScoreAsStars($value);
-            })->sortable(),
+            })->sortable()->hideWhenCreating()->hideWhenUpdating(),
             BelongsTo::make('Region')->sortable()->filterable()->searchable(),
         ]);
     }

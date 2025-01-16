@@ -10,6 +10,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\MapMultiPolygon\MapMultiPolygon;
+use Laravel\Nova\Fields\BelongsToMany;
 
 class MountainGroups extends Resource
 {
@@ -61,6 +62,8 @@ class MountainGroups extends Resource
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
+            BelongsToMany::make('Regioni', 'regions', Region::class)
+                ->searchable(),
             Text::make('POI Generico', function () {
                 return $this->ecPois->count();
             })->sortable(),

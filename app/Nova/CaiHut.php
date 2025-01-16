@@ -57,7 +57,7 @@ class CaiHut extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            ID::make('Unico Id')->hideFromIndex(),
+            Text::make('Unico Id')->hideFromIndex(),
             Text::make('Name'),
             Text::make('Second Name'),
             Textarea::make('Description'),
@@ -72,10 +72,6 @@ class CaiHut extends Resource
                 'maxZoom' => 17,
                 'defaultZoom' => 13,
             ])->hideFromIndex(),
-            Text::make('Aws Cached Data', function () {
-                return '<a href="'.$this->getPublicAwsUrl('wmfemitur').'" target="_blank" style="text-decoration:underline;">'.$this->getPublicAwsUrl('wmfemitur').'</a>';
-            })->onlyOnDetail()->asHtml(),
-
         ];
     }
 
