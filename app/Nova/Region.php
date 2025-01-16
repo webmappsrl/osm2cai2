@@ -230,6 +230,7 @@ class Region extends Resource
                 return $request->user()->hasRole('Administrator');
             })->showInline(),
 
+
         ];
     }
 }

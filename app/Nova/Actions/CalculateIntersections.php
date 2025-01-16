@@ -60,6 +60,7 @@ class CalculateIntersections extends Action
                     CalculateIntersectionsJob::dispatch($model, CaiHut::class)->onQueue('geometric-computations');
                     CalculateIntersectionsJob::dispatch($model, HikingRoute::class)->onQueue('geometric-computations');
                     CalculateIntersectionsJob::dispatch($model, EcPoi::class)->onQueue('geometric-computations');
+
                     break;
             }
         }
