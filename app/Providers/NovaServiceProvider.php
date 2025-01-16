@@ -150,11 +150,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Tools
                 MenuSection::make('Tools', [
-                    MenuItem::link('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
-                    MenuItem::link('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
-                    MenuItem::link('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
-                    MenuItem::link('API', '/api/documentation')->openInNewTab(),
-                    MenuItem::link('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
+                    MenuItem::externalLink('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
+                    MenuItem::externalLink('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::externalLink('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::externalLink('API', '/api/documentation')->openInNewTab(),
+                    MenuItem::externalLink('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
