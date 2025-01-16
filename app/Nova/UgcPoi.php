@@ -57,11 +57,11 @@ class UgcPoi extends AbstractUgc
     public static function applySearch($query, $search)
     {
         return $query->where(function ($query) use ($search) {
-            $query->where('name', 'like', '%' . $search . '%')
-                ->orWhere('id', 'like', '%' . $search . '%')
+            $query->where('name', 'like', '%'.$search.'%')
+                ->orWhere('id', 'like', '%'.$search.'%')
                 ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%');
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%');
                 });
         });
     }
@@ -205,7 +205,7 @@ class UgcPoi extends AbstractUgc
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/' . $resource->id . '/edit';
+        return '/resources/ugc-pois/'.$resource->id.'/edit';
     }
 
     /**
