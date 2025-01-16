@@ -21,7 +21,7 @@ class GeojsonController extends Controller
     public function download(string $modelType, string $id)
     {
         // Dynamically load the model based on type
-        $modelClass = 'App\\Models\\'.ucfirst($modelType);
+        $modelClass = 'App\\Models\\' . ucfirst($modelType);
 
         // Verify that the model exists
         if (! class_exists($modelClass)) {
@@ -31,7 +31,7 @@ class GeojsonController extends Controller
         // Find the resource by ID
         $model = $modelClass::find($id);
         if (! $model) {
-            return response()->json(['error' => ucfirst($modelType).' '.$id.' not found'], 404);
+            return response()->json(['error' => ucfirst($modelType) . ' ' . $id . ' not found'], 404);
         }
 
         // Initialize GeoJSON structure
@@ -45,7 +45,7 @@ class GeojsonController extends Controller
         $relatedResources = $this->getRelatedResources($modelType, $model);
 
         foreach ($relatedResources as $resource) {
-            $geometry = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM '.$resource->getTable().' WHERE id = ?', [$resource->id])[0];
+            $geometry = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM ' . $resource->getTable() . ' WHERE id = ?', [$resource->id])[0];
 
             $geojson['features'][] = [
                 'type' => 'Feature',
@@ -57,7 +57,7 @@ class GeojsonController extends Controller
         // Settings for GeoJSON file download
         $headers = [
             'Content-type' => 'application/json',
-            'Content-Disposition' => 'attachment; filename="'.$id.'.geojson"',
+            'Content-Disposition' => 'attachment; filename="' . $id . '.geojson"',
         ];
 
         return response(json_encode($geojson), 200, $headers);
@@ -174,7 +174,7 @@ class GeojsonController extends Controller
             $geometry = DB::select('SELECT ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom FROM hiking_routes WHERE id = ?;', [$resource->id]);
             $osmfeaturesDataProperties = $resource->osmfeatures_data['properties'];
 
-            $name = $resource->name ? $resource->name.' - '.$resource->ref : $resource->ref;
+            $name = $resource->name ? $resource->name . ' - ' . $resource->ref : $resource->ref;
 
             $regions = $resource->regions->pluck('name')->implode(', ');
             $provinces = $resource->provinces->pluck('name')->implode(', ');
@@ -190,7 +190,7 @@ class GeojsonController extends Controller
                 'relation_id' => $osmfeaturesDataProperties['osm_id'] ?? '',
                 'ref' => $resource->ref ?? '',
                 'source_ref' => $osmfeaturesDataProperties['source_ref'] ?? '',
-                'difficulty' => $resource->cai_scale ?? '',
+                'difficulty' => $osmfeaturesDataProperties['cai_scale'] ?? '',
                 'from' => $osmfeaturesDataProperties['from'] ?? '',
                 'to' => $osmfeaturesDataProperties['to'] ?? '',
                 'regions' => $regions,

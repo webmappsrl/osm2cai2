@@ -12,6 +12,8 @@ use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Wm\MapPoint\MapPoint;
+use Wm\WmPackage\Exporters\ModelExporter;
+use Wm\WmPackage\Nova\Actions\ExportTo;
 
 class UgcPoi extends AbstractUgc
 {
@@ -55,11 +57,11 @@ class UgcPoi extends AbstractUgc
     public static function applySearch($query, $search)
     {
         return $query->where(function ($query) use ($search) {
-            $query->where('name', 'like', '%'.$search.'%')
-                ->orWhere('id', 'like', '%'.$search.'%')
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('id', 'like', '%' . $search . '%')
                 ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', '%'.$search.'%')
-                        ->orWhere('email', 'like', '%'.$search.'%');
+                    $query->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
                 });
         });
     }
@@ -168,7 +170,16 @@ class UgcPoi extends AbstractUgc
     {
         $parentActions = parent::actions($request);
         $specificActions = [
-            (new DownloadUgcCsv($this)),
+            (new ExportTo(
+                $this->getExportFields(),
+                ['user' => 'name', 'user' => 'email'],
+                'ugc-poi',
+                ModelExporter::DEFAULT_STYLE
+            ))->canSee(function () {
+                return true;
+            })->canRun(function () {
+                return true;
+            }),
         ];
 
         return array_merge($parentActions, $specificActions);
@@ -194,7 +205,7 @@ class UgcPoi extends AbstractUgc
      */
     public static function redirectAfterCreate(Request $request, $resource)
     {
-        return '/resources/ugc-pois/'.$resource->id.'/edit';
+        return '/resources/ugc-pois/' . $resource->id . '/edit';
     }
 
     /**
@@ -209,7 +220,8 @@ class UgcPoi extends AbstractUgc
      */
     protected function getFormIdOptions()
     {
-        return Cache::remember('form_id_options', 3600, function () {
+        //cache for 24 hours
+        return Cache::remember('form_id_options', 86400, function () {
             $configs = config('geohub.configs');
             $formIdOptions = [];
 
@@ -233,11 +245,11 @@ class UgcPoi extends AbstractUgc
     {
         return [
             'id' => 'ID',
-            'user->name' => 'Nome utente',
-            'user->email' => 'Email utente',
+            'user.name' => 'Nome utente',
+            'user.email' => 'Email utente',
             'registered_at' => 'Data di acquisizione',
-            'raw_data->position->latitude' => 'Latitudine',
-            'raw_data->position->longitude' => 'Longitudine',
+            'raw_data.position.latitude' => 'Latitudine',
+            'raw_data.position.longitude' => 'Longitudine',
             'validated' => 'Stato di validazione',
             'validation_date' => 'Data di validazione',
             'app_id' => 'App ID',
