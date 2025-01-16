@@ -6,6 +6,10 @@ use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Spatie\Permission\Models\Role;
 
+const PROVINCIAL_ASSOCIATION = 'Provincial Association';
+const AREA_ASSOCIATION = 'Area Association';
+const SECTOR_ASSOCIATION = 'Sector Association';
+
 class UserTypeFilter extends BooleanFilter
 {
     /**
@@ -22,27 +26,27 @@ class UserTypeFilter extends BooleanFilter
             return $query;
         }
 
-        if (!empty($value['Provincial Association'])||
-            !empty($value['Area Association']) ||
-            !empty($value['Sector Association'])
+        if (!empty($value[PROVINCIAL_ASSOCIATION])||
+            !empty($value[AREA_ASSOCIATION]) ||
+            !empty($value[SECTOR_ASSOCIATION])
         ){
-            if (!empty($value['Provincial Association'])) {
+            if (!empty($value[PROVINCIAL_ASSOCIATION])) {
                 $query->whereHas('provinces', function ($query) {
                     $query->where('provinces.id', '>', 0);
                 });
-                unset($value['Provincial Association']);
+                unset($value[PROVINCIAL_ASSOCIATION]);
             }
-            if (!empty($value['Area Association'])) {
+            if (!empty($value[AREA_ASSOCIATION])) {
                 $query->whereHas('areas', function ($query) {
                     $query->where('areas.id', '>', 0);
                 });
-                unset($value['Area Association']);
+                unset($value[AREA_ASSOCIATION]);
             }
-            if (!empty($value['Sector Association'])) {
+            if (!empty($value[SECTOR_ASSOCIATION])) {
                 $query->whereHas('sectors', function ($query) {
                     $query->where('sectors.id', '>', 0);
                 });
-                unset($value['Sector Association']);
+                unset($value[SECTOR_ASSOCIATION]);
             }
         }
 
@@ -67,9 +71,9 @@ class UserTypeFilter extends BooleanFilter
             'Admin' => 'Administrator',
             'Referente Nazionale' => 'National Referent',
             'Referente Regionale' => 'Regional Referent',
-            'Associazione Provinciale' => 'Provincial Association',
-            'Associazione Area' => 'Area Association',
-            'Associazione Settore' => 'Sector Association',
+            'Associazione Provinciale' => PROVINCIAL_ASSOCIATION,
+            'Associazione Area' => AREA_ASSOCIATION,
+            'Associazione Settore' => SECTOR_ASSOCIATION,
         ];
     }
 }
