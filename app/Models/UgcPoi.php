@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use App\Models\UgcMedia;
 use App\Models\User;
-use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\UgcMedia;
 use Illuminate\Support\Carbon;
+use App\Traits\SpatialDataTrait;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UgcPoi extends Model
 {
@@ -40,6 +41,10 @@ class UgcPoi extends Model
             $model->user_id = auth()->id() ?? $model->user_id;
             $model->app_id = $model->app_id ?? 'osm2cai';
             $model->save();
+
+            if (isset($model->geometry)) {
+                $model->fillRawDataLatitudeAndLongitude();
+            }
         });
     }
 
@@ -102,5 +107,57 @@ class UgcPoi extends Model
         } else {
             return null;
         }
+    }
+
+    /**
+     * Calculate the geometry based on the raw_data
+     *
+     * @return string
+     */
+    public function calculateGeometryFromRawData(): string
+    {
+        $latitude = $this->raw_data['position']['latitude'];
+        $longitude = $this->raw_data['position']['longitude'];
+
+        return DB::select(
+            "SELECT ST_AsGeoJSON(ST_SetSRID(ST_MakePoint(?, ?), 4326))::json as geom",
+            [$longitude, $latitude]
+        )[0]->geom;
+    }
+
+    /**
+     * Fill raw_data latitude and longitude based on the geometry
+     */
+    public function fillRawDataLatitudeAndLongitude(): void
+    {
+
+        //check if the latitude and longitude are already set
+        if (isset($this->raw_data['position']['latitude']) && isset($this->raw_data['position']['longitude'])) {
+            return;
+        }
+
+        //get latitude and longitude from geometry using postgis
+        $geometry = $this->geometry;
+
+        $coordinates = DB::select(
+            "SELECT ST_Y(geometry) as latitude, ST_X(geometry) as longitude 
+             FROM (SELECT geometry::geometry FROM (SELECT ?::geometry as geometry) g) as t",
+            [$geometry]
+        )[0];
+
+        //save rawdata in a variable because with the array cast it is not possible to set the raw_data attribute
+        $rawData = $this->raw_data ?? [];
+
+        if (!isset($rawData['position'])) {
+            $rawData['position'] = [];
+        }
+
+        $rawData['position']['latitude'] = $coordinates->latitude;
+        $rawData['position']['longitude'] = $coordinates->longitude;
+
+        // override the raw_data attribute with the new raw data
+        $this->raw_data = $rawData;
+
+        $this->save();
     }
 }
