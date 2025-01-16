@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\CasLoginController;
-use App\Http\Controllers\MiturAbruzzoController;
 use App\Jobs\TestJob;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CasLoginController;
+use App\Http\Controllers\MiturAbruzzoController;
+use App\Http\Controllers\HikingRouteLoScarponeExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,7 +47,7 @@ Route::get('/hiking-route/id/{id}', function ($id) {
 /**
  * Route to login to application with cas with specific middleware and controller
  */
-Route::get('/nova/cas-login', CasLoginController::class.'@casLogin')
+Route::get('/nova/cas-login', CasLoginController::class . '@casLogin')
     ->middleware('cai.cas');
 
 /**
@@ -63,3 +64,9 @@ Route::get('/loading-download/{type}/{model}/{id}', function () {
         'id' => request()->id,
     ]);
 })->name('loading-download');
+
+
+Route::get('loscarpone/export/', [HikingRouteLoScarponeExportController::class, 'export'])->name('loscarpone-export');
+Route::get('hiking-route-map/{id}', function ($id) {
+    return view('maps.hikingroute', ['hikingroute' => HikingRoute::findOrFail($id)]);
+})->name('hiking-route-public-map');
