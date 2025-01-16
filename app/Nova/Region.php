@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Actions\CacheMiturApi;
+use App\Nova\Actions\CalculateIntersections;
 use App\Nova\Actions\DownloadCsvCompleteAction;
 use App\Nova\Actions\DownloadGeojson;
 use App\Nova\Actions\DownloadGeojsonCompleteAction;
@@ -219,6 +220,11 @@ class Region extends Resource
                 return true;
             })->showInline(),
             (new CacheMiturApi('Region'))->canSee(function ($request) {
+                return $request->user()->hasRole('Administrator');
+            })->canRun(function ($request) {
+                return $request->user()->hasRole('Administrator');
+            })->showInline(),
+            (new CalculateIntersections('Region'))->canSee(function ($request) {
                 return $request->user()->hasRole('Administrator');
             })->canRun(function ($request) {
                 return $request->user()->hasRole('Administrator');

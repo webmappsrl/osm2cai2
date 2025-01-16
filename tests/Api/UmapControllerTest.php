@@ -11,6 +11,16 @@ class UmapControllerTest extends TestCase
 {
     use DatabaseTransactions;
 
+    private function createUgcPoi(string $formId, array $rawData): UgcPoi
+    {
+        return UgcPoi::factory()->createQuietly([
+            'form_id' => $formId,
+            'geohub_id' => '123',
+            'geometry' => DB::raw('ST_GeomFromGeoJSON(\'{"type":"Point","coordinates":[10,10]}\')'),
+            'raw_data' => $rawData,
+        ]);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -21,15 +31,10 @@ class UmapControllerTest extends TestCase
 
     public function test_pois_endpoint_returns_correct_structure()
     {
-        $poi = UgcPoi::factory()->create([
-            'form_id' => 'poi',
-            'geohub_id' => '123',
-            'geometry' => DB::raw('ST_GeomFromGeoJSON(\'{"type":"Point","coordinates":[10,10]}\')'),
-            'raw_data' => [
-                'waypointtype' => 'flora',
-                'title' => 'Test POI',
-                'description' => 'Test description',
-            ],
+        $poi = $this->createUgcPoi('poi', [
+            'waypointtype' => 'flora',
+            'title' => 'Test POI',
+            'description' => 'Test description',
         ]);
 
         $response = $this->getJson(url('/api/umap/pois'));
@@ -61,17 +66,12 @@ class UmapControllerTest extends TestCase
 
     public function test_signs_endpoint_returns_correct_structure()
     {
-        $sign = UgcPoi::factory()->create([
-            'form_id' => 'signs',
-            'geohub_id' => '123',
-            'geometry' => DB::raw('ST_GeomFromGeoJSON(\'{"type":"Point","coordinates":[10,10]}\')'),
-            'raw_data' => [
-                'artifact_type' => 'Test Artifact',
-                'title' => 'Test Sign',
-                'location' => 'Test Location',
-                'conservation_status' => 'Test Conservation Status',
-                'notes' => 'Test Notes',
-            ],
+        $sign = $this->createUgcPoi('signs', [
+            'artifact_type' => 'Test Artifact',
+            'title' => 'Test Sign',
+            'location' => 'Test Location',
+            'conservation_status' => 'Test Conservation Status',
+            'notes' => 'Test Notes',
         ]);
 
         $response = $this->getJson(url('/api/umap/signs'));
@@ -107,17 +107,12 @@ class UmapControllerTest extends TestCase
 
     public function test_archaeological_sites_endpoint_returns_correct_structure()
     {
-        $archaeologicalSite = UgcPoi::factory()->create([
-            'form_id' => 'archaeological_site',
-            'geohub_id' => '123',
-            'geometry' => DB::raw('ST_GeomFromGeoJSON(\'{"type":"Point","coordinates":[10,10]}\')'),
-            'raw_data' => [
-                'title' => 'Test Archaeological Site',
-                'location' => 'Test Location',
-                'condition' => 'Test Condition',
-                'informational_supports' => 'Test Informational Supports',
-                'notes' => 'Test Notes',
-            ],
+        $archaeologicalSite = $this->createUgcPoi('archaeological_site', [
+            'title' => 'Test Archaeological Site',
+            'location' => 'Test Location',
+            'condition' => 'Test Condition',
+            'informational_supports' => 'Test Informational Supports',
+            'notes' => 'Test Notes',
         ]);
 
         $response = $this->getJson(url('/api/umap/archaeological_sites'));
@@ -153,16 +148,11 @@ class UmapControllerTest extends TestCase
 
     public function test_archaeological_areas_endpoint_returns_correct_structure()
     {
-        $archaeologicalArea = UgcPoi::factory()->create([
-            'form_id' => 'archaeological_area',
-            'geohub_id' => '123',
-            'geometry' => DB::raw('ST_GeomFromGeoJSON(\'{"type":"Point","coordinates":[10,10]}\')'),
-            'raw_data' => [
-                'title' => 'Test Archaeological Area',
-                'area_type' => 'Test Area Type',
-                'location' => 'Test Location',
-                'notes' => 'Test Notes',
-            ],
+        $archaeologicalArea = $this->createUgcPoi('archaeological_area', [
+            'title' => 'Test Archaeological Area',
+            'area_type' => 'Test Area Type',
+            'location' => 'Test Location',
+            'notes' => 'Test Notes',
         ]);
 
         $response = $this->getJson(url('/api/umap/archaeological_areas'));
@@ -196,18 +186,13 @@ class UmapControllerTest extends TestCase
 
     public function test_geological_sites_endpoint_returns_correct_structure()
     {
-        $geologicalSite = UgcPoi::factory()->create([
-            'form_id' => 'geological_site',
-            'geohub_id' => '123',
-            'geometry' => DB::raw('ST_GeomFromGeoJSON(\'{"type":"Point","coordinates":[10,10]}\')'),
-            'raw_data' => [
-                'title' => 'Test Geological Site',
-                'site_type' => 'Test Site Type',
-                'vulnerability' => 'Test Vulnerability',
-                'vulnerability_reasons' => 'Test Vulnerability Reasons',
-                'ispra_geosite' => 'Test ISPRA Geosite',
-                'notes' => 'Test Notes',
-            ],
+        $geologicalSite = $this->createUgcPoi('geological_site', [
+            'title' => 'Test Geological Site',
+            'site_type' => 'Test Site Type',
+            'vulnerability' => 'Test Vulnerability',
+            'vulnerability_reasons' => 'Test Vulnerability Reasons',
+            'ispra_geosite' => 'Test ISPRA Geosite',
+            'notes' => 'Test Notes',
         ]);
 
         $response = $this->getJson(url('/api/umap/geological_sites'));

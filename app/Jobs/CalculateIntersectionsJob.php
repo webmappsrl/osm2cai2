@@ -71,36 +71,63 @@ class CalculateIntersectionsJob implements ShouldQueue
                 ->pluck('id')
                 ->toArray();
 
-            // Determine pivot table name based on models
-            $pivotTable = $this->determinePivotTable($baseModel->getTable(), $intersectingModelInstance->getTable());
+            // Check if there is a direct relationship between the two models
+            $directRelations = [
+                'areas' => ['provinces' => 'province_id'],
+                'cai_huts' => ['regions' => 'region_id'],
+                'clubs' => ['regions' => 'region_id'],
+                'ec_pois' => ['regions' => 'region_id'],
+                'provinces' => ['regions' => 'region_id'],
+                'sectors' => ['areas' => 'area_id'],
+            ];
 
-            // Sync relationships in pivot table
-            DB::table($pivotTable)->where([
-                $this->getModelForeignKey($baseModel) => $baseModel->id,
-            ])->delete();
+            $intersectingTable = $intersectingModelInstance->getTable();
+            $baseTable = $baseModel->getTable();
 
-            $pivotRecords = array_map(function ($intersectingId) use ($baseModel, $intersectingModelInstance, $pivotTable) {
-                $intersectingModel = $intersectingModelInstance::findOrFail($intersectingId);
-                $baseModelForeignKey = $this->getModelForeignKey($baseModel);
-                $intersectingModelForeignKey = $this->getModelForeignKey($intersectingModel);
+            if (isset($directRelations[$intersectingTable][$baseTable])) {
+                // check if there is a direct relationship between the two models
+                $foreignKey = $directRelations[$intersectingTable][$baseTable];
 
-                $record = [
-                    $baseModelForeignKey => $baseModel->id,
-                    $intersectingModelForeignKey => $intersectingId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+                // update the foreign key for all intersecting records
+                $intersectingModelClass::whereIn('id', $intersectingIds)
+                    ->update([$foreignKey => $baseModel->id]);
 
-                if (Schema::hasColumn($pivotTable, 'percentage')) {
-                    $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
-                    Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
-                    $record['percentage'] = $percentage;
-                }
+                // set NULL for all records that no longer intersect
+                $intersectingModelClass::whereNotIn('id', $intersectingIds)
+                    ->where($foreignKey, $baseModel->id)
+                    ->update([$foreignKey => null]);
+            } else {
+                // many-to-many relationship with pivot table
+                $pivotTable = $this->determinePivotTable($baseModel->getTable(), $intersectingModelInstance->getTable());
 
-                return $record;
-            }, $intersectingIds);
+                // Sync relationships in pivot table
+                DB::table($pivotTable)->where([
+                    $this->getModelForeignKey($baseModel) => $baseModel->id,
+                ])->delete();
 
-            DB::table($pivotTable)->insert($pivotRecords);
+                $pivotRecords = array_map(function ($intersectingId) use ($baseModel, $intersectingModelInstance, $pivotTable) {
+                    $intersectingModel = $intersectingModelInstance::findOrFail($intersectingId);
+                    $baseModelForeignKey = $this->getModelForeignKey($baseModel);
+                    $intersectingModelForeignKey = $this->getModelForeignKey($intersectingModel);
+
+                    $record = [
+                        $baseModelForeignKey => $baseModel->id,
+                        $intersectingModelForeignKey => $intersectingId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+
+                    if (Schema::hasColumn($pivotTable, 'percentage')) {
+                        $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
+                        Log::info("Calculated intersection percentage for {$baseModel->getTable()} ID {$baseModel->id} and {$intersectingModelInstance->getTable()} ID {$intersectingId}: {$percentage}%");
+                        $record['percentage'] = $percentage;
+                    }
+
+                    return $record;
+                }, $intersectingIds);
+
+                DB::table($pivotTable)->insert($pivotRecords);
+            }
         } catch (\Exception $e) {
             Log::error('Error recalculating intersections for model '.$baseModel->getTable().': '.$e->getMessage());
             throw $e;
@@ -112,6 +139,20 @@ class CalculateIntersectionsJob implements ShouldQueue
      */
     private function determinePivotTable(string $baseModelTable, string $intersectingModelTable): string
     {
+        // Definizione delle relazioni dirette (con foreign key)
+        $directRelations = [
+            'areas' => ['provinces' => 'province_id'],
+            'cai_huts' => ['regions' => 'region_id'],
+            'clubs' => ['regions' => 'region_id'],
+            'ec_pois' => ['regions' => 'region_id'],
+        ];
+
+        // Verifica se esiste una relazione diretta
+        if (isset($directRelations[$intersectingModelTable][$baseModelTable])) {
+            return $directRelations[$intersectingModelTable][$baseModelTable];
+        }
+
+        // Tabelle pivot esistenti
         $tables = [
             'hiking_routes' => [
                 'regions' => 'hiking_route_region',
@@ -167,7 +208,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             return $tables[$intersectingModelTable][$baseModelTable];
         }
 
-        throw new \Exception("No pivot table found for {$baseModelTable} and {$intersectingModelTable}");
+        throw new \Exception("No relationship found for {$baseModelTable} and {$intersectingModelTable}");
     }
 
     /**

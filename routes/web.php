@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CasLoginController;
+use App\Http\Controllers\HikingRouteLoScarponeExportController;
 use App\Http\Controllers\MiturAbruzzoController;
 use App\Jobs\TestJob;
 use App\Models\HikingRoute;
@@ -63,3 +64,8 @@ Route::get('/loading-download/{type}/{model}/{id}', function () {
         'id' => request()->id,
     ]);
 })->name('loading-download');
+
+Route::get('loscarpone/export/', [HikingRouteLoScarponeExportController::class, 'export'])->name('loscarpone-export');
+Route::get('hiking-route-map/{id}', function ($id) {
+    return view('maps.hikingroute', ['hikingroute' => HikingRoute::findOrFail($id)]);
+})->name('hiking-route-public-map');

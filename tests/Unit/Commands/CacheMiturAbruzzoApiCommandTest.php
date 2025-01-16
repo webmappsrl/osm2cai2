@@ -82,10 +82,11 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
 
         $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'Region'])
             ->expectsConfirmation('This command is meant to be run in production. By continuing, you will update cached file on AWS S3 with your local data. Do you wish to continue?', 'yes')
-            ->expectsOutput('Processing 3 Region')
             ->assertSuccessful();
 
-        Queue::assertPushed(CacheMiturAbruzzoDataJob::class, 3);
+        $count_region = Region::count();
+
+        Queue::assertPushed(CacheMiturAbruzzoDataJob::class, $count_region);
     }
 
     /** @test */

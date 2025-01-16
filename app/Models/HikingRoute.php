@@ -136,7 +136,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
             [$this->id]
         );
 
-        return $result ? $result->distance / 1000 : null;
+        return round($result ? $result->distance / 1000 : null, 2);
     }
 
     /**

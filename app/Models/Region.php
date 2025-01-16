@@ -85,7 +85,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
 
     public function hikingRoutes()
     {
-        return $this->belongsToMany(HikingRoute::class, 'hiking_route_region', 'region_id', 'hiking_route_id');
+        return $this->belongsToMany(HikingRoute::class);
     }
 
     public function clubs()
