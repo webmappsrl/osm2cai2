@@ -108,7 +108,7 @@ class UgcMedia extends Resource
                 })
                 ->asHtml()
                 ->required(),
-            MapPoint::make('Map','geometry')->withMeta([
+            MapPoint::make('Map', 'geometry')->withMeta([
                 'center' => [43.7125, 10.4013],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                 'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',

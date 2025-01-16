@@ -7,12 +7,13 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\File;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Illuminate\Support\Facades\DB;
+
 class UploadAndAssociateUgcMedia extends Action
 {
     use InteractsWithQueue, Queueable;
@@ -72,7 +73,6 @@ class UploadAndAssociateUgcMedia extends Action
                 ", [$geometry]);
                 $geometry = $centroid->center; // Convert to WKT for storage
             }
-
 
             $newUgcMedia = \App\Models\UgcMedia::create([
                 'name' => $ugcMedia->getClientOriginalName(),
