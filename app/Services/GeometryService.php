@@ -20,6 +20,10 @@ class GeometryService
 
     public function geojsonToGeometry($geojson)
     {
+        if (empty($geojson)) {
+            return null;
+        }
+
         if (is_array($geojson)) {
             $geojson = json_encode($geojson);
         }
@@ -160,6 +164,10 @@ class GeometryService
 
     public function getCentroid($geometry)
     {
+        if (empty($geometry)) {
+            return null;
+        }
+
         $geometry = $this->geojsonToGeometry($geometry);
 
         return DB::select("select ST_AsGeoJSON(ST_Centroid('".$geometry."')) as g")[0]->g;

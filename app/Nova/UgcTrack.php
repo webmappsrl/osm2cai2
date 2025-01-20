@@ -19,6 +19,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Webmapp\WmEmbedmapsField\WmEmbedmapsField;
 use Wm\MapMultiLinestring\MapMultiLinestring;
+use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
 use Wm\MapMultiLinestringNova\MapMultiLinestringNova;
 use Wm\MapMultiLinestringNova3\MapMultiLinestringNova3;
 use Wm\WmPackage\Nova\Actions\EditFields;
@@ -78,6 +79,8 @@ class UgcTrack extends AbstractUgc
 
     public function additionalFields(Request $request)
     {
+        $centroid = $this->getCentroid();
+        $geojson = $this->getGeojsonForMapView();
         $fields = [
             Text::make(__('Taxonomy Where'), function ($model) {
                 $wheres = $model->taxonomy_wheres;
@@ -92,15 +95,12 @@ class UgcTrack extends AbstractUgc
                 ->onlyOnDetail(),
             $this->getCodeField('Raw data'),
             $this->getCodeField('Metadata'),
-            MapMultiLinestring::make('geometry')->withMeta([
-                'center' => [42, 10],
+            Osm2caiMapMultiLinestring::make('geometry')->withMeta([
+                'center' => $centroid ?? [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                 'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
-                'minZoom' => 5,
-                'maxZoom' => 17,
                 'defaultZoom' => 10,
-                'graphhopper_api' => 'https://graphhopper.webmapp.it/route',
-                'graphhopper_profile' => 'hike',
+                'geojson' => json_encode($geojson),
             ])->hideFromIndex(),
         ];
 
