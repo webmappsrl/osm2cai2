@@ -39,6 +39,12 @@ class ProvinceFilter extends Filter
             });
         }
 
+        if ($query->getModel() instanceof \App\Models\User) {
+            return $query->whereHas('provinces', function ($query) use ($value) {
+                $query->where('name', Province::find($value)->name);
+            });
+        }
+
         return $query->where('province_id', $value);
     }
 
