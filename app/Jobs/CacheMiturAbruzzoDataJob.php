@@ -103,14 +103,14 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
             case Region::class:
                 return $this->buildRegionGeojson($model);
             default:
-                $this->logger()->error('Unsupported model type: '.get_class($model));
-                throw new \Exception('Unsupported model type: '.get_class($model));
+                $this->logger()->error('Unsupported model type: ' . get_class($model));
+                throw new \Exception('Unsupported model type: ' . get_class($model));
         }
     }
 
     protected function buildHikingRouteGeojson($hikingRoute): array
     {
-        $intersectingPois = $hikingRoute->getIntersections(new EcPoi());
+        $intersectingPois = $hikingRoute->getElementsInBuffer(new EcPoi(), 1000);
 
         $pois = $intersectingPois->pluck('updated_at', 'id')->toArray();
 
@@ -216,7 +216,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     {
         $regions = $mountainGroup->regions->pluck('name')->implode(', ');
         $provinces = $mountainGroup->getIntersections(new Province())->pluck('name')->implode(', ');
-        $municipalities = $mountainGroup->getIntersections(new Municipality())->pluck('comune')->implode(', ');
+        $municipalities = $mountainGroup->getIntersections(new Municipality())->pluck('name')->implode(', ');
 
         //build the geojson
         $geojson = [];
@@ -261,33 +261,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     {
         $this->logger()->info("Start caching club $club->name");
 
-        $queryForProvinces = <<<'SQL'
-SELECT 
-    p.id AS province_id, 
-    p.name AS province_name, 
-    c.id AS club_id, 
-    c.name AS club_name
-FROM 
-    clubs c
-JOIN 
-    provinces p 
-ON 
-    ST_Intersects(ST_Transform(p.geometry, 4326), c.geometry)
-SQL;
-
-        $provinces = DB::select($queryForProvinces);
-        //get the province names
-
-        $provincesNames = [];
-        foreach ($provinces as $province) {
-            $provincesNames[] = $province->province_name;
-        }
-        //delete double provinces
-
-        $provincesNames = array_unique($provincesNames);
-
-        //implode the provinces
-        $provincesNames = implode(', ', $provincesNames);
+        $provinceNames = $club->getIntersections(new Province())->pluck('name')->implode(', ');
 
         //build the geojson
         $geojson = [];
@@ -300,7 +274,7 @@ SQL;
         $properties['addr:housenumber'] = $club->addr_housenumber ?? '';
         $properties['addr:postcode'] = $club->addr_postcode ?? '';
         $properties['addr:street'] = $club->addr_street ?? '';
-        $properties['provinces'] = $provincesNames;
+        $properties['provinces'] = $provinceNames;
         $properties['source:ref'] = $club->cai_code;
         $properties['website'] = $club->website ?? '';
         $properties['email'] = $club->email ?? '';
@@ -330,7 +304,7 @@ SQL;
             $type = $osmfeaturesData['class'];
         }
         if (isset($osmfeaturesData['subclass'])) {
-            $type .= '/'.$osmfeaturesData['subclass'];
+            $type .= '/' . $osmfeaturesData['subclass'];
         }
 
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
@@ -343,7 +317,7 @@ SQL;
         $geojson['type'] = 'Feature';
 
         $intersectingMunicipalities = $poi->getIntersections(new Municipality());
-        $municipalities = $intersectingMunicipalities->pluck('comune')->implode(', ');
+        $municipalities = $intersectingMunicipalities->pluck('name')->implode(', ');
 
         $properties = [];
         $properties['id'] = $poi->id;
