@@ -1,16 +1,14 @@
-# map-multi-linestring
-![Map Multi Linestring, awesome resource field for Nova](banner.jpg)
+# osm2cai-map-multi-linestring
+![OSM2CAI Map Multi Linestring, awesome resource field for Nova](banner.jpg)
 
 ---
 
-[![Version](http://poser.pugx.org/wm/map-multi-linestring/version)](https://packagist.org/packages/wm/map-multi-linestring)
-
-- [map-multi-linestring](#map-multi-linestring)
+- [osm2cai-map-multi-linestring](#osm2cai-map-multi-linestring)
   - [Requirements](#requirements)
-  - [Installation](#installation)
-  - [Develop](#develop)
+  - [Installation & Development](#installation--development)
+  - [Development Commands](#development-commands)
   - [Usage](#usage)
-    - [Map Multi Linestring](#map-multi-linestring-1)
+    - [OSM2CAI Map Multi Linestring](#osm2cai-map-multi-linestring-1)
   - [Configuration](#configuration)
 
 ## Requirements
@@ -18,83 +16,106 @@
 - `php: ^8`
 - `laravel/nova: ^4`
 
-## Installation
+## Installation & Development
 
-You can install the package in to a Laravel app that uses [Nova](https://nova.laravel.com) via composer:
+This package is included in the main project. No additional installation steps are required - it will be automatically set up when you run:
 
 ```bash
-composer require wm/map-multi-linestring
-```
-## Develop
-create a```nova-components``` folder in the root of the project where you want to develop.
-Clone map-multi-linestring inside.
-add  in ``` "repositories"``` array  attribute of ```composer.json```  
-```php 
-        {
-            "type": "path",
-            "url": "./nova-components/map-multi-linestring"
-        }
+composer install
 ```
 
-modify  in ``` "requires"``` object  attribute of ```composer.json```  
-```php 
-    "wm/map-multi-linestring": "*",
-```
-in the first time
+If you need to develop or modify the package, you can find it in the `nova-components/osm2cai-map-multi-linestring` directory of your project.
 
-launch inside the repository hosting the field
+For development, you might need to install the package dependencies:
 ```bash
-    cd vendor/laravel/nova && npm install
-```
-we need modify composer.lock 
-launch
-```bash
-    composer update wm/map-multi-linestring
+cd nova-components/osm2cai-map-multi-linestring && npm install
 ```
 
-launch inside field
+## Development Commands
+
+Here are all the available commands for developing and maintaining the component:
+
+### Nova Commands
 ```bash
-    npm install
+# Install Nova in your Laravel project
+composer require laravel/nova
+
+# Run Nova's installation process (publishes config, sets up database, etc.)
+php artisan nova:install
 ```
+
+### Package Development
+From the package directory (`nova-components/osm2cai-map-multi-linestring`):
+```bash
+# Install all JavaScript dependencies
+npm install
+
+# Watch for changes during development
+# This will automatically recompile your assets when you make changes to your JavaScript or CSS files
+npm run dev
+
+# Compile and minify for production
+# Use this when you're ready to deploy your changes
+npm run prod
+
+# Combination of prod and publishing
+# This will build your assets and publish them to the public directory
+npm run build
+
+# Update PHP dependencies
+composer update
+```
+
+### Laravel Mix Commands
+```bash
+# Run all Mix tasks
+npm run watch
+
+# Run all Mix tasks and minify output
+npm run production
+
+# Compile assets without watching
+npm run development
+```
+
+These commands are essential for development workflow.
 
 ## Usage
 
-### Map Multi Linestring
+### OSM2CAI Map Multi Linestring
 
 ![image](field.png)
 
-You can display a post gist geography(MultiLineString,4326) area on the map and change it by uploading a new MultiLineString file (.GPX, .KML, .GEOJSON).
-To use the Map Multi Linestring feature, include the MapMultiLinestring class and add it to your resource's fields. Customize the map settings by providing metadata such as the initial map center, tile server URL, attribution text, minimum and maximum zoom levels, default zoom level, GraphHopper API URL used to specify the URL of the GraphHopper API, and GraphHopper routing profile used by GraphHopper when calculating the route. Routing profiles determine the type of transportation mode and the set of rules that the routing engine will use. The default value for this field is 'foot', which means the routing will be optimized for walking. Other available profiles include 'bike' and 'hike'.
+You can display a PostGIS geography(MultiLineString,4326) area on the map and change it by uploading a new MultiLineString file (.GPX, .KML, .GEOJSON).
+To use the Map Multi Linestring feature, include the Osm2caiMapMultiLinestring class and add it to your resource's fields. Customize the map settings by providing metadata such as the initial map center, tile server URL, attribution text, minimum and maximum zoom levels, and default zoom level. The component will display your tracks with different styles based on their order in the MultiLineString collection.
 
 ```php
-    use Wm\MapMultiLinestring\MapMultiLinestring;
-    /**
-     * Get the fields displayed by the resource.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
-    public function fields(NovaRequest $request)
-    {
-        return [
-            ID::make()->sortable(),
-                ...
-            MapMultiLinestring::make('geometry')->withMeta([
-                'center' => [42, 10],
-                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-                'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
-                'minZoom' => 5,
-                'maxZoom' => 17,
-                'defaultZoom' => 10,
-                'graphhopper_api' => 'https://graphhopper.webmapp.it/route',
-                'graphhopper_profile' => 'hike'
-            ]),
-        ];
-    }
-```
-## Configuration
+use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
 
-As of v1.4.0 it's possible to use a `Tab` class instead of an array to represent your tabs.
+/**
+ * Get the fields displayed by the resource.
+ *
+ * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+ * @return array
+ */
+public function fields(NovaRequest $request)
+{
+    return [
+        ID::make()->sortable(),
+            ...
+        Osm2caiMapMultiLinestring::make('geometry')->withMeta([
+            'center' => [42, 10],
+            'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+            'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+            'minZoom' => 5,
+            'maxZoom' => 17,
+            'defaultZoom' => 10
+        ]),
+    ];
+}
+```
+
+## Configuration
 
 <div style="overflow-x:auto;">
   <table style="width: 100%">
@@ -116,7 +137,7 @@ As of v1.4.0 it's possible to use a `Tab` class instead of an array to represent
       <tr>
         <td>attribution</td>
         <td>string</td>
-        <td>'&lt;a href="https://www.openstreetmap.org/"&gt;OpenStreetMap&lt;/a&gt; contributors, &lt;a href="https://creativecommons.org/licenses/by-sa/2.0/"&gt;CC-BY-SA&lt;/a&gt;, Imagery (c) &lt;a href="https://www.mapbox.com/"&gt;Mapbox&lt;/a&gt;'</td>
+        <td>'&lt;a href="https://www.openstreetmap.org/"&gt;OpenStreetMap&lt;/a&gt; contributors'</td>
         <td>The HTML content displayed as map attribution.</td>
       </tr>
       <tr>
@@ -128,32 +149,20 @@ As of v1.4.0 it's possible to use a `Tab` class instead of an array to represent
       <tr>
         <td>minZoom</td>
         <td>integer</td>
-        <td>1</td>
+        <td>5</td>
         <td>The minimum zoom level allowed on the map.</td>
       </tr>
       <tr>
         <td>maxZoom</td>
         <td>integer</td>
-        <td>19</td>
+        <td>17</td>
         <td>The maximum zoom level allowed on the map.</td>
       </tr>
       <tr>
         <td>defaultZoom</td>
         <td>integer</td>
-        <td>10</td>
+        <td>8</td>
         <td>The initial zoom level when the map is first displayed.</td>
-      </tr>
-      <tr>
-        <td>graphhoopper_api</td>
-        <td>string</td>
-        <td>undefined</td>
-        <td>The URL of the GraphHopper API used for routing requests.</td>
-      </tr>
-      <tr>
-        <td>graphhopper_profile</td>
-        <td>string</td>
-        <td>'foot'</td>
-        <td>The routing profile used by GraphHopper for calculating the route. Default is optimized for walking. All available profiles: 'bike', 'foot', and 'hike'.</td>
       </tr>
     </tbody>
   </table>
