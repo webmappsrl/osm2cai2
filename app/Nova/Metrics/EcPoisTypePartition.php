@@ -3,9 +3,10 @@
 namespace App\Nova\Metrics;
 
 use App\Models\EcPoi;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Metrics\PartitionResult;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class EcPoisTypePartition extends Partition
 {
@@ -21,10 +22,18 @@ class EcPoisTypePartition extends Partition
      */
     public function calculate(NovaRequest $request): PartitionResult
     {
-        return $this->count($request, EcPoi::class, 'type')
-            ->label(function ($value) {
-                return $value;
-            });
+        return $this->result(
+            EcPoi::query()
+                ->select('type', DB::raw('count(*) as count'))
+                ->groupBy('type')
+                ->get()
+                ->pluck('count', 'type')
+                ->toArray()
+        );
+        // return $this->count($request, EcPoi::class, 'type')
+        //     ->label(function ($value) {
+        //         return $value;
+        //     });
     }
 
     /**
@@ -45,5 +54,26 @@ class EcPoisTypePartition extends Partition
     public function uriKey()
     {
         return 'ec-pois-type-partition';
+    }
+
+    /**
+     * Get the appropriate cache key for the metric.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return string
+     */
+    public function getCacheKey(NovaRequest $request)
+    {
+        // return sprintf(
+        //     'nova.metric.%s.%s.%s.%s.%s.%s',
+        //     $this->uriKey(),
+        //     $request->input('range', 'no-range'),
+        //     $request->input('timezone', 'no-timezone'),
+        //     $request->input('twelveHourTime', 'no-12-hour-time'),
+        //     $this->onlyOnDetail ? $request->findModelOrFail()->getKey() : 'no-resource-id',
+        //     md5($request->input('filter', 'no-filter'))
+        // );
+
+        return 'nova.metric.' . $this->uriKey();
     }
 }
