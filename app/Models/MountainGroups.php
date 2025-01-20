@@ -33,12 +33,6 @@ class MountainGroups extends Model
                 $mountainGroup->dispatchGeometricComputationsJobs();
             }
         });
-
-        static::updated(function ($mountainGroup) {
-            if (app()->environment('production')) {
-                CacheMiturAbruzzoDataJob::dispatch('MountainGroups', $mountainGroup->id);
-            }
-        });
     }
 
     public function regions()

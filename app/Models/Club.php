@@ -36,15 +36,6 @@ class Club extends Model
         'fax',
     ];
 
-    protected static function booted()
-    {
-        static::updated(function ($club) {
-            if (app()->environment('production')) {
-                CacheMiturAbruzzoDataJob::dispatch('Club', $club->id);
-            }
-        });
-    }
-
     public function region()
     {
         return $this->belongsTo(Region::class);

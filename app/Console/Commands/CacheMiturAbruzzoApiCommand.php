@@ -11,9 +11,12 @@ class CacheMiturAbruzzoApiCommand extends Command
 {
     protected $signature = 'osm2cai:cache-mitur-abruzzo-api 
         {model=Region : The model name} 
-        {id? : The model id}';
+        {id? : The model id}
+        {--all : Cache for all available models}';
 
     protected $description = 'Store MITUR Abruzzo API data using AWS S3. Only HikingRoutes with osm2cai_status 4 are cached.';
+
+    protected $models = ['Region', 'CaiHut', 'Club', 'EcPoi', 'HikingRoute', 'MountainGroups'];
 
     public function handle()
     {
@@ -25,11 +28,22 @@ class CacheMiturAbruzzoApiCommand extends Command
             }
         }
 
+        if ($this->option('all')) {
+            foreach ($this->models as $model) {
+                $this->processModel($model);
+            }
+            return;
+        }
+
+        $this->processModel($this->argument('model'));
+    }
+
+    protected function processModel($modelName)
+    {
         try {
-            $modelClass = App::make("App\\Models\\{$this->argument('model')}");
+            $modelClass = App::make("App\\Models\\{$modelName}");
         } catch (\Exception $e) {
             $this->error($e->getMessage());
-
             return;
         }
         $className = class_basename($modelClass);
@@ -47,7 +61,6 @@ class CacheMiturAbruzzoApiCommand extends Command
         if ($count === 0 && $className === 'HikingRoute') {
             $this->error('No hiking routes found with osm2cai_status 4');
             Log::error('No hiking routes found with osm2cai_status 4');
-
             return;
         }
 
@@ -61,8 +74,8 @@ class CacheMiturAbruzzoApiCommand extends Command
             try {
                 CacheMiturAbruzzoDataJob::dispatch($className, $model->id);
             } catch (\Exception $e) {
-                Log::error("Failed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
-                $this->error("\nFailed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
+                Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
+                $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
             }
 
             $bar->advance();

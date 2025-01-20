@@ -11,7 +11,7 @@ class EcPoiController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/ecpois/bb/{bounding_box}/{type}",
+     *     path="/api/v2/ecpois/bb/{bounding_box}/{type}",
      *     tags={"Api V2"},
      *     summary="Get Ec POIs by Bounding Box and Type",
      *     description="Returns a list of Eco POIs within the specified bounding box and of the specified type",
@@ -65,7 +65,7 @@ class EcPoiController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/ecpois/{hr_osm2cai_id}/{type}",
+     *     path="/api/v2/ecpois/{hr_osm2cai_id}/{type}",
      *     tags={"Api V2"},
      *     summary="Get EcPOIs in a 1km buffer from the HikingRoutes defined by ID",
      *     description="Returns a list of Ec POIs around 1km from a specific OSM2CAI hiking route ID and of a specified type",
@@ -110,7 +110,7 @@ class EcPoiController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/ecpois/{hr_osm_id}/{type}",
+     *     path="/api/v2/ecpois/{hr_osm_id}/{type}",
      *     tags={"Api V2"},
      *     summary="Get EcPOIs in a 1km buffer from the HikingRoutes defined by OSM ID",
      *     description="Returns a list of Ec POIs around 1km from a specific OSM hiking route ID and of a specified type",

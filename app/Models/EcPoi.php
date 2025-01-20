@@ -11,6 +11,7 @@ use App\Models\MountainGroups;
 use App\Models\Region;
 use App\Models\User;
 use App\Traits\AwsCacheable;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,7 +24,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait, SpatialDataTrait, AwsCacheable;
+    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait, SpatialDataTrait, AwsCacheable, OsmfeaturesGeometryUpdateTrait;
 
     protected $fillable = [
         'name',
@@ -40,7 +41,6 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
-        'tags' => 'array',
     ];
 
     protected static function booted()
@@ -51,12 +51,6 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
                 CalculateIntersectionsJob::dispatch($ecPoi, MountainGroups::class)->onQueue('geometric-computations');
                 CheckNearbyHikingRoutesJob::dispatch($ecPoi, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
                 CheckNearbyHutsJob::dispatch($ecPoi, config('osm2cai.cai_hut_buffer'))->onQueue('geometric-computations');
-            }
-        });
-
-        static::updated(function ($ecPoi) {
-            if (app()->environment('production')) {
-                CacheMiturAbruzzoDataJob::dispatch('EcPoi', $ecPoi->id);
             }
         });
     }
@@ -95,32 +89,27 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi ' . $osmfeaturesId);
 
             return;
         }
 
-        //format the geometry
-        if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
-        } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Ec Poi '.$osmfeaturesId);
-            $geometry = null;
+        //check if geometry has changed
+        $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
+
+        //check if name has changed
+        if ($osmfeaturesData['properties']['name'] !== $model->name) {
+            $updateData['name'] = $osmfeaturesData['properties']['name'];
         }
 
-        if ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Ec Poi '.$osmfeaturesId);
-            $name = null;
-        } else {
-            $name = $osmfeaturesData['properties']['name'];
+        //check if score has changed
+        if ($osmfeaturesData['properties']['score'] !== $model->score) {
+            $updateData['score'] = $osmfeaturesData['properties']['score'];
         }
 
-        $model->update([
-            'name' => $name,
-            'geometry' => $geometry,
-            'score' => $osmfeaturesData['properties']['score'],
-            'type' => $model->getTagsMapping(),
-        ]);
+        if (! empty($updateData)) {
+            $model->update($updateData);
+        }
     }
 
     public function User()
