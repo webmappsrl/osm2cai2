@@ -67,10 +67,6 @@ class Region extends Model implements OsmfeaturesSyncableInterface
                 CalculateIntersectionsJob::dispatch($region, MountainGroups::class)->onQueue('geometric-computations');
             }
         });
-
-        static::updated(function ($region) {
-            CacheMiturAbruzzoDataJob::dispatch('Region', $region->id);
-        });
     }
 
     public function users()

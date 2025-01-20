@@ -39,6 +39,12 @@ class RegionFilter extends Filter
             });
         }
 
+        if ($model instanceof \App\Models\User) {
+            return $query->whereHas('region', function ($query) use ($value) {
+                $query->where('region_id', $value);
+            });
+        }
+
         return $query->whereHas('regions', function ($query) use ($value) {
             $query->where('region_id', $value);
         });

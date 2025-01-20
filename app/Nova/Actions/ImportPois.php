@@ -92,7 +92,7 @@ class ImportPois extends Action
                         $poi = EcPoi::updateOrCreate(['osmfeatures_id' => $osmType.$element['id']], [
                             'name' => $element['tags']['name'] ?? $element['tags']['name:it'] ?? 'no name ('.$type.'/'.$element['id'].')',
                             'geometry' => null,
-                            'tags' => $element['tags'] ?? null,
+                            'osmfeatures_data->properties->osm_tags' => $element['tags'] ?? null,
                             'user_id' => auth()->user()->id,
                         ]);
                     }
@@ -101,12 +101,14 @@ class ImportPois extends Action
                 $centroidCoords = $this->calculateCentroid($coordinates);
                 $poi->geometry = DB::raw("ST_SetSRID(ST_MakePoint({$centroidCoords[0]}, {$centroidCoords[1]}), 4326)");
                 $poi->save();
+
+                $poi->nearbyHikingRoutes()->attach($models->first()->id);
             } else {
                 foreach ($elements as $element) {
                     if ($element['type'] !== 'node') {
                         continue;
                     }
-                    $this->importPoi($element, $osmType);
+                    $this->importPoi($element, $osmType, $models->first());
                 }
             }
         }
@@ -121,7 +123,7 @@ class ImportPois extends Action
         return array_unique($osm_ids);
     }
 
-    private function importPoi($data, $osmType)
+    private function importPoi($data, $osmType, $hikingRoute)
     {
         $osmId = $data['id'];
         $name = $data['name'] ?? $data['tags']['name'] ?? $data['tags']['name:it'] ?? 'no name ('.$data['id'].')';
@@ -131,9 +133,12 @@ class ImportPois extends Action
         $poi = EcPoi::updateOrCreate(['osmfeatures_id' => $osmType.$osmId], [
             'name' => $name,
             'geometry' => $geometry,
-            'tags' => $tags,
+            'osmfeatures_data->properties->osm_tags' => $tags,
             'user_id' => auth()->user()->id,
         ]);
+
+        //associate the poi to the hiking route
+        $poi->nearbyHikingRoutes()->attach($hikingRoute->id);
     }
 
     private function calculateCentroid($coordinates)

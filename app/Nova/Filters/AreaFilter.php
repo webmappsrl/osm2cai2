@@ -38,6 +38,12 @@ class AreaFilter extends Filter
             });
         }
 
+        if ($query->getModel() instanceof \App\Models\User) {
+            return $query->whereHas('areas', function ($query) use ($value) {
+                $query->where('area_id', $value);
+            });
+        }
+
         return $query->where('area_id', $value);
     }
 

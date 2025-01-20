@@ -17,7 +17,7 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *     path="/api/v2/hiking-routes/list",
      *     summary="Get list of hiking routes",
-     *     tags={"V2"},
+     *     tags={"Api V2"},
      *     @OA\Response(
      *         response=200,
      *         description="List of hiking routes",

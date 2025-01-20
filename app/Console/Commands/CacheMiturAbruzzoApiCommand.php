@@ -11,9 +11,12 @@ class CacheMiturAbruzzoApiCommand extends Command
 {
     protected $signature = 'osm2cai:cache-mitur-abruzzo-api 
         {model=Region : The model name} 
-        {id? : The model id}';
+        {id? : The model id}
+        {--all : Cache for all available models}';
 
     protected $description = 'Store MITUR Abruzzo API data using AWS S3. Only HikingRoutes with osm2cai_status 4 are cached.';
+
+    protected $models = ['Region', 'CaiHut', 'Club', 'EcPoi', 'HikingRoute', 'MountainGroups'];
 
     public function handle()
     {
@@ -25,8 +28,21 @@ class CacheMiturAbruzzoApiCommand extends Command
             }
         }
 
+        if ($this->option('all')) {
+            foreach ($this->models as $model) {
+                $this->processModel($model);
+            }
+
+            return;
+        }
+
+        $this->processModel($this->argument('model'));
+    }
+
+    protected function processModel($modelName)
+    {
         try {
-            $modelClass = App::make("App\\Models\\{$this->argument('model')}");
+            $modelClass = App::make("App\\Models\\{$modelName}");
         } catch (\Exception $e) {
             $this->error($e->getMessage());
 

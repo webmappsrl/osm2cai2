@@ -66,12 +66,6 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
                 CheckNearbyHikingRoutesJob::dispatch($caiHut, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
             }
         });
-
-        static::updated(function ($caiHut) {
-            if (app()->environment('production')) {
-                CacheMiturAbruzzoDataJob::dispatch('CaiHut', $caiHut->id);
-            }
-        });
     }
 
     public function region()

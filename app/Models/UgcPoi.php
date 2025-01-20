@@ -151,8 +151,8 @@ class UgcPoi extends Model
             $rawData['position'] = [];
         }
 
-        $rawData['position']['latitude'] = $coordinates->latitude;
-        $rawData['position']['longitude'] = $coordinates->longitude;
+        $rawData['position']['latitude'] = floatval($coordinates->latitude);
+        $rawData['position']['longitude'] = floatval($coordinates->longitude);
 
         // override the raw_data attribute with the new raw data
         $this->raw_data = $rawData;

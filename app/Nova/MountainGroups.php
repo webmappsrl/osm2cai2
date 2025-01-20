@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Nova\Filters\RegionFilter;
 use Illuminate\Http\Request;
 use Imumz\Nova4FieldMap\Nova4FieldMap;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
@@ -32,7 +33,7 @@ class MountainGroups extends Resource
 
     public static function label()
     {
-        return 'Gruppi Montuosi';
+        return __('Gruppi Montuosi');
     }
 
     /**
@@ -55,22 +56,24 @@ class MountainGroups extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make('Nome', 'name')->sortable(),
-            Textarea::make('Descrizione', 'description')->hideFromIndex(),
-            MapMultiPolygon::make('Geometry')->withMeta([
+            Text::make(__('Nome'), 'name')->sortable(),
+            Textarea::make(__('Descrizione'), 'description')->hideFromIndex(),
+            MapMultiPolygon::make(__('Geometry'))->withMeta([
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
-            Text::make('POI Generico', function () {
+            BelongsToMany::make(__('Regioni'), 'regions', Region::class)
+                ->searchable(),
+            Text::make(__('POI Generico'), function () {
                 return $this->ecPois->count();
             })->sortable(),
-            Text::make('POI Rifugio', function () {
+            Text::make(__('POI Rifugio'), function () {
                 return $this->caiHuts->count();
             })->sortable(),
-            Text::make('Percorsi POI Totali', function () {
+            Text::make(__('Percorsi POI Totali'), function () {
                 return $this->ecPois->count() + $this->caiHuts->count();
             })->sortable(),
-            Text::make('Attivitá o Esperienze', function () {
+            Text::make(__('Attivitá o Esperienze'), function () {
                 return $this->hikingRoutes->count();
             })->sortable(),
         ];

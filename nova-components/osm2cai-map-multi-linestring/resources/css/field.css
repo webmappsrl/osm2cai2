@@ -1,0 +1,68 @@
+/* Nova Field CSS */
+.wm-map {
+    width:600px;
+    height: 400px;
+    }
+.index-view .wm-map  {
+    height: 100px;
+    width: 300px;
+}
+.leaflet-pane{z-index:50!important}
+.leaflet-bottom,.leaflet-top{z-index:51!important}
+.version-image {
+    display: unset!important;
+    height: inherit;
+}
+.leaflet-control-attribution {
+    padding-right: 0!important;
+}
+.delete-button {
+    width: 30px;
+    height: 30px;
+    padding: 4px;
+    background-color: white;
+    border: 1px solid black;
+    box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
+}
+.delete-button:hover {
+    opacity: 0.6;
+}
+.fullscreen-icon {
+    background-image: url(https://unpkg.com/leaflet.fullscreen@2.4.0/icon-fullscreen.svg)!important;
+}
+.leaflet-control-button {
+    background-image: url('/assets/images/Maps-Center-Direction-icon.png') !important;
+}
+.flex-container {
+    margin: 10px 10px 10px 0px;
+    width: 600px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: flex-start;
+    align-items: stretch;
+}
+.flex-geometry {
+    flex: 1 0 25%;
+    align-self: auto;
+    margin-right: 5px;
+}
+.leaflet-draw-toolbar a {
+    background-image: linear-gradient(transparent, transparent), url(https://leaflet.github.io/Leaflet.draw/src/images/spritesheet.svg)!important;
+}
+.graph-hopper-button{
+    width: 30px;
+    height: 30px;
+    padding: 4px;
+    background-color: white;
+    border: 1px solid black;
+    box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
+  }
+.graph-hopper-button:hover {
+    opacity: 0.6;
+}
+.leaflet-draw-actions-top li a{
+            color: white;
+}
+

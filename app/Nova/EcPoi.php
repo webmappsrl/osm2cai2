@@ -56,12 +56,12 @@ class EcPoi extends OsmfeaturesResource
     public function fields(NovaRequest $request)
     {
         return array_merge(parent::fields($request), [
-            Text::make('Type', 'type')->sortable(),
-            BelongsTo::make('User')->sortable()->filterable()->searchable(),
-            Text::make('Score', 'score')->displayUsing(function ($value) {
+            Text::make(__('Type'), 'type')->sortable(),
+            BelongsTo::make(__('User'), 'user')->sortable()->filterable()->searchable(),
+            Text::make(__('Score'), 'score')->displayUsing(function ($value) {
                 return Osm2caiHelper::getScoreAsStars($value);
-            })->sortable(),
-            BelongsTo::make('Region')->sortable()->filterable()->searchable(),
+            })->sortable()->hideWhenCreating()->hideWhenUpdating(),
+            BelongsTo::make(__('Region'), 'region')->sortable()->filterable()->searchable(),
         ]);
     }
 

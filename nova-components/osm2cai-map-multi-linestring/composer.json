@@ -1,0 +1,29 @@
+{
+    "name": "wm/osm2cai-map-multi-linestring",
+    "description": "A Laravel Nova field.",
+    "keywords": [
+        "laravel",
+        "nova"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^7.3|^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wm\\Osm2caiMapMultiLinestring\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Wm\\Osm2caiMapMultiLinestring\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

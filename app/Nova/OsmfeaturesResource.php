@@ -17,9 +17,9 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
-use Wm\MapMultiLinestring\MapMultiLinestring;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 use Wm\MapPoint\MapPoint;
+use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
 
 abstract class OsmfeaturesResource extends Resource
 {
@@ -57,15 +57,14 @@ abstract class OsmfeaturesResource extends Resource
                 ])->hideFromIndex();
                 break;
             default:
-                $geometryField = MapMultiLinestring::make('geometry')->withMeta([
-                    'center' => [42, 10],
+                $centroid = $this->getCentroid();
+                $geojson = $this->getGeojsonForMapView();
+                $geometryField = Osm2caiMapMultiLinestring::make('geometry')->withMeta([
+                    'center' => $centroid ?? [42, 10],
                     'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                     'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
-                    'minZoom' => 5,
-                    'maxZoom' => 17,
                     'defaultZoom' => 10,
-                    'graphhopper_api' => 'https://graphhopper.webmapp.it/route',
-                    'graphhopper_profile' => 'hike',
+                    'geojson' => json_encode($geojson),
                 ])->hideFromIndex();
                 break;
         }
