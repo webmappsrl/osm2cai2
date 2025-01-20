@@ -39,7 +39,7 @@ class RefCard extends HtmlCard
             return 'No data';
         }
 
-        $osmfeaturesDataProperties = $this->hr->osmfeatures_data['properties'];
+        $osmfeaturesDataProperties = is_string($this->hr->osmfeatures_data) ? json_decode($this->hr->osmfeatures_data, true) : $this->hr->osmfeatures_data['properties'];
 
         $ref = $osmfeaturesDataProperties['ref'] ?? '/';
         $refRei = $osmfeaturesDataProperties['ref:REI'] ?? '/';
