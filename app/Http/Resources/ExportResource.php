@@ -45,7 +45,13 @@ class ExportResource extends JsonResource
                 $result['edges'] = json_decode($this->resource->edges, true);
                 break;
             case $this->resource instanceof EcPoi:
-                $result['tags'] = is_string($this->osmfeatures_data) ? json_decode($this->osmfeatures_data, true)['properties']['osm_tags'] : $this->osmfeatures_data['properties']['osm_tags'];
+                $result['tags'] = null;
+                if ($this->osmfeatures_data) {
+                    $data = is_string($this->osmfeatures_data) ? json_decode($this->osmfeatures_data, true) : $this->osmfeatures_data;
+                    if (isset($data['properties']['osm_tags'])) {
+                        $result['tags'] = $data['properties']['osm_tags'];
+                    }
+                }
                 break;
             case $this->resource instanceof User:
                 $result['password'] = $this->resource->password;
