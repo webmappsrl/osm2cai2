@@ -32,6 +32,7 @@ class CacheMiturAbruzzoApiCommand extends Command
             foreach ($this->models as $model) {
                 $this->processModel($model);
             }
+
             return;
         }
 
@@ -44,6 +45,7 @@ class CacheMiturAbruzzoApiCommand extends Command
             $modelClass = App::make("App\\Models\\{$modelName}");
         } catch (\Exception $e) {
             $this->error($e->getMessage());
+
             return;
         }
         $className = class_basename($modelClass);
@@ -61,6 +63,7 @@ class CacheMiturAbruzzoApiCommand extends Command
         if ($count === 0 && $className === 'HikingRoute') {
             $this->error('No hiking routes found with osm2cai_status 4');
             Log::error('No hiking routes found with osm2cai_status 4');
+
             return;
         }
 
@@ -74,8 +77,8 @@ class CacheMiturAbruzzoApiCommand extends Command
             try {
                 CacheMiturAbruzzoDataJob::dispatch($className, $model->id);
             } catch (\Exception $e) {
-                Log::error("Failed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
-                $this->error("\nFailed to dispatch job for {$className} {$model->id}: " . $e->getMessage());
+                Log::error("Failed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
+                $this->error("\nFailed to dispatch job for {$className} {$model->id}: ".$e->getMessage());
             }
 
             $bar->advance();
