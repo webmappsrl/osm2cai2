@@ -297,7 +297,8 @@ trait SpatialDataTrait
 
     public function textToGeojson(string $text): ?array
     {
-        return GeometryService::getService()->textToGeojson($text);
+        $geojson = GeometryService::getService()->textToGeojson($text);
+        return (array) $geojson;
     }
 
     public function geojsonToGeometry(array $geojson): ?string
