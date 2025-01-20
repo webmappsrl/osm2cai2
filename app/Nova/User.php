@@ -3,6 +3,11 @@
 namespace App\Nova;
 
 use App\Nova\Club;
+use App\Nova\Filters\AreaFilter;
+use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Filters\RegionFilter;
+use App\Nova\Filters\SectorFilter;
+use App\Nova\Filters\UserTypeFilter;
 use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
@@ -16,14 +21,8 @@ use Spatie\Permission\Models\Permission;
 use Vyuldashev\NovaPermission\PermissionBooleanGroup;
 use Vyuldashev\NovaPermission\RoleBooleanGroup;
 use Wm\WmPackage\Nova\AbstractUser;
-use App\Nova\Filters\UserTypeFilter;
-use App\Nova\Filters\RegionFilter;
-use App\Nova\Filters\AreaFilter;
-use App\Nova\Filters\ProvinceFilter;
-use App\Nova\Filters\SectorFilter;
 
 class User extends AbstractUser
-
 {
     /**
      * The model the resource corresponds to.
@@ -46,22 +45,22 @@ class User extends AbstractUser
             Text::make('Phone')
                 ->sortable()
                 ->rules('max:255'),
-                
+
             BelongsToMany::make('Provinces', 'provinces', Province::class),
 
-            Text::make("Provinces", function () {
+            Text::make('Provinces', function () {
                 return $this->provinces->pluck('name')->join(', ');
             })->onlyOnIndex(),
 
             BelongsToMany::make('Areas', 'areas', Area::class),
 
-            Text::make("Areas", function () {
+            Text::make('Areas', function () {
                 return $this->areas->pluck('name')->join(', ');
             })->onlyOnIndex(),
 
             BelongsToMany::make('Sectors', 'sectors', Sector::class),
 
-            Text::make("Sectors", function () {
+            Text::make('Sectors', function () {
                 return $this->sectors->pluck('name')->join(', ');
             })->onlyOnIndex(),
 
@@ -80,7 +79,6 @@ class User extends AbstractUser
                 ->searchable()
                 ->nullable()
                 ->sortable(),
-
 
         ];
 
@@ -115,7 +113,7 @@ class User extends AbstractUser
             new RegionFilter,
             new AreaFilter,
             new ProvinceFilter,
-            new SectorFilter
+            new SectorFilter,
         ];
     }
 
