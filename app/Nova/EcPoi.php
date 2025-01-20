@@ -58,7 +58,7 @@ class EcPoi extends OsmfeaturesResource
         return array_merge(parent::fields($request), [
             Text::make(__('Type'), 'type')->sortable(),
             BelongsTo::make(__('User'), 'user')->sortable()->filterable()->searchable(),
-            Text::make(__('Score')  , 'score')->displayUsing(function ($value) {
+            Text::make(__('Score'), 'score')->displayUsing(function ($value) {
                 return Osm2caiHelper::getScoreAsStars($value);
             })->sortable()->hideWhenCreating()->hideWhenUpdating(),
             BelongsTo::make(__('Region'), 'region')->sortable()->filterable()->searchable(),

@@ -5,12 +5,12 @@ namespace App\Nova;
 use App\Nova\Filters\RegionFilter;
 use Illuminate\Http\Request;
 use Imumz\Nova4FieldMap\Nova4FieldMap;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\MapMultiPolygon\MapMultiPolygon;
-use Laravel\Nova\Fields\BelongsToMany;
 
 class MountainGroups extends Resource
 {
