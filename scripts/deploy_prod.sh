@@ -10,6 +10,10 @@ git submodule update --init --recursive
 composer install --no-interaction --prefer-dist --optimize-autoloader
 composer dump-autoload
 
+# Update nova assets for the custom login page
+# https://github.com/Muetze42/nova-assets-changer
+php artisan nova:custom-assets
+
 # Clear and cache config
 php artisan config:cache
 php artisan config:clear
