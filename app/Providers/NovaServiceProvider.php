@@ -66,103 +66,103 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
                         }),
 
-                    MenuItem::link('Percorsi Favoriti', '/dashboards/percorsi-favoriti')
+                    MenuItem::link(__('Percorsi Favoriti'), '/dashboards/percorsi-favoriti')
                         ->canSee(function () {
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
                         }),
 
-                    MenuItem::link('POIS', '/dashboards/ec-pois')
+                    MenuItem::link(__('POIS'), '/dashboards/ec-pois')
                         ->canSee(function () {
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent']);
                         }),
 
-                    MenuItem::link('Riepilogo utenti', '/dashboards/utenti')
+                    MenuItem::link(__('Riepilogo utenti'), '/dashboards/utenti')
                         ->canSee(function () {
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
                         }),
 
-                    MenuItem::link('Riepilogo Percorribilità', '/dashboards/percorribilità')
+                    MenuItem::link(__('Riepilogo Percorribilità'), '/dashboards/percorribilità')
                         ->canSee(function () {
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
                         }),
 
-                    MenuItem::link('Riepilogo MITUR-Abruzzo', '/dashboards/sal-mitur-abruzzo')
+                    MenuItem::link(__('Riepilogo MITUR-Abruzzo'), '/dashboards/sal-mitur-abruzzo')
                         ->canSee(function () {
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
                         }),
 
-                    MenuItem::link('Riepilogo Acqua Sorgente', '/dashboards/acqua-sorgente')
+                    MenuItem::link(__('Riepilogo Acqua Sorgente'), '/dashboards/acqua-sorgente')
                         ->canSee(function () {
                             return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
                         }),
 
-                    MenuItem::link('Riepilogo Settori', '/dashboards/settori')
+                    MenuItem::link(__('Riepilogo Settori'), '/dashboards/settori')
                         ->canSee(function () {
                             return auth()->user()->hasRole('Regional Referent');
                         }),
                 ]),
 
                 // Rete Escursionistica
-                MenuSection::make('Rete Escursionistica', [
-                    MenuSection::make('Sentieri', [
-                        MenuItem::resource(HikingRoute::class, 'Percorsi'),
-                        MenuItem::resource(Itinerary::class, 'Itinerari'),
+                MenuSection::make(__('Rete Escursionistica'), [
+                    MenuSection::make(__('Sentieri'), [
+                        MenuItem::resource(HikingRoute::class, __('Percorsi')),
+                        MenuItem::resource(Itinerary::class, __('Itinerari')),
                     ])->icon('none')->collapsable(),
-                    MenuSection::make('Luoghi3', [
-                        MenuItem::resource(Poles::class, 'Poles'),
+                    MenuSection::make(__('Luoghi'), [
+                        MenuItem::resource(Poles::class, __('Poles')),
                     ])->icon('none')->collapsable(),
-                    MenuSection::make('Unità Territoriali', [
+                    MenuSection::make(__('Unità Territoriali'), [
                         MenuItem::resource(Club::class),
-                        MenuItem::resource(Municipality::class, 'Comuni'),
-                        MenuItem::resource(Sector::class, 'Settori'),
-                        MenuItem::resource(Area::class, 'Aree'),
-                        MenuItem::resource(Province::class, 'Province'),
-                        MenuItem::resource(Region::class, 'Regioni'),
+                        MenuItem::resource(Municipality::class, __('Comuni')),
+                        MenuItem::resource(Sector::class, __('Settori')),
+                        MenuItem::resource(Area::class, __('Aree')),
+                        MenuItem::resource(Province::class, __('Province')),
+                        MenuItem::resource(Region::class, __('Regioni')),
                     ])->icon('none')->collapsable(),
                 ])->icon('globe')->collapsable(),
 
                 // Arricchimenti
-                MenuSection::make('Arricchimenti', [
-                    MenuItem::resource(EcPoi::class, 'Punti di interesse'),
-                    MenuItem::resource(MountainGroups::class, 'Gruppi Montuosi'),
-                    MenuItem::resource(CaiHut::class, 'Rifugi'),
-                    MenuItem::resource(NaturalSpring::class, 'Acqua Sorgente'),
+                MenuSection::make(__('Arricchimenti'), [
+                    MenuItem::resource(EcPoi::class, __('Punti di interesse')),
+                    MenuItem::resource(MountainGroups::class, __('Gruppi Montuosi')),
+                    MenuItem::resource(CaiHut::class, __('Rifugi')),
+                    MenuItem::resource(NaturalSpring::class, __('Acqua Sorgente')),
                 ])->icon('database')->collapsable(),
 
                 // Rilievi
-                MenuSection::make('Rilievi', [
-                    MenuSection::make('Elementi rilevati', [
+                MenuSection::make(__('Rilievi'), [
+                    MenuSection::make(__('Elementi rilevati'), [
                         MenuItem::resource(UgcPoi::class),
                         MenuItem::resource(UgcTrack::class),
                         MenuItem::resource(UgcMedia::class),
                     ])->icon('none')->collapsable(),
-                    MenuSection::make('Validazioni', [
+                    MenuSection::make(__('Validazioni'), [
                         MenuItem::resource(SourceSurvey::class),
                         MenuItem::resource(Sign::class),
                         MenuItem::resource(ArchaeologicalSite::class),
                         MenuItem::resource(ArchaeologicalArea::class),
                         MenuItem::resource(GeologicalSite::class),
                     ])->icon('none')->collapsable(),
-                    MenuSection::make('Export', [
-                        MenuItem::link('Esporta Rilievi', '/dashboards/main'),
+                    MenuSection::make(__('Export'), [
+                        MenuItem::link(__('Esporta Rilievi'), '/dashboards/main'),
                     ])->icon('download')->collapsable(),
                 ])->icon('eye')->collapsable(),
 
                 // Tools
-                MenuSection::make('Tools', [
-                    MenuItem::externalLink('Mappa Settori', 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
-                    MenuItem::externalLink('Mappa Percorsi', 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
-                    MenuItem::externalLink('INFOMONT', 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
-                    MenuItem::externalLink('LoScarpone-Export', route('loscarpone-export'))->openInNewTab(),
-                    MenuItem::externalLink('API', '/api/documentation')->openInNewTab(),
-                    MenuItem::externalLink('Documentazione OSM2CAI', 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
+                MenuSection::make(__('Tools'), [
+                    MenuItem::externalLink(__('Mappa Settori'), 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
+                    MenuItem::externalLink(__('Mappa Percorsi'), 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::externalLink(__('INFOMONT'), 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
+                    MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
+                    MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
-                MenuSection::make('Admin', [
-                    MenuItem::resource(User::class, 'User'), // Usa User Nova resource
-                    MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab(),
-                    MenuItem::externalLink('Logs', url('/logs'))->openInNewTab(),
+                MenuSection::make(__('Admin'), [
+                    MenuItem::resource(User::class, __('User')), // Usa User Nova resource
+                    MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab(),
+                    MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab(),
                 ])->icon('user'),
             ];
         });
