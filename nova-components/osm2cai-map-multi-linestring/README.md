@@ -1,6 +1,8 @@
 # osm2cai-map-multi-linestring
 ![OSM2CAI Map Multi Linestring, awesome resource field for Nova](banner.jpg)
 
+This is an internal Nova field component of the [osm2cai2](link-to-main-repo) project. It's automatically included when you clone the main repository.
+
 ---
 
 - [osm2cai-map-multi-linestring](#osm2cai-map-multi-linestring)
