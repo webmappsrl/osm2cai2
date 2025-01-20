@@ -3,14 +3,14 @@
 namespace App\Nova\Metrics;
 
 use App\Models\EcPoi;
-use Laravel\Nova\Nova;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Arr;
-use Laravel\Nova\Metrics\Trend;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Metrics\Trend;
 use Laravel\Nova\Metrics\TrendDateExpressionFactory;
+use Laravel\Nova\Nova;
 
 class EcPoisTrend extends Trend
 {
@@ -28,6 +28,7 @@ class EcPoisTrend extends Trend
     {
         return $this->countByDays($request, EcPoi::class);
     }
+
     /**
      * Get default timezone.
      *
@@ -42,8 +43,8 @@ class EcPoisTrend extends Trend
     /**
      * Return a value result showing a aggregate over time.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder|class-string<\Illuminate\Database\Eloquent\Model>  $model
+     * @param  NovaRequest  $request
+     * @param  Builder|class-string<\Illuminate\Database\Eloquent\Model>  $model
      * @param  string  $unit
      * @param  string  $function
      * @param  \Illuminate\Database\Query\Expression|string  $column
@@ -136,11 +137,10 @@ class EcPoisTrend extends Trend
         return 'ec-pois-trend';
     }
 
-
     /**
      * Get the appropriate cache key for the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return string
      */
     public function getCacheKey(NovaRequest $request)
@@ -155,6 +155,6 @@ class EcPoisTrend extends Trend
         //     md5($request->input('filter', 'no-filter'))
         // );
 
-        return 'nova.metric.' . $this->uriKey();
+        return 'nova.metric.'.$this->uriKey();
     }
 }
