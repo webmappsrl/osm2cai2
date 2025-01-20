@@ -17,9 +17,9 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
-use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 use Wm\MapPoint\MapPoint;
+use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
 
 abstract class OsmfeaturesResource extends Resource
 {
@@ -64,7 +64,7 @@ abstract class OsmfeaturesResource extends Resource
                     'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                     'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
                     'defaultZoom' => 10,
-                    'geojson' => json_encode($geojson)
+                    'geojson' => json_encode($geojson),
                 ])->hideFromIndex();
                 break;
         }
