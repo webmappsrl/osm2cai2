@@ -57,13 +57,12 @@ class CaiHut extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make('Unico Id')->hideFromIndex(),
-            Text::make('Name'),
-            Text::make('Second Name'),
-            Textarea::make('Description'),
-            Text::make('Owner'),
-            Number::make('Elevation'),
-            BelongsToField::make('Region'),
+            Text::make(__('Name')),
+            Text::make(__('Second Name')),
+            Textarea::make(__('Description')),
+            Text::make(__('Owner')),
+            Number::make(__('Elevation')),
+            BelongsToField::make(__('Region')),
             MapPoint::make('geometry')->withMeta([
                 'center' => [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
