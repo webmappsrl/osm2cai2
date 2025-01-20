@@ -10,6 +10,10 @@ echo "Deployment started ..."
 # Install composer dependencies
 composer install  --no-interaction --prefer-dist --optimize-autoloader
 
+# Update nova assets for the custom login page
+# https://github.com/Muetze42/nova-assets-changer
+php artisan nova:custom-assets
+
 # Run database migrations
 php artisan migrate
 
