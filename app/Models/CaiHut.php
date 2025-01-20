@@ -66,12 +66,6 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
                 CheckNearbyHikingRoutesJob::dispatch($caiHut, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
             }
         });
-
-        static::updated(function ($caiHut) {
-            if (app()->environment('production')) {
-                CacheMiturAbruzzoDataJob::dispatch('CaiHut', $caiHut->id);
-            }
-        });
     }
 
     public function region()
@@ -128,7 +122,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData || empty($osmfeaturesData)) {
-            Log::channel('wm-osmfeatures')->info('No data found for CaiHut '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for CaiHut ' . $osmfeaturesId);
 
             return;
         }
@@ -140,7 +134,7 @@ class CaiHut extends Model implements OsmfeaturesSyncableInterface
             if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
                 $updateData['name'] = $osmfeaturesData['properties']['name'];
             } elseif ($osmfeaturesData['properties']['name'] === null) {
-                Log::channel('wm-osmfeatures')->info('No name found for CaiHut '.$osmfeaturesId);
+                Log::channel('wm-osmfeatures')->info('No name found for CaiHut ' . $osmfeaturesId);
             }
         }
 
