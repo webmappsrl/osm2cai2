@@ -4,8 +4,8 @@ namespace App\Nova\Metrics;
 
 use App\Models\EcPoi;
 use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Metrics\Partition;
 
 class EcPoisScorePartition extends Partition
 {
@@ -29,7 +29,6 @@ class EcPoisScorePartition extends Partition
                 ->pluck('count', 'score')
                 ->toArray()
         );
-
 
         //return $this->count($request, EcPoi::class, 'score');
     }
@@ -57,7 +56,7 @@ class EcPoisScorePartition extends Partition
     /**
      * Get the appropriate cache key for the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  NovaRequest  $request
      * @return string
      */
     public function getCacheKey(NovaRequest $request)
@@ -72,6 +71,6 @@ class EcPoisScorePartition extends Partition
         //     md5($request->input('filter', 'no-filter'))
         // );
 
-        return 'nova.metric.' . $this->uriKey();
+        return 'nova.metric.'.$this->uriKey();
     }
 }
