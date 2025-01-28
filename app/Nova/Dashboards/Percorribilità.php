@@ -32,7 +32,7 @@ class Percorribilità extends Dashboard
      */
     public function cards()
     {
-        return $this->cardsService->getPercorribilitàDashboardCardsData($this->user);
+        return $this->cardsService->getPercorribilitàDashboardCards($this->user);
     }
 
 

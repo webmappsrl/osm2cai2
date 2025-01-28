@@ -188,7 +188,7 @@ class DashboardCardsHelper
         return $cards;
     }
 
-    public function getUtentiDashboardCardsData()
+    public function getUtentiDashboardCards()
     {
         $usersByRole = Cache::remember('usersByRole', 60 * 60 * 24 * 2, function () {
             return
@@ -237,7 +237,7 @@ class DashboardCardsHelper
         ];
     }
 
-    public function getPercorribilitàDashboardCardsData(User $user)
+    public function getPercorribilitàDashboardCards(User $user)
     {
         $hikingRoutesSda4 = $this->getHikingRoutes(4, $user);
         $hikingRoutesSda34 = $this->getHikingRoutes([3, 4], $user);
@@ -245,6 +245,41 @@ class DashboardCardsHelper
         return [
             new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
             new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
+        ];
+    }
+
+    public function getSALMiturAbruzzoDashboardCards()
+    {
+        $regions = Cache::remember('sal_mitur_regions', 60 * 60 * 24 * 2, function () {
+            return Region::all();
+        });
+
+        $totalsGlobal = Cache::remember('sal_mitur_totals', 60 * 60 * 24 * 2, function () {
+            $sumMountainGroups = DB::select('SELECT count(*) as count FROM mountain_groups')[0]->count;
+            $sumEcPois = DB::select('SELECT count(*) as count FROM ec_pois')[0]->count;
+            $sumHikingRoutes = DB::select('SELECT count(*) as count FROM hiking_routes WHERE osm2cai_status = 4')[0]->count;
+            $sumPoiTotal = $sumEcPois + $sumHikingRoutes;
+            $sumCaiHuts = DB::select('SELECT count(*) as count FROM cai_huts')[0]->count;
+            $sumClubs = DB::select('SELECT count(*) as count FROM clubs')[0]->count;
+
+            return [
+                'sumMountainGroups' => $sumMountainGroups,
+                'sumEcPois' => $sumEcPois,
+                'sumHikingRoutes' => $sumHikingRoutes,
+                'sumPoiTotal' => $sumPoiTotal,
+                'sumCaiHuts' => $sumCaiHuts,
+                'sumClubs' => $sumClubs,
+            ];
+        });
+
+        return [
+            (new HtmlCard())
+                ->width('full')
+                ->view('nova.cards.sal-mitur-abruzzo-regions-table', [
+                    'regions' => $regions,
+                    'totals' => $totalsGlobal,
+                ])
+                ->withBasicStyles(),
         ];
     }
 

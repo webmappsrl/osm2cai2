@@ -32,7 +32,7 @@ class Utenti extends Dashboard
      */
     public function cards()
     {
-        return $this->cardsService->getUtentiDashboardCardsData();
+        return $this->cardsService->getUtentiDashboardCards();
     }
 
     /**
