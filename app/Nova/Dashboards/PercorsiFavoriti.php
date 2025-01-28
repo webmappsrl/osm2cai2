@@ -10,11 +10,11 @@ use InteractionDesignFoundation\HtmlCard\HtmlCard;
 class PercorsiFavoriti extends Dashboard
 {
 
-    private $cardsService;
+    private $cardsHelper;
 
     public function __construct()
     {
-        $this->cardsService = new DashboardCardsHelper();
+        $this->cardsHelper = new DashboardCardsHelper();
     }
 
     public function label()
@@ -29,7 +29,7 @@ class PercorsiFavoriti extends Dashboard
      */
     public function cards()
     {
-        return [$this->cardsService->getPercorsiFavoritiDashboardCard()];
+        return [$this->cardsHelper->getPercorsiFavoritiDashboardCard()];
     }
 
     /**

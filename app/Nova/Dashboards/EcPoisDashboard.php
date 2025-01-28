@@ -11,11 +11,11 @@ use InteractionDesignFoundation\HtmlCard\HtmlCard;
 
 class EcPoisDashboard extends Dashboard
 {
-    private $cardsService;
+    private $cardsHelper;
 
     public function __construct()
     {
-        $this->cardsService = new DashboardCardsHelper();
+        $this->cardsHelper = new DashboardCardsHelper();
     }
 
     public function label()
@@ -32,7 +32,7 @@ class EcPoisDashboard extends Dashboard
     {
         return [
             new EcPoisTrend,
-            $this->cardsService->getEcPoisDashboardCard(),
+            $this->cardsHelper->getEcPoisDashboardCard(),
             new EcPoisScorePartition,
             new EcPoisTypePartition,
         ];

@@ -16,11 +16,11 @@ use Laravel\Nova\Dashboard;
 class ItalyDashboard extends Dashboard
 {
 
-    private $cardsService;
+    private $cardsHelper;
 
     public function __construct()
     {
-        $this->cardsService = new DashboardCardsHelper();
+        $this->cardsHelper = new DashboardCardsHelper();
     }
 
     public function label()
@@ -31,7 +31,7 @@ class ItalyDashboard extends Dashboard
 
     public function cards()
     {
-        $italyDashboardCards = $this->cardsService->getItalyDashboardCards();
+        $italyDashboardCards = $this->cardsHelper->getItalyDashboardCards();
 
         return [
             (new TotalProvincesCount())->width('1/4'),
@@ -42,9 +42,9 @@ class ItalyDashboard extends Dashboard
             $italyDashboardCards['sda2'],
             $italyDashboardCards['sda3'],
             $italyDashboardCards['sda4'],
-            $this->cardsService->getNationalSalCard(),
-            $this->cardsService->getTotalKmSda3Sda4Card(),
-            $this->cardsService->getTotalKmSda4Card(),
+            $this->cardsHelper->getNationalSalCard(),
+            $this->cardsHelper->getTotalKmSda3Sda4Card(),
+            $this->cardsHelper->getTotalKmSda4Card(),
         ];
     }
 
