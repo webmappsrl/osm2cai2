@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\User;
 use App\Models\Region;
 use App\Models\Sector;
+use App\Models\UgcPoi;
 use App\Models\Province;
 use App\Models\HikingRoute;
 use Illuminate\Support\Arr;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Mako\CustomTableCard\Table\Row;
 use Mako\CustomTableCard\Table\Cell;
 use Illuminate\Support\Facades\Cache;
+use App\Nova\Metrics\AcquaSorgenteTrend;
 use App\Nova\Metrics\ValidatedHrPerMonth;
 use Mako\CustomTableCard\CustomTableCard;
 use App\Nova\Metrics\IssueStatusPartition;
@@ -28,7 +30,7 @@ class DashboardCardsHelper
 {
     public function getNationalSalCard()
     {
-        $sal = cache()->remember('national_sal', now()->addDays(2), function () {
+        $sal = Cache::remember('national_sal', now()->addDays(2), function () {
             return (HikingRoute::where('osm2cai_status', 1)->count() * 0.25 +
                 HikingRoute::where('osm2cai_status', 2)->count() * 0.50 +
                 HikingRoute::where('osm2cai_status', 3)->count() * 0.75 +
@@ -66,7 +68,7 @@ class DashboardCardsHelper
 
     public function getItalyDashboardCards()
     {
-        $numbers = cache()->remember('italy_dashboard_data', now()->addDays(2), function () {
+        $numbers = Cache::remember('italy_dashboard_data', now()->addDays(2), function () {
             $values = DB::table('hiking_routes')
                 ->select('osm2cai_status', DB::raw('count(*) as num'))
                 ->groupBy('osm2cai_status')
@@ -128,7 +130,7 @@ class DashboardCardsHelper
 
     public function getPercorsiFavoritiDashboardCard()
     {
-        $regions = cache()->remember('percorsi-favoriti-dashboard-data', 60 * 60 * 24 * 2, function () {
+        $regions = Cache::remember('percorsi-favoriti-dashboard-data', 60 * 60 * 24 * 2, function () {
             return DB::table('regions')
                 ->select([
                     'regions.name as region_name',
@@ -147,7 +149,7 @@ class DashboardCardsHelper
     public function getEcPoisDashboardCard()
     {
 
-        $ecPoisCount = cache()->remember('ec-pois-count', 60 * 60 * 24 * 2, function () {
+        $ecPoisCount = Cache::remember('ec-pois-count', 60 * 60 * 24 * 2, function () {
             return \App\Models\EcPoi::count();
         });
 
@@ -283,11 +285,24 @@ class DashboardCardsHelper
         ];
     }
 
+    public function getAcquaSorgenteDashboardCards()
+    {
+
+        $ugcPoiWaterCount = Cache::remember('ugc_poi_water_count', now()->addDays(2), function () {
+            return UgcPoi::where('form_id', 'water')->count();
+        });
+
+        return [
+            (new HtmlCard())->view('nova.cards.acqua-sorgente', ['ugcPoiWaterCount' => $ugcPoiWaterCount])->center()->withBasicStyles(),
+            (new AcquaSorgenteTrend)->width('1/2'),
+        ];
+    }
+
     private function getTotalKmCard($status, $label)
     {
         $cacheKey = is_array($status) ? 'total_km_' . implode('_', $status) : 'total_km_' . $status;
 
-        $total = cache()->remember($cacheKey, now()->addDays(2), function () use ($status) {
+        $total = Cache::remember($cacheKey, now()->addDays(2), function () use ($status) {
             $query = DB::table('hiking_routes')
                 ->selectRaw('
                     COALESCE(
@@ -321,7 +336,7 @@ class DashboardCardsHelper
 
     private function nationalCards($user, $roles)
     {
-        $data = cache()->remember('national_data', now()->addDays(2), function () {
+        $data = Cache::remember('national_data', now()->addDays(2), function () {
             $values = DB::table('hiking_routes')
                 ->select('osm2cai_status', DB::raw('count(*) as num'))
                 ->groupBy('osm2cai_status')
@@ -372,7 +387,7 @@ class DashboardCardsHelper
     {
         $region = $user->region;
 
-        $data = cache()->remember('regional_data_' . $region->id, now()->addDays(2), function () use ($region) {
+        $data = Cache::remember('regional_data_' . $region->id, now()->addDays(2), function () use ($region) {
             $numbers = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
 
             foreach ($region->hikingRoutes as $hr) {
@@ -406,7 +421,7 @@ class DashboardCardsHelper
             ];
         });
 
-        $SALIssueStatus = cache()->remember('sal_issue_status_' . $region->id, now()->addDays(2), function () use ($region) {
+        $SALIssueStatus = Cache::remember('sal_issue_status_' . $region->id, now()->addDays(2), function () use ($region) {
             return $this->getSalIssueStatus($region);
         });
 
@@ -530,7 +545,7 @@ class DashboardCardsHelper
         ]);
 
         // Fetch regions data with caching
-        $data = cache()->remember('regions_table_data', 60 * 60 * 24 * 2, function () {
+        $data = Cache::remember('regions_table_data', 60 * 60 * 24 * 2, function () {
             $regions = Region::all();
             $tableData = [];
 
@@ -666,7 +681,7 @@ class DashboardCardsHelper
         ]);
 
         // Get stats with caching
-        $items = cache()->remember("children_stats_{$modelName}_{$childrenTable}", 60 * 60 * 24 * 2, function () use ($childrenAbstractModel, $childrenIds) {
+        $items = Cache::remember("children_stats_{$modelName}_{$childrenTable}", 60 * 60 * 24 * 2, function () use ($childrenAbstractModel, $childrenIds) {
             return $childrenAbstractModel::getStatsForIds($childrenIds);
         });
 
@@ -705,7 +720,7 @@ class DashboardCardsHelper
         $table = (new $modelClassName)->getTable();
         $models = $user->{$table}; // Get models from user relation
 
-        $data = cache()->remember('local_cards_data_' . $user->id . '_' . $modelClassName, now()->addDays(2), function () use ($user, $modelClassName, $models, $table) {
+        $data = Cache::remember('local_cards_data_' . $user->id . '_' . $modelClassName, now()->addDays(2), function () use ($user, $modelClassName, $models, $table) {
             $numbers = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
             foreach ($models as $model) {
                 foreach ($model->hikingRoutes as $hr) {
