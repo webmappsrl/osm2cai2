@@ -2,19 +2,22 @@
 
 namespace App\Nova\Dashboards;
 
-use App\Models\HikingRoute;
 use App\Models\User;
-use App\Nova\Metrics\IssueStatusPartition;
-use Illuminate\Support\Facades\Cache;
+use App\Models\HikingRoute;
 use Laravel\Nova\Dashboard;
+use Illuminate\Support\Facades\Cache;
+use App\Helpers\Nova\DashboardCardsHelper;
+use App\Nova\Metrics\IssueStatusPartition;
 
 class Percorribilità extends Dashboard
 {
     protected $user;
+    private $cardsService;
 
     public function __construct(User $user = null)
     {
         $this->user = $user;
+        $this->cardsService = new DashboardCardsHelper();
     }
 
     public function label()
@@ -29,75 +32,10 @@ class Percorribilità extends Dashboard
      */
     public function cards()
     {
-        $hikingRoutesSda4 = $this->getHikingRoutes(4);
-        $hikingRoutesSda34 = $this->getHikingRoutes([3, 4]);
-
-        return [
-            new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
-            new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
-        ];
+        return $this->cardsService->getPercorribilitàDashboardCardsData($this->user);
     }
 
-    /**
-     * Get hiking routes filtered by status and user's territory
-     *
-     * @param int|array $status
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    protected function getHikingRoutes($status)
-    {
-        $cacheKey = is_array($status) ? 'hikingRoutesSda' . implode('', $status) : 'hikingRoutesSda' . $status;
 
-        //add user id to cache key to avoid conflicts between users
-        if ($this->user) {
-            $cacheKey .= '_user_' . $this->user->id;
-        }
-
-        //increase cache time to 1 hour instead of 1 minute because data doesn't change frequently
-        return Cache::remember($cacheKey, 3600, function () use ($status) {
-            $query = HikingRoute::select('issues_status');
-
-            if (is_array($status)) {
-                $query->whereIn('osm2cai_status', $status);
-            } else {
-                $query->where('osm2cai_status', $status);
-            }
-
-            if ($this->user) {
-                $query->where(function ($q) {
-                    if ($this->user->region) {
-                        $q->orWhereHas(
-                            'regions',
-                            fn($query) => $query->where('regions.id', $this->user->region->id)
-                        );
-                    }
-
-                    if ($this->user->areas->count()) {
-                        $q->orWhereHas(
-                            'areas',
-                            fn($query) => $query->whereIn('areas.id', $this->user->area->pluck('id'))
-                        );
-                    }
-
-                    if ($this->user->provinces->count()) {
-                        $q->orWhereHas(
-                            'provinces',
-                            fn($query) => $query->whereIn('provinces.id', $this->user->provinces->pluck('id'))
-                        );
-                    }
-
-                    if ($this->user->sectors->count()) {
-                        $q->orWhereHas(
-                            'sectors',
-                            fn($query) => $query->whereIn('sectors.id', $this->user->sectors->pluck('id'))
-                        );
-                    }
-                });
-            }
-
-            return $query->get();
-        });
-    }
 
     /**
      * Get the URI key for the dashboard.

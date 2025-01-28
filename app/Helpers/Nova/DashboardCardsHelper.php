@@ -3,6 +3,7 @@
 namespace App\Helpers\Nova;
 
 use App\Models\Area;
+use App\Models\User;
 use App\Models\Region;
 use App\Models\Sector;
 use App\Models\Province;
@@ -17,6 +18,7 @@ use Mako\CustomTableCard\Table\Cell;
 use Illuminate\Support\Facades\Cache;
 use App\Nova\Metrics\ValidatedHrPerMonth;
 use Mako\CustomTableCard\CustomTableCard;
+use App\Nova\Metrics\IssueStatusPartition;
 use App\Nova\Metrics\UserDistributionByRole;
 use App\Nova\Metrics\IssueLastUpdatePerMonth;
 use App\Nova\Metrics\UserDistributionByRegion;
@@ -232,6 +234,17 @@ class DashboardCardsHelper
                 ->withBasicStyles(),
             (new ValidatedHrPerMonth()),
             (new IssueLastUpdatePerMonth()),
+        ];
+    }
+
+    public function getPercorribilitàDashboardCardsData(User $user)
+    {
+        $hikingRoutesSda4 = $this->getHikingRoutes(4, $user);
+        $hikingRoutesSda34 = $this->getHikingRoutes([3, 4], $user);
+
+        return [
+            new IssueStatusPartition($hikingRoutesSda4, 'Percorribilità SDA 4', 'sda4-issue-status-partition'),
+            new IssueStatusPartition($hikingRoutesSda34, 'Percorribilità SDA 3 e 4', 'sda3-and-4-issue-status-partition'),
         ];
     }
 
@@ -920,5 +933,65 @@ class DashboardCardsHelper
         $sectorsCard->data($data);
 
         return $sectorsCard;
+    }
+
+    /**
+     * Get hiking routes filtered by status and user's territory
+     *
+     * @param int|array $status
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function getHikingRoutes($status, $user = null)
+    {
+        $cacheKey = is_array($status) ? 'hikingRoutesSda' . implode('', $status) : 'hikingRoutesSda' . $status;
+
+        //add user id to cache key to avoid conflicts between users
+        if ($user) {
+            $cacheKey .= '_user_' . $user->id;
+        }
+
+        return Cache::remember($cacheKey, 60 * 60 * 24 * 2, function () use ($status, $user) {
+            $query = HikingRoute::select('issues_status');
+
+            if (is_array($status)) {
+                $query->whereIn('osm2cai_status', $status);
+            } else {
+                $query->where('osm2cai_status', $status);
+            }
+
+            if ($user) {
+                $query->where(function ($q) use ($user) {
+                    if ($user->region) {
+                        $q->orWhereHas(
+                            'regions',
+                            fn($query) => $query->where('regions.id', $user->region->id)
+                        );
+                    }
+
+                    if ($user->areas->count()) {
+                        $q->orWhereHas(
+                            'areas',
+                            fn($query) => $query->whereIn('areas.id', $user->area->pluck('id'))
+                        );
+                    }
+
+                    if ($user->provinces->count()) {
+                        $q->orWhereHas(
+                            'provinces',
+                            fn($query) => $query->whereIn('provinces.id', $user->provinces->pluck('id'))
+                        );
+                    }
+
+                    if ($user->sectors->count()) {
+                        $q->orWhereHas(
+                            'sectors',
+                            fn($query) => $query->whereIn('sectors.id', $user->sectors->pluck('id'))
+                        );
+                    }
+                });
+            }
+
+            return $query->get();
+        });
     }
 }
