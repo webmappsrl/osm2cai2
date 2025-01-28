@@ -2,14 +2,22 @@
 
 namespace App\Nova\Dashboards;
 
-use App\Nova\Metrics\EcPoisScorePartition;
+use Laravel\Nova\Dashboard;
 use App\Nova\Metrics\EcPoisTrend;
 use App\Nova\Metrics\EcPoisTypePartition;
+use App\Helpers\Nova\DashboardCardsHelper;
+use App\Nova\Metrics\EcPoisScorePartition;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
-use Laravel\Nova\Dashboard;
 
 class EcPoisDashboard extends Dashboard
 {
+    private $cardsService;
+
+    public function __construct()
+    {
+        $this->cardsService = new DashboardCardsHelper();
+    }
+
     public function label()
     {
         return 'POIS';
@@ -24,7 +32,7 @@ class EcPoisDashboard extends Dashboard
     {
         return [
             new EcPoisTrend,
-            (new HtmlCard())->view('nova.cards.ec-pois', ['ecPoiCount' => \App\Models\EcPoi::count()])->center()->withBasicStyles(),
+            $this->cardsService->getEcPoisDashboardCard(),
             new EcPoisScorePartition,
             new EcPoisTypePartition,
         ];

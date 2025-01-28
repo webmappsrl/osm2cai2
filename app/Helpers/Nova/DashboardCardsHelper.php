@@ -146,7 +146,7 @@ class DashboardCardsHelper
         ];
     }
 
-    public function getPercorsiFavoritiDashboardCards()
+    public function getPercorsiFavoritiDashboardCard()
     {
         $regions = cache()->remember('percorsi-favoriti-dashboard-data', 60 * 60 * 24 * 2, function () {
             return DB::table('regions')
@@ -159,10 +159,18 @@ class DashboardCardsHelper
                 ->get();
         });
 
-        return [
-            (new HtmlCard())->width('full')
-                ->view('nova.cards.percorsi-favoriti-table', ['regions' => $regions])
-                ->withBasicStyles(),
-        ];
+        return (new HtmlCard())->width('full')
+            ->view('nova.cards.percorsi-favoriti-table', ['regions' => $regions])
+            ->withBasicStyles();
+    }
+
+    public function getEcPoisDashboardCard()
+    {
+
+        $ecPoisCount = cache()->remember('ec-pois-count', 60 * 60 * 24 * 2, function () {
+            return \App\Models\EcPoi::count();
+        });
+
+        return (new HtmlCard())->view('nova.cards.ec-pois', ['ecPoiCount' => $ecPoisCount])->center()->withBasicStyles();
     }
 }

@@ -29,7 +29,7 @@ class PercorsiFavoriti extends Dashboard
      */
     public function cards()
     {
-        return  $this->cardsService->getPercorsiFavoritiDashboardCards();
+        return [$this->cardsService->getPercorsiFavoritiDashboardCard()];
     }
 
     /**
