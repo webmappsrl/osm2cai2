@@ -15,16 +15,23 @@ use Laravel\Nova\Dashboard;
 
 class ItalyDashboard extends Dashboard
 {
+
+    private $cardsService;
+
+    public function __construct()
+    {
+        $this->cardsService = new DashboardCardsHelper();
+    }
+
     public function label()
     {
         return 'Riepilogo nazionale';
     }
 
+
     public function cards()
     {
-
-        $cardsService = new DashboardCardsHelper;
-        $italyDashboardCards = $cardsService->getItalyDashboardCards();
+        $italyDashboardCards = $this->cardsService->getItalyDashboardCards();
 
         return [
             (new TotalProvincesCount())->width('1/4'),
@@ -35,9 +42,9 @@ class ItalyDashboard extends Dashboard
             $italyDashboardCards['sda2'],
             $italyDashboardCards['sda3'],
             $italyDashboardCards['sda4'],
-            $cardsService->getNationalSalCard(),
-            $cardsService->getTotalKmSda3Sda4Card(),
-            $cardsService->getTotalKmSda4Card(),
+            $this->cardsService->getNationalSalCard(),
+            $this->cardsService->getTotalKmSda3Sda4Card(),
+            $this->cardsService->getTotalKmSda4Card(),
         ];
     }
 
