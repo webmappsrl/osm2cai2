@@ -10,11 +10,16 @@ use App\Models\HikingRoute;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Helpers\Osm2caiHelper;
+use App\Nova\Metrics\TotalUsers;
 use Illuminate\Support\Facades\DB;
 use Mako\CustomTableCard\Table\Row;
 use Mako\CustomTableCard\Table\Cell;
 use Illuminate\Support\Facades\Cache;
+use App\Nova\Metrics\ValidatedHrPerMonth;
 use Mako\CustomTableCard\CustomTableCard;
+use App\Nova\Metrics\UserDistributionByRole;
+use App\Nova\Metrics\IssueLastUpdatePerMonth;
+use App\Nova\Metrics\UserDistributionByRegion;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 
 class DashboardCardsHelper
@@ -34,42 +39,6 @@ class DashboardCardsHelper
             ->view('nova.cards.sal-nazionale', [
                 'sal' => number_format($sal * 100, 2),
                 'backgroundColor' => Osm2caiHelper::getSalColor($sal),
-            ])
-            ->center()
-            ->withBasicStyles();
-    }
-
-    private function getTotalKmCard($status, $label)
-    {
-        $cacheKey = is_array($status) ? 'total_km_' . implode('_', $status) : 'total_km_' . $status;
-
-        $total = cache()->remember($cacheKey, now()->addDays(2), function () use ($status) {
-            $query = DB::table('hiking_routes')
-                ->selectRaw('
-                    COALESCE(
-                        SUM(ST_Length(geometry::geography) / 1000), 
-                        0
-                    ) as total
-                ');
-
-            if (is_array($status)) {
-                $query->whereIn('osm2cai_status', $status);
-            } else {
-                $query->where('osm2cai_status', $status);
-            }
-
-            $tot = $query->first();
-
-            return round(floatval($tot->total), 2);
-        });
-
-        $formatted = number_format($total, 2, ',', '.');
-
-        return (new HtmlCard())
-            ->width('1/4')
-            ->view('nova.cards.total-km', [
-                'total' => $formatted,
-                'label' => $label,
             ])
             ->center()
             ->withBasicStyles();
@@ -215,6 +184,91 @@ class DashboardCardsHelper
         }
 
         return $cards;
+    }
+
+    public function getUtentiDashboardCardsData()
+    {
+        $usersByRole = Cache::remember('usersByRole', 60 * 60 * 24 * 2, function () {
+            return
+                DB::table('users')
+                ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->select('roles.name', DB::raw('count(*) as count'))
+                ->groupBy('roles.name')
+                ->get()
+                ->pluck('count', 'name')
+                ->toArray();
+        });
+
+        $usersByRegion = Cache::remember('usersByRegion', 60 * 60 * 24 * 2, function () {
+            return
+                [
+                    'Region' => DB::table('users')->whereNotNull('region_id')->count(),
+                    'Province' => DB::table('province_user')->distinct('user_id')->count('user_id'),
+                    'Area' => DB::table('area_user')->distinct('user_id')->count('user_id'),
+                    'Sector' => DB::table('sector_user')->distinct('user_id')->count('user_id'),
+                ];
+        });
+
+        $mostActiveUsers = Cache::remember('mostActiveUsers', 60 * 60 * 24 * 2, function () {
+            return DB::select("
+                SELECT u.id AS user_id, u.name AS user_name, COUNT(DISTINCT hr.id) AS numero_validazioni
+                FROM users u
+                JOIN hiking_routes hr ON u.id = hr.validator_id
+                WHERE hr.osm2cai_status = '4'
+                GROUP BY u.id, u.name
+                ORDER BY numero_validazioni DESC
+                LIMIT 5
+            ");
+        });
+
+        return [
+            new TotalUsers,
+            new UserDistributionByRole($usersByRole),
+            new UserDistributionByRegion($usersByRegion),
+            (new HtmlCard())
+                ->width('1/2')
+                ->view('nova.cards.most-active-users', ['users' => $mostActiveUsers])
+                ->withBasicStyles(),
+            (new ValidatedHrPerMonth()),
+            (new IssueLastUpdatePerMonth()),
+        ];
+    }
+
+    private function getTotalKmCard($status, $label)
+    {
+        $cacheKey = is_array($status) ? 'total_km_' . implode('_', $status) : 'total_km_' . $status;
+
+        $total = cache()->remember($cacheKey, now()->addDays(2), function () use ($status) {
+            $query = DB::table('hiking_routes')
+                ->selectRaw('
+                    COALESCE(
+                        SUM(ST_Length(geometry::geography) / 1000), 
+                        0
+                    ) as total
+                ');
+
+            if (is_array($status)) {
+                $query->whereIn('osm2cai_status', $status);
+            } else {
+                $query->where('osm2cai_status', $status);
+            }
+
+            $tot = $query->first();
+
+            return round(floatval($tot->total), 2);
+        });
+
+        $formatted = number_format($total, 2, ',', '.');
+
+        return (new HtmlCard())
+            ->width('1/4')
+            ->view('nova.cards.total-km', [
+                'total' => $formatted,
+                'label' => $label,
+            ])
+            ->center()
+            ->withBasicStyles();
     }
 
     private function nationalCards($user, $roles)
