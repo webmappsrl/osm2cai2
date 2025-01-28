@@ -14,7 +14,7 @@ class SALMiturAbruzzo extends Dashboard
 {
     private $cardsService;
 
-    public function __construct(User $user = null)
+    public function __construct()
     {
         $this->cardsService = new DashboardCardsHelper();
     }
