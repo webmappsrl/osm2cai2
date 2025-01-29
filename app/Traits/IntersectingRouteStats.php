@@ -9,9 +9,6 @@ trait IntersectingRouteStats
 {
     public function getRouteStats()
     {
-        $intersectingRoutes = $this->intersectings['hiking_routes'] ?? [];
-        $routeIds = array_keys($intersectingRoutes);
-
         $stats = [
             'tot1' => 0,
             'tot2' => 0,
@@ -19,15 +16,9 @@ trait IntersectingRouteStats
             'tot4' => 0,
         ];
 
-        if (! empty($routeIds)) {
-            $routes = HikingRoute::whereIn('id', $routeIds)
-                ->select('id', 'osm2cai_status')
-                ->get();
-
-            foreach ($routes as $route) {
-                if ($route->osm2cai_status >= 1 && $route->osm2cai_status <= 4) {
-                    $stats['tot'.$route->osm2cai_status]++;
-                }
+        foreach ($this->hikingRoutes as $route) {
+            if ($route->osm2cai_status >= 1 && $route->osm2cai_status <= 4) {
+                $stats['tot' . $route->osm2cai_status]++;
             }
         }
 
