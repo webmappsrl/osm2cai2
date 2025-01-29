@@ -15,7 +15,6 @@ use Laravel\Nova\Dashboard;
 
 class ItalyDashboard extends Dashboard
 {
-
     private $cardsHelper;
 
     public function __construct()
@@ -27,7 +26,6 @@ class ItalyDashboard extends Dashboard
     {
         return 'Riepilogo nazionale';
     }
-
 
     public function cards()
     {

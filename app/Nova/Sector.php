@@ -221,7 +221,7 @@ class Sector extends Resource
             $filter = base64_encode(json_encode($availableFilters));
 
             // Build the URL
-            $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
+            $link = trim(Nova::path(), '/').'/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens?hiking-routes_filter='.$filter;
             $exploreUrl = $link;
         }
 
@@ -328,7 +328,6 @@ class Sector extends Resource
 
     public function authorizedToAttachAny(NovaRequest $request, $model)
     {
-
         $user = auth()->user();
         $sector = $this->resource;
 

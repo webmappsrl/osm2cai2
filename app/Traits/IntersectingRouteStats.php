@@ -18,7 +18,7 @@ trait IntersectingRouteStats
 
         foreach ($this->hikingRoutes as $route) {
             if ($route->osm2cai_status >= 1 && $route->osm2cai_status <= 4) {
-                $stats['tot' . $route->osm2cai_status]++;
+                $stats['tot'.$route->osm2cai_status]++;
             }
         }
 

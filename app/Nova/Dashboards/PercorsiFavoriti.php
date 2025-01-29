@@ -2,14 +2,13 @@
 
 namespace App\Nova\Dashboards;
 
-use Laravel\Nova\Dashboard;
-use Illuminate\Support\Facades\DB;
 use App\Helpers\Nova\DashboardCardsHelper;
+use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Dashboard;
 
 class PercorsiFavoriti extends Dashboard
 {
-
     private $cardsHelper;
 
     public function __construct()

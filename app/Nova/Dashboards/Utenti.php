@@ -2,17 +2,16 @@
 
 namespace App\Nova\Dashboards;
 
-use Laravel\Nova\Dashboard;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use App\Nova\Metrics\ValidatedHrPerMonth;
 use App\Helpers\Nova\DashboardCardsHelper;
 use App\Nova\Metrics\IssueLastUpdatePerMonth;
+use App\Nova\Metrics\ValidatedHrPerMonth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Dashboard;
 
 class Utenti extends Dashboard
 {
-
     private $cardsService;
 
     public function __construct()

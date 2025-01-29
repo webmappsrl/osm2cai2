@@ -2,16 +2,17 @@
 
 namespace App\Nova\Dashboards;
 
-use App\Models\User;
-use App\Models\HikingRoute;
-use Laravel\Nova\Dashboard;
-use Illuminate\Support\Facades\Cache;
 use App\Helpers\Nova\DashboardCardsHelper;
+use App\Models\HikingRoute;
+use App\Models\User;
 use App\Nova\Metrics\IssueStatusPartition;
+use Illuminate\Support\Facades\Cache;
+use Laravel\Nova\Dashboard;
 
 class Percorribilità extends Dashboard
 {
     protected $user;
+
     private $cardsService;
 
     public function __construct(User $user = null)
@@ -34,8 +35,6 @@ class Percorribilità extends Dashboard
     {
         return $this->cardsService->getPercorribilitàDashboardCards($this->user);
     }
-
-
 
     /**
      * Get the URI key for the dashboard.
