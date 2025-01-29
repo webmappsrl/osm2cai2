@@ -78,7 +78,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                     MenuItem::link(__('Riepilogo utenti'), '/dashboards/utenti')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                            return auth()->user()->hasRole(['Administrator']);
                         }),
 
                     MenuItem::link(__('Riepilogo Percorribilità'), '/dashboards/percorribilità')
@@ -210,7 +210,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         ];
 
         $loggedInUser = auth()->user();
-
         if (! $loggedInUser) {
             return $dashboards;
         }
@@ -230,11 +229,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         if ($loggedInUser->hasRole('Regional Referent')) {
             $dashboards[] = new SectorsDashboard;
-            $dashboards[] = new Percorribilità($loggedInUser); //show data only for the user region
+            $dashboards[] = new Percorribilità();
         }
 
         if ($loggedInUser->hasRole('Local Referent')) {
-            $dashboards[] = new Percorribilità($loggedInUser);
+            $dashboards[] = new Percorribilità();
         }
 
         return $dashboards;
