@@ -139,6 +139,22 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
     }
 
     /**
+     * Getter for the geometry_sync field
+     *
+     * Converts the local geometry to GeoJSON format and compares it with the
+     * geometry stored in osmfeatures_data to determine if they are in sync
+     *
+     * @return bool True if geometries match, false otherwise
+     */
+    public function getGeometrySyncAttribute(): bool
+    {
+        $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
+        $geom = json_decode($geojson, true);
+
+        return $geom == $this->osmfeatures_data['geometry'];
+    }
+
+    /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
      */
     public static function getOsmfeaturesEndpoint(): string
@@ -370,25 +386,6 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         }
 
         return Sector::find($sectorId[0]->sector_id);
-    }
-
-    /**
-     * It returns a string with all hiking routes sectors full codes separated by ';'
-     *
-     * @return string
-     */
-    public function getSectorsString(): string
-    {
-        $s = 'ND';
-        if (count($this->sectors) > 0) {
-            $sectors = [];
-            foreach ($this->sectors as $sector) {
-                $sectors[] = $sector->full_code.'('.number_format($sector->pivot->percentage * 100, 2).'%)';
-            }
-            $s = implode('; ', $sectors);
-        }
-
-        return $s;
     }
 
     /**

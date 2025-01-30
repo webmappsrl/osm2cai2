@@ -39,11 +39,11 @@ class GeometryService
      */
     public function geojsonToMultilinestringGeometry($geojson)
     {
-        return DB::select(DB::raw("select (
+        return DB::select("select (
         ST_Multi(
           ST_GeomFromGeoJSON('".$geojson."')
         )
-    ) as g "))[0]->g;
+    ) as g ")[0]->g;
     }
 
     /**
@@ -77,8 +77,8 @@ class GeometryService
                 if ('' === $geojson) {
                     try {
                         $geojson = Gisconverter::gpxToGeojson($text);
-                        $content = json_decode($geojson);
-                        $contentType = @$content->type;
+                        $content = json_decode($geojson, true);
+                        $contentType = $content['type'];
                     } catch (InvalidText $ec) {
                     }
                 }
@@ -86,8 +86,8 @@ class GeometryService
                 if ('' === $geojson) {
                     try {
                         $geojson = Gisconverter::kmlToGeojson($text);
-                        $content = json_decode($geojson);
-                        $contentType = @$content->type;
+                        $content = json_decode($geojson, true);
+                        $contentType = $content['type'];
                     } catch (InvalidText $ec) {
                     }
                 }

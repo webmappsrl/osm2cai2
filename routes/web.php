@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CasLoginController;
 use App\Http\Controllers\HikingRouteLoScarponeExportController;
+use App\Http\Controllers\ImportUGCController;
 use App\Http\Controllers\MiturAbruzzoController;
 use App\Jobs\TestJob;
 use App\Models\HikingRoute;
@@ -69,3 +70,4 @@ Route::get('loscarpone/export/', [HikingRouteLoScarponeExportController::class, 
 Route::get('hiking-route-map/{id}', function ($id) {
     return view('maps.hikingroute', ['hikingroute' => HikingRoute::findOrFail($id)]);
 })->name('hiking-route-public-map');
+Route::get('/import-ugc', [ImportUGCController::class, 'importUGCFromGeohub'])->name('import-ugc')->middleware('auth');

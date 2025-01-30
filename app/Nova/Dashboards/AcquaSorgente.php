@@ -2,11 +2,19 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Helpers\Nova\DashboardCardsHelper;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Dashboard;
 
 class AcquaSorgente extends Dashboard
 {
+    private $cardsService;
+
+    public function __construct()
+    {
+        $this->cardsService = new DashboardCardsHelper();
+    }
+
     public function label()
     {
         return 'Riepilogo Acqua Sorgente';
@@ -19,13 +27,7 @@ class AcquaSorgente extends Dashboard
      */
     public function cards()
     {
-        //get all the ugcPoi with form_id = 'water'
-        $ugcPoiWaterCount = \App\Models\UgcPoi::where('form_id', 'water')->count();
-
-        return [
-            (new HtmlCard())->view('nova.cards.acqua-sorgente', ['ugcPoiWaterCount' => $ugcPoiWaterCount])->center()->withBasicStyles(),
-            (new \App\Nova\Metrics\AcquaSorgenteTrend)->width('1/2'),
-        ];
+        return $this->cardsService->getAcquaSorgenteDashboardCards();
     }
 
     /**

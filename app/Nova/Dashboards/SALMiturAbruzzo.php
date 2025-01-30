@@ -2,6 +2,7 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Helpers\Nova\DashboardCardsHelper;
 use App\Models\Region;
 use Ericlagarda\NovaTextCard\TextCard;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,13 @@ use Laravel\Nova\Dashboard;
 
 class SALMiturAbruzzo extends Dashboard
 {
+    private $cardsService;
+
+    public function __construct()
+    {
+        $this->cardsService = new DashboardCardsHelper();
+    }
+
     public function label()
     {
         return 'Riepilogo MITUR-Abruzzo';
@@ -23,33 +31,7 @@ class SALMiturAbruzzo extends Dashboard
      */
     public function cards()
     {
-        $regions = Region::all();
-
-        $sumMountainGroups = DB::select('SELECT count(*) as count FROM mountain_groups')[0]->count;
-        $sumEcPois = DB::select('SELECT count(*) as count FROM ec_pois')[0]->count;
-        $sumHikingRoutes = DB::select('SELECT count(*) as count FROM hiking_routes WHERE osm2cai_status = 4')[0]->count;
-        $sumPoiTotal = $sumEcPois + $sumHikingRoutes;
-        $sumCaiHuts = DB::select('SELECT count(*) as count FROM cai_huts')[0]->count;
-        $sumClubs = DB::select('SELECT count(*) as count FROM clubs')[0]->count;
-
-        $totalsGlobal = [
-            'sumMountainGroups' => $sumMountainGroups,
-            'sumEcPois' => $sumEcPois,
-            'sumHikingRoutes' => $sumHikingRoutes,
-            'sumPoiTotal' => $sumPoiTotal,
-            'sumCaiHuts' => $sumCaiHuts,
-            'sumClubs' => $sumClubs,
-        ];
-
-        return [
-            (new HtmlCard())
-                ->width('full')
-                ->view('nova.cards.sal-mitur-abruzzo-regions-table', [
-                    'regions' => $regions,
-                    'totals' => $totalsGlobal,
-                ])
-                ->withBasicStyles(),
-        ];
+        return $this->cardsService->getSALMiturAbruzzoDashboardCards();
     }
 
     /**

@@ -3,6 +3,10 @@
 namespace App\Services;
 
 use App\Models\HikingRoute;
+use App\Models\Sector;
+use App\Nova\Actions\CalculateIntersections;
+use App\Services\GeometryService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use SimpleXMLElement;
 use Symfony\Component\String\Exception\RuntimeException;
@@ -119,11 +123,10 @@ class OsmService
             foreach ($relation->tag as $tag) {
                 $key = str_replace(':', '_', (string) $tag['k']);
                 if (in_array($key, $allowedKeys)) {
-                    $return[$key.'_osm'] = (string) $tag['v'];
                     $return[$key] = (string) $tag['v'];
                 }
             }
-            $return['relation_id'] = $relationId;
+            $return['osm_id'] = $relationId;
         }
 
         return $return;
@@ -166,7 +169,7 @@ class OsmService
         if ($gpx) {
             $service = GeometryService::getService();
             $geojson = $service->textToGeojson($gpx);
-            $geometry = $service->geojsonToMultilinestringGeometry($geojson);
+            $geometry = $service->geojsonToMultilinestringGeometry(json_encode($geojson));
 
             return $geometry;
         }
@@ -199,36 +202,29 @@ class OsmService
 
     public function updateHikingRouteModelWithOsmData(HikingRoute $model, $osmHr = null)
     {
-        $relationId = $model->relation_id;
+        $osmfeaturesData = $model->osmfeatures_data;
+        $relationId = $osmfeaturesData['properties']['osm_id'];
         if (is_null($osmHr)) {
             $osmHr = $this->getHikingRoute($relationId);
         }
-        //non è i tempo reale
+
         $osmGeo = $this->getHikingRouteGeometry($relationId);
-        //AGGIORNO GEOMETRIA
         $model->geometry = $osmGeo;
-        $model->geometry_osm = $osmGeo;
-        foreach ($this->getRelationApiFieldsKey() as $attribute) {
-            $key = $attribute;
-            $key_osm = $attribute.'_osm';
+        $osmfeaturesData['geometry'] = json_decode(DB::select("SELECT ST_AsGeoJSON('".$osmGeo."') as geojson")[0]->geojson, true);
+        foreach ($this->getRelationApiFieldsKey() as $key) {
             if (isset($osmHr[$key])) {
-                $model->$key = $osmHr[$key];
+                $osmfeaturesData['properties'][$key] = $osmHr[$key];
             } else {
-                $model->$key = null;
-            }
-            if (isset($osmHr[$key_osm])) {
-                $model->$key_osm = $osmHr[$key_osm];
-            } else {
-                $model->$key_osm = null;
+                $osmfeaturesData['properties'][$key] = null;
             }
         }
-        $model->setGeometrySync();
-        $model->setRefREIComp();
-        $model->setOsm2CaiStatus();
+        $model->osmfeatures_data = $osmfeaturesData;
         $model->save();
-        $model->computeAndSetTechInfo();
-        //rifattorizzazione dei settori
-        $model->computeAndSetSectors();
+
+        $sectorsIntersecting = $model->getIntersections(new Sector());
+
+        //associate sectors intersecting with the route
+        $model->sectors()->sync($sectorsIntersecting->pluck('id'));
 
         return $model->save();
     }

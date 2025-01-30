@@ -34,8 +34,10 @@ use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
 use App\Nova\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Menu\Menu;
 use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
@@ -78,7 +80,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                     MenuItem::link(__('Riepilogo utenti'), '/dashboards/utenti')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                            return auth()->user()->hasRole(['Administrator']);
                         }),
 
                     MenuItem::link(__('Riepilogo Percorribilità'), '/dashboards/percorribilità')
@@ -156,6 +158,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
                     MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
                     MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
+                    MenuItem::externalLink(__('Sync UGC'), route('import-ugc'))->canSee(function () {
+                        return auth()->user()->hasRole('Administrator');
+                    })->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
@@ -163,7 +168,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(User::class, __('User')), // Usa User Nova resource
                     MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab(),
                     MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab(),
-                ])->icon('user'),
+                ])->icon('user')->canSee(function () {
+                    return auth()->user()->hasRole('Administrator');
+                }),
+
             ];
         });
     }
@@ -210,7 +218,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         ];
 
         $loggedInUser = auth()->user();
-
         if (! $loggedInUser) {
             return $dashboards;
         }
@@ -230,11 +237,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         if ($loggedInUser->hasRole('Regional Referent')) {
             $dashboards[] = new SectorsDashboard;
-            $dashboards[] = new Percorribilità($loggedInUser); //show data only for the user region
+            $dashboards[] = new Percorribilità();
         }
 
         if ($loggedInUser->hasRole('Local Referent')) {
-            $dashboards[] = new Percorribilità($loggedInUser);
+            $dashboards[] = new Percorribilità();
         }
 
         return $dashboards;

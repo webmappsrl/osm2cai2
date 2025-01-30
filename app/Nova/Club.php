@@ -202,7 +202,7 @@ class Club extends Resource
             (new ClubSalPercorsi($hr))->onlyOnDetail()->width('1/4'),
             (new HtmlCard())->width('1/4')
                 ->view('nova.cards.club-total-hr-card', [
-                    'total' => $hr->count(),
+                    'total' => count($hr),
                 ])->center()
                 ->withBasicStyles()
                 ->onlyOnDetail(),

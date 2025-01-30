@@ -329,7 +329,7 @@ class Sector extends Resource
     public function authorizedToAttachAny(NovaRequest $request, $model)
     {
         $user = auth()->user();
-        $sector = $model;
+        $sector = $this->resource;
 
         if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
             return true;

@@ -38,7 +38,7 @@ class SectorPolicy
      */
     public function create(User $user): bool
     {
-        return $this->hasAllowedRole($user);
+        return $user->hasRole('Administrator');
     }
 
     /**
@@ -46,7 +46,7 @@ class SectorPolicy
      */
     public function update(User $user, Sector $sector): bool
     {
-        return $this->hasAllowedRole($user) || $user->region_id === $sector->area_province->region_id;
+        return $this->hasAllowedRole($user) || $user->region_id === $sector->area->province->region_id;
     }
 
     /**

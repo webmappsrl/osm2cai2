@@ -10,6 +10,7 @@ use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;
 use App\Nova\Actions\DeleteHikingRouteAction;
 use App\Nova\Actions\ImportPois;
+use App\Nova\Actions\OsmSyncHikingRouteAction;
 use App\Nova\Actions\OverpassMap;
 use App\Nova\Actions\PercorsoFavoritoAction;
 use App\Nova\Actions\RevertValidateHikingRouteAction;
@@ -146,14 +147,9 @@ class HikingRoute extends OsmfeaturesResource
         return array_merge($orderedFields, [
             Boolean::make(__('Geometry Correctness'), 'is_geometry_correct')->onlyOnDetail(),
             Boolean::make(__('REI Ref Consistency'), function () {
-                return $this->osmfeatures_data['properties']['ref_REI'] == $this->ref_rei;
+                return $this->ref_rei == $this->ref_rei_comp;
             })->onlyOnDetail(),
-            Boolean::make(__('Geometry Sync'), function () {
-                $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
-                $geom = json_decode($geojson, true);
-
-                return $geom == $this->osmfeatures_data['geometry'];
-            })->onlyOnDetail(),
+            Boolean::make(__('Geometry Sync'), 'geometry_sync')->onlyOnDetail(),
         ], $this->getTabs());
     }
 
@@ -253,8 +249,8 @@ class HikingRoute extends OsmfeaturesResource
     {
         return [
             (new UploadValidationRawDataAction)
-                ->confirmButtonText('Carica')
-                ->cancelButtonText('Non caricare')
+                ->confirmButtonText(__('Upload'))
+                ->cancelButtonText(__('Do not upload'))
                 ->canSee(function ($request) {
                     return true;
                 })
@@ -264,9 +260,9 @@ class HikingRoute extends OsmfeaturesResource
                     }
                 ),
             (new ValidateHikingRouteAction)
-                ->confirmText('Sei sicuro di voler validare questo percorso?'.'REF:'.$this->ref.' (CODICE REI: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Non validare')
+                ->confirmText(__('Are you sure you want to validate this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Do not validate'))
                 ->canSee(function ($request) {
                     return true;
                 })
@@ -275,22 +271,22 @@ class HikingRoute extends OsmfeaturesResource
                         return true;
                     }
                 ),
-            // (new OsmSyncHikingRouteAction) TODO: check if still needed after osmfeatures sync
-            //     ->confirmText('Sei sicuro di voler sincronizzare i dati osm?')
-            //     ->confirmButtonText('Aggiorna con dati osm')
-            //     ->cancelButtonText("Annulla")
-            //     ->canSee(function ($request) {
-            //         return true;
-            //     })
-            //     ->canRun(
-            //         function ($request, $user) {
-            //             return true;
-            //         }
-            //     ),
+            (new OsmSyncHikingRouteAction)
+                ->confirmText(__('Are you sure you want to sync OSM data?'))
+                ->confirmButtonText(__('Update with OSM data'))
+                ->cancelButtonText(__('Cancel'))
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(
+                    function ($request, $user) {
+                        return true;
+                    }
+                ),
             (new RevertValidateHikingRouteAction)
-                ->confirmText('Sei sicuro di voler revertare la validazione di questo percorso?'.'REF:'.$this->ref.' (CODICE REI: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to revert the validation of this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return true;
                 })
@@ -300,9 +296,9 @@ class HikingRoute extends OsmfeaturesResource
                     }
                 ),
             (new DeleteHikingRouteAction())
-                ->confirmText('Sei sicuro di voler eliminare il percorso?'.'REF:'.$this->ref.' (CODICE REI: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to delete this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return true;
                 })
@@ -313,9 +309,9 @@ class HikingRoute extends OsmfeaturesResource
                 ),
             (new SectorRefactoring())
                 ->onlyOnDetail('true')
-                ->confirmText('Sei sicuro di voler rifattorizzare i settori per il percorso?'.'REF:'.$this->ref.' (CODICE REI: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to refactor sectors for this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return true;
                 })
@@ -332,9 +328,9 @@ class HikingRoute extends OsmfeaturesResource
                 }),
             (new PercorsoFavoritoAction())
                 ->onlyOnDetail('true')
-                ->confirmText('Sei sicuro di voler aggiornare il percorso?')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to update this route?'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return true;
                 })
@@ -345,9 +341,9 @@ class HikingRoute extends OsmfeaturesResource
                 ),
             (new AddRegionFavoritePublicationDateToHikingRouteAction())
                 ->onlyOnDetail('true')
-                ->confirmText('Imposta la data prevista per la publicazione sullo Scarpone Online')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Set expected publication date on Scarpone Online'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent');
                 })
@@ -357,9 +353,9 @@ class HikingRoute extends OsmfeaturesResource
                     }
                 ),
             (new CreateIssue($this->model()))
-                ->confirmText('Sei sicuro di voler creare un issue per questo percorso?')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to create an issue for this route?'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return auth()->user()->getTerritorialRole() != 'unknown';
                 })
@@ -371,9 +367,9 @@ class HikingRoute extends OsmfeaturesResource
                 ->showInline(),
             (new OverpassMap($this->model()))
                 ->onlyOnDetail('true')
-                ->confirmText('Sei sicuro di voler creare una mappa Overpass per questo percorso?')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to create an Overpass map for this route?'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     $userRoles = auth()->user()->getRoleNames()->toArray();
 
@@ -385,9 +381,9 @@ class HikingRoute extends OsmfeaturesResource
                 }),
             (new ImportPois($this->model()))
                 ->onlyOnDetail('true')
-                ->confirmText('Sei sicuro di voler importare i POI per questo percorso?')
-                ->confirmButtonText('Confermo')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Are you sure you want to import POIs for this route?'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     $userRoles = auth()->user()->getRoleNames()->toArray();
 

@@ -11,10 +11,13 @@ use App\Models\Sector;
 use App\Models\UgcPoi;
 use App\Models\UgcTrack;
 use Illuminate\Database\Eloquent\Collection;
+use Laravel\Nova\Auth\Impersonatable;
 use Wm\WmPackage\Models\User as WmUser;
 
 class User extends WmUser
 {
+    use Impersonatable;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -210,5 +213,20 @@ class User extends WmUser
         }
 
         return false;
+    }
+
+    public function canImpersonate()
+    {
+        return $this->hasRole('Administrator');
+    }
+
+    public function canBeImpersonated()
+    {
+        return ! $this->hasRole('Administrator');
+    }
+
+    public function canManageClub(): bool
+    {
+        return $this->hasRole('Administrator') || $this->hasRole('National Referent') || ($this->hasRole('Regional Referent') && $this->region_id == $club->region_id) || (! is_null($this->managedClub) && $this->managedClub->id == $club->id);
     }
 }

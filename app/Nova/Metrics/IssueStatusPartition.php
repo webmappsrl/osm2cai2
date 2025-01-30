@@ -70,6 +70,11 @@ class IssueStatusPartition extends Partition
         return now()->addMinutes(60 * 24);
     }
 
+    public function getCacheKey(NovaRequest $request)
+    {
+        return parent::getCacheKey($request).'-'.$request->user()->id;
+    }
+
     /**
      * Get the URI key for the metric.
      *
