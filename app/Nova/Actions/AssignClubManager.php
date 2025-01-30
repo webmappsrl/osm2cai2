@@ -34,7 +34,7 @@ class AssignClubManager extends Action
     {
         $user = auth()->user();
         foreach ($models as $model) {
-            if (! $this->userCanManageClub($user, $model)) {
+            if (! $user->canManageClub()) {
                 return Action::danger(__('You are not authorized to modify this club'));
             }
             $user = User::find($fields->clubManager);
@@ -46,10 +46,6 @@ class AssignClubManager extends Action
         return Action::message(__('Club\'s manager assigned successfully'));
     }
 
-    private function userCanManageClub($user, $club)
-    {
-        return $user->hasRole('Administrator') || $user->hasRole('National referent') || ($user->hasRole('Regional referent') && $user->region_id == $section->region_id) || (! is_null($user->managedClub) && $user->managedClub->id == $section->id);
-    }
 
     /**
      * Get the fields available on the action.

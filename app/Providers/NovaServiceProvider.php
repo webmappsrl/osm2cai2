@@ -2,44 +2,46 @@
 
 namespace App\Providers;
 
-use App\Nova\ArchaeologicalArea;
-use App\Nova\ArchaeologicalSite;
 use App\Nova\Area;
-use App\Nova\CaiHut;
 use App\Nova\Club;
-use App\Nova\Dashboards\AcquaSorgente;
-use App\Nova\Dashboards\EcPoisDashboard;
-use App\Nova\Dashboards\ItalyDashboard;
-use App\Nova\Dashboards\Main;
-use App\Nova\Dashboards\Percorribilità;
-use App\Nova\Dashboards\PercorsiFavoriti;
-use App\Nova\Dashboards\SALMiturAbruzzo;
-use App\Nova\Dashboards\SectorsDashboard;
-use App\Nova\Dashboards\Utenti;
+use App\Nova\Sign;
+use App\Nova\User;
 use App\Nova\EcPoi;
-use App\Nova\GeologicalSite;
-use App\Nova\HikingRoute;
-use App\Nova\Itinerary;
-use App\Nova\MountainGroups;
-use App\Nova\Municipality;
-use App\Nova\NaturalSpring;
 use App\Nova\Poles;
-use App\Nova\Province;
+use App\Nova\CaiHut;
 use App\Nova\Region;
 use App\Nova\Sector;
-use App\Nova\Sign;
-use App\Nova\SourceSurvey;
-use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
+use App\Nova\Province;
+use App\Nova\UgcMedia;
 use App\Nova\UgcTrack;
-use App\Nova\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Gate;
-use Laravel\Nova\Menu\MenuGroup;
-use Laravel\Nova\Menu\MenuItem;
-use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\Nova;
+use App\Nova\Itinerary;
+use App\Nova\HikingRoute;
+use App\Nova\Municipality;
+use App\Nova\SourceSurvey;
+use App\Nova\NaturalSpring;
+use Laravel\Nova\Menu\Menu;
+use App\Nova\GeologicalSite;
+use App\Nova\MountainGroups;
+use Illuminate\Http\Request;
+use App\Nova\Dashboards\Main;
+use App\Nova\Dashboards\Utenti;
+use Laravel\Nova\Menu\MenuItem;
+use App\Nova\ArchaeologicalArea;
+use App\Nova\ArchaeologicalSite;
+use Laravel\Nova\Menu\MenuGroup;
+use Laravel\Nova\Menu\MenuSection;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Blade;
+use App\Nova\Dashboards\AcquaSorgente;
+use App\Nova\Dashboards\ItalyDashboard;
+use App\Nova\Dashboards\Percorribilità;
+use Illuminate\Support\Facades\Artisan;
+use App\Nova\Dashboards\EcPoisDashboard;
+use App\Nova\Dashboards\SALMiturAbruzzo;
+use App\Nova\Dashboards\PercorsiFavoriti;
+use App\Nova\Dashboards\SectorsDashboard;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -78,7 +80,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                     MenuItem::link(__('Riepilogo utenti'), '/dashboards/utenti')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                            return auth()->user()->hasRole(['Administrator']);
                         }),
 
                     MenuItem::link(__('Riepilogo Percorribilità'), '/dashboards/percorribilità')
@@ -156,6 +158,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
                     MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
                     MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
+                    MenuItem::externalLink(__('Sync UGC'), route('import-ugc'))->canSee(function () {
+                        return auth()->user()->hasRole('Administrator');
+                    })->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
@@ -163,7 +168,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(User::class, __('User')), // Usa User Nova resource
                     MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab(),
                     MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab(),
-                ])->icon('user'),
+                ])->icon('user')->canSee(function () {
+                    return auth()->user()->hasRole('Administrator');
+                })
+
             ];
         });
     }
@@ -210,7 +218,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         ];
 
         $loggedInUser = auth()->user();
-
         if (! $loggedInUser) {
             return $dashboards;
         }
@@ -230,11 +237,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         if ($loggedInUser->hasRole('Regional Referent')) {
             $dashboards[] = new SectorsDashboard;
-            $dashboards[] = new Percorribilità($loggedInUser); //show data only for the user region
+            $dashboards[] = new Percorribilità();
         }
 
         if ($loggedInUser->hasRole('Local Referent')) {
-            $dashboards[] = new Percorribilità($loggedInUser);
+            $dashboards[] = new Percorribilità();
         }
 
         return $dashboards;

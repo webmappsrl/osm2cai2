@@ -33,7 +33,7 @@ class AddMembersToClub extends Action
     {
         $user = auth()->user();
         foreach ($models as $model) {
-            if (! $this->userCanManageClub($user, $model)) {
+            if (! $user->canManageClub()) {
                 return Action::danger(__('You are not authorized to modify this club'));
             }
             $ids = $fields->users;
@@ -49,10 +49,6 @@ class AddMembersToClub extends Action
         return Action::message(__('Members added to the club'));
     }
 
-    private function userCanManageClub($user, $club)
-    {
-        return $user->hasRole('Administrator') || $user->hasRole('National referent') || ($user->hasRole('Regional referent') && $user->region_id == $club->region_id) || (! is_null($user->managedClub) && $user->managedClub->id == $club->id);
-    }
 
     /**
      * Get the fields available on the action.

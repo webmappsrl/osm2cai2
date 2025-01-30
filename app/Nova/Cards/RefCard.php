@@ -7,7 +7,6 @@ use App\Models\HikingRoute;
 
 class RefCard extends HtmlCard
 {
-    private $osmTags;
 
     public function __construct(HikingRoute $hr)
     {
@@ -42,11 +41,25 @@ class RefCard extends HtmlCard
         $osmfeaturesDataProperties = is_string($this->hr->osmfeatures_data) ? json_decode($this->hr->osmfeatures_data, true) : $this->hr->osmfeatures_data['properties'];
 
         $ref = $osmfeaturesDataProperties['ref'] ?? '/';
-        $refRei = $osmfeaturesDataProperties['ref:REI'] ?? '/';
+        $refRei = $osmfeaturesDataProperties['ref_REI'] ?? '/';
+        $refReiComp = $this->hr->ref_rei_comp;
         $sectors = $this->hr->sectors()->pluck('name')->implode(', ');
 
         return <<<HTML
-       <h1 class='text-4xl'>REF:$ref (CODICE REI: $refRei)</h1><p class='text-lg text-gray-400 text-center'>Settori: $sectors</p> 
+       <h1 class='text-3xl'>REF:$ref (CODICE REI: $refRei/$refReiComp)</h1><p class='text-lg text-gray-400 text-center'>Settori: {$this->getSectorsString($this->hr)}</p> 
        HTML;
+    }
+
+    public function getSectorsString(HikingRoute $hr): string
+    {
+        $s = 'ND';
+        if (count($hr->sectors) > 0) {
+            $sectors = [];
+            foreach ($hr->sectors as $sector) {
+                $sectors[] = $sector->full_code . '(' . number_format($sector->pivot->percentage, 2) . '%)';
+            }
+            $s = implode('; ', $sectors);
+        }
+        return $s;
     }
 }

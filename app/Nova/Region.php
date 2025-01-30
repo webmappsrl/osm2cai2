@@ -79,76 +79,62 @@ class Region extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $provincesCount = cache()->remember('region_'.$this->id.'_provinces_count', 60 * 60 * 24, function () {
-            return count($this->provinces);
-        });
+        $cacheKey = "region_{$this->id}_stats";
+        $cacheDuration = 60 * 60 * 1; // 1 hour
 
-        $areasCount = cache()->remember('region_'.$this->id.'_areas_count', 60 * 60 * 24, function () {
-            $count = 0;
-            foreach ($this->provinces as $province) {
-                $count += count($province->areas);
-            }
+        $stats = cache()->remember($cacheKey, $cacheDuration, function () {
+            $provincesCount = count($this->provinces);
 
-            return $count;
-        });
+            $areasCount = $this->provinces->sum(function ($province) {
+                return count($province->areas);
+            });
 
-        $sectorsCount = cache()->remember('region_'.$this->id.'_sectors_count', 60 * 60 * 24, function () {
-            $count = 0;
-            foreach ($this->provinces as $province) {
-                foreach ($province->areas as $area) {
-                    $count += count($area->sectors);
-                }
-            }
+            $sectorsCount = $this->provinces->sum(function ($province) {
+                return $province->areas->sum(function ($area) {
+                    return count($area->sectors);
+                });
+            });
 
-            return $count;
-        });
+            $hikingRoutes = $this->hikingRoutes()
+                ->selectRaw('osm2cai_status, count(*) as count')
+                ->groupBy('osm2cai_status')
+                ->pluck('count', 'osm2cai_status')
+                ->toArray();
 
-        $hikingRoutes4Count = cache()->remember('region_'.$this->id.'_hiking_routes_4_count', 60 * 60 * 24, function () {
-            return $this->hikingRoutes()->where('osm2cai_status', '=', 4)->count();
-        });
-
-        $hikingRoutes3Count = cache()->remember('region_'.$this->id.'_hiking_routes_3_count', 60 * 60 * 24, function () {
-            return $this->hikingRoutes()->where('osm2cai_status', '=', 3)->count();
-        });
-
-        $hikingRoutes2Count = cache()->remember('region_'.$this->id.'_hiking_routes_2_count', 60 * 60 * 24, function () {
-            return $this->hikingRoutes()->where('osm2cai_status', '=', 2)->count();
-        });
-
-        $hikingRoutes1Count = cache()->remember('region_'.$this->id.'_hiking_routes_1_count', 60 * 60 * 24, function () {
-            return $this->hikingRoutes()->where('osm2cai_status', '=', 1)->count();
-        });
-
-        $hikingRoutes0Count = cache()->remember('region_'.$this->id.'_hiking_routes_0_count', 60 * 60 * 24, function () {
-            return $this->hikingRoutes()->where('osm2cai_status', '=', 0)->count();
+            return [
+                'provinces' => $provincesCount,
+                'areas' => $areasCount,
+                'sectors' => $sectorsCount,
+                'hiking_routes' => $hikingRoutes
+            ];
         });
 
         return [
             Text::make('Region', 'name')->sortable(),
             Text::make(__('CAI Code'), 'code')->sortable(),
-            Number::make(__('# Province'), function () use ($provincesCount) {
-                return $provincesCount;
+            Number::make(__('# Province'), function () use ($stats) {
+                return $stats['provinces'];
             }),
-            Number::make(__('# Aree'), function () use ($areasCount) {
-                return $areasCount;
+            Number::make(__('# Aree'), function () use ($stats) {
+                return $stats['areas'];
             }),
-            Number::make(__('# Settori'), function () use ($sectorsCount) {
-                return $sectorsCount;
+            Number::make(__('# Settori'), function () use ($stats) {
+                return $stats['sectors'];
             }),
-            Number::make(__('# 4'), function () use ($hikingRoutes4Count) {
-                return $hikingRoutes4Count;
+            Number::make(__('# 4'), function () use ($stats) {
+                return $stats['hiking_routes'][4] ?? 0;
             }),
-            Number::make(__('# 3'), function () use ($hikingRoutes3Count) {
-                return $hikingRoutes3Count;
+            Number::make(__('# 3'), function () use ($stats) {
+                return $stats['hiking_routes'][3] ?? 0;
             }),
-            Number::make(__('# 2'), function () use ($hikingRoutes2Count) {
-                return $hikingRoutes2Count;
+            Number::make(__('# 2'), function () use ($stats) {
+                return $stats['hiking_routes'][2] ?? 0;
             }),
-            Number::make(__('# 1'), function () use ($hikingRoutes1Count) {
-                return $hikingRoutes1Count;
+            Number::make(__('# 1'), function () use ($stats) {
+                return $stats['hiking_routes'][1] ?? 0;
             }),
-            Number::make(__('# 0'), function () use ($hikingRoutes0Count) {
-                return $hikingRoutes0Count;
+            Number::make(__('# 0'), function () use ($stats) {
+                return $stats['hiking_routes'][0] ?? 0;
             }),
 
             MapMultiPolygon::make('Geometry')->withMeta([

@@ -17,29 +17,19 @@ class UserPolicy
      *
      * @return void
      */
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function viewAny(User $user): bool
     {
         $territorialRole = $user->getTerritorialRole();
-        if ($territorialRole == 'local' || $territorialRole == 'unknown') {
-            return false;
-        } else {
-            return true;
-        }
+        return $territorialRole !== 'local' && $territorialRole !== 'unknown';
     }
 
     public function view(User $user, User $model): bool
     {
         $territorialRole = $user->getTerritorialRole();
 
-        if ($territorialRole === 'admin' || $territorialRole === 'regional' || $territorialRole === 'national') {
-            return true;
-        } else {
-            return false;
-        }
+        return $territorialRole === 'admin' || $territorialRole === 'regional' || $territorialRole === 'national';
     }
 
     public function create(User $user): bool
@@ -51,11 +41,7 @@ class UserPolicy
     {
         $territorialRole = $user->getTerritorialRole();
 
-        if ($territorialRole === 'admin' || $territorialRole === 'regional' || $territorialRole === 'national') {
-            return true;
-        } else {
-            return false;
-        }
+        return $territorialRole === 'admin' || $territorialRole === 'regional' || $territorialRole === 'national';
     }
 
     public function delete(User $user, User $model): bool
