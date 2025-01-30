@@ -41,7 +41,7 @@ class DashboardCardsHelper
         return (new HtmlCard())
             ->width('1/4')
             ->view('nova.cards.sal-nazionale', [
-                'sal' => number_format($sal * 100, 2),
+                'sal' => $sal,
                 'backgroundColor' => Osm2caiHelper::getSalColor($sal),
             ])
             ->center()
