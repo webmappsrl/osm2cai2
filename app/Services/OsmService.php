@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
-use SimpleXMLElement;
-use App\Models\Sector;
 use App\Models\HikingRoute;
+use App\Models\Sector;
+use App\Nova\Actions\CalculateIntersections;
 use App\Services\GeometryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use App\Nova\Actions\CalculateIntersections;
+use SimpleXMLElement;
 use Symfony\Component\String\Exception\RuntimeException;
 
 class OsmService
@@ -103,7 +103,7 @@ class OsmService
      */
     public function hikingRouteExists($relationId)
     {
-        return $this->http::head('https://www.openstreetmap.org/api/0.6/relation/' . intval($relationId))->ok();
+        return $this->http::head('https://www.openstreetmap.org/api/0.6/relation/'.intval($relationId))->ok();
     }
 
     /**
@@ -115,7 +115,7 @@ class OsmService
     public function getHikingRoute($relationId)
     {
         $return = false;
-        $response = $this->http::get('https://www.openstreetmap.org/api/0.6/relation/' . intval($relationId));
+        $response = $this->http::get('https://www.openstreetmap.org/api/0.6/relation/'.intval($relationId));
         if ($response->ok()) {
             $allowedKeys = $this->getRelationApiFieldsKey();
             $xml = $response->body();
@@ -135,7 +135,7 @@ class OsmService
     public function getHikingRouteGeojson($relationId)
     {
         $return = false;
-        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/' . intval($relationId) . '/geometry/geojson');
+        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/'.intval($relationId).'/geometry/geojson');
         if ($response->ok()) {
             $return = $response->body();
         }
@@ -146,7 +146,7 @@ class OsmService
     public function getHikingRouteGpx($relationId)
     {
         $return = false;
-        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/' . intval($relationId) . '/geometry/gpx');
+        $response = $this->http::get('https://hiking.waymarkedtrails.org/api/v1/details/relation/'.intval($relationId).'/geometry/gpx');
         if ($response->ok()) {
             $return = $response->body();
         }
@@ -210,7 +210,7 @@ class OsmService
 
         $osmGeo = $this->getHikingRouteGeometry($relationId);
         $model->geometry = $osmGeo;
-        $osmfeaturesData['geometry'] = json_decode(DB::select("SELECT ST_AsGeoJSON('" . $osmGeo . "') as geojson")[0]->geojson, true);
+        $osmfeaturesData['geometry'] = json_decode(DB::select("SELECT ST_AsGeoJSON('".$osmGeo."') as geojson")[0]->geojson, true);
         foreach ($this->getRelationApiFieldsKey() as $key) {
             if (isset($osmHr[$key])) {
                 $osmfeaturesData['properties'][$key] = $osmHr[$key];

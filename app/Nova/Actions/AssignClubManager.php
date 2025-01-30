@@ -46,7 +46,6 @@ class AssignClubManager extends Action
         return Action::message(__('Club\'s manager assigned successfully'));
     }
 
-
     /**
      * Get the fields available on the action.
      *

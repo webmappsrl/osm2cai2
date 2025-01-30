@@ -105,7 +105,7 @@ class Region extends Resource
                 'provinces' => $provincesCount,
                 'areas' => $areasCount,
                 'sectors' => $sectorsCount,
-                'hiking_routes' => $hikingRoutes
+                'hiking_routes' => $hikingRoutes,
             ];
         });
 

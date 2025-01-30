@@ -222,7 +222,7 @@ class User extends WmUser
 
     public function canBeImpersonated()
     {
-        return !$this->hasRole('Administrator');
+        return ! $this->hasRole('Administrator');
     }
 
     public function canManageClub(): bool

@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
-use App\Models\UgcPoi;
 use App\Models\UgcMedia;
+use App\Models\UgcPoi;
 use App\Models\UgcTrack;
-use Illuminate\Console\Command;
+use App\Models\User;
 use App\Services\GeometryService;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -37,18 +37,22 @@ class SyncUgcFromGeohub extends Command
         parent::__construct();
     }
 
-    private $baseApiUrl = "https://geohub.webmapp.it/api/ugc/";
+    private $baseApiUrl = 'https://geohub.webmapp.it/api/ugc/';
+
     private $apps = [
         20 => 'it.webmapp.sicai',
         26 => 'it.webmapp.osm2cai',
-        58 => 'it.webmapp.acquasorgente'
+        58 => 'it.webmapp.acquasorgente',
     ];
+
     private $types = ['track'];
+
     private $createdElements = [
         'poi' => 0,
         'track' => 0,
-        'media' => 0
+        'media' => 0,
     ];
+
     private $updatedElements = [];
 
     /**
@@ -66,8 +70,8 @@ class SyncUgcFromGeohub extends Command
             $this->syncAllApps();
         }
 
-        Log::channel('import-ugc')->info("Sync completato.");
-        $this->info("Sync completato.");
+        Log::channel('import-ugc')->info('Sync completato.');
+        $this->info('Sync completato.');
 
         return ['createdElements' => $this->createdElements, 'updatedElements' => $this->updatedElements];
     }
@@ -79,15 +83,15 @@ class SyncUgcFromGeohub extends Command
         }
     }
 
-
     private function syncApp($appId)
     {
         Log::channel('import-ugc')->info("Avvio sync per l'app con ID $appId");
         $this->info("Avvio sync per l'app con ID $appId");
 
-        if (!in_array($appId, array_keys($this->apps))) {
+        if (! in_array($appId, array_keys($this->apps))) {
             Log::channel('import-ugc')->error("ID app non valido: $appId");
             $this->error("ID app non valido: $appId");
+
             return;
         }
 
@@ -104,6 +108,7 @@ class SyncUgcFromGeohub extends Command
         if (empty($list)) {
             Log::channel('import-ugc')->info("Nessun elemento da sincronizzare per $type da $endpoint");
             $this->info("Nessun elemento da sincronizzare per $type da $endpoint");
+
             return;
         }
 
@@ -125,6 +130,7 @@ class SyncUgcFromGeohub extends Command
             throw new \Exception("Failed to fetch content from URL: $url");
         }
         curl_close($ch);
+
         return $data;
     }
 
@@ -145,7 +151,7 @@ class SyncUgcFromGeohub extends Command
                 $this->info("Creato nuovo $type con id $id");
                 Log::channel('import-ugc')->info("Creato nuovo $type con id $id");
             } else {
-                $this->updatedElements[] = ucfirst($type) . ' with id ' . $id . ' updated';
+                $this->updatedElements[] = ucfirst($type).' with id '.$id.' updated';
                 $this->info("Aggiornato $type con geohub id $id");
                 Log::channel('import-ugc')->info("Aggiornato $type con geohub id $id");
             }
@@ -154,7 +160,8 @@ class SyncUgcFromGeohub extends Command
 
     private function getModel($type, $id)
     {
-        $model = 'App\Models\Ugc' . ucfirst($type);
+        $model = 'App\Models\Ugc'.ucfirst($type);
+
         return $model::firstOrCreate(['geohub_id' => $id]);
     }
 
@@ -166,6 +173,7 @@ class SyncUgcFromGeohub extends Command
             $this->error("Errore nel fetch del GeoJSON da $url");
             throw new \Exception("Errore nel fetch del GeoJSON da $url");
         }
+
         return $geoJson;
     }
 
@@ -179,7 +187,7 @@ class SyncUgcFromGeohub extends Command
             'raw_data' => isset($geoJson['properties']['raw_data']) ? json_decode($geoJson['properties']['raw_data'], true) : null,
             'updated_at' => $geoJson['properties']['updated_at'] ?? null,
             'taxonomy_wheres' => $geoJson['properties']['taxonomy_wheres'] ?? null,
-            'app_id' => 'geohub_' . $appId,
+            'app_id' => 'geohub_'.$appId,
         ];
 
         $user = User::where('email', $geoJson['properties']['user_email'])->first();
@@ -189,7 +197,7 @@ class SyncUgcFromGeohub extends Command
             if ($model instanceof UgcTrack) {
                 $data['geometry'] = GeometryService::getService()->geojsonToGeometry($geoJson['geometry']);
             } else {
-                $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\'' . json_encode($geoJson['geometry']) . '\'), 4326)');
+                $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\''.json_encode($geoJson['geometry']).'\'), 4326)');
             }
         }
 
@@ -203,7 +211,7 @@ class SyncUgcFromGeohub extends Command
         if ($user) {
             $model->user_id = $user->id;
         } else {
-            Log::channel('import-ugc')->info('Utente con email ' . $geoJson['properties']['user_email'] . ' non trovato');
+            Log::channel('import-ugc')->info('Utente con email '.$geoJson['properties']['user_email'].' non trovato');
         }
 
         if ($model instanceof UgcMedia) {
@@ -211,18 +219,18 @@ class SyncUgcFromGeohub extends Command
             $poisGeohubIds = $geoJson['properties']['ugc_pois'] ?? [];
             $tracksGeohubIds = $geoJson['properties']['ugc_tracks'] ?? [];
 
-            if (!empty($poisGeohubIds)) {
+            if (! empty($poisGeohubIds)) {
                 $poisIds = UgcPoi::whereIn('geohub_id', $poisGeohubIds)->pluck('id')->toArray();
                 $model->ugc_poi_id = $poisIds[0] ?? null;
             }
-            if (!empty($tracksGeohubIds)) {
+            if (! empty($tracksGeohubIds)) {
                 $tracksIds = UgcTrack::whereIn('geohub_id', $tracksGeohubIds)->pluck('id')->toArray();
                 $model->ugc_track_id = $tracksIds[0] ?? null;
             }
         }
 
         $model->save();
-        Log::channel('import-ugc')->info("Aggiornamento completato");
-        $this->info("Aggiornamento completato");
+        Log::channel('import-ugc')->info('Aggiornamento completato');
+        $this->info('Aggiornamento completato');
     }
 }

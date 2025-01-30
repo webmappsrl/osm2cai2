@@ -7,7 +7,6 @@ use App\Models\HikingRoute;
 
 class RefCard extends HtmlCard
 {
-
     public function __construct(HikingRoute $hr)
     {
         $this->hr = $hr;
@@ -56,10 +55,11 @@ class RefCard extends HtmlCard
         if (count($hr->sectors) > 0) {
             $sectors = [];
             foreach ($hr->sectors as $sector) {
-                $sectors[] = $sector->full_code . '(' . number_format($sector->pivot->percentage, 2) . '%)';
+                $sectors[] = $sector->full_code.'('.number_format($sector->pivot->percentage, 2).'%)';
             }
             $s = implode('; ', $sectors);
         }
+
         return $s;
     }
 }

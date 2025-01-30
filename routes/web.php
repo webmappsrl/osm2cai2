@@ -1,12 +1,12 @@
 <?php
 
+use App\Http\Controllers\CasLoginController;
+use App\Http\Controllers\HikingRouteLoScarponeExportController;
+use App\Http\Controllers\ImportUGCController;
+use App\Http\Controllers\MiturAbruzzoController;
 use App\Jobs\TestJob;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CasLoginController;
-use App\Http\Controllers\ImportUGCController;
-use App\Http\Controllers\MiturAbruzzoController;
-use App\Http\Controllers\HikingRouteLoScarponeExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +48,7 @@ Route::get('/hiking-route/id/{id}', function ($id) {
 /**
  * Route to login to application with cas with specific middleware and controller
  */
-Route::get('/nova/cas-login', CasLoginController::class . '@casLogin')
+Route::get('/nova/cas-login', CasLoginController::class.'@casLogin')
     ->middleware('cai.cas');
 
 /**

@@ -49,7 +49,6 @@ class AddMembersToClub extends Action
         return Action::message(__('Members added to the club'));
     }
 
-
     /**
      * Get the fields available on the action.
      *
