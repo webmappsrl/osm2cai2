@@ -53,7 +53,7 @@ class IssueStatusPartition extends Partition
                     break;
             }
         }
-        $issueStatus = array_map(fn ($status) => $status->value, $issueStatus);
+        $issueStatus = array_map(fn($status) => $status->value, $issueStatus);
 
         $result = array_combine(array_values($issueStatus), [$sconosciuto, $percorribile, $nonPercorribile, $percorribileParzialmente]);
 
@@ -68,6 +68,11 @@ class IssueStatusPartition extends Partition
     public function cacheFor()
     {
         return now()->addMinutes(60 * 24);
+    }
+
+    public function getCacheKey(NovaRequest $request)
+    {
+        return parent::getCacheKey($request) . '-' . $request->user()->id;
     }
 
     /**

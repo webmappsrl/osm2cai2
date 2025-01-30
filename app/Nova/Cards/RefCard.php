@@ -56,7 +56,7 @@ class RefCard extends HtmlCard
         if (count($hr->sectors) > 0) {
             $sectors = [];
             foreach ($hr->sectors as $sector) {
-                $sectors[] = $sector->full_code . '(' . $sector->pivot->percentage  . '%)';
+                $sectors[] = $sector->full_code . '(' . number_format($sector->pivot->percentage, 2) . '%)';
             }
             $s = implode('; ', $sectors);
         }

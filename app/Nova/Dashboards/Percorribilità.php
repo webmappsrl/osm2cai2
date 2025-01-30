@@ -11,13 +11,10 @@ use Laravel\Nova\Dashboard;
 
 class Percorribilità extends Dashboard
 {
-    protected $user;
-
     private $cardsService;
 
     public function __construct(User $user = null)
     {
-        $this->user = $user;
         $this->cardsService = new DashboardCardsHelper();
     }
 
@@ -33,7 +30,7 @@ class Percorribilità extends Dashboard
      */
     public function cards()
     {
-        return $this->cardsService->getPercorribilitàDashboardCards($this->user);
+        return $this->cardsService->getPercorribilitàDashboardCards(auth()->user());
     }
 
     /**

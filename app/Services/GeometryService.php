@@ -28,7 +28,7 @@ class GeometryService
             $geojson = json_encode($geojson);
         }
 
-        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('".$geojson."'))) as g ")[0]->g;
+        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('" . $geojson . "'))) as g ")[0]->g;
     }
 
     /**
@@ -39,11 +39,11 @@ class GeometryService
      */
     public function geojsonToMultilinestringGeometry($geojson)
     {
-        return DB::select(DB::raw("select (
+        return DB::select("select (
         ST_Multi(
-          ST_GeomFromGeoJSON('".$geojson."')
+          ST_GeomFromGeoJSON('" . $geojson . "')
         )
-    ) as g "))[0]->g;
+    ) as g ")[0]->g;
     }
 
     /**
@@ -56,7 +56,7 @@ class GeometryService
     {
         return DB::select(DB::raw("select (
         ST_Multi(
-          ST_Transform( ST_GeomFromGeoJSON('".$geojson."' ) , 3857 )
+          ST_Transform( ST_GeomFromGeoJSON('" . $geojson . "' ) , 3857 )
         )
     ) as g "))[0]->g;
     }
@@ -64,7 +64,7 @@ class GeometryService
     public function geometryTo4326Srid($geometry)
     {
         return DB::select(DB::raw("select (
-      ST_Transform('".$geometry."', 4326)
+      ST_Transform('" . $geometry . "', 4326)
     ) as g "))[0]->g;
     }
 
@@ -77,8 +77,8 @@ class GeometryService
                 if ('' === $geojson) {
                     try {
                         $geojson = Gisconverter::gpxToGeojson($text);
-                        $content = json_decode($geojson);
-                        $contentType = @$content->type;
+                        $content = json_decode($geojson, true);
+                        $contentType = $content['type'];
                     } catch (InvalidText $ec) {
                     }
                 }
@@ -86,8 +86,8 @@ class GeometryService
                 if ('' === $geojson) {
                     try {
                         $geojson = Gisconverter::kmlToGeojson($text);
-                        $content = json_decode($geojson);
-                        $contentType = @$content->type;
+                        $content = json_decode($geojson, true);
+                        $contentType = $content['type'];
                     } catch (InvalidText $ec) {
                     }
                 }
@@ -170,6 +170,6 @@ class GeometryService
 
         $geometry = $this->geojsonToGeometry($geometry);
 
-        return DB::select("select ST_AsGeoJSON(ST_Centroid('".$geometry."')) as g")[0]->g;
+        return DB::select("select ST_AsGeoJSON(ST_Centroid('" . $geometry . "')) as g")[0]->g;
     }
 }
