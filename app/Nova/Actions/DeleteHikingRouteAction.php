@@ -35,7 +35,7 @@ class DeleteHikingRouteAction extends DestructiveAction
         if (! $user || $user == null) {
             return Action::danger(__('User info is not available'));
         }
-        if (in_array('Administrator', $roles) || in_array('National referent', $roles) || in_array('Regional referent', $roles)) {
+        if (in_array('Administrator', $roles) || in_array('National Referent', $roles) || in_array('Regional Referent', $roles)) {
             foreach ($models as $m) {
                 if ($m->deleted_on_osm) {
                     $m->regions()->sync([]);
