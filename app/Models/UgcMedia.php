@@ -25,12 +25,12 @@ class UgcMedia extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function ugc_poi(): BelongsTo
+    public function ugcPoi(): BelongsTo
     {
         return $this->belongsTo(UgcPoi::class);
     }
 
-    public function ugc_track(): BelongsTo
+    public function ugcTrack(): BelongsTo
     {
         return $this->belongsTo(UgcTrack::class);
     }
