@@ -224,4 +224,9 @@ class User extends WmUser
     {
         return !$this->hasRole('Administrator');
     }
+
+    public function canManageClub(): bool
+    {
+        return $this->hasRole('Administrator') || $this->hasRole('National Referent') || ($this->hasRole('Regional Referent') && $this->region_id == $club->region_id) || (! is_null($this->managedClub) && $this->managedClub->id == $club->id);
+    }
 }
