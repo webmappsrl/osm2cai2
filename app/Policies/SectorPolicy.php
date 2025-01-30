@@ -38,7 +38,7 @@ class SectorPolicy
      */
     public function create(User $user): bool
     {
-        return $this->hasAllowedRole($user);
+        return $user->hasRole('Administrator');
     }
 
     /**
