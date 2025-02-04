@@ -3,24 +3,20 @@
 namespace App\Nova;
 
 use App\Nova\Club;
+use App\Nova\Region as NovaRegion;
+use App\Models\Region;
+use Laravel\Nova\Fields\Text;
 use App\Nova\Filters\AreaFilter;
-use App\Nova\Filters\ProvinceFilter;
+use App\Models\User as UserModel;
 use App\Nova\Filters\RegionFilter;
 use App\Nova\Filters\SectorFilter;
-use App\Nova\Filters\UserTypeFilter;
-use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\FormData;
-use Laravel\Nova\Fields\Gravatar;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Password;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Spatie\Permission\Models\Permission;
-use Vyuldashev\NovaPermission\PermissionBooleanGroup;
-use Vyuldashev\NovaPermission\RoleBooleanGroup;
 use Wm\WmPackage\Nova\AbstractUser;
+use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Filters\UserTypeFilter;
+use Laravel\Nova\Fields\BelongsToMany;
+use Illuminate\Database\Eloquent\Builder;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
 class User extends AbstractUser
 {
@@ -30,6 +26,94 @@ class User extends AbstractUser
      * @var string
      */
     public static $model = \App\Models\User::class;
+
+    private static array $indexDefaultOrder = [
+        'name' => 'asc'
+    ];
+
+    public static function indexQuery(NovaRequest $request, $query): Builder
+    {
+        if (empty($request->get('orderBy'))) {
+            $query->getQuery()->orders = [];
+            $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
+        }
+
+        /**
+         * @var \App\Models\User
+         */
+        $user = auth()->user();
+
+        //if user is administrator or national referent
+        if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
+            return $query;
+        }
+
+        //if user is regional referent
+        if ($user->getTerritorialRole() == 'regional') {
+            $regionId = $user->region_id;
+
+            // Get users from territorial hierarchy
+            $provinces = Region::find($regionId)->provinces()->get();
+            $regionUsers = UserModel::where('region_id', $regionId)->get()->pluck('id')->toArray();
+            $provinceUsers = [];
+            $areaUsers = [];
+            $sectorUsers = [];
+
+            foreach ($provinces as $province) {
+                $provinceUsers = array_merge($provinceUsers, $province->users()->get()->pluck('id')->toArray());
+                $areas = $province->areas()->get();
+                foreach ($areas as $area) {
+                    $areaUsers = array_merge($areaUsers, $area->users()->get()->pluck('id')->toArray());
+                    $sectors = $area->sectors()->get();
+                    foreach ($sectors as $sector) {
+                        $sectorUsers = array_merge($sectorUsers, $sector->moderators()->get()->pluck('id')->toArray());
+                    }
+                }
+            }
+
+            // Get users from clubs in the region
+            $clubUsers = UserModel::whereHas('club', function ($query) use ($regionId) {
+                $query->whereHas('region', function ($query) use ($regionId) {
+                    $query->where('id', $regionId);
+                });
+            })->pluck('id')->toArray();
+
+            // Get users who manage clubs in the region
+            $clubManagerUsers = UserModel::whereHas('managedClub', function ($query) use ($regionId) {
+                $query->whereHas('region', function ($query) use ($regionId) {
+                    $query->where('id', $regionId);
+                });
+            })->pluck('id')->toArray();
+
+            // Merge all user IDs and remove duplicates
+            $allUsers = array_unique(array_merge(
+                $regionUsers,
+                $provinceUsers,
+                $areaUsers,
+                $sectorUsers,
+                $clubUsers,
+                $clubManagerUsers
+            ));
+
+            $query->whereIn('id', $allUsers);
+        }
+        //if user is section manager
+        elseif ($user->managedClub) {
+            $clubId = $user->managedClub->id;
+
+            // Get users who are members of the managed club
+            $clubMemberIds = UserModel::whereHas('club', function ($query) use ($clubId) {
+                $query->where('id', $clubId);
+            })->pluck('id')->toArray();
+
+            // Include also the club manager in the list
+            $allUsers = array_unique(array_merge([$user->id], $clubMemberIds));
+
+            $query->whereIn('id', $allUsers);
+        }
+
+        return $query;
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -64,7 +148,7 @@ class User extends AbstractUser
                 return $this->sectors->pluck('name')->join(', ');
             })->onlyOnIndex(),
 
-            BelongsTo::make('Region', 'region', Region::class)
+            BelongsTo::make('Region', 'region', NovaRegion::class)
                 ->searchable()
                 ->nullable()
                 ->sortable(),
