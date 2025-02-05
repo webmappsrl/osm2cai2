@@ -54,7 +54,7 @@ class User extends WmUser
 
     public function provinces()
     {
-        return $this->belongsToMany(Province::class, 'province_user', 'user_id', 'province_name', 'id', 'name');
+        return $this->belongsToMany(Province::class, 'province_user', 'user_id', 'province_id');
     }
 
     public function areas()
@@ -186,26 +186,26 @@ class User extends WmUser
         }
 
         if ($role === 'regional') {
-            return $hr->regions()->where('id', $this->region_id)->exists();
+            return $hr->regions()->where('regions.id', $this->region_id)->exists();
         }
 
         if ($role === 'local') {
             if ($this->areas->isNotEmpty()) {
-                $hasMatchingArea = $hr->areas()->whereIn('id', $this->areas->pluck('id'))->exists();
+                $hasMatchingArea = $hr->areas()->whereIn('areas.id', $this->areas->pluck('id'))->exists();
                 if ($hasMatchingArea) {
                     return true;
                 }
             }
 
             if ($this->sectors->isNotEmpty()) {
-                $hasMatchingSector = $hr->sectors()->whereIn('id', $this->sectors->pluck('id'))->exists();
+                $hasMatchingSector = $hr->sectors()->whereIn('sectors.id', $this->sectors->pluck('id'))->exists();
                 if ($hasMatchingSector) {
                     return true;
                 }
             }
 
             if ($this->provinces->isNotEmpty()) {
-                $hasMatchingProvince = $hr->provinces()->whereIn('id', $this->provinces->pluck('id'))->exists();
+                $hasMatchingProvince = $hr->provinces()->whereIn('provinces.id', $this->provinces->pluck('id'))->exists();
                 if ($hasMatchingProvince) {
                     return true;
                 }
@@ -225,7 +225,7 @@ class User extends WmUser
         return ! $this->hasRole('Administrator');
     }
 
-    public function canManageClub(): bool
+    public function canManageClub(Club $club): bool
     {
         return $this->hasRole('Administrator') || $this->hasRole('National Referent') || ($this->hasRole('Regional Referent') && $this->region_id == $club->region_id) || (! is_null($this->managedClub) && $this->managedClub->id == $club->id);
     }
