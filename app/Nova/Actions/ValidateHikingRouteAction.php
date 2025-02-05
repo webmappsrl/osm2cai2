@@ -54,7 +54,7 @@ class ValidateHikingRouteAction extends Action
         }
 
         if (! $model->geometry_raw_data) {
-            return Action::danger('Upload a GPX first!');
+            return Action::danger('Upload a Geometry file first!');
         }
 
         if (! $model->is_geometry_correct) {
