@@ -47,14 +47,14 @@ class ValidateHikingRouteAction extends Action
 
         $model = $models->first();
         if (! $user->canManageHikingRoute($model)) {
-            return Action::danger('You don\'t have permissions on this Hiking Route');
+            return Action::danger('You are not authorized to validate this hiking route');
         }
         if ($model->osm2cai_status != 3) {
             return Action::danger('The SDA is not 3!');
         }
 
         if (! $model->geometry_raw_data) {
-            return Action::danger('Upload a GPX first!');
+            return Action::danger('Upload a Geometry file first!');
         }
 
         if (! $model->is_geometry_correct) {

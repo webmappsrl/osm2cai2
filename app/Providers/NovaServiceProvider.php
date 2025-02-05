@@ -165,12 +165,16 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Admin
                 MenuSection::make(__('Admin'), [
-                    MenuItem::resource(User::class, __('User')), // Usa User Nova resource
-                    MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab(),
-                    MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab(),
-                ])->icon('user')->canSee(function () {
-                    return auth()->user()->hasRole('Administrator');
-                }),
+                    MenuItem::resource(User::class, __('User'))->canSee(function () {
+                        return auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent') || auth()->user()->hasRole('Regional Referent');
+                    }),
+                    MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab()->canSee(function () {
+                        return auth()->user()->hasRole('Administrator');
+                    }),
+                    MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab()->canSee(function () {
+                        return auth()->user()->hasRole('Administrator');
+                    }),
+                ])->icon('user'),
 
             ];
         });

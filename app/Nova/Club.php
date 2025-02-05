@@ -11,6 +11,7 @@ use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\DownloadCsvCompleteAction;
 use App\Nova\Actions\DownloadGeojson;
 use App\Nova\Filters\ClubFilter;
+use App\Nova\Filters\RegionFilter;
 use App\Nova\Metrics\ClubSalPercorribilità;
 use App\Nova\Metrics\ClubSalPercorsi;
 use Illuminate\Http\Request;
@@ -254,7 +255,9 @@ class Club extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [(new RegionFilter())->canSee(function ($request) {
+            return true;
+        })];
     }
 
     /**

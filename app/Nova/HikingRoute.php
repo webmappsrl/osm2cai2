@@ -80,12 +80,12 @@ class HikingRoute extends OsmfeaturesResource
     {
         $supplementaryString = ' - ';
 
-        if ($this->name) {
-            $supplementaryString .= $this->name;
+        if ($this->osmfeatures_data['properties']['name']) {
+            $supplementaryString .= $this->osmfeatures_data['properties']['name'];
         }
 
-        if ($this->ref) {
-            $supplementaryString .= 'ref: '.$this->ref;
+        if ($this->osmfeatures_data['properties']['ref']) {
+            $supplementaryString .= ' ref: '.$this->osmfeatures_data['properties']['ref'];
         }
 
         if ($this->sectors->count()) {
@@ -93,6 +93,17 @@ class HikingRoute extends OsmfeaturesResource
         }
 
         return $this->id.$supplementaryString;
+    }
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        if (auth()->user()->getTerritorialRole() == 'regional') {
+            return $query->whereHas('regions', function ($q) {
+                $q->where('regions.id', auth()->user()->region->id);
+            });
+        }
+
+        return $query;
     }
 
     /**

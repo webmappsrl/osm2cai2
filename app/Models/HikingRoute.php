@@ -101,7 +101,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
     {
         $this->addMediaCollection('feature_image')
             ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
     }
 
     /**

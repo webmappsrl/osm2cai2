@@ -34,7 +34,7 @@ class AssignClubManager extends Action
     {
         $user = auth()->user();
         foreach ($models as $model) {
-            if (! $user->canManageClub()) {
+            if (! $user->canManageClub($model)) {
                 return Action::danger(__('You are not authorized to modify this club'));
             }
             $user = User::find($fields->clubManager);

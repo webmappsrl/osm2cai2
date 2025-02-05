@@ -28,6 +28,7 @@
         "league/flysystem-aws-s3-v3": "^3.12",
         "m-a-k-o/nova-custom-table-card": "^4.0",
         "maatwebsite/excel": "^3.1",
+        "outl1ne/nova-multiselect-field": "^4.6",
         "predis/predis": "^2.2",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
         "spatie/db-dumper": "^3.3",
