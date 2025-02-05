@@ -26,7 +26,18 @@ class PercorsoFavoritoAction extends Action
 
     public function handle(ActionFields $fields, Collection $models)
     {
+        $user = auth()->user();
+
+        if (! $user || $user == null) {
+            return Action::danger('User information not available');
+        }
+
         $model = $models->first();
+
+
+        if (! $user->canManageHikingRoute($model)) {
+            return Action::danger('You are not authorized for this hiking route');
+        }
 
         // Handle FAVORITE toggle
         $model->region_favorite = $fields->favorite;
@@ -53,7 +64,8 @@ class PercorsoFavoritoAction extends Action
             Boolean::make(__('Favorite Route'), 'favorite')
                 ->default($region_favorite ?? false),
             Image::make(__('Image'), 'feature_image')
-                ->help(__('For correct upload use files smaller than 2MB')),
+                ->help(__('For correct upload use files smaller than 20MB'))
+                ->rules('image', 'max:2048'),
             Textarea::make(__('Description'), 'description_cai_it')
                 ->rules('max:10000') // 10,000 characters limit
                 ->default(\App\Models\HikingRoute::find(intval($id))->description_cai_it ?? ''),
