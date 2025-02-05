@@ -45,7 +45,7 @@ class CheckHikingRoutesGeometry extends Command
 
             if ($hr->is_geometry_correct !== $newGeometryCheck) {
                 $hr->is_geometry_correct = $newGeometryCheck;
-                $hr->save();
+                $hr->saveQuietly();
                 $this->info("Updated is_geometry_correct for {$hr->name} (id: {$hr->id})");
             } else {
                 $this->info("No change needed for {$hr->name} (id: {$hr->id})");
