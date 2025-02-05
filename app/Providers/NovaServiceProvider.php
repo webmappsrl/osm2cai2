@@ -174,7 +174,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab()->canSee(function () {
                         return auth()->user()->hasRole('Administrator');
                     }),
-                ])->icon('user')
+                ])->icon('user'),
 
             ];
         });

@@ -54,7 +54,6 @@ class RevertValidateHikingRouteAction extends Action
             return Action::danger('You are not authorized to revert the validation of this hiking route');
         }
 
-
         $this->revertValidation($model);
 
         return Action::redirect($model->id);

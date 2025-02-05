@@ -2,21 +2,21 @@
 
 namespace App\Nova;
 
-use App\Nova\Club;
-use App\Nova\Region as NovaRegion;
 use App\Models\Region;
-use Laravel\Nova\Fields\Text;
-use App\Nova\Filters\AreaFilter;
 use App\Models\User as UserModel;
+use App\Nova\Club;
+use App\Nova\Filters\AreaFilter;
+use App\Nova\Filters\ProvinceFilter;
 use App\Nova\Filters\RegionFilter;
 use App\Nova\Filters\SectorFilter;
-use Laravel\Nova\Fields\BelongsTo;
-use Wm\WmPackage\Nova\AbstractUser;
-use App\Nova\Filters\ProvinceFilter;
 use App\Nova\Filters\UserTypeFilter;
-use Laravel\Nova\Fields\BelongsToMany;
+use App\Nova\Region as NovaRegion;
 use Illuminate\Database\Eloquent\Builder;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\WmPackage\Nova\AbstractUser;
 
 class User extends AbstractUser
 {
@@ -25,10 +25,10 @@ class User extends AbstractUser
      *
      * @var string
      */
-    public static $model = \App\Models\User::class;
+    public static $model = UserModel::class;
 
     private static array $indexDefaultOrder = [
-        'name' => 'asc'
+        'name' => 'asc',
     ];
 
     public static function indexQuery(NovaRequest $request, $query): Builder
@@ -39,7 +39,7 @@ class User extends AbstractUser
         }
 
         /**
-         * @var \App\Models\User
+         * @var UserModel
          */
         $user = auth()->user();
 

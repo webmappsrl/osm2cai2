@@ -34,7 +34,6 @@ class PercorsoFavoritoAction extends Action
 
         $model = $models->first();
 
-
         if (! $user->canManageHikingRoute($model)) {
             return Action::danger('You are not authorized for this hiking route');
         }
