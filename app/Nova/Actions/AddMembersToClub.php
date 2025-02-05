@@ -4,12 +4,12 @@ namespace App\Nova\Actions;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
+use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
-use Laravel\Nova\Fields\MultiSelect;
+use Illuminate\Queue\InteractsWithQueue;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Outl1ne\MultiselectField\Multiselect;
 
 class AddMembersToClub extends Action
 {
@@ -33,15 +33,15 @@ class AddMembersToClub extends Action
     {
         $user = auth()->user();
         foreach ($models as $model) {
-            if (! $user->canManageClub()) {
+            if (! $user->canManageClub($model)) {
                 return Action::danger(__('You are not authorized to modify this club'));
             }
-            $ids = $fields->users;
+            $ids = json_decode($fields->members);
             foreach ($ids as $id) {
                 $user = User::find($id);
                 if ($user) {
                     $user->club_id = $model->id;
-                    $user->save();
+                    $user->saveQuietly();
                 }
             }
         }
@@ -56,8 +56,8 @@ class AddMembersToClub extends Action
      */
     public function fields(NovaRequest $request)
     {
-        $users = User::all()->pluck('name', 'id');
+        $users = User::orderBy('name')->pluck('name', 'id');
 
-        return [MultiSelect::make('Utente', 'users')->options($users)];
+        return [Multiselect::make('Members')->options($users)];
     }
 }

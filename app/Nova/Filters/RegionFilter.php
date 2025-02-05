@@ -29,7 +29,7 @@ class RegionFilter extends Filter
     {
         $model = $query->getModel();
 
-        if ($model instanceof \App\Models\Province) {
+        if ($model instanceof \App\Models\Province || $model instanceof \App\Models\Club) {
             return $query->where('region_id', $value);
         }
 
