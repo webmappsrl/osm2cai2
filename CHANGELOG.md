@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.17.0](https://github.com/webmappsrl/osm2cai2/compare/v1.16.0...v1.17.0) (2025-02-06)
+
+
+### Features
+
+* added impersonatable users ([840c9be](https://github.com/webmappsrl/osm2cai2/commit/840c9be0522589e3ed6a3868db69f772d0cfcc79))
+
+
+### Bug Fixes
+
+* field.js in osm2cai-map-multi-linestring ([4f8dce3](https://github.com/webmappsrl/osm2cai2/commit/4f8dce35129b8e129dbe36bcab9ec5f1c753add8))
+* fixed bug in Clubs nova resource OC:4804 ([6c7745c](https://github.com/webmappsrl/osm2cai2/commit/6c7745cc603e4baa0ef722aa2f68224b30c07187))
+* fixed nova gate ([dce7da5](https://github.com/webmappsrl/osm2cai2/commit/dce7da5f60059031afb318cceacedef5d4b7268e))
+* fixed nova gate ([5312c43](https://github.com/webmappsrl/osm2cai2/commit/5312c43a6e75ed371fc9ac48c8a4690fc1c774fa))
+* fixed typo in clubs nova actions OC:4811 ([57d70f2](https://github.com/webmappsrl/osm2cai2/commit/57d70f2de06aa9de4e838d93ab573e370a26aa64))
+* increase docker php ram memory oc:4643 ([bf6697d](https://github.com/webmappsrl/osm2cai2/commit/bf6697df01ac3121602b219359a2984696533208))
+* number formatting on sal nazionale italy dashbaord ([670ec74](https://github.com/webmappsrl/osm2cai2/commit/670ec740bfb0c0a5c5342f6615a3c958895b3b27))
+* ref rei and ref rei comp in hiking routes nova detail OC:4805 ([ea5cb8b](https://github.com/webmappsrl/osm2cai2/commit/ea5cb8be1e231010005027e13ffc0fc60b77e23e))
+* removed utenti dashboard for national referent user OC:4794 ([40482b1](https://github.com/webmappsrl/osm2cai2/commit/40482b171503c3ba0cfd08496865beed966a6dad))
+* sectors can only be created by admin OC:4812 ([d948860](https://github.com/webmappsrl/osm2cai2/commit/d94886056d4462dad46a6805b5ba8a401dc77df7))
+* typo in cai hut nova resource ([fab5e54](https://github.com/webmappsrl/osm2cai2/commit/fab5e5455f734116b7dd8dd4d2cc17067b6922ad))
+* typo in delete hiking route action OC:4810 ([e4595bf](https://github.com/webmappsrl/osm2cai2/commit/e4595bf57da292a07b73c0e72b24983683805427))
+* user policies ([2716f78](https://github.com/webmappsrl/osm2cai2/commit/2716f78b075a29e225ab64cb6bdee720c863ce25))
+* user policies ([2905b83](https://github.com/webmappsrl/osm2cai2/commit/2905b83ceff0dd91c40c91348a7338f37c1f3f41))
+
+
+### Miscellaneous Chores
+
+* added osm sync hiking route action OC:4809 ([a620b30](https://github.com/webmappsrl/osm2cai2/commit/a620b302af780f95a9ae9033c7bdbcf7779cb33d))
+* added sync-ugc tool in nova menu OC:4808 ([ded2152](https://github.com/webmappsrl/osm2cai2/commit/ded2152a7e29f9217769b4c9d1637022bb06c64a))
+* main dashboard refactor to cache data in helper class ([43336b0](https://github.com/webmappsrl/osm2cai2/commit/43336b094cac0fd5b914679617a90f82011de103))
+* percorsi favoriti refactor to cache data in helper class ([6f6ae0a](https://github.com/webmappsrl/osm2cai2/commit/6f6ae0a6ca62c299a846c31d3408fb37d047742f))
+* refactored acquasorgente dashboard to cache data in a separate helper class ([b039c0a](https://github.com/webmappsrl/osm2cai2/commit/b039c0ad9688c687d1eebc1de032199a6b0d7d86))
+* refactored percorribilitá dashboards to cache data in a separate helper class ([9d197eb](https://github.com/webmappsrl/osm2cai2/commit/9d197ebe6559147ed29725a0754f82b221c65ca9))
+* refactored sal mitur abruzzo dashboard to cache data in a separate helper class ([e648d4c](https://github.com/webmappsrl/osm2cai2/commit/e648d4c9c9d537a955e2efb921c9fc2878d47e52))
+* refactored sector dashboard to cache data in a separate helper class ([a8d7518](https://github.com/webmappsrl/osm2cai2/commit/a8d751892342d56d03ff7c263211bb655a9887cb))
+* refactored utenti dashboard to cache data in a helper class ([3674dc6](https://github.com/webmappsrl/osm2cai2/commit/3674dc64b0bd553d7dae4b19d6c626ade6daeb3a))
+* refactoring ecpois dashboard to cache data in helper class ([077e46b](https://github.com/webmappsrl/osm2cai2/commit/077e46b5280089bfaa7b558b7ea918690b4dce10))
+* updated action artifacts to the latest version ([10e033a](https://github.com/webmappsrl/osm2cai2/commit/10e033ae2e0cfd69d7e26324486db7abedfc6eb7))
+* updated action artifacts to the latest version ([937f4cf](https://github.com/webmappsrl/osm2cai2/commit/937f4cfbda0d8d5bb9dde63b2636eafa01e04ca3))
+* updated actions artifact to the latest version (missing one) ([0ade4af](https://github.com/webmappsrl/osm2cai2/commit/0ade4aff312783fd6034c5150807ff5640538466))
+* updated actions artifact to the latest version (missing one) ([83aa094](https://github.com/webmappsrl/osm2cai2/commit/83aa094475f78ef7fc08238727c6865abe06234c))
+* updated caching for regions hiking routes count OC: 4801 ([6848091](https://github.com/webmappsrl/osm2cai2/commit/684809158806713a00634a05de3ff54e731c131d))
+* updated italy dashboard with caching methods in dashboard helper ([8ffd6a3](https://github.com/webmappsrl/osm2cai2/commit/8ffd6a387c0685b0e807536a730816cbe51cf8ab))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
