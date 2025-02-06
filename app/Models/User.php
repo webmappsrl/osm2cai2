@@ -198,9 +198,11 @@ class User extends WmUser
             }
 
             if ($this->sectors->isNotEmpty()) {
+
                 $hasMatchingSector = $hr->sectors()
                     ->whereIn('sectors.id', $this->sectors->pluck('id'))
                     ->exists();
+              
                 if ($hasMatchingSector) {
                     return true;
                 }
