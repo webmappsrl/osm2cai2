@@ -84,6 +84,10 @@ class UgcMedia extends Model
 
     public function getUrl()
     {
+        if (! $this->relative_url) {
+            return null;
+        }
+
         if (Storage::disk('public')->exists($this->relative_url)) {
             return Storage::disk('public')->url($this->relative_url);
         }

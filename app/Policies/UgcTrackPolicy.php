@@ -53,7 +53,11 @@ class UgcTrackPolicy
      */
     public function update(User $user, UgcTrack $ugcTrack)
     {
-        return $user->hasRole('Administrator') || ($ugcTrack->user_id === $user->id && $ugcTrack->validated === 'not_validated');
+        $user_can_update = $user->hasRole('Administrator') || ($ugcTrack->user_id === $user->id && $ugcTrack->validated === 'not_validated');
+
+        $permission = 'validate tracks';
+
+        return $user_can_update || $user->hasPermissionTo($permission);
     }
 
     /**
