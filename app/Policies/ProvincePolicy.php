@@ -30,10 +30,9 @@ class ProvincePolicy
      */
     public function view(User $user, Province $province): bool
     {
-        $modelQuery = $province->newQuery();
-        $userModels = $modelQuery->ownedBy($user)->get('id');
+        $provinces = $user->provinces;
 
-        return $this->hasAllowedRole($user) || $userModels->contains($province->id);
+        return $this->hasAllowedRole($user) || $provinces->contains($province->id);
     }
 
     /**
