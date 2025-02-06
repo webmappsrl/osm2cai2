@@ -4,17 +4,12 @@ namespace App\Nova;
 
 use App\Nova\Filters\RelatedUGCFilter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Webmapp\WmEmbedmapsField\WmEmbedmapsField;
 use Wm\MapPoint\MapPoint;
-use Wm\MapPointNova3\MapPointNova3;
 
 class UgcMedia extends Resource
 {
@@ -80,19 +75,24 @@ class UgcMedia extends Resource
                 ->nullable(),
             Text::make('Media', function () {
                 if ($this->model() instanceof \App\Models\UgcMedia) {
+                    $url = $this->getUrl();
+                    if (! $url) {
+                        return '/';
+                    }
+
                     return <<<HTML
-                    <a href='{$this->getUrl()}' target='_blank'>
-                        <img src='{$this->getUrl()}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'>
+                    <a href='{$url}' target='_blank'>
+                        <img src='{$url}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'>
                     </a>
                     HTML;
                 }
             })->asHtml(),
-            BelongsTo::make('Ugc Poi', 'ugc_poi')
+            BelongsTo::make('Ugc Poi', 'ugcPoi')
                 ->searchable()
                 ->sortable()
                 ->nullable()
                 ->hideFromIndex(),
-            BelongsTo::make('Ugc Track', 'ugc_track')
+            BelongsTo::make('Ugc Track', 'ugcTrack')
                 ->searchable()
                 ->sortable()
                 ->nullable()
@@ -102,9 +102,12 @@ class UgcMedia extends Resource
             Text::make('Relative URL', 'relative_url')
                 ->hideFromIndex()
                 ->displayUsing(function ($value) {
-                    return <<<HTML
-                    <a href='{$this->getUrl()}' target='_blank'>{$this->getUrl()}</a>
-                    HTML;
+                    $url = $this->getUrl();
+                    if (! $url) {
+                        return '/';
+                    }
+
+                    return "<a href='{$url}' target='_blank'>{$url}</a>";
                 })
                 ->asHtml()
                 ->required(),

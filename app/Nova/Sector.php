@@ -126,16 +126,18 @@ class Sector extends Resource
         if (! is_null($request['resourceId'])) {
             $sector = self::find($request['resourceId']);
 
-            $numbers = DB::table('hiking_route_sector')
-                ->join('hiking_routes', 'hiking_route_sector.hiking_route_id', '=', 'hiking_routes.id')
-                ->where('hiking_route_sector.sector_id', $request['resourceId'])
-                ->selectRaw('
-                COUNT(CASE WHEN hiking_routes.osm2cai_status = 1 THEN 1 END) as tot1,
-                COUNT(CASE WHEN hiking_routes.osm2cai_status = 2 THEN 1 END) as tot2, 
-                COUNT(CASE WHEN hiking_routes.osm2cai_status = 3 THEN 1 END) as tot3,
-                COUNT(CASE WHEN hiking_routes.osm2cai_status = 4 THEN 1 END) as tot4
-            ')
-                ->first();
+            $numbers = Cache::remember('sector_'.$request['resourceId'].'_numbers', 60, function () use ($request) {
+                return DB::table('hiking_route_sector')
+                    ->join('hiking_routes', 'hiking_route_sector.hiking_route_id', '=', 'hiking_routes.id')
+                    ->where('hiking_route_sector.sector_id', $request['resourceId'])
+                    ->selectRaw('
+                    COUNT(CASE WHEN hiking_routes.osm2cai_status = 1 THEN 1 END) as tot1,
+                    COUNT(CASE WHEN hiking_routes.osm2cai_status = 2 THEN 1 END) as tot2, 
+                    COUNT(CASE WHEN hiking_routes.osm2cai_status = 3 THEN 1 END) as tot3,
+                    COUNT(CASE WHEN hiking_routes.osm2cai_status = 4 THEN 1 END) as tot4
+                ')
+                    ->first();
+            });
 
             $numbers = [
                 1 => $numbers->tot1,
@@ -144,7 +146,9 @@ class Sector extends Resource
                 4 => $numbers->tot4,
             ];
 
-            $sal = $sector->getSal();
+            $sal = Cache::remember('sector_'.$request['resourceId'].'_sal', 60, function () use ($sector) {
+                return $sector->getSal();
+            });
 
             return [
                 (new HtmlCard())

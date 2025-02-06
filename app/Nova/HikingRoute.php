@@ -80,12 +80,18 @@ class HikingRoute extends OsmfeaturesResource
     {
         $supplementaryString = ' - ';
 
-        if ($this->osmfeatures_data['properties']['name']) {
-            $supplementaryString .= $this->osmfeatures_data['properties']['name'];
+        if (is_string($this->osmfeatures_data)) {
+            $osmfeatures_data = json_decode($this->osmfeatures_data, true);
+        } else {
+            $osmfeatures_data = $this->osmfeatures_data;
         }
 
-        if ($this->osmfeatures_data['properties']['ref']) {
-            $supplementaryString .= ' ref: '.$this->osmfeatures_data['properties']['ref'];
+        if (! empty($osmfeatures_data['properties']['name'])) {
+            $supplementaryString .= $osmfeatures_data['properties']['name'];
+        }
+
+        if (! empty($osmfeatures_data['properties']['ref'])) {
+            $supplementaryString .= ' ref: '.$osmfeatures_data['properties']['ref'];
         }
 
         if ($this->sectors->count()) {
