@@ -56,7 +56,7 @@ class UgcPoiPolicy
         $user_can_update = $user->hasRole('Administrator') || ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated');
 
         $permission = $ugcPoi->form_id === 'water' ? 'source surveys' : str_replace('_', ' ', $ugcPoi->form_id);
-        $permission = 'validate ' . $permission;
+        $permission = 'validate '.$permission;
 
         return $user_can_update || $user->hasPermissionTo($permission);
     }

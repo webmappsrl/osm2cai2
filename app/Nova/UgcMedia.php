@@ -76,9 +76,10 @@ class UgcMedia extends Resource
             Text::make('Media', function () {
                 if ($this->model() instanceof \App\Models\UgcMedia) {
                     $url = $this->getUrl();
-                    if (!$url) {
+                    if (! $url) {
                         return '/';
                     }
+
                     return <<<HTML
                     <a href='{$url}' target='_blank'>
                         <img src='{$url}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'>
@@ -102,9 +103,10 @@ class UgcMedia extends Resource
                 ->hideFromIndex()
                 ->displayUsing(function ($value) {
                     $url = $this->getUrl();
-                    if (!$url) {
+                    if (! $url) {
                         return '/';
                     }
+
                     return "<a href='{$url}' target='_blank'>{$url}</a>";
                 })
                 ->asHtml()

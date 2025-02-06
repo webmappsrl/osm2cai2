@@ -126,7 +126,7 @@ class Sector extends Resource
         if (! is_null($request['resourceId'])) {
             $sector = self::find($request['resourceId']);
 
-            $numbers = Cache::remember('sector_' . $request['resourceId'] . '_numbers', 60, function () use ($request) {
+            $numbers = Cache::remember('sector_'.$request['resourceId'].'_numbers', 60, function () use ($request) {
                 return DB::table('hiking_route_sector')
                     ->join('hiking_routes', 'hiking_route_sector.hiking_route_id', '=', 'hiking_routes.id')
                     ->where('hiking_route_sector.sector_id', $request['resourceId'])
@@ -146,7 +146,7 @@ class Sector extends Resource
                 4 => $numbers->tot4,
             ];
 
-            $sal = Cache::remember('sector_' . $request['resourceId'] . '_sal', 60, function () use ($sector) {
+            $sal = Cache::remember('sector_'.$request['resourceId'].'_sal', 60, function () use ($sector) {
                 return $sector->getSal();
             });
 
@@ -225,7 +225,7 @@ class Sector extends Resource
             $filter = base64_encode(json_encode($availableFilters));
 
             // Build the URL
-            $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
+            $link = trim(Nova::path(), '/').'/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens?hiking-routes_filter='.$filter;
             $exploreUrl = $link;
         }
 
