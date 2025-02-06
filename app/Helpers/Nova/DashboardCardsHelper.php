@@ -62,6 +62,7 @@ class DashboardCardsHelper
     {
         return (new HtmlCard())
             ->view('nova.cards.no-permissions-card')
+            ->width('full')
             ->center()
             ->withBasicStyles();
     }
@@ -162,7 +163,7 @@ class DashboardCardsHelper
         $user = auth()->user();
         $roles = $user->getRoleNames()->toArray();
 
-        switch ($roles) {
+        switch (true) {
             case in_array('Administrator', $roles):
                 $cards = $this->nationalCards($user, $roles);
                 break;
@@ -182,7 +183,7 @@ class DashboardCardsHelper
                 }
                 break;
             default:
-                $cards = [$this->dashboardCardsHelper->getNoPermissionsCard()];
+                $cards = [$this->getNoPermissionsCard()];
                 break;
         }
 
@@ -805,7 +806,7 @@ class DashboardCardsHelper
                 foreach ($user->provinces as $province) {
                     $sal = $province->getSal();
                     $sal_color = Osm2caiHelper::getSalColor($sal);
-                    $salHtml .= $province->name.'<div style="background-color: '.$sal_color.'; color: white; font-size: xx-large">'.
+                    $salHtml .= $province->name.'<div style="background-color: '.$sal_color.'; color: white; font-size: xx-large; padding: 12px">'.
                         number_format($sal * 100, 2).' %</div>';
 
                     $numAreas += $province->areas->count();
@@ -821,7 +822,7 @@ class DashboardCardsHelper
                     foreach ($user->areas as $area) {
                         $sal = $area->getSal();
                         $sal_color = Osm2caiHelper::getSalColor($sal);
-                        $salHtml .= $area->name.'<div style="background-color: '.$sal_color.'; color: white; font-size: xx-large">'.
+                        $salHtml .= $area->name.'<div style="background-color: '.$sal_color.'; color: white; font-size: xx-large; padding: 12px">'.
                             number_format($sal * 100, 2).' %</div>';
                         $numSectors += $area->sectors->count();
                     }
@@ -831,7 +832,7 @@ class DashboardCardsHelper
                 foreach ($user->sectors as $sector) {
                     $sal = $sector->getSal();
                     $salColor = Osm2caiHelper::getSalColor($sal);
-                    $salHtml .= $sector->name.'<div style="background-color: '.$salColor.'; color: white; font-size: xx-large">'.
+                    $salHtml .= $sector->name.'<div style="background-color: '.$salColor.'; color: white; font-size: xx-large; padding: 12px">'.
                         number_format($sal * 100, 2).' %</div>';
                 }
             }
@@ -952,8 +953,7 @@ class DashboardCardsHelper
         $path = '/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens';
 
         return (new HtmlCard())->width('1/4')
-            ->html('<div style="background-color: '.Osm2caiHelper::getSdaColor($sda).'; color: white; font-size: xx-large">'.$num.'</div>')
-            ->html('<div>#sda '.$sda.' <a href="'.url($path).'">[Esplora]</a></div>')
+            ->html('<div style="background-color: '.Osm2caiHelper::getSdaColor($sda).'; color: white; font-size: xx-large; padding: 10px">'.$num.'</div><div style="padding: 5px">#sda '.$sda.' <a href="'.url($path).'">[Esplora]</a></div>')
             ->center()
             ->withBasicStyles();
     }

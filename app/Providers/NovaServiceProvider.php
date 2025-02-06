@@ -65,17 +65,17 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuGroup::make('', [
                     MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
+                            return true;
                         }),
 
                     MenuItem::link(__('Percorsi Favoriti'), '/dashboards/percorsi-favoriti')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
+                            return true;
                         }),
 
                     MenuItem::link(__('POIS'), '/dashboards/ec-pois')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent']);
+                            return true;
                         }),
 
                     MenuItem::link(__('Riepilogo utenti'), '/dashboards/utenti')
