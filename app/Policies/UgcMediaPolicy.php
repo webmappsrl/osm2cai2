@@ -53,7 +53,7 @@ class UgcMediaPolicy
      */
     public function update(User $user, UgcMedia $ugcMedia)
     {
-        return true;
+        return $user->hasRole('Administrator') || ($ugcMedia->user_id === $user->id);
     }
 
     /**
