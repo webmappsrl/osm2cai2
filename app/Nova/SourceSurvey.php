@@ -110,9 +110,9 @@ class SourceSurvey extends AbstractValidationResource
     public static function getExportFields(): array
     {
         return array_merge(parent::getExportFields(), [
-            'raw_data->flow_rate' => __('Flow Rate L/s'),
-            'raw_data->conductivity' => __('Conductivity microS/cm'),
-            'raw_data->temperature' => __('Temperature °C'),
+            'raw_data.flow_rate' => __('Flow Rate L/s'),
+            'raw_data.conductivity' => __('Conductivity microS/cm'),
+            'raw_data.temperature' => __('Temperature °C'),
             'water_flow_rate_validated' => __('Flow Rate Validation'),
             'note' => __('Notes'),
         ]);
