@@ -2,8 +2,8 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\User;
 use App\Models\Club;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
