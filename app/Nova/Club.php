@@ -10,6 +10,7 @@ use App\Nova\Actions\AssignClubManager;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\DownloadCsvCompleteAction;
 use App\Nova\Actions\DownloadGeojson;
+use App\Nova\Actions\RemoveMembersFromClub;
 use App\Nova\Filters\ClubFilter;
 use App\Nova\Filters\RegionFilter;
 use App\Nova\Metrics\ClubSalPercorribilità;
@@ -98,18 +99,12 @@ class Club extends Resource
             BelongsTo::make('Region', 'region', Region::class)
                 ->searchable(),
             Text::make('Club\'s managers', function () {
-                $clubManagers = $this->managerUsers()->get();
-                $clubManagerString = '';
-                foreach ($clubManagers as $clubManager) {
-                    $clubManagerString .= "<a href='/resources/users/{$clubManager->id}'>{$clubManager->name}</a>";
-                    if (strlen($clubManagerString) > 40) {
-                        $clubManagerString .= '<br>';
-                    }
-                }
-
-                return $clubManagerString ? rtrim($clubManagerString, ', ') : '/';
+                return $this->formatUserList($this->managerUsers()->get(), null, false);
             })->asHtml(),
-            HasMany::make('Club\'s members', 'users', User::class)->onlyOnDetail(),
+            Text::make('Club\'s members', function () {
+                return $this->formatUserList($this->users()->get(), null, true);
+            })->asHtml()
+                ->onlyOnDetail(),
             BelongsToMany::make('Club\'s hiking routes', 'hikingRoutes', HikingRoute::class)
                 ->help(__('Only national referents can add hiking routes to the club')),
             Text::make('SDA1', function () use ($hikingRoutesSDA1) {
@@ -294,6 +289,13 @@ class Club extends Resource
                 ->canRun(function ($request) {
                     return true;
                 }),
+            (new RemoveMembersFromClub())
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(function ($request) {
+                    return true;
+                }),
             (new DownloadGeojson())->canSee(function ($request) {
                 return true;
             })->canRun(function ($request) {
@@ -314,11 +316,41 @@ class Club extends Resource
 
     public function authorizedToAttachAny(NovaRequest $request, $model)
     {
-        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent');
+        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent') || $request->user()->managedClub?->id === $this->model()->id;
     }
 
     public function authorizedToDetach(NovaRequest $request, $model, $relationship)
     {
         return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent');
+    }
+
+    /**
+     * Format a list of users into an HTML string
+     *
+     * @param \Illuminate\Database\Eloquent\Collection $users
+     * @param int|null $maxLength Maximum length of each name
+     * @param bool $showCount Whether to show the total count
+     * @return string
+     */
+    private function formatUserList($users, $maxLength = null, $showCount = false)
+    {
+        if ($users->isEmpty()) {
+            return '-';
+        }
+
+        $formattedNames = $users->map(function ($user) use ($maxLength) {
+            $name = $user->name;
+            if ($maxLength && strlen($name) > $maxLength) {
+                $name = substr($name, 0, $maxLength).'...';
+            }
+
+            return $name;
+        })->join('<br>');
+
+        if ($showCount) {
+            $formattedNames .= '<br><strong>Total: '.$users->count().'</strong>';
+        }
+
+        return $formattedNames;
     }
 }
