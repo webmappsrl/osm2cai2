@@ -10,20 +10,19 @@ class MigrationCheck extends Controller
 {
     const preparedQueries = [
         'count hiking routes' => [
-            'legacy' => "select count(*) from hiking_routes;",
-            'current' => "select count(*) from hiking_routes;"
-        ]
+            'legacy' => 'select count(*) from hiking_routes;',
+            'current' => 'select count(*) from hiking_routes;',
+        ],
     ];
 
     public function show(Request $request)
     {
-
         $validated = $request->validate(
             [
                 'queryLegacy' => 'string|nullable',
                 'queryCurrent' => 'string|nullable',
                 'preparedQuery' => 'string|nullable',
-                'run_all' => 'boolean|nullable'
+                'run_all' => 'boolean|nullable',
             ]
         );
 
@@ -33,14 +32,12 @@ class MigrationCheck extends Controller
         $dataLegacy = 'No query was run';
         $dataCurrent = 'No query was run';
 
-
         if (isset($validated['run_all']) && $validated['run_all']) {
             $dataCurrent = ['report' => []];
             $dataLegacy = ['report' => []];
             $queryLegacy = 'All prepared queries';
             $queryCurrent = 'All prepared queries';
             foreach ($this::preparedQueries as $name => $preparedQuery) {
-
                 $legacy = $preparedQuery['legacy'];
                 $dataLegacy[$name] = $this->runOverLegacy($legacy);
 
@@ -48,7 +45,7 @@ class MigrationCheck extends Controller
                 $dataCurrent[$name] = $this->runOverCurrent($current);
 
                 if ($dataCurrent[$name] !== $dataLegacy[$name]) {
-                    $message = "Different result " . strtoupper($name);
+                    $message = 'Different result '.strtoupper($name);
                     $dataCurrent['report'][] = $message;
                     $dataLegacy['report'][] = $message;
                 }
@@ -79,9 +76,7 @@ class MigrationCheck extends Controller
         ]);
     }
 
-
-
-    ###########################
+    //##########################
 
     protected function runOverLegacy(string $sql)
     {
