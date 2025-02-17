@@ -20,33 +20,62 @@ class MigrationCheck extends Controller
 
         $validated = $request->validate(
             [
-                'query' => 'string|nullable',
-                'preparedQuery' => 'string|nullable'
+                'queryLegacy' => 'string|nullable',
+                'queryCurrent' => 'string|nullable',
+                'preparedQuery' => 'string|nullable',
+                'run_all' => 'boolean|nullable'
             ]
         );
 
+        //dd($request->all());
+        $queryLegacy = $validated['queryLegacy'] ?? false;
+        $queryCurrent = $validated['queryCurrent'] ?? $queryLegacy;
         $dataLegacy = 'No query was run';
         $dataCurrent = 'No query was run';
 
-        if (
+
+        if (isset($validated['run_all']) && $validated['run_all']) {
+            $dataCurrent = ['report' => []];
+            $dataLegacy = ['report' => []];
+            $queryLegacy = 'All prepared queries';
+            $queryCurrent = 'All prepared queries';
+            foreach ($this::preparedQueries as $name => $preparedQuery) {
+
+                $legacy = $preparedQuery['legacy'];
+                $dataLegacy[$name] = $this->runOverLegacy($legacy);
+
+                $current = $preparedQuery['current'];
+                $dataCurrent[$name] = $this->runOverCurrent($current);
+
+                if ($dataCurrent[$name] !== $dataLegacy[$name]) {
+                    $message = "Different result " . strtoupper($name);
+                    $dataCurrent['report'][] = $message;
+                    $dataLegacy['report'][] = $message;
+                }
+            }
+        } elseif (
             isset($validated['preparedQuery'])
+            && ! empty($validated['preparedQuery'])
             && isset($this::preparedQueries[$validated['preparedQuery']])
         ) {
             $queries = $this::preparedQueries[$validated['preparedQuery']];
-            $dataLegacy = $this->runOverLegacy($queries['legacy']);
-            $dataCurrent = $this->runOverCurrent($queries['current']);
-        } elseif (isset($validated['query']) && ($query = $validated['query'])) {
-            $request->flashOnly(['query']);
-            $dataLegacy = $this->runOverLegacy($query);
-            $dataCurrent = $this->runOverCurrent($query);
+            $queryLegacy = $queries['legacy'];
+            $dataLegacy = $this->runOverLegacy($queryLegacy);
+            $queryCurrent = $queries['current'];
+            $dataCurrent = $this->runOverCurrent($queryCurrent);
+        } elseif ($queryLegacy && $queryCurrent) {
+            $dataLegacy = $this->runOverLegacy($queryLegacy);
+            $dataCurrent = $this->runOverCurrent($queryCurrent);
         }
 
-
+        $request->flash();
 
         return view('migrationCheck', [
             'preparedQueries' => array_keys($this::preparedQueries),
             'dataLegacy' => $dataLegacy,
-            'dataCurrent' => $dataCurrent
+            'dataCurrent' => $dataCurrent,
+            'queryLegacy' => $queryLegacy,
+            'queryCurrent' => $queryCurrent,
         ]);
     }
 
