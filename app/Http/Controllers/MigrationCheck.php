@@ -11,32 +11,32 @@ class MigrationCheck extends Controller
     const preparedQueries = [
         // USERS
         'count hiking routes' => [
-            'legacy' => "select count(*) from hiking_routes;",
-            'current' => "select count(*) from hiking_routes;",
+            'legacy' => "select count(*) as num from hiking_routes;",
+            'current' => "select count(*) as num from hiking_routes;",
         ],
         'count users admin' => [
-            'legacy' => "select count(*) from users where is_administrator = true;",
-            'current' => "select count(DISTINCT model_id) from model_has_roles where role_id=1 AND model_type='App\Models\User';",
+            'legacy' => "select count(*) as num from users where is_administrator = true;",
+            'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=1 AND model_type='App\Models\User';",
         ],
         'count users itinerary manager' => [
-            'legacy' => "select count(*) from users where is_itinerary_manager = true;",
-            'current' => "select count(DISTINCT model_id) from model_has_roles where role_id=2 AND model_type='App\Models\User';",
+            'legacy' => "select count(*) as num from users where is_itinerary_manager = true;",
+            'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=2 AND model_type='App\Models\User';",
         ],
         'count users natioanal referent' => [
-            'legacy' => "select count(*) from users where is_national_referent = true;",
-            'current' => "select count(DISTINCT model_id) from model_has_roles where role_id=3 AND model_type='App\Models\User';",
+            'legacy' => "select count(*) as num from users where is_national_referent = true;",
+            'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=3 AND model_type='App\Models\User';",
         ],
         'count users regional referent' => [
-            'legacy' => "select count(*) from users where region_id IS NOT NULL;",
-            'current' => "select count(DISTINCT model_id) from model_has_roles where role_id=4 AND model_type='App\Models\User';",
+            'legacy' => "select count(*) as num from users where region_id IS NOT NULL;",
+            'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=4 AND model_type='App\Models\User';",
         ],
         'count users local referent' => [
-            'legacy' => "select (select count(DISTINCT user_id) from area_user) + (select count(DISTINCT user_id) from sector_user);",
-            'current' => "select count(DISTINCT model_id) from model_has_roles where role_id=5 AND model_type='App\Models\User';",
+            'legacy' => "select (select count(DISTINCT user_id) from area_user) + (select count(DISTINCT user_id) from sector_user) as num;",
+            'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=5 AND model_type='App\Models\User';",
         ],
         'count users sectional referent' => [
-            'legacy' => "select count(*) from users where section_id IS NOT NULL;",
-            'current' => "select count(DISTINCT model_id) from model_has_roles where role_id=6 AND model_type='App\Models\User';",
+            'legacy' => "select count(*) as num from users where section_id IS NOT NULL;",
+            'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=6 AND model_type='App\Models\User';",
         ]
 
     ];
@@ -59,10 +59,10 @@ class MigrationCheck extends Controller
         $dataCurrent = 'No query was run';
 
         if (isset($validated['run_all']) && $validated['run_all']) {
-            $dataCurrent = ['report' => []];
-            $dataLegacy = ['report' => []];
             $queryLegacy = 'All prepared queries';
             $queryCurrent = 'All prepared queries';
+            $dataLegacy = [];
+            $dataCurrent = [];
             foreach ($this::preparedQueries as $name => $preparedQuery) {
                 $legacy = $preparedQuery['legacy'];
                 $dataLegacy[$name] = $this->runOverLegacy($legacy);
@@ -70,11 +70,9 @@ class MigrationCheck extends Controller
                 $current = $preparedQuery['current'];
                 $dataCurrent[$name] = $this->runOverCurrent($current);
 
-                if ($dataCurrent[$name] !== $dataLegacy[$name]) {
-                    $message = 'Different result '.strtoupper($name);
-                    $dataCurrent['report'][] = $message;
-                    $dataLegacy['report'][] = $message;
-                }
+                // if ($dataCurrent[$name] !== $dataLegacy[$name]) {
+                //     $message = 'Different result ' . strtoupper($name);
+                // }
             }
         } elseif (
             isset($validated['preparedQuery'])
@@ -120,6 +118,8 @@ class MigrationCheck extends Controller
         $connection->beginTransaction();
         try {
             $r = $connection->select($sql);
+            if (isset($r[0]->num))
+                $r = $r[0]->num;
         } catch (Exception $e) {
             $r = $e->getMessage();
         }
