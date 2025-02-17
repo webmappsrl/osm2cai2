@@ -3,6 +3,7 @@
 use App\Http\Controllers\CasLoginController;
 use App\Http\Controllers\HikingRouteLoScarponeExportController;
 use App\Http\Controllers\ImportUGCController;
+use App\Http\Controllers\MigrationCheck;
 use App\Http\Controllers\MiturAbruzzoController;
 use App\Jobs\TestJob;
 use App\Models\HikingRoute;
@@ -18,6 +19,10 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::controller(MigrationCheck::class)->group(function () {
+    Route::get('/migration-check', 'show')->name('migration-check');
+})->middleware('auth');
 
 Route::get('/test-horizon', function () {
     for ($i = 0; $i < 1000; $i++) {

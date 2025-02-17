@@ -161,6 +161,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('Sync UGC'), route('import-ugc'))->canSee(function () {
                         return auth()->user()->hasRole('Administrator');
                     })->openInNewTab(),
+                    MenuItem::externalLink(__('Migration check'), route('migration-check'))->canSee(function () {
+                        return auth()->user()->hasRole('Administrator');
+                    })->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
