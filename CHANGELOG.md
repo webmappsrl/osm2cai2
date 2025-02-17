@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.0.0 (2025-02-17)
+
+
+### Features
+
+* add a new view to run queries against legacy and current db ([57eaad9](https://github.com/webmappsrl/osm2cai2/commit/57eaad92efb9cdf5a07742caed65cd5149d7ea8a))
+* Add RemoveMembersFromClub action and improve Club resource user display OC:4917 ([ee6c071](https://github.com/webmappsrl/osm2cai2/commit/ee6c07101139f560c840bf48d70ba2e177afb2c6))
+* added impersonatable users ([840c9be](https://github.com/webmappsrl/osm2cai2/commit/840c9be0522589e3ed6a3868db69f772d0cfcc79))
+* migration check tool ([cbdbf01](https://github.com/webmappsrl/osm2cai2/commit/cbdbf013a49dc1021bf082839d12ba785f7dc3f1))
+
+
+### Bug Fixes
+
+* fixed bug in Clubs nova resource OC:4804 ([6c7745c](https://github.com/webmappsrl/osm2cai2/commit/6c7745cc603e4baa0ef722aa2f68224b30c07187))
+* fixed typo in clubs nova actions OC:4811 ([57d70f2](https://github.com/webmappsrl/osm2cai2/commit/57d70f2de06aa9de4e838d93ab573e370a26aa64))
+* fixed validation policies typo error ([155f02e](https://github.com/webmappsrl/osm2cai2/commit/155f02e5d7b9a3d9d81274783515a7ae4aa5b8b7))
+* number formatting on sal nazionale italy dashbaord ([670ec74](https://github.com/webmappsrl/osm2cai2/commit/670ec740bfb0c0a5c5342f6615a3c958895b3b27))
+* ref rei and ref rei comp in hiking routes nova detail OC:4805 ([ea5cb8b](https://github.com/webmappsrl/osm2cai2/commit/ea5cb8be1e231010005027e13ffc0fc60b77e23e))
+* sectors can only be created by admin OC:4812 ([d948860](https://github.com/webmappsrl/osm2cai2/commit/d94886056d4462dad46a6805b5ba8a401dc77df7))
+* typo in cai hut nova resource ([fab5e54](https://github.com/webmappsrl/osm2cai2/commit/fab5e5455f734116b7dd8dd4d2cc17067b6922ad))
+* typo in delete hiking route action OC:4810 ([e4595bf](https://github.com/webmappsrl/osm2cai2/commit/e4595bf57da292a07b73c0e72b24983683805427))
+* typo in source survey export ([53b851b](https://github.com/webmappsrl/osm2cai2/commit/53b851b0f3315db99c55579cf7fe4339316649d1))
+* updated ugc media policy ([1187a14](https://github.com/webmappsrl/osm2cai2/commit/1187a1491a71b40f668ece3301d5e753dba06e9f))
+
+
+### Miscellaneous Chores
+
+* added osm sync hiking route action OC:4809 ([a620b30](https://github.com/webmappsrl/osm2cai2/commit/a620b302af780f95a9ae9033c7bdbcf7779cb33d))
+* added sync-ugc tool in nova menu OC:4808 ([ded2152](https://github.com/webmappsrl/osm2cai2/commit/ded2152a7e29f9217769b4c9d1637022bb06c64a))
+* updated caching for regions hiking routes count OC: 4801 ([6848091](https://github.com/webmappsrl/osm2cai2/commit/684809158806713a00634a05de3ff54e731c131d))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
