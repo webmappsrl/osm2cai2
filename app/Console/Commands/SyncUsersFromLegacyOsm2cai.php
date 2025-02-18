@@ -4,13 +4,14 @@ namespace App\Console\Commands;
 
 use App\Models\Area;
 use App\Models\Club;
-use App\Models\Province;
+use App\Models\User;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\User;
+use App\Models\Province;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Artisan;
 
 class SyncUsersFromLegacyOsm2cai extends Command
 {
@@ -22,30 +23,39 @@ class SyncUsersFromLegacyOsm2cai extends Command
     {
         $legacyUsers = DB::connection('legacyosm2cai')->table('users')->get();
 
-        //populate the roles and permissions table
-        Artisan::call('db:seed');
+        //populate the roles and permissions table if not already populated
+        if (Role::count() === 0) {
+            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
+        }
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: '.$legacyUser->email);
+            $this->info('Importing user: ' . $legacyUser->email);
 
-            $user = User::where('email', $legacyUser->email)->first();
+            try {
+                $user = User::where('email', $legacyUser->email)->first();
 
-            if (! $user) {
-                $user = new User();
+                if (! $user) {
+                    $user = new User();
+                }
+                $user->id = $legacyUser->id;
+                $user->email = $legacyUser->email;
+                $user->phone = $legacyUser->phone;
+                $user->name = $legacyUser->name;
+                $user->email_verified_at = $legacyUser->email_verified_at;
+                $user->password = $legacyUser->password;
+                $user->remember_token = $legacyUser->remember_token;
+                $user->created_at = $legacyUser->created_at;
+                $user->updated_at = now();
+
+                $user->savequietly();
+
+                $this->assignRolesAndPermissions($user, $legacyUser);
+                $this->syncTerritorialRelations($user, $legacyUser);
+            } catch (\Exception $e) {
+                $this->error('Error importing user: ' . $legacyUser->email);
+                $this->error($e->getMessage());
+                continue;
             }
-            $user->id = $legacyUser->id;
-            $user->email = $legacyUser->email;
-            $user->phone = $legacyUser->phone;
-            $user->name = $legacyUser->name;
-            $user->email_verified_at = $legacyUser->email_verified_at;
-            $user->password = $legacyUser->password;
-            $user->remember_token = $legacyUser->remember_token;
-            $user->created_at = $legacyUser->created_at;
-            $user->updated_at = now();
-            $user->savequietly();
-
-            $this->assignRolesAndPermissions($user, $legacyUser);
-            $this->syncTerritorialRelations($user, $legacyUser);
         }
 
         $this->info('Import completed.');
@@ -192,29 +202,31 @@ class SyncUsersFromLegacyOsm2cai extends Command
             return;
         }
 
-        if (isset($legacyResourceValidation['is_sign_validator']) && $legacyResourceValidation['is_sign_validator'] == true) {
-            $user->syncRoles(['Validator']);
-            $user->givePermissionTo('validate signs');
-        }
+        if (!$user->hasRole('Administrator')) {
+            if (isset($legacyResourceValidation['is_sign_validator']) && $legacyResourceValidation['is_sign_validator'] == true) {
+                $user->syncRoles(['Validator']);
+                $user->givePermissionTo('validate signs');
+            }
 
-        if (isset($legacyResourceValidation['is_source_validator']) && $legacyResourceValidation['is_source_validator'] == true) {
-            $user->syncRoles(['Validator']);
-            $user->givePermissionTo('validate source surveys');
-        }
+            if (isset($legacyResourceValidation['is_source_validator']) && $legacyResourceValidation['is_source_validator'] == true) {
+                $user->syncRoles(['Validator']);
+                $user->givePermissionTo('validate source surveys');
+            }
 
-        if (isset($legacyResourceValidation['is_geological_site_validator']) && $legacyResourceValidation['is_geological_site_validator'] == true) {
-            $user->syncRoles(['Validator']);
-            $user->givePermissionTo('validate geological sites');
-        }
+            if (isset($legacyResourceValidation['is_geological_site_validator']) && $legacyResourceValidation['is_geological_site_validator'] == true) {
+                $user->syncRoles(['Validator']);
+                $user->givePermissionTo('validate geological sites');
+            }
 
-        if (isset($legacyResourceValidation['is_archaeological_site_validator']) && $legacyResourceValidation['is_archaeological_site_validator'] == true) {
-            $user->syncRoles(['Validator']);
-            $user->givePermissionTo('validate archaeological sites');
-        }
+            if (isset($legacyResourceValidation['is_archaeological_site_validator']) && $legacyResourceValidation['is_archaeological_site_validator'] == true) {
+                $user->syncRoles(['Validator']);
+                $user->givePermissionTo('validate archaeological sites');
+            }
 
-        if (isset($legacyResourceValidation['is_archaeological_area_validator']) && $legacyResourceValidation['is_archaeological_area_validator'] == true) {
-            $user->syncRoles(['Validator']);
-            $user->givePermissionTo('validate archaeological areas');
+            if (isset($legacyResourceValidation['is_archaeological_area_validator']) && $legacyResourceValidation['is_archaeological_area_validator'] == true) {
+                $user->syncRoles(['Validator']);
+                $user->givePermissionTo('validate archaeological areas');
+            }
         }
     }
 }

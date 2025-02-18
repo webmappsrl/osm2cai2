@@ -45,26 +45,40 @@ class Osm2caiSetExpectedValuesCommand extends Command
      */
     public function handle()
     {
-        Region::where('name', 'Abruzzo')->first()->updateQuietly(['num_expected' => 449]);
-        Region::where('name', 'Basilicata')->first()->updateQuietly(['num_expected' => 200]);
-        Region::where('name', 'Calabria')->first()->updateQuietly(['num_expected' => 357]);
-        Region::where('name', 'Campania')->first()->updateQuietly(['num_expected' => 559]);
-        Region::where('name', 'Emilia-Romagna')->first()->updateQuietly(['num_expected' => 1253]);
-        Region::where('name', 'Friuli-Venezia Giulia')->first()->updateQuietly(['num_expected' => 645]);
-        Region::where('name', 'Lazio')->first()->updateQuietly(['num_expected' => 1033]);
-        Region::where('name', 'Liguria')->first()->updateQuietly(['num_expected' => 806]);
-        Region::where('name', 'Lombardia')->first()->updateQuietly(['num_expected' => 3784]);
-        Region::where('name', 'Marche')->first()->updateQuietly(['num_expected' => 602]);
-        Region::where('name', 'Molise')->first()->updateQuietly(['num_expected' => 35]);
-        Region::where('name', 'Piemonte')->first()->updateQuietly(['num_expected' => 4642]);
-        Region::where('name', 'Puglia')->first()->updateQuietly(['num_expected' => 64]);
-        Region::where('name', 'Sardigna/Sardegna')->first()->updateQuietly(['num_expected' => 445]);
-        Region::where('name', 'Sicilia')->first()->updateQuietly(['num_expected' => 444]);
-        Region::where('name', 'Toscana')->first()->updateQuietly(['num_expected' => 2684]);
-        Region::where('name', 'Trentino-Alto Adige/Südtirol')->first()->updateQuietly(['num_expected' => 4947]);
-        Region::where('name', 'Umbria')->first()->updateQuietly(['num_expected' => 444]);
-        Region::where('name', 'Valle d\'Aosta / Vallée d\'Aoste')->first()->updateQuietly(['num_expected' => 1070]);
-        Region::where('name', 'Veneto')->first()->updateQuietly(['num_expected' => 984]);
+        $this->info('Setting expected values for regions...');
+        $regions = [
+            ['name' => 'Abruzzo', 'expected' => 449],
+            ['name' => 'Basilicata', 'expected' => 200],
+            ['name' => 'Calabria', 'expected' => 357],
+            ['name' => 'Campania', 'expected' => 559],
+            ['name' => 'Emilia-Romagna', 'expected' => 1253],
+            ['name' => 'Friuli-Venezia Giulia', 'expected' => 645],
+            ['name' => 'Lazio', 'expected' => 1033],
+            ['name' => 'Liguria', 'expected' => 806],
+            ['name' => 'Lombardia', 'expected' => 3784],
+            ['name' => 'Marche', 'expected' => 602],
+            ['name' => 'Molise', 'expected' => 35],
+            ['name' => 'Piemonte', 'expected' => 4642],
+            ['name' => 'Puglia', 'expected' => 64],
+            ['name' => 'Sardigna/Sardegna', 'expected' => 445],
+            ['name' => 'Sicilia', 'expected' => 444],
+            ['name' => 'Toscana', 'expected' => 2684],
+            ['name' => 'Trentino-Alto Adige/Südtirol', 'expected' => 4947],
+            ['name' => 'Umbria', 'expected' => 444],
+            ['name' => 'Valle d\'Aosta / Vallée d\'Aoste', 'expected' => 1070],
+            ['name' => 'Veneto', 'expected' => 984],
+        ];
+
+        $bar = $this->output->createProgressBar(count($regions));
+        $bar->start();
+
+        foreach ($regions as $region) {
+            Region::where('name', $region['name'])->first()->updateQuietly(['num_expected' => $region['expected']]);
+            $bar->advance();
+        }
+
+        $bar->finish();
+        $this->newLine();
 
         $this->setProvinceExpectedValues();
         $this->setAreaExpectedValues();
@@ -73,7 +87,11 @@ class Osm2caiSetExpectedValuesCommand extends Command
 
     private function setProvinceExpectedValues()
     {
+        $this->info('Setting expected values for provinces...');
         $legacyProvinces = $this->legacyOsm2cai->table('provinces')->get();
+
+        $bar = $this->output->createProgressBar(count($legacyProvinces));
+        $bar->start();
 
         foreach ($legacyProvinces as $legacyProvince) {
             $actualProvince = Province::where('osmfeatures_data->properties->osm_tags->short_name', $legacyProvince->code)
@@ -83,12 +101,20 @@ class Osm2caiSetExpectedValuesCommand extends Command
                 $actualProvince->num_expected = $legacyProvince->num_expected;
                 $actualProvince->saveQuietly();
             }
+            $bar->advance();
         }
+
+        $bar->finish();
+        $this->newLine();
     }
 
     private function setAreaExpectedValues()
     {
+        $this->info('Setting expected values for areas...');
         $legacyAreas = $this->legacyOsm2cai->table('areas')->get();
+
+        $bar = $this->output->createProgressBar(count($legacyAreas));
+        $bar->start();
 
         foreach ($legacyAreas as $legacyArea) {
             $actualArea = Area::where('full_code', $legacyArea->full_code)
@@ -97,12 +123,20 @@ class Osm2caiSetExpectedValuesCommand extends Command
                 $actualArea->num_expected = $legacyArea->num_expected;
                 $actualArea->saveQuietly();
             }
+            $bar->advance();
         }
+
+        $bar->finish();
+        $this->newLine();
     }
 
     private function setSectorExpectedValues()
     {
+        $this->info('Setting expected values for sectors...');
         $legacySectors = $this->legacyOsm2cai->table('sectors')->get();
+
+        $bar = $this->output->createProgressBar(count($legacySectors));
+        $bar->start();
 
         foreach ($legacySectors as $legacySector) {
             $actualSector = Sector::where('full_code', $legacySector->full_code)
@@ -111,6 +145,10 @@ class Osm2caiSetExpectedValuesCommand extends Command
                 $actualSector->num_expected = $legacySector->num_expected;
                 $actualSector->saveQuietly();
             }
+            $bar->advance();
         }
+
+        $bar->finish();
+        $this->newLine();
     }
 }

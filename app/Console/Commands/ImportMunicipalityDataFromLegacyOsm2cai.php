@@ -37,6 +37,9 @@ class ImportMunicipalityDataFromLegacyOsm2cai extends Command
         $updatedCount = 0;
         $notUpdated = [];
 
+        $progressBar = $this->output->createProgressBar($legacyMunicipalities->count());
+        $progressBar->start();
+
         //insert the data into the municipalities table
         foreach ($legacyMunicipalities as $legacyMunicipality) {
             //search the corresponding municipality in the new database
@@ -54,15 +57,19 @@ class ImportMunicipalityDataFromLegacyOsm2cai extends Command
             } else {
                 $notUpdated[] = $legacyMunicipality->comune;
             }
+            $progressBar->advance();
         }
 
-        $this->info('Updated municipalities: '.$updatedCount);
-        $this->info('Not updated municipalities: '.count($notUpdated));
+        $progressBar->finish();
+        $this->newLine();
+
+        $this->info('Updated municipalities: ' . $updatedCount);
+        $this->info('Not updated municipalities: ' . count($notUpdated));
 
         if (count($notUpdated) > 0) {
             $this->info('List of not updated municipalities:');
             foreach ($notUpdated as $comune) {
-                $this->error('- '.$comune);
+                $this->error('- ' . $comune);
             }
         }
     }

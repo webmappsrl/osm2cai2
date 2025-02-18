@@ -32,12 +32,15 @@ class associateUsersToecPoisCommand extends Command
         //get all ec_pois
         $ecPois = EcPoi::all();
 
+        $progressBar = $this->output->createProgressBar($ecPois->count());
+        $progressBar->start();
+
         foreach ($ecPois as $ecPoi) {
-            $ecPoiApiData = Http::get('https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id);
+            $ecPoiApiData = Http::get('https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id);
 
             if ($ecPoiApiData->failed() || $ecPoiApiData->json() === null) {
-                $this->info('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id);
-                Log::error('Failed to retrieve data from API: '.'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/'.$ecPoi->osmfeatures_id.' '.$ecPoiApiData->body());
+                $this->info('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id);
+                Log::error('Failed to retrieve data from API: ' . 'https://osm2cai.cai.it/api/v2/export/ec_pois/osmfeatures/' . $ecPoi->osmfeatures_id . ' ' . $ecPoiApiData->body());
             }
 
             $ecPoiApiData = $ecPoiApiData->json();
@@ -46,11 +49,15 @@ class associateUsersToecPoisCommand extends Command
             $user = User::where('id', $ecPoiApiData['user_id'])->first();
 
             if (! $user) {
-                $this->info('User with id '.$ecPoiApiData['user_id'].' does not exist');
+                $this->info('User with id ' . $ecPoiApiData['user_id'] . ' does not exist');
                 continue;
             }
 
             $ecPoi->update(['user_id' => $ecPoiApiData['user_id']]);
+            $progressBar->advance();
         }
+
+        $progressBar->finish();
+        $this->newLine();
     }
 }
