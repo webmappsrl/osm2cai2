@@ -20,9 +20,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::controller(MigrationCheck::class)->group(function () {
-    Route::get('/migration-check', 'show')->name('migration-check');
-})->middleware('auth');
+Route::middleware(['auth', 'nova'])->group(function () {
+    Route::get('/migration-check', [MigrationCheck::class, 'show'])->name('migration-check');
+});
 
 Route::get('/test-horizon', function () {
     for ($i = 0; $i < 1000; $i++) {
@@ -53,7 +53,7 @@ Route::get('/hiking-route/id/{id}', function ($id) {
 /**
  * Route to login to application with cas with specific middleware and controller
  */
-Route::get('/nova/cas-login', CasLoginController::class.'@casLogin')
+Route::get('/nova/cas-login', CasLoginController::class . '@casLogin')
     ->middleware('cai.cas');
 
 /**
