@@ -39,15 +39,9 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $modelInstance = new $this->modelClass();
+        $modelInstance = $this->modelClass::firstOrNew(['id' => $this->data['id']]);
 
         $legacyDbConnection = DB::connection('legacyosm2cai');
-
-        if ($modelInstance->where('id', $this->data['id'])->exists()) {
-            Log::info($modelInstance.' with id: '.$this->data['id'].' already imported, skipping');
-
-            return;
-        }
 
         $this->performImport($modelInstance, $this->data, $legacyDbConnection);
     }

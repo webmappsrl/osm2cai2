@@ -30,6 +30,8 @@ class SyncHrFeatureImageFromLegacyCommand extends Command
      */
     public function handle()
     {
+        $this->info('[START] Importing hiking routes feature images from legacy database...');
+
         $legacyConnection = DB::connection('legacyosm2cai');
         $legacyHrs = $legacyConnection->table('hiking_routes')
             ->whereNotNull('feature_image')
