@@ -38,13 +38,13 @@ class SyncHrFeatureImageFromLegacyCommand extends Command
             ->get(['relation_id', 'feature_image']);
 
         foreach ($legacyHrs as $lhr) {
-            $osmfeaturesId = 'R' . $lhr->relation_id;
+            $osmfeaturesId = 'R'.$lhr->relation_id;
             $currentHr = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();
 
             if ($currentHr) {
                 // Build the full URL to the legacy image
                 $featureImage = str_replace('public', 'storage', $lhr->feature_image);
-                $legacyImageUrl = 'https://osm2cai.cai.it/' . $featureImage;
+                $legacyImageUrl = 'https://osm2cai.cai.it/'.$featureImage;
 
                 // Verifiy if the image is already associated
                 if (! $currentHr->getFirstMedia('feature_image')) {
@@ -82,7 +82,7 @@ class SyncHrFeatureImageFromLegacyCommand extends Command
                 }
 
                 // Rename the temporary file with the correct extension
-                $tempFileWithExtension = $tempFile . '.' . $extension;
+                $tempFileWithExtension = $tempFile.'.'.$extension;
                 rename($tempFile, $tempFileWithExtension);
 
                 // Associate the image to the feature_image collection
@@ -97,7 +97,7 @@ class SyncHrFeatureImageFromLegacyCommand extends Command
 
             return false;
         } catch (\Exception $e) {
-            Log::error("Error during the download of the image for hiking route {$hr->id}: " . $e->getMessage());
+            Log::error("Error during the download of the image for hiking route {$hr->id}: ".$e->getMessage());
 
             return false;
         }

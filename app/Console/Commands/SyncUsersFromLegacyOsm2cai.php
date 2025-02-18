@@ -4,14 +4,14 @@ namespace App\Console\Commands;
 
 use App\Models\Area;
 use App\Models\Club;
-use App\Models\User;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
-use App\Models\Province;
+use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Artisan;
 
 class SyncUsersFromLegacyOsm2cai extends Command
 {
@@ -29,7 +29,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         }
 
         foreach ($legacyUsers as $legacyUser) {
-            $this->info('Importing user: ' . $legacyUser->email);
+            $this->info('Importing user: '.$legacyUser->email);
 
             try {
                 $user = User::where('email', $legacyUser->email)->first();
@@ -52,7 +52,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 $this->assignRolesAndPermissions($user, $legacyUser);
                 $this->syncTerritorialRelations($user, $legacyUser);
             } catch (\Exception $e) {
-                $this->error('Error importing user: ' . $legacyUser->email);
+                $this->error('Error importing user: '.$legacyUser->email);
                 $this->error($e->getMessage());
                 continue;
             }
@@ -202,7 +202,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             return;
         }
 
-        if (!$user->hasRole('Administrator')) {
+        if (! $user->hasRole('Administrator')) {
             if (isset($legacyResourceValidation['is_sign_validator']) && $legacyResourceValidation['is_sign_validator'] == true) {
                 $user->syncRoles(['Validator']);
                 $user->givePermissionTo('validate signs');
