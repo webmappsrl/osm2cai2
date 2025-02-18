@@ -12,7 +12,7 @@ class CheckHikingRoutesGeometry extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai:check_hiking_routes_geometry';
+    protected $signature = 'osm2cai:check-hiking-routes-geometry';
 
     /**
      * The console command description.
@@ -39,8 +39,12 @@ class CheckHikingRoutesGeometry extends Command
     public function handle()
     {
         ini_set('memory_limit', '-1');
-        HikingRoute::all('id', 'is_geometry_correct')->each(function ($hr) {
-            $this->info("Checking hiking route (id: {$hr->id})");
+        $routes = HikingRoute::all('id', 'is_geometry_correct');
+        $bar = $this->output->createProgressBar(count($routes));
+        $bar->start();
+
+        $routes->each(function ($hr) use ($bar) {
+            $this->info("\nChecking hiking route (id: {$hr->id})");
             $newGeometryCheck = $hr->hasCorrectGeometry();
 
             if ($hr->is_geometry_correct !== $newGeometryCheck) {
@@ -50,7 +54,12 @@ class CheckHikingRoutesGeometry extends Command
             } else {
                 $this->info("No change needed for {$hr->name} (id: {$hr->id})");
             }
+
+            $bar->advance();
         });
+
+        $bar->finish();
+        $this->info("\nAll routes checked!");
 
         return 0;
     }

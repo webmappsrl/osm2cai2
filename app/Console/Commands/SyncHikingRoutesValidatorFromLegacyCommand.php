@@ -28,6 +28,8 @@ class SyncHikingRoutesValidatorFromLegacyCommand extends Command
      */
     public function handle()
     {
+        $this->info('[START] Synchronizing validator data from legacy database...');
+
         $legacyConnection = DB::connection('legacyosm2cai');
 
         // Get all records with user_id not null
@@ -36,7 +38,9 @@ class SyncHikingRoutesValidatorFromLegacyCommand extends Command
             ->get();
 
         $this->info('Found '.count($legacyHikingRoutes).' hiking routes to update');
+
         $progressBar = $this->output->createProgressBar(count($legacyHikingRoutes));
+        $progressBar->start();
 
         foreach ($legacyHikingRoutes as $legacyHr) {
             $osmfeaturesId = 'R'.$legacyHr->relation_id;

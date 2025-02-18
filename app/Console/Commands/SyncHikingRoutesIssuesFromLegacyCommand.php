@@ -28,6 +28,7 @@ class SyncHikingRoutesIssuesFromLegacyCommand extends Command
      */
     public function handle()
     {
+        $this->info('[START] Importing hiking routes issues from legacy database...');
         $legacyConnection = DB::connection('legacyosm2cai');
 
         // Get all hiking routes from legacy database
@@ -38,6 +39,8 @@ class SyncHikingRoutesIssuesFromLegacyCommand extends Command
         $this->info('Found '.count($legacyHikingRoutes).' hiking routes with issues to import');
 
         $progressBar = $this->output->createProgressBar(count($legacyHikingRoutes));
+        $progressBar->start();
+
         $updated = 0;
         $notFound = [];
 
@@ -69,8 +72,9 @@ class SyncHikingRoutesIssuesFromLegacyCommand extends Command
         }
 
         $progressBar->finish();
+        $this->newLine();
 
-        $this->info("\nSuccessfully updated: ".$updated.' hiking routes');
+        $this->info('Successfully updated: '.$updated.' hiking routes');
         $this->info('Hiking routes not found: '.count($notFound));
     }
 }

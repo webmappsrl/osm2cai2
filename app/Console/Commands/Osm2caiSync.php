@@ -65,18 +65,19 @@ class Osm2caiSync extends Command
         $progressBar = $this->output->createProgressBar(count($listData));
         $progressBar->start();
 
-        $batchSize = 1000;
+        $batchSize = 300;
         $batch = [];
 
-        foreach ($listData as $id => $udpated_at) {
-            $modelInstance = new $modelClass();
-            if ($modelInstance->where('id', $id)->exists()) {
-                $this->info('Skipping '.$id.' because it already exists');
+        foreach ($listData as $id => $updated_at) {
+            // Check if record exists and compare updated_at
+            $existingRecord = $modelClass::find($id);
+            if ($existingRecord && $existingRecord->updated_at >= $updated_at) {
+                $this->info('Skipping '.$id.' because it is up to date');
                 $progressBar->advance();
                 continue;
             }
-            $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
 
+            $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
             $singleFeatureResponse = Http::get($singleFeatureApi);
 
             if ($singleFeatureResponse->failed()) {
