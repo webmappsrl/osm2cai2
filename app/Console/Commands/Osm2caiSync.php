@@ -34,7 +34,7 @@ class Osm2caiSync extends Command
 
         if ($modelClass === null) {
             $this->error('Model class not found');
-            Log::error('Model'.$modelClass.' class not found');
+            Log::error('Model' . $modelClass . ' class not found');
 
             return;
         }
@@ -52,8 +52,8 @@ class Osm2caiSync extends Command
 
             $listResponse = Http::get($listApi);
             if ($listResponse->failed() || $listResponse->json() === null) {
-                $this->error('Failed to retrieve data from API: '.$listApi);
-                Log::error('Failed to retrieve data from API: '.$listApi.' '.$listResponse->body());
+                $this->error('Failed to retrieve data from API: ' . $listApi);
+                Log::error('Failed to retrieve data from API: ' . $listApi . ' ' . $listResponse->body());
 
                 return;
             }
@@ -61,37 +61,38 @@ class Osm2caiSync extends Command
 
         $listData = $listResponse->json();
 
-        $this->info('Dispatching '.count($listData).' jobs for '.$model.' model');
+        $this->info('Dispatching ' . count($listData) . ' jobs for ' . $model . ' model');
         $progressBar = $this->output->createProgressBar(count($listData));
         $progressBar->start();
 
-        $batchSize = 1000;
+        $batchSize = 300;
         $batch = [];
 
-        foreach ($listData as $id => $udpated_at) {
-            $modelInstance = new $modelClass();
-            if ($modelInstance->where('id', $id)->exists()) {
-                $this->info('Skipping '.$id.' because it already exists');
+        foreach ($listData as $id => $updated_at) {
+            // Check if record exists and compare updated_at
+            $existingRecord = $modelClass::find($id);
+            if ($existingRecord && $existingRecord->updated_at >= $updated_at) {
+                $this->info('Skipping ' . $id . ' because it is up to date');
                 $progressBar->advance();
                 continue;
             }
-            $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
 
+            $singleFeatureApi = "https://osm2cai.cai.it/api/v2/export/$model/$id";
             $singleFeatureResponse = Http::get($singleFeatureApi);
 
             if ($singleFeatureResponse->failed()) {
-                Log::error('Failed to retrieve data from OSM2CAI API'.$singleFeatureResponse->body());
-
+                Log::error('Failed to retrieve data from OSM2CAI API' . $singleFeatureResponse->body());
                 return;
             }
 
             $singleFeatureData = $singleFeatureResponse->json();
 
             if (empty($singleFeatureData)) {
-                $this->info('Skipping '.$id.' because it is empty');
+                $this->info('Skipping ' . $id . ' because it is empty');
                 $progressBar->advance();
                 continue;
             }
+
 
             $batch[] = new ImportElementFromOsm2caiJob($modelClass, $singleFeatureData);
 
@@ -119,12 +120,12 @@ class Osm2caiSync extends Command
     private function parseModelClass($model)
     {
         $model = str_replace('_', '', ucwords($model, '_'));
-        $modelClass = 'App\\Models\\'.$model;
+        $modelClass = 'App\\Models\\' . $model;
 
         if (! class_exists($modelClass)) {
             //remove final 's' from model name
             $modelName = substr($model, 0, -1);
-            $modelClass = 'App\\Models\\'.$modelName;
+            $modelClass = 'App\\Models\\' . $modelName;
             if (! class_exists($modelClass)) {
                 //rename section model to club
                 if ($model === 'Sections') {
