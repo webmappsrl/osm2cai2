@@ -14,7 +14,7 @@ class CheckHikingRoutesExistenceOnOsm extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai:check_hr_existence_on_osm';
+    protected $signature = 'osm2cai:check-hr-existence-on-osm';
 
     /**
      * The console command description.

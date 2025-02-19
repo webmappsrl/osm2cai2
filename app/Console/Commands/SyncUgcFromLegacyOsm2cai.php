@@ -228,6 +228,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                         $media->id,
                         $geometryType
                     );
+                    continue;
                 }
             }
 
