@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.0 (2025-02-19)
+
+
+### Features
+
+* add a new view to run queries against legacy and current db ([57eaad9](https://github.com/webmappsrl/osm2cai2/commit/57eaad92efb9cdf5a07742caed65cd5149d7ea8a))
+* Add RemoveMembersFromClub action and improve Club resource user display OC:4917 ([ee6c071](https://github.com/webmappsrl/osm2cai2/commit/ee6c07101139f560c840bf48d70ba2e177afb2c6))
+* migration check tool ([cbdbf01](https://github.com/webmappsrl/osm2cai2/commit/cbdbf013a49dc1021bf082839d12ba785f7dc3f1))
+* new query (Users + HR) ([0c6bd1e](https://github.com/webmappsrl/osm2cai2/commit/0c6bd1e93e625dcd2b5da9f35c29a841da601acd))
+* query check for migration ([087a946](https://github.com/webmappsrl/osm2cai2/commit/087a9466092dd4bbde16b3de962b3150b9875838))
+
+
+### Bug Fixes
+
+* fixed validation policies typo error ([155f02e](https://github.com/webmappsrl/osm2cai2/commit/155f02e5d7b9a3d9d81274783515a7ae4aa5b8b7))
+* migration check tool ([09fe7e8](https://github.com/webmappsrl/osm2cai2/commit/09fe7e82b969fffcfebc36dc0ad9b2c376ec9878))
+* number formatting on sal nazionale italy dashbaord ([670ec74](https://github.com/webmappsrl/osm2cai2/commit/670ec740bfb0c0a5c5342f6615a3c958895b3b27))
+* typo in source survey export ([53b851b](https://github.com/webmappsrl/osm2cai2/commit/53b851b0f3315db99c55579cf7fe4339316649d1))
+* unauthorized migration check route ([e00eda8](https://github.com/webmappsrl/osm2cai2/commit/e00eda8dac3f930024a7e4c81f90a4d8cbe1e0d8))
+* updated ugc media policy ([1187a14](https://github.com/webmappsrl/osm2cai2/commit/1187a1491a71b40f668ece3301d5e753dba06e9f))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
