@@ -14,7 +14,7 @@ class CheckHikingRoutesExistenceOnOsm extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai:check_hr_existence_on_osm';
+    protected $signature = 'osm2cai:check-hr-existence-on-osm';
 
     /**
      * The console command description.
@@ -41,7 +41,7 @@ class CheckHikingRoutesExistenceOnOsm extends Command
     public function handle()
     {
         HikingRoute::where('deleted_on_osm', false)->each(function ($hr) {
-            $this->info('dispatching job for hiking route '.$hr->id);
+            $this->info('dispatching job for hiking route ' . $hr->id);
             CheckHikingRouteExistenceOnOSM::dispatch($hr);
         });
 
