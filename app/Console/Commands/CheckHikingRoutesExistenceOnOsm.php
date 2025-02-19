@@ -41,7 +41,7 @@ class CheckHikingRoutesExistenceOnOsm extends Command
     public function handle()
     {
         HikingRoute::where('deleted_on_osm', false)->each(function ($hr) {
-            $this->info('dispatching job for hiking route ' . $hr->id);
+            $this->info('dispatching job for hiking route '.$hr->id);
             CheckHikingRouteExistenceOnOSM::dispatch($hr);
         });
 
