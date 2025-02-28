@@ -30,6 +30,9 @@ php artisan osm2cai:associate-clubs-to-hiking-routes
 echo "Esecuzione del comando: osm2cai:check-hiking-routes-geometry"
 php artisan osm2cai:check-hiking-routes-geometry
 
+echo "Esecuzione del comando: osm2cai:sync-hiking-routes-description-cai-it"
+php artisan osm2cai:sync-hiking-routes-description-cai-it
+
 echo "Esecuzione del comando: osm2cai:check-hiking-routes-existence-on-osm (dispatch jobs)"
 php artisan osm2cai:check-hiking-routes-existence-on-osm
 
