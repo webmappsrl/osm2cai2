@@ -39,6 +39,7 @@ class AssignClubManager extends Action
             }
             $user = User::find($fields->clubManager);
             $user->managed_club_id = $model->id;
+            $user->assignRole('Club Manager');
             $user->club_manager_expire_date = $fields->club_manager_expire_date;
             $user->save();
         }
