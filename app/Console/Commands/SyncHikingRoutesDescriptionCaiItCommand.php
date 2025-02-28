@@ -38,7 +38,7 @@ class SyncHikingRoutesDescriptionCaiItCommand extends Command
             ->select('relation_id', 'description_cai_it')
             ->get();
 
-        $this->info('Found ' . count($legacyHikingRoutes) . ' hiking routes with description_cai_it to import');
+        $this->info('Found '.count($legacyHikingRoutes).' hiking routes with description_cai_it to import');
 
         $progressBar = $this->output->createProgressBar(count($legacyHikingRoutes));
         $progressBar->start();
@@ -51,7 +51,7 @@ class SyncHikingRoutesDescriptionCaiItCommand extends Command
 
         try {
             foreach ($legacyHikingRoutes as $legacyHr) {
-                $osmfeaturesId = 'R' . $legacyHr->relation_id;
+                $osmfeaturesId = 'R'.$legacyHr->relation_id;
 
                 // Find the corresponding hiking route in the current database
                 $currentHr = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();
@@ -59,11 +59,11 @@ class SyncHikingRoutesDescriptionCaiItCommand extends Command
                 if ($currentHr) {
                     try {
                         $currentHr->update([
-                            'description_cai_it' => $legacyHr->description_cai_it
+                            'description_cai_it' => $legacyHr->description_cai_it,
                         ]);
                         $updated++;
                     } catch (\Exception $e) {
-                        Log::error('Error updating description_cai_it for hiking route ' . $osmfeaturesId . ': ' . $e->getMessage());
+                        Log::error('Error updating description_cai_it for hiking route '.$osmfeaturesId.': '.$e->getMessage());
                         $notFound[] = $osmfeaturesId;
                     }
                 } else {
@@ -76,26 +76,26 @@ class SyncHikingRoutesDescriptionCaiItCommand extends Command
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error during description_cai_it synchronization: ' . $e->getMessage());
-            $this->error('An error occurred during synchronization: ' . $e->getMessage());
+            Log::error('Error during description_cai_it synchronization: '.$e->getMessage());
+            $this->error('An error occurred during synchronization: '.$e->getMessage());
         }
 
         $progressBar->finish();
         $this->newLine();
 
         // Write not found hiking routes to a file
-        if (!empty($notFound)) {
+        if (! empty($notFound)) {
             $notFoundFile = storage_path('hiking_routes_description_cai_it_not_found.txt');
             file_put_contents(
                 $notFoundFile,
-                implode("\n", $notFound) . "\n"
+                implode("\n", $notFound)."\n"
             );
-            $this->info('List of not found hiking routes written to: ' . $notFoundFile);
+            $this->info('List of not found hiking routes written to: '.$notFoundFile);
         }
 
-        $this->info('Update successfully completed for ' . $updated . ' hiking routes');
-        $this->info('Hiking routes not found: ' . count($notFound));
+        $this->info('Update successfully completed for '.$updated.' hiking routes');
+        $this->info('Hiking routes not found: '.count($notFound));
 
-        Log::info('SyncHikingRoutesDescriptionCaiItCommand completed: ' . $updated . ' updated, ' . count($notFound) . ' not found');
+        Log::info('SyncHikingRoutesDescriptionCaiItCommand completed: '.$updated.' updated, '.count($notFound).' not found');
     }
 }

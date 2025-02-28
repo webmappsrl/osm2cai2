@@ -9,9 +9,9 @@ use App\Models\Region;
 use App\Models\Sector;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Role;
 
 class SyncUsersFromLegacyOsm2cai extends Command
@@ -24,6 +24,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
     // Cache per risultati di query frequenti
     protected $legacyCache = [];
+
     protected $modelCache = [];
 
     public function __construct()
@@ -49,12 +50,12 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
             try {
                 foreach ($legacyUsers as $legacyUser) {
-                    $this->info('Importing user: ' . $legacyUser->email);
+                    $this->info('Importing user: '.$legacyUser->email);
 
                     try {
                         $this->syncUser($legacyUser);
                     } catch (\Exception $e) {
-                        $this->error('Error importing user: ' . $legacyUser->email);
+                        $this->error('Error importing user: '.$legacyUser->email);
                         $this->error($e->getMessage());
                         continue;
                     }
@@ -63,7 +64,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
-                $this->error('Error during transaction: ' . $e->getMessage());
+                $this->error('Error during transaction: '.$e->getMessage());
             }
         });
 
@@ -123,22 +124,23 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ->pluck('province_id')
             ->toArray();
 
-        if (!empty($provinceIds)) {
+        if (! empty($provinceIds)) {
             // Recupera i codici provincia una sola volta se non sono in cache
-            if (!isset($this->legacyCache['provinceCodes_' . implode('_', $provinceIds)])) {
-                $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['provinceCodes_'.implode('_', $provinceIds)])) {
+                $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)] = $this->legacyDbConnection
                     ->table('provinces')
                     ->whereIn('id', $provinceIds)
                     ->pluck('code')
                     ->toArray();
             }
 
-            $provinceCodes = $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)];
+            $provinceCodes = $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)];
 
-            if (!empty($provinceCodes)) {
+            if (! empty($provinceCodes)) {
                 $provinces = $this->modelCache['provinces']->filter(function ($province) use ($provinceCodes) {
                     $shortName = data_get($province, 'osmfeatures_data.properties.osm_tags.short_name');
                     $ref = data_get($province, 'osmfeatures_data.properties.osm_tags.ref');
+
                     return in_array($shortName, $provinceCodes) || in_array($ref, $provinceCodes);
                 });
 
@@ -164,19 +166,19 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ->pluck('area_id')
             ->toArray();
 
-        if (!empty($areaIds)) {
+        if (! empty($areaIds)) {
             // Recupera i nomi delle aree una sola volta se non sono in cache
-            if (!isset($this->legacyCache['areaNames_' . implode('_', $areaIds)])) {
-                $this->legacyCache['areaNames_' . implode('_', $areaIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['areaNames_'.implode('_', $areaIds)])) {
+                $this->legacyCache['areaNames_'.implode('_', $areaIds)] = $this->legacyDbConnection
                     ->table('areas')
                     ->whereIn('id', $areaIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $areaNames = $this->legacyCache['areaNames_' . implode('_', $areaIds)];
+            $areaNames = $this->legacyCache['areaNames_'.implode('_', $areaIds)];
 
-            if (!empty($areaNames)) {
+            if (! empty($areaNames)) {
                 $areas = $this->modelCache['areas']->only($areaNames);
                 if ($areas->isNotEmpty()) {
                     $user->areas()->sync($areas->pluck('id'));
@@ -200,19 +202,19 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ->pluck('sector_id')
             ->toArray();
 
-        if (!empty($sectorIds)) {
+        if (! empty($sectorIds)) {
             // Recupera i nomi dei settori una sola volta se non sono in cache
-            if (!isset($this->legacyCache['sectorNames_' . implode('_', $sectorIds)])) {
-                $this->legacyCache['sectorNames_' . implode('_', $sectorIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['sectorNames_'.implode('_', $sectorIds)])) {
+                $this->legacyCache['sectorNames_'.implode('_', $sectorIds)] = $this->legacyDbConnection
                     ->table('sectors')
                     ->whereIn('id', $sectorIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $sectorNames = $this->legacyCache['sectorNames_' . implode('_', $sectorIds)];
+            $sectorNames = $this->legacyCache['sectorNames_'.implode('_', $sectorIds)];
 
-            if (!empty($sectorNames)) {
+            if (! empty($sectorNames)) {
                 $sectors = $this->modelCache['sectors']->only($sectorNames);
                 if ($sectors->isNotEmpty()) {
                     $user->sectors()->sync($sectors->pluck('id'));
@@ -269,28 +271,28 @@ class SyncUsersFromLegacyOsm2cai extends Command
         }
 
         // Remove roles if conditions are not met
-        if (!$shouldHaveLocalReferent && $user->hasRole('Local Referent')) {
+        if (! $shouldHaveLocalReferent && $user->hasRole('Local Referent')) {
             $user->removeRole('Local Referent');
         }
 
-        if (!$shouldHaveRegionalReferent && $user->hasRole('Regional Referent')) {
+        if (! $shouldHaveRegionalReferent && $user->hasRole('Regional Referent')) {
             $user->removeRole('Regional Referent');
         }
 
-        if (!$shouldHaveClubManager && $user->hasRole('Club Manager')) {
+        if (! $shouldHaveClubManager && $user->hasRole('Club Manager')) {
             $user->removeRole('Club Manager');
         }
 
         // If no role is assigned and the user is not Administrator or National Referent or other roles,
         // reassign the Guest role
         if (
-            !$user->hasRole('Administrator') &&
-            !$user->hasRole('National Referent') &&
-            !$user->hasRole('Itinerary Manager') &&
-            !$user->hasRole('Validator') &&
-            !$shouldHaveLocalReferent &&
-            !$shouldHaveRegionalReferent &&
-            !$shouldHaveClubManager
+            ! $user->hasRole('Administrator') &&
+            ! $user->hasRole('National Referent') &&
+            ! $user->hasRole('Itinerary Manager') &&
+            ! $user->hasRole('Validator') &&
+            ! $shouldHaveLocalReferent &&
+            ! $shouldHaveRegionalReferent &&
+            ! $shouldHaveClubManager
         ) {
             $user->assignRole('Guest');
         }
