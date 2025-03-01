@@ -43,6 +43,16 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private $invalidGeometriesLog = [];
 
+    /**
+     * Log for UGC media import issues
+     */
+    private $ugcMediaLog = [];
+
+    /**
+     * Log for UGC media skipped due to null relative_url
+     */
+    private $skippedNullUrlMedia = [];
+
     public function __construct()
     {
         parent::__construct();
@@ -57,6 +67,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
     public function handle(): void
     {
         $this->invalidGeometriesLog = [];
+        $this->ugcMediaLog = [];
+        $this->skippedNullUrlMedia = [];
 
         $model = $this->option('model');
         $importMethods = [
@@ -69,7 +81,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
             $this->importAll();
         }
         if (! in_array($model, ['pois', 'tracks', 'media'])) {
-            $this->error('Invalid model: '.$model);
+            $this->error('Invalid model: ' . $model);
 
             return;
         }
@@ -82,6 +94,19 @@ class SyncUgcFromLegacyOsm2cai extends Command
             $content = implode("\n", $this->invalidGeometriesLog);
             Storage::put('invalid_geometries_ugc.txt', $content);
             $this->info('Invalid geometries have been logged to invalid_geometries_ugc.txt');
+        }
+
+        if (! empty($this->ugcMediaLog)) {
+            $content = implode("\n", $this->ugcMediaLog);
+
+            // Add skipped null URL media section if any
+            if (!empty($this->skippedNullUrlMedia)) {
+                $content .= "\n\n----- MEDIA SKIPPED DUE TO NULL RELATIVE_URL -----\n";
+                $content .= implode("\n", $this->skippedNullUrlMedia);
+            }
+
+            Storage::put('ugc_media_import_log.txt', $content);
+            $this->info('UGC Media import logs have been saved to ugc_media_import_log.txt');
         }
 
         Log::info('SyncUgcFromLegacyOsm2caiCommand finished');
@@ -121,7 +146,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
             ->first();
 
         if (! $legacyUser) {
-            $this->error('User not found: '.$userId ?? 'empty user_id');
+            $this->error('User not found: ' . $userId ?? 'empty user_id');
             $this->userCache[$userId] = null;
 
             return null;
@@ -158,7 +183,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
         try {
             $user->save();
         } catch (\Exception $e) {
-            $this->error('Error importing user: '.$e->getMessage());
+            $this->error('Error importing user: ' . $e->getMessage());
         }
 
         return $user;
@@ -172,81 +197,178 @@ class SyncUgcFromLegacyOsm2cai extends Command
     private function importUgcMedia(): void
     {
         $legacyMedia = $this->legacyDb->table('ugc_media')->get();
+        $this->info('Starting UGC Media import. Total to process: ' . $legacyMedia->count());
+        $skippedCount = 0;
 
         foreach ($legacyMedia as $media) {
-            $userId = $media->user_id;
-            $ugcPoiId = null;
-            $ugcTrackId = null;
-            $mediaUser = $this->ensureUserExists($userId);
-
-            $poiRelation = $this->legacyDb
-                ->table('ugc_media_ugc_poi')
-                ->where('ugc_media_id', $media->id)
-                ->first();
-
-            if ($poiRelation) {
-                $ugcPoi = UgcPoi::find($poiRelation->ugc_poi_id);
-                if ($ugcPoi) {
-                    $ugcPoiId = $ugcPoi->id;
-                }
+            // Skip media with null relative_url
+            if ($media->relative_url === null) {
+                $this->skippedNullUrlMedia[] = "UGC Media ID: {$media->id}";
+                $skippedCount++;
+                continue;
             }
 
-            $trackRelation = $this->legacyDb
-                ->table('ugc_media_ugc_track')
-                ->where('ugc_media_id', $media->id)
-                ->first();
+            try {
+                $userId = $media->user_id;
+                $ugcPoiId = null;
+                $ugcTrackId = null;
+                $relatedUgcPoi = null;
+                $relatedUgcTrack = null;
+                $mediaUser = $this->ensureUserExists($userId);
 
-            if ($trackRelation) {
-                $ugcTrack = UgcTrack::find($trackRelation->ugc_track_id);
-                if ($ugcTrack) {
-                    $ugcTrackId = $ugcTrack->id;
+
+                $poiRelation = $this->legacyDb
+                    ->table('ugc_media_ugc_poi')
+                    ->where('ugc_media_id', $media->id)
+                    ->first();
+
+                if ($poiRelation) {
+                    $relatedUgcPoi = UgcPoi::find($poiRelation->ugc_poi_id);
+                    if ($relatedUgcPoi) {
+                        $ugcPoiId = $relatedUgcPoi->id;
+                    } else {
+                        // Log only when a referenced POI is not found
+                        $this->ugcMediaLog[] = "[UGC Media ID: {$media->id}] Referenced UGC POI ID {$poiRelation->ugc_poi_id} not found";
+                    }
                 }
-            }
 
-            $this->info('Importing UGC media: '.$media->id);
-            $imageUrl = strpos($media->relative_url, 'http') === 0 ? $media->relative_url : "https://osm2cai.cai.it/storage/{$media->relative_url}";
+                $trackRelation = $this->legacyDb
+                    ->table('ugc_media_ugc_track')
+                    ->where('ugc_media_id', $media->id)
+                    ->first();
 
-            if (! str_starts_with($imageUrl, 'https://geohub.webmapp.it/')) {
-                $imageContent = Http::get($imageUrl)->body();
-                $imagePath = 'ugc-media/'.basename($media->relative_url);
-                //check if the image already exists
-                if (! Storage::disk('public')->exists($imagePath)) {
-                    Storage::disk('public')->put($imagePath, $imageContent);
+                if ($trackRelation) {
+                    $relatedUgcTrack = UgcTrack::find($trackRelation->ugc_track_id);
+                    if ($relatedUgcTrack) {
+                        $ugcTrackId = $relatedUgcTrack->id;
+                    } else {
+                        // Log only when a referenced Track is not found
+                        $this->ugcMediaLog[] = "[UGC Media ID: {$media->id}] Referenced UGC Track ID {$trackRelation->ugc_track_id} not found";
+                    }
                 }
-            }
 
-            // Check geometry type and calculate centroid if needed (there is one media with type linestring https://osm2cai.cai.it/resources/ugc-medias/5270)
-            $geometry = $media->geometry;
-            if ($geometry) {
-                $geometryType = $this->legacyDb
-                    ->selectOne('SELECT ST_GeometryType(?) as type', [$geometry])
-                    ->type;
+                $this->info('Importing UGC media: ' . $media->id);
+                $imageUrl = strpos($media->relative_url, 'http') === 0 ? $media->relative_url : "https://osm2cai.cai.it/storage/{$media->relative_url}";
 
-                if ($geometryType !== 'ST_Point') {
-                    $this->invalidGeometriesLog[] = sprintf(
-                        'UGC_MEDIA ID: %d - Invalid geometry type: %s',
-                        $media->id,
-                        $geometryType
-                    );
-                    continue;
+                if (! str_starts_with($imageUrl, 'https://geohub.webmapp.it/')) {
+                    try {
+                        $imageContent = Http::get($imageUrl)->body();
+                        $imagePath = 'ugc-media/' . basename($media->relative_url);
+                        // Check if the image already exists
+                        if (! Storage::disk('public')->exists($imagePath)) {
+                            Storage::disk('public')->put($imagePath, $imageContent);
+                        }
+                    } catch (\Exception $e) {
+                        $this->ugcMediaLog[] = "[UGC Media ID: {$media->id}] Error downloading image: " . $e->getMessage();
+                    }
                 }
-            }
 
-            UgcMedia::updateOrCreate(['id' => $media->id], [
-                'geohub_id' => $media->geohub_id,
-                'created_at' => $media->created_at,
-                'updated_at' => now(),
-                'name' => $media->name,
-                'description' => $media->description,
-                'geometry' => $geometry,
-                'user_id' => $mediaUser->id ?? null,
-                'ugc_poi_id' => $ugcPoiId,
-                'ugc_track_id' => $ugcTrackId,
-                'raw_data' => is_string($media->raw_data) ? json_decode($media->raw_data, true) : $media->raw_data,
-                'taxonomy_wheres' => $media->taxonomy_wheres,
-                'relative_url' => $media->relative_url,
-                'app_id' => $media->app_id,
-            ]);
+                // Process geometry
+                $geometry = $media->geometry;
+                $geometryErrorMessage = null;
+
+                if ($geometry) {
+                    $geometryType = $this->legacyDb
+                        ->selectOne('SELECT ST_GeometryType(?) as type', [$geometry])
+                        ->type;
+
+                    // Handle ST_LineString (requires ST_Centroid)
+                    if ($geometryType === 'ST_LineString') {
+                        $centroid = $this->legacyDb
+                            ->selectOne('SELECT ST_AsEWKT(ST_Centroid(?)) as centroid', [$geometry])
+                            ->centroid;
+
+                        if ($centroid) {
+                            $geometry = $centroid;
+                        } else {
+                            $geometryErrorMessage = "Failed to calculate centroid for LineString geometry";
+                        }
+                    } elseif ($geometryType !== 'ST_Point') {
+                        // For any other non-point geometry, use centroid
+                        $centroid = $this->legacyDb
+                            ->selectOne('SELECT ST_AsEWKT(ST_Centroid(?)) as centroid', [$geometry])
+                            ->centroid;
+
+                        if ($centroid) {
+                            $geometry = $centroid;
+                        } else {
+                            $geometryErrorMessage = "Failed to calculate centroid for {$geometryType} geometry";
+                            $geometry = null;
+                        }
+                    }
+                } else {
+                    // Case 3: NULL geometry with associated UGC POI
+                    if (!$geometry && $relatedUgcPoi && $relatedUgcPoi->geometry) {
+                        $geometry = $relatedUgcPoi->geometry;
+                    }
+                    // Case 4: NULL geometry with associated UGC Track
+                    elseif (!$geometry && $relatedUgcTrack && $relatedUgcTrack->geometry) {
+                        try {
+                            $centroid = $this->legacyDb
+                                ->selectOne('SELECT ST_AsEWKT(ST_Centroid(?)) as centroid', [$relatedUgcTrack->geometry])
+                                ->centroid;
+
+                            if ($centroid) {
+                                $geometry = $centroid;
+                            } else {
+                                $geometryErrorMessage = "Failed to calculate centroid for associated Track geometry";
+                            }
+                        } catch (\Exception $e) {
+                            $geometryErrorMessage = "Error calculating centroid: " . $e->getMessage();
+                        }
+                    }
+
+                    if (!$geometry) {
+                        $geometryErrorMessage = "No valid geometry could be determined";
+                    }
+                }
+
+                // Log geometry errors if any
+                if ($geometryErrorMessage) {
+                    $this->ugcMediaLog[] = "[UGC Media ID: {$media->id}] Geometry error: " . $geometryErrorMessage;
+                }
+
+                // Check if we should use geohub_id or id as lookup key
+                $lookupParams = ['id' => $media->id];
+
+                // If this media has a geohub_id, first check if a media with this geohub_id already exists
+                if (!empty($media->geohub_id)) {
+                    $existingMediaWithGeohubId = UgcMedia::where('geohub_id', $media->geohub_id)->first();
+                    if ($existingMediaWithGeohubId && $existingMediaWithGeohubId->id != $media->id) {
+                        // If a media with this geohub_id already exists but has a different id,
+                        // skip to avoid creating duplicates
+                        continue;
+                    }
+                }
+
+                UgcMedia::updateOrCreate($lookupParams, [
+                    'geohub_id' => $media->geohub_id,
+                    'created_at' => $media->created_at,
+                    'updated_at' => now(),
+                    'name' => $media->name,
+                    'description' => $media->description,
+                    'geometry' => $geometry,
+                    'user_id' => $mediaUser->id ?? null,
+                    'ugc_poi_id' => $ugcPoiId,
+                    'ugc_track_id' => $ugcTrackId,
+                    'raw_data' => is_string($media->raw_data) ? json_decode($media->raw_data, true) : $media->raw_data,
+                    'taxonomy_wheres' => $media->taxonomy_wheres,
+                    'relative_url' => $media->relative_url,
+                    'app_id' => $media->app_id,
+                ]);
+
+                // No success messages in log as requested
+
+            } catch (\Exception $e) {
+                $this->ugcMediaLog[] = "[UGC Media ID: {$media->id}] IMPORT FAILED: " . $e->getMessage();
+                $this->error("Error importing UGC Media ID {$media->id}: " . $e->getMessage());
+            }
+        }
+
+        if ($skippedCount > 0) {
+            $this->info("UGC Media import completed. Skipped {$skippedCount} media with NULL relative_url");
+        } else {
+            $this->info('UGC Media import completed');
         }
     }
 
@@ -290,7 +412,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     continue;
                 }
 
-                $this->info('Importing UGC track: '.$track->id);
+                $this->info('Importing UGC track: ' . $track->id);
 
                 UgcTrack::updateOrCreate(
                     ['id' => $track->id],
@@ -312,7 +434,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
             } catch (\Exception $e) {
-                $this->error("Error importing track ID {$track->id}: ".$e->getMessage());
+                $this->error("Error importing track ID {$track->id}: " . $e->getMessage());
                 continue;
             }
         }
@@ -359,7 +481,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     continue;
                 }
 
-                $this->info('Importing UGC POI: '.$ugc->id);
+                $this->info('Importing UGC POI: ' . $ugc->id);
 
                 UgcPoi::updateOrCreate(
                     ['id' => $ugc->id],
@@ -383,7 +505,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
             } catch (\Exception $e) {
-                $this->error("Error importing POI ID {$ugc->id}: ".$e->getMessage());
+                $this->error("Error importing POI ID {$ugc->id}: " . $e->getMessage());
                 continue;
             }
         }
