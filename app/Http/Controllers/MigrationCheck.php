@@ -36,19 +36,19 @@ class MigrationCheck extends Controller
         ],
         'count membri del gruppo sentieri / 1' => [
             'legacy' => 'select count(*) as num from users where section_id IS NOT NULL;',
-            'current' => 'select count(*) from users where managed_club_id is not null;',
+            'current' => 'select count(*) as num from users where club_id is not null;',
         ],
         'count membri del gruppo sentieri / 2' => [
             'legacy' => 'select count(*) as num from users where section_id IS NOT NULL;',
             'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=6 AND model_type='App\Models\User';",
         ],
         'count responsabili gruppo sentieri / 1' => [
-            'legacy' => 'select count(*) from users where manager_section_id IS NOT NULL;',
-            'current' => 'select count(*) from users where managed_club_id is not null;',
+            'legacy' => 'select count(*) as num from users where manager_section_id IS NOT NULL;',
+            'current' => 'select count(*) as num from users where managed_club_id is not null;',
         ],
         'count responsabili gruppo sentieri / 2' => [
-            'legacy' => 'select count(*) from users where manager_section_id IS NOT NULL;',
-            'current' => "select count(DISTINCT model_id) from model_has_roles where role_id=10 AND model_type='App\Models\User';",
+            'legacy' => 'select count(*) as num from users where manager_section_id IS NOT NULL;',
+            'current' => "select count(DISTINCT model_id) as num from model_has_roles where role_id=10 AND model_type='App\Models\User';",
         ],
 
         // TODO: roles ID 8 and 9 missing
@@ -163,10 +163,167 @@ class MigrationCheck extends Controller
         ],
         'count hiking routes with feature_image not null' => [
             'legacy' => 'SELECT COUNT(*) as num FROM hiking_routes WHERE feature_image IS NOT NULL;',
-            'current' => 'SELECT COUNT(*) as num FROM hiking_routes WHERE feature_image IS NOT NULL;',
+            'current' => "SELECT COUNT(*) as num FROM media WHERE model_type='App\Models\HikingRoute' AND collection_name='feature_image';",
         ],
 
-        // TODO: HR natural_springs, cai_huts, cached_mnitur_data, tdh
+        // MOUNTAIN GROUPS
+        'count mountain groups' => [
+            'legacy' => 'SELECT COUNT(*) as num from mountain_groups;',
+            'current' => 'SELECT COUNT(*) as num from mountain_groups;',
+        ],
+
+        // NATURAL SPRINGS
+        'count natural springs' => [
+            'legacy' => 'SELECT COUNT(*) as num from natural_springs;',
+            'current' => 'SELECT COUNT(*) as num from natural_springs;',
+        ],
+
+        // AREAS
+        'count areas' => [
+            'legacy' => 'SELECT COUNT(*) as num from areas;',
+            'current' => 'SELECT COUNT(*) as num from areas;',
+        ],
+
+        //SECTORS
+        'count sectors' => [
+            'legacy' => 'SELECT COUNT(*) as num from sectors;',
+            'current' => 'SELECT COUNT(*) as num from sectors;',
+        ],
+
+        //SECTIONS
+        'count clubs' => [
+            'legacy' => 'SELECT COUNT(*) as num from sections;',
+            'current' => 'SELECT COUNT(*) as num from clubs;',
+        ],
+
+        // CAI HUTS
+        'count cai huts' => [
+            'legacy' => 'SELECT COUNT(*) as num from cai_huts;',
+            'current' => 'SELECT COUNT(*) as num from cai_huts;',
+        ],
+
+        // UGC (User Generated Content)
+        // UGC POIS
+        'count ugc pois' => [
+            'legacy' => 'SELECT COUNT(*) as num from ugc_pois;',
+            'current' => 'SELECT COUNT(*) as num from ugc_pois;',
+        ],
+        'count ugc pois with validated=valid' => [
+            'legacy' => 'SELECT COUNT(*) as num from ugc_pois WHERE validated=\'valid\';',
+            'current' => 'SELECT COUNT(*) as num from ugc_pois WHERE validated=\'valid\';',
+        ],
+        'count ugc pois with validated=invalid' => [
+            'legacy' => 'SELECT COUNT(*) as num from ugc_pois WHERE validated=\'invalid\';',
+            'current' => 'SELECT COUNT(*) as num from ugc_pois WHERE validated=\'invalid\';',
+        ],
+        'count ugc pois with validated=not_validated' => [
+            'legacy' => 'SELECT COUNT(*) as num from ugc_pois WHERE validated=\'not_validated\';',
+            'current' => 'SELECT COUNT(*) as num from ugc_pois WHERE validated=\'not_validated\';',
+        ],
+        // CHECK COUNT ON form_id Values
+        // form_id       
+        // ---------------------
+        //  archaeological_area
+        //  swe
+        //  3969
+        //  geological_site
+        //  signs
+        //  3657
+        //  archaeological_site
+        //  1495
+        //  report
+        //  water
+        //  paths
+        //  poi
+
+        // UGC poi qith form_id=archaeological_area
+        'count ugc pois with form_id=archaeological_area' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='archaeological_area';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='archaeological_area';",
+        ],
+        // UGC poi qith form_id=geological_site
+        'count ugc pois with form_id=geological_site' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='geological_site';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='geological_site';",
+        ],
+        // UGC poi qith form_id=signs
+        'count ugc pois with form_id=signs' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='signs';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='signs';",
+        ],
+        // UGC poi qith form_id=archaeological_site
+        'count ugc pois with form_id=archaeological_site' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='archaeological_site';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='archaeological_site';",
+        ],
+        // UGC poi qith form_id=report
+        'count ugc pois with form_id=report' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='report';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='report';",
+        ],
+        // UGC poi qith form_id=water
+        'count ugc pois with form_id=water' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='water';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='water';",
+        ],
+        // UGC poi qith form_id=paths
+        'count ugc pois with form_id=paths' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='paths';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='paths';",
+        ],
+        // UGC poi qith form_id=poi
+        'count ugc pois with form_id=poi' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='poi';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='poi';",
+        ],
+        // UGC poi qith form_id=swe
+        'count ugc pois with form_id=swe' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='swe';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='swe';",
+        ],
+        // UGC poi qith form_id=3969
+        'count ugc pois with form_id=3969' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='3969';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='3969';",
+        ],
+        // UGC poi qith form_id=3657
+        'count ugc pois with form_id=3657' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='3657';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='3657';",
+        ],
+        // UGC poi qith form_id=1495
+        'count ugc pois with form_id=1495' => [
+            'legacy' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='1495';",
+            'current' => "SELECT COUNT(*) as num from ugc_pois WHERE form_id='1495';",
+        ],
+
+        // POI MEDIA
+        'count ugc poi with media' => [
+            'legacy' => 'SELECT COUNT(DISTINCT ugc_pois.id) as num FROM ugc_pois INNER JOIN ugc_media_ugc_poi ON ugc_pois.id = ugc_media_ugc_poi.ugc_poi_id INNER JOIN ugc_media ON ugc_media.id = ugc_media_ugc_poi.ugc_media_id;',
+            'current' => 'SELECT COUNT(DISTINCT ugc_pois.id) AS num FROM ugc_pois INNER JOIN ugc_media ON ugc_pois.id = ugc_media.ugc_poi_id;',
+        ],
+
+        // UGC tracks
+        'count ugc tracks' => [
+            'legacy' => 'SELECT COUNT(*) as num from ugc_tracks;',
+            'current' => 'SELECT COUNT(*) as num from ugc_tracks;',
+        ],
+
+        // UGC track media
+        'count ugc poi with media' => [
+            'legacy' => 'SELECT COUNT(DISTINCT ugc_tracks.id) as num FROM ugc_tracks INNER JOIN ugc_media_ugc_track ON ugc_tracks.id = ugc_media_ugc_track.ugc_track_id INNER JOIN ugc_media ON ugc_media.id = ugc_media_ugc_track.ugc_media_id;',
+            'current' => 'SELECT COUNT(DISTINCT ugc_tracks.id) AS num FROM ugc_tracks INNER JOIN ugc_media ON ugc_tracks.id = ugc_media.ugc_track_id;',
+        ],
+
+        // UGC media
+        'count ugc media' => [
+            'legacy' => 'SELECT COUNT(*) as num from ugc_media;',
+            'current' => 'SELECT COUNT(*) as num from ugc_media;',
+        ],
+
+
+
+
 
     ];
 
