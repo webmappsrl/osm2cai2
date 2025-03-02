@@ -221,7 +221,7 @@ class MigrationCheck extends Controller
             'current' => 'SELECT COUNT(*) as num from ugc_pois WHERE validated=\'not_validated\';',
         ],
         // CHECK COUNT ON form_id Values
-        // form_id       
+        // form_id
         // ---------------------
         //  archaeological_area
         //  swe
@@ -320,10 +320,6 @@ class MigrationCheck extends Controller
             'legacy' => 'SELECT COUNT(*) as num from ugc_media;',
             'current' => 'SELECT COUNT(*) as num from ugc_media;',
         ],
-
-
-
-
 
     ];
 
