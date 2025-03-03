@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Models\UgcMedia;
-use App\Models\UgcPoi;
-use App\Models\UgcTrack;
 use App\Models\User;
+use App\Models\UgcPoi;
+use App\Models\UgcMedia;
+use App\Models\UgcTrack;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class SyncUgcFromLegacyOsm2cai extends Command
@@ -77,11 +77,10 @@ class SyncUgcFromLegacyOsm2cai extends Command
         $this->resetLogs();
         $model = $this->option('model');
 
-        if (! $model) {
+        if (!$model) {
             $this->importAll();
-        } elseif (! in_array($model, array_keys(self::UGC_TYPES))) {
-            $this->error('Invalid model: '.$model);
-
+        } elseif (!in_array($model, array_keys(self::UGC_TYPES))) {
+            $this->error('Invalid model: ' . $model);
             return;
         } else {
             $importMethod = self::UGC_TYPES[$model];
@@ -107,16 +106,16 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private function saveLogs(): void
     {
-        if (! empty($this->logs['invalidGeometries'])) {
+        if (!empty($this->logs['invalidGeometries'])) {
             $content = implode("\n", $this->logs['invalidGeometries']);
             Storage::put('invalid_geometries_ugc.txt', $content);
             $this->info('Invalid geometries have been logged to invalid_geometries_ugc.txt');
         }
 
-        if (! empty($this->logs['ugcMedia']) || ! empty($this->logs['skippedNullUrlMedia'])) {
+        if (!empty($this->logs['ugcMedia']) || !empty($this->logs['skippedNullUrlMedia'])) {
             $content = implode("\n", $this->logs['ugcMedia']);
 
-            if (! empty($this->logs['skippedNullUrlMedia'])) {
+            if (!empty($this->logs['skippedNullUrlMedia'])) {
                 $content .= "\n\n----- MEDIA SKIPPED DUE TO NULL RELATIVE_URL -----\n";
                 $content .= implode("\n", $this->logs['skippedNullUrlMedia']);
             }
@@ -146,7 +145,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
      */
     private function ensureUserExists(?int $userId): ?User
     {
-        if (! $userId) {
+        if (!$userId) {
             return null;
         }
 
@@ -159,21 +158,19 @@ class SyncUgcFromLegacyOsm2cai extends Command
             ->where('id', $userId)
             ->first();
 
-        if (! $legacyUser) {
-            $this->error('User not found: '.($userId ?? 'empty user_id'));
+        if (!$legacyUser) {
+            $this->error('User not found: ' . ($userId ?? 'empty user_id'));
             $this->userCache[$userId] = null;
-
             return null;
         }
 
         $user = User::where('email', $legacyUser->email)->first();
-        if (! $user) {
+        if (!$user) {
             $user = $this->createUser($legacyUser);
         }
 
         // Cache the result
         $this->userCache[$userId] = $user;
-
         return $user;
     }
 
@@ -198,7 +195,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
         try {
             $user->save();
         } catch (\Exception $e) {
-            $this->error('Error importing user: '.$e->getMessage());
+            $this->error('Error importing user: ' . $e->getMessage());
         }
 
         return $user;
@@ -212,8 +209,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
         $query = $this->legacyDb->table('ugc_media');
         $query = $this->option('id') ? $query->where('id', $this->option('id')) : $query;
         $legacyMedia = $query->get();
-
-        $this->info('Starting UGC Media import. Total to process: '.$legacyMedia->count());
+        
+        $this->info('Starting UGC Media import. Total to process: ' . $legacyMedia->count());
         $skippedCount = 0;
 
         foreach ($legacyMedia as $media) {
@@ -228,24 +225,24 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $mediaUser = $this->ensureUserExists($media->user_id);
                 list($ugcPoiId, $ugcTrackId, $relatedUgcPoi, $relatedUgcTrack) = $this->getMediaRelationships($media->id);
 
-                $this->info('Importing UGC media: '.$media->id);
+                $this->info('Importing UGC media: ' . $media->id);
                 $imageUrl = $this->getMediaImageUrl($media->relative_url);
-
+                
                 // Store image if needed
                 $this->storeMediaImage($imageUrl, $media->relative_url, $media->id);
 
                 // Process geometry
                 $geometry = $this->processMediaGeometry(
-                    $media->geometry,
-                    $imageUrl,
-                    $media->raw_data,
-                    $relatedUgcPoi,
-                    $relatedUgcTrack,
+                    $media->geometry, 
+                    $imageUrl, 
+                    $media->raw_data, 
+                    $relatedUgcPoi, 
+                    $relatedUgcTrack, 
                     $media->id
                 );
 
                 // Check for duplicate geohub_id
-                if (! $this->isDuplicateMedia($media)) {
+                if (!$this->isDuplicateMedia($media)) {
                     // Create or update the media record
                     UgcMedia::updateOrCreate(
                         ['id' => $media->id],
@@ -267,8 +264,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     );
                 }
             } catch (\Exception $e) {
-                $this->logs['ugcMedia'][] = "[UGC Media ID: {$media->id}] IMPORT FAILED: ".$e->getMessage();
-                $this->error("Error importing UGC Media ID {$media->id}: ".$e->getMessage());
+                $this->logs['ugcMedia'][] = "[UGC Media ID: {$media->id}] IMPORT FAILED: " . $e->getMessage();
+                $this->error("Error importing UGC Media ID {$media->id}: " . $e->getMessage());
             }
         }
 
@@ -281,7 +278,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Get UGC media relationships (POI and Track)
-     *
+     * 
      * @param int $mediaId The media ID to find relationships for
      * @return array [$ugcPoiId, $ugcTrackId, $relatedUgcPoi, $relatedUgcTrack]
      */
@@ -327,20 +324,20 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Get the full image URL from relative URL
-     *
+     * 
      * @param string $relativeUrl
      * @return string Full image URL
      */
     private function getMediaImageUrl(string $relativeUrl): string
     {
-        return strpos($relativeUrl, 'http') === 0
-            ? $relativeUrl
+        return strpos($relativeUrl, 'http') === 0 
+            ? $relativeUrl 
             : "https://osm2cai.cai.it/storage/{$relativeUrl}";
     }
 
     /**
      * Store media image to local storage if needed
-     *
+     * 
      * @param string $imageUrl Full image URL
      * @param string $relativeUrl Original relative URL
      * @param int $mediaId Media ID for logging
@@ -353,20 +350,20 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
         try {
             $imageContent = Http::get($imageUrl)->body();
-            $imagePath = 'ugc-media/'.basename($relativeUrl);
-
+            $imagePath = 'ugc-media/' . basename($relativeUrl);
+            
             // Check if the image already exists
-            if (! Storage::disk('public')->exists($imagePath)) {
+            if (!Storage::disk('public')->exists($imagePath)) {
                 Storage::disk('public')->put($imagePath, $imageContent);
             }
         } catch (\Exception $e) {
-            $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] Error downloading image: ".$e->getMessage();
+            $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] Error downloading image: " . $e->getMessage();
         }
     }
 
     /**
      * Process media geometry using multiple fallback strategies
-     *
+     * 
      * @param mixed $geometry Original geometry
      * @param string $imageUrl Image URL for EXIF extraction
      * @param mixed $rawData Raw data that might contain coordinates
@@ -378,9 +375,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
     private function processMediaGeometry($geometry, string $imageUrl, $rawData, ?UgcPoi $relatedUgcPoi, ?UgcTrack $relatedUgcTrack, int $mediaId)
     {
         $geometryErrorMessage = null;
-        $isInvalidGeometry = ! $geometry || $this->isPointZero($geometry);
+        $isInvalidGeometry = !$geometry || $this->isPointZero($geometry);
 
-        if (! $isInvalidGeometry) {
+        if (!$isInvalidGeometry) {
             $geometry = $this->normalizeNonPointGeometry($geometry, $mediaId);
             $isInvalidGeometry = $geometry === null;
         }
@@ -402,7 +399,6 @@ class SyncUgcFromLegacyOsm2cai extends Command
             // Strategy 3: Get coordinates from related UGC POI
             if ($relatedUgcPoi && $relatedUgcPoi->geometry) {
                 $wktGeometry = $this->legacyDb->selectOne('SELECT ST_AsEWKT(?) as wkt', [$relatedUgcPoi->geometry])->wkt;
-
                 return DB::raw("ST_GeomFromText('SRID=4326;{$wktGeometry}')");
             }
 
@@ -417,19 +413,18 @@ class SyncUgcFromLegacyOsm2cai extends Command
                         return DB::raw("ST_GeomFromText('SRID=4326;POINT({$centroid})')");
                     }
                 } catch (\Exception $e) {
-                    $geometryErrorMessage = 'Error calculating centroid: '.$e->getMessage();
+                    $geometryErrorMessage = 'Error calculating centroid: ' . $e->getMessage();
                 }
             }
 
             // Strategy 5: Fallback to default point
             $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] No valid geometry found, using default sea location";
-
-            return DB::raw("ST_GeomFromText('SRID=4326;POINT(".self::DEFAULT_FALLBACK_POINT.")')");
+            return DB::raw("ST_GeomFromText('SRID=4326;POINT(" . self::DEFAULT_FALLBACK_POINT . ")')");
         }
 
         // Log any geometry errors
         if ($geometryErrorMessage) {
-            $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] Geometry error: ".$geometryErrorMessage;
+            $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] Geometry error: " . $geometryErrorMessage;
         }
 
         return $geometry;
@@ -437,7 +432,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Check if geometry is at point zero (0,0)
-     *
+     * 
      * @param mixed $geometry
      * @return bool
      */
@@ -448,7 +443,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Convert non-point geometries to points (using centroid)
-     *
+     * 
      * @param mixed $geometry Original geometry
      * @param int $mediaId Media ID for error logging
      * @return mixed Normalized geometry or null if invalid
@@ -474,43 +469,41 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 return $centroid;
             } else {
                 $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] Failed to calculate centroid for {$geometryType} geometry";
-
                 return null;
             }
         } catch (\Exception $e) {
-            $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] Error calculating centroid: ".$e->getMessage();
-
+            $this->logs['ugcMedia'][] = "[UGC Media ID: {$mediaId}] Error calculating centroid: " . $e->getMessage();
             return null;
         }
     }
 
     /**
      * Extract coordinates from raw data
-     *
+     * 
      * @param mixed $rawData
      * @return array|null ['lat' => float, 'lon' => float] or null if not found
      */
     private function getCoordinatesFromRawData($rawData): ?array
     {
-        if (! isset($rawData)) {
+        if (!isset($rawData)) {
             return null;
         }
 
         $data = is_string($rawData) ? json_decode($rawData, true) : $rawData;
-
+        
         if (isset($data['position']['latitude']) && isset($data['position']['longitude'])) {
             return [
                 'lat' => $data['position']['latitude'],
-                'lon' => $data['position']['longitude'],
+                'lon' => $data['position']['longitude']
             ];
         }
-
+        
         return null;
     }
 
     /**
      * Check if media with the same geohub_id already exists
-     *
+     * 
      * @param object $media Media object from legacy database
      * @return bool True if duplicate found
      */
@@ -519,9 +512,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
         if (empty($media->geohub_id)) {
             return false;
         }
-
+        
         $existingMediaWithGeohubId = UgcMedia::where('geohub_id', $media->geohub_id)->first();
-
         return $existingMediaWithGeohubId && $existingMediaWithGeohubId->id != $media->id;
     }
 
@@ -534,20 +526,20 @@ class SyncUgcFromLegacyOsm2cai extends Command
         $query = $this->option('id') ? $query->where('id', $this->option('id')) : $query;
         $legacyTracks = $query->get();
 
-        $this->info('Starting UGC Tracks import. Total to process: '.$legacyTracks->count());
+        $this->info('Starting UGC Tracks import. Total to process: ' . $legacyTracks->count());
 
         foreach ($legacyTracks as $track) {
             try {
                 $trackUser = $this->ensureUserExists($track->user_id);
                 $validGeometry = $this->validateTrackGeometry($track->id);
 
-                if (! $validGeometry) {
+                if (!$validGeometry) {
                     $this->logs['invalidGeometries'][] = "UGC_TRACK ID: {$track->id} - Invalid or unsupported geometry";
                     $this->warn("Invalid or unsupported geometry for track ID: {$track->id}. Skipping...");
                     continue;
                 }
 
-                $this->info('Importing UGC track: '.$track->id);
+                $this->info('Importing UGC track: ' . $track->id);
 
                 UgcTrack::updateOrCreate(
                     ['id' => $track->id],
@@ -569,7 +561,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
             } catch (\Exception $e) {
-                $this->error("Error importing track ID {$track->id}: ".$e->getMessage());
+                $this->error("Error importing track ID {$track->id}: " . $e->getMessage());
             }
         }
 
@@ -578,7 +570,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Validate and extract track geometry
-     *
+     * 
      * @param int $trackId Track ID
      * @return mixed Valid geometry or null if invalid
      */
@@ -610,7 +602,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
         $query = $this->option('id') ? $query->where('id', $this->option('id')) : $query;
         $legacyPois = $query->get();
 
-        $this->info('Starting UGC POIs import. Total to process: '.$legacyPois->count());
+        $this->info('Starting UGC POIs import. Total to process: ' . $legacyPois->count());
 
         foreach ($legacyPois as $poi) {
             try {
@@ -618,13 +610,13 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 $poiValidator = $this->ensureUserExists($poi->validator_id);
                 $validGeometry = $this->validatePoiGeometry($poi->id);
 
-                if (! $validGeometry) {
+                if (!$validGeometry) {
                     $this->logs['invalidGeometries'][] = "UGC_POI ID: {$poi->id} - Invalid or unsupported geometry";
                     $this->warn("Invalid or unsupported geometry for POI ID: {$poi->id}. Skipping...");
                     continue;
                 }
 
-                $this->info('Importing UGC POI: '.$poi->id);
+                $this->info('Importing UGC POI: ' . $poi->id);
 
                 UgcPoi::updateOrCreate(
                     ['id' => $poi->id],
@@ -648,7 +640,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                     ]
                 );
             } catch (\Exception $e) {
-                $this->error("Error importing POI ID {$poi->id}: ".$e->getMessage());
+                $this->error("Error importing POI ID {$poi->id}: " . $e->getMessage());
             }
         }
 
@@ -657,7 +649,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Validate and extract POI geometry
-     *
+     * 
      * @param int $poiId POI ID
      * @return mixed Valid geometry or null if invalid
      */
@@ -682,22 +674,22 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Normalize raw data to ensure consistent format
-     *
+     * 
      * @param mixed $rawData
      * @return array|null
      */
     private function normalizeRawData($rawData)
     {
-        if (! isset($rawData)) {
+        if (!isset($rawData)) {
             return null;
         }
-
+        
         return is_string($rawData) ? json_decode($rawData, true) : $rawData;
     }
 
     /**
      * Extract coordinates from EXIF data of an image
-     *
+     * 
      * @param string $imageUrl Image URL
      * @return array|null ['lat' => float, 'lon' => float] or null if not found
      */
@@ -706,19 +698,18 @@ class SyncUgcFromLegacyOsm2cai extends Command
         try {
             // Read EXIF data with error handling
             $exif = @exif_read_data($imageUrl, 0, true);
-
-            if (! $exif) {
+            
+            if (!$exif) {
                 $this->info("No EXIF data found in: {$imageUrl}");
-
                 return null;
             }
-
+            
             $this->info("EXIF data found for: {$imageUrl}");
-
+            
             // Method 1: Standard structure with GPS section
             if (isset($exif['GPS'])) {
                 return $this->parseStandardGpsExif($exif['GPS']);
-            }
+            } 
             // Method 2: Alternative structure with coordinates at the main level
             elseif (isset($exif['GPSLatitude']) && isset($exif['GPSLongitude'])) {
                 return $this->parseDirectGpsExif($exif);
@@ -728,15 +719,14 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 return $this->exploreExifForGps($exif);
             }
         } catch (\Exception $e) {
-            $this->error('Error extracting EXIF data: '.$e->getMessage());
-
+            $this->error("Error extracting EXIF data: " . $e->getMessage());
             return null;
         }
     }
 
     /**
      * Parse GPS data in standard format
-     *
+     * 
      * @param array $gpsData GPS data section from EXIF
      * @return array|null ['lat' => float, 'lon' => float] or null if invalid
      */
@@ -745,18 +735,18 @@ class SyncUgcFromLegacyOsm2cai extends Command
         if (isset($gpsData['GPSLatitude']) && isset($gpsData['GPSLongitude'])) {
             $lat = $this->convertDMSToDecimal($gpsData['GPSLatitude'], $gpsData['GPSLatitudeRef'] ?? 'N');
             $lon = $this->convertDMSToDecimal($gpsData['GPSLongitude'], $gpsData['GPSLongitudeRef'] ?? 'E');
-
+            
             if ($this->areValidCoordinates($lat, $lon)) {
                 return ['lat' => $lat, 'lon' => $lon];
             }
         }
-
+        
         return null;
     }
 
     /**
      * Parse direct GPS coordinates (not in GPS section)
-     *
+     * 
      * @param array $exif Full EXIF data
      * @return array|null ['lat' => float, 'lon' => float] or null if invalid
      */
@@ -765,21 +755,21 @@ class SyncUgcFromLegacyOsm2cai extends Command
         if (isset($exif['GPSLatitude']) && isset($exif['GPSLongitude'])) {
             $latRef = isset($exif['GPSLatitudeRef']) ? $exif['GPSLatitudeRef'] : 'N';
             $lonRef = isset($exif['GPSLongitudeRef']) ? $exif['GPSLongitudeRef'] : 'E';
-
+            
             $lat = $this->convertDMSToDecimal($exif['GPSLatitude'], $latRef);
             $lon = $this->convertDMSToDecimal($exif['GPSLongitude'], $lonRef);
-
+            
             if ($this->areValidCoordinates($lat, $lon)) {
                 return ['lat' => $lat, 'lon' => $lon];
             }
         }
-
+        
         return null;
     }
 
     /**
      * Recursively explore EXIF data for GPS coordinates
-     *
+     * 
      * @param array $exif EXIF data to explore
      * @return array|null ['lat' => float, 'lon' => float] or null if not found
      */
@@ -791,15 +781,15 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 if (isset($section['GPSLatitude']) && isset($section['GPSLongitude'])) {
                     $latRef = $section['GPSLatitudeRef'] ?? 'N';
                     $lonRef = $section['GPSLongitudeRef'] ?? 'E';
-
+                    
                     $lat = $this->convertDMSToDecimal($section['GPSLatitude'], $latRef);
                     $lon = $this->convertDMSToDecimal($section['GPSLongitude'], $lonRef);
-
+                    
                     if ($this->areValidCoordinates($lat, $lon)) {
                         return ['lat' => $lat, 'lon' => $lon];
                     }
                 }
-
+                
                 // Check subsections recursively
                 $result = $this->exploreExifForGps($section);
                 if ($result) {
@@ -807,54 +797,54 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 }
             }
         }
-
+        
         return null;
     }
 
     /**
      * Check if coordinates are valid (not 0,0 and within bounds)
-     *
+     * 
      * @param float $lat Latitude
      * @param float $lon Longitude
      * @return bool
      */
     private function areValidCoordinates(float $lat, float $lon): bool
     {
-        return ($lat != 0 || $lon != 0) &&
-               $lat >= -90 && $lat <= 90 &&
+        return ($lat != 0 || $lon != 0) && 
+               $lat >= -90 && $lat <= 90 && 
                $lon >= -180 && $lon <= 180;
     }
 
     /**
      * Convert DMS (Degrees, Minutes, Seconds) to decimal
-     *
+     * 
      * @param array|string $dmsArray DMS coordinates
      * @param string $ref Direction reference (N/S/E/W)
      * @return float Decimal coordinate
      */
     private function convertDMSToDecimal($dmsArray, string $ref): float
     {
-        if (! is_array($dmsArray) || count($dmsArray) < 3) {
+        if (!is_array($dmsArray) || count($dmsArray) < 3) {
             return 0;
         }
-
+        
         $degrees = $this->fractionToFloat($dmsArray[0]);
         $minutes = $this->fractionToFloat($dmsArray[1]);
         $seconds = $this->fractionToFloat($dmsArray[2]);
-
+        
         $decimal = $degrees + ($minutes / 60) + ($seconds / 3600);
-
+        
         // Make negative for South or West
         if ($ref == 'S' || $ref == 'W') {
             $decimal = -$decimal;
         }
-
+        
         return $decimal;
     }
 
     /**
      * Convert fraction to float
-     *
+     * 
      * @param mixed $fraction Fraction as string "10/3" or array [10, 3]
      * @return float
      */
@@ -863,19 +853,18 @@ class SyncUgcFromLegacyOsm2cai extends Command
         // Handle string fractions like "10/3"
         if (is_string($fraction) && strpos($fraction, '/') !== false) {
             $parts = explode('/', $fraction);
-            if (isset($parts[1]) && (float) $parts[1] != 0) {
-                return (float) $parts[0] / (float) $parts[1];
+            if (isset($parts[1]) && (float)$parts[1] != 0) {
+                return (float)$parts[0] / (float)$parts[1];
             }
-
             return 0;
         }
-
+        
         // Handle array fractions like [10, 3]
-        if (is_array($fraction) && isset($fraction[0]) && isset($fraction[1]) && (float) $fraction[1] != 0) {
-            return (float) $fraction[0] / (float) $fraction[1];
+        if (is_array($fraction) && isset($fraction[0]) && isset($fraction[1]) && (float)$fraction[1] != 0) {
+            return (float)$fraction[0] / (float)$fraction[1];
         }
-
+        
         // Return direct value if already a number
-        return (float) $fraction;
+        return (float)$fraction;
     }
 }
