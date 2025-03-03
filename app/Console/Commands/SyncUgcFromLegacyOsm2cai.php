@@ -403,7 +403,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
             if ($relatedUgcPoi && $relatedUgcPoi->geometry) {
                 $wktGeometry = $this->legacyDb->selectOne('SELECT ST_AsEWKT(?) as wkt', [$relatedUgcPoi->geometry])->wkt;
 
-                return DB::raw("ST_GeomFromText('SRID=4326;{$wktGeometry}')");
+                return DB::raw("ST_GeomFromText({$wktGeometry}')");
             }
 
             // Strategy 4: Get coordinates from related UGC Track (centroid)
@@ -821,8 +821,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
     private function areValidCoordinates(float $lat, float $lon): bool
     {
         return ($lat != 0 || $lon != 0) &&
-               $lat >= -90 && $lat <= 90 &&
-               $lon >= -180 && $lon <= 180;
+            $lat >= -90 && $lat <= 90 &&
+            $lon >= -180 && $lon <= 180;
     }
 
     /**
