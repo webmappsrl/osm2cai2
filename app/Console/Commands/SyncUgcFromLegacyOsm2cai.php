@@ -390,20 +390,21 @@ class SyncUgcFromLegacyOsm2cai extends Command
             // Strategy 1: Get coordinates from EXIF data
             $exifCoords = $this->getExifCoordinates($imageUrl);
             if ($exifCoords) {
-                return DB::raw("ST_GeomFromText('SRID=4326;POINT({$exifCoords['lon']} {$exifCoords['lat']})')");
+                return DB::raw("ST_GeomFromText('POINT({$exifCoords['lon']} {$exifCoords['lat']})', 4326)");
             }
 
             // Strategy 2: Get coordinates from raw_data
             $rawDataCoords = $this->getCoordinatesFromRawData($rawData);
             if ($rawDataCoords) {
-                return DB::raw("ST_GeomFromText('SRID=4326;POINT({$rawDataCoords['lon']} {$rawDataCoords['lat']})')");
+                return DB::raw("ST_GeomFromText('POINT({$rawDataCoords['lon']} {$rawDataCoords['lat']})', 4326)");
             }
 
             // Strategy 3: Get coordinates from related UGC POI
             if ($relatedUgcPoi && $relatedUgcPoi->geometry) {
-                $wktGeometry = $this->legacyDb->selectOne('SELECT ST_AsEWKT(?) as wkt', [$relatedUgcPoi->geometry])->wkt;
-
-                return DB::raw("ST_GeomFromText({$wktGeometry}')");
+                //get lon and lat from relatedUgcPoi->geometry
+                $lon = $this->legacyDb->selectOne('SELECT ST_X(?) as lon', [$relatedUgcPoi->geometry])->lon;
+                $lat = $this->legacyDb->selectOne('SELECT ST_Y(?) as lat', [$relatedUgcPoi->geometry])->lat;
+                return DB::raw("ST_GeomFromText('POINT({$lon} {$lat})', 4326)");
             }
 
             // Strategy 4: Get coordinates from related UGC Track (centroid)
