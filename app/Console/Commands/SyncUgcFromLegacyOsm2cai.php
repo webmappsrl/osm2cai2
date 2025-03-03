@@ -404,6 +404,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 //get lon and lat from relatedUgcPoi->geometry
                 $lon = $this->legacyDb->selectOne('SELECT ST_X(?) as lon', [$relatedUgcPoi->geometry])->lon;
                 $lat = $this->legacyDb->selectOne('SELECT ST_Y(?) as lat', [$relatedUgcPoi->geometry])->lat;
+
                 return DB::raw("ST_GeomFromText('POINT({$lon} {$lat})', 4326)");
             }
 
