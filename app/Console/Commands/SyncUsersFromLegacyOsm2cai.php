@@ -16,13 +16,13 @@ use Spatie\Permission\Models\Role;
 
 class SyncUsersFromLegacyOsm2cai extends Command
 {
-    protected $signature = 'osm2cai:sync-users';
+    protected $signature = 'osm2cai:sync-users {--role= : Filter users by role (Local Referent, Club Manager, Regional Referent, etc.)} {--debug : Enable debug mode with additional information}';
 
     protected $description = 'Sync users from legacy OSM2CAI along with relationships and handle roles and permissions.';
 
     protected $legacyDbConnection;
 
-    // Cache per risultati di query frequenti
+    // Cache for frequent query results
     protected $legacyCache = [];
 
     protected $modelCache = [];
@@ -35,25 +35,203 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
     public function handle()
     {
-        // Prepopolare le cache per ridurre le query
+        // Preload caches to reduce queries
         $this->preloadCaches();
 
-        // Assicuriamoci che i ruoli esistano
+        // Make sure roles exist
         if (Role::count() === 0) {
             Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
         }
 
-        // Utilizziamo il metodo chunk per elaborare gli utenti in batch
-        $this->legacyDbConnection->table('users')->orderBy('id')->chunk(100, function ($legacyUsers) {
-            // Utilizziamo le transazioni per migliorare le prestazioni
+        $role = $this->option('role');
+        $debug = $this->option('debug');
+
+        // Counters for debug
+        $userStats = [
+            'total' => 0,
+            'processed' => 0,
+            'roles' => [],
+        ];
+
+        // Use chunk method to process users in batches
+        $query = $this->legacyDbConnection->table('users')->orderBy('id');
+
+        // Specific filters by role
+        if ($role) {
+            $this->info("Filtering users by role: $role");
+
+            // Apply filters based on requested role
+            switch ($role) {
+                case 'Local Referent':
+                    // Users with assigned provinces, areas or sectors
+                    $usersWithProvinces = $this->legacyDbConnection->table('province_user')
+                        ->distinct()->pluck('user_id');
+                    $usersWithAreas = $this->legacyDbConnection->table('area_user')
+                        ->distinct()->pluck('user_id');
+                    $usersWithSectors = $this->legacyDbConnection->table('sector_user')
+                        ->distinct()->pluck('user_id');
+
+                    // Union of user IDs with provinces, areas or sectors
+                    $userIds = collect($usersWithProvinces)
+                        ->merge($usersWithAreas)
+                        ->merge($usersWithSectors)
+                        ->unique();
+
+                    if ($debug) {
+                        $this->info("Found {$usersWithProvinces->count()} users with provinces");
+                        $this->info("Found {$usersWithAreas->count()} users with areas");
+                        $this->info("Found {$usersWithSectors->count()} users with sectors");
+                        $this->info("Total unique Local Referent users in legacy system: {$userIds->count()}");
+                    }
+
+                    $query->whereIn('id', $userIds);
+                    break;
+
+                case 'Club Manager':
+                    // Users with manager_section_id set
+                    $query->whereNotNull('manager_section_id');
+
+                    if ($debug) {
+                        $count = $this->legacyDbConnection->table('users')
+                            ->whereNotNull('manager_section_id')->count();
+                        $this->info("Found $count Club Manager users in legacy system");
+                    }
+                    break;
+
+                case 'Regional Referent':
+                    // Users with region_id set
+                    $query->whereNotNull('region_id');
+
+                    if ($debug) {
+                        $count = $this->legacyDbConnection->table('users')
+                            ->whereNotNull('region_id')->count();
+                        $this->info("Found $count Regional Referent users in legacy system");
+                    }
+                    break;
+
+                case 'Administrator':
+                    $query->where('is_administrator', true);
+
+                    if ($debug) {
+                        $count = $this->legacyDbConnection->table('users')
+                            ->where('is_administrator', true)->count();
+                        $this->info("Found $count Administrator users in legacy system");
+                    }
+                    break;
+
+                case 'National Referent':
+                    $query->where('is_national_referent', true);
+
+                    if ($debug) {
+                        $count = $this->legacyDbConnection->table('users')
+                            ->where('is_national_referent', true)->count();
+                        $this->info("Found $count National Referent users in legacy system");
+                    }
+                    break;
+
+                case 'Validator':
+                    // Users with any validation permission
+                    $query->where(function ($q) {
+                        $q->whereNotNull('resources_validator')
+                            ->where('resources_validator', '<>', '');
+                    });
+
+                    if ($debug) {
+                        $count = $this->legacyDbConnection->table('users')
+                            ->whereNotNull('resources_validator')
+                            ->where('resources_validator', '<>', '')
+                            ->count();
+                        $this->info("Found $count Validator users in legacy system");
+                    }
+                    break;
+
+                default:
+                    $this->warn("Unknown role: $role. Will process all users.");
+            }
+        }
+
+        // Count total users for the operation
+        $totalUsers = $query->count();
+        $userStats['total'] = $totalUsers;
+        $this->info("Processing $totalUsers users");
+
+        if ($debug) {
+            // Verifica count utenti unici nelle relazioni territoriali
+            $legacyCount = $this->legacyDbConnection->select('
+                SELECT COUNT(DISTINCT user_id) AS utenti_unici
+                FROM (
+                    SELECT user_id FROM area_user
+                    UNION ALL
+                    SELECT user_id FROM sector_user
+                    UNION ALL
+                    SELECT user_id FROM province_user
+                ) AS combined_users
+            ')[0]->utenti_unici;
+
+            $currentCount = DB::select('
+                SELECT COUNT(DISTINCT user_id) AS utenti_unici
+                FROM (
+                    SELECT user_id FROM area_user
+                    UNION ALL
+                    SELECT user_id FROM sector_user
+                    UNION ALL
+                    SELECT user_id FROM province_user
+                ) AS combined_users
+            ')[0]->utenti_unici;
+
+            $this->info("Utenti unici con relazioni territoriali - Legacy: $legacyCount, Attuale: $currentCount");
+        }
+
+        $query->chunk(100, function ($legacyUsers) use ($debug, &$userStats) {
+            // Use transactions to improve performance
             DB::beginTransaction();
 
             try {
                 foreach ($legacyUsers as $legacyUser) {
                     $this->info('Importing user: '.$legacyUser->email);
+                    $userStats['processed']++;
 
                     try {
+                        $before = null;
+                        if ($debug) {
+                            // Save roles before synchronization for debugging
+                            $user = User::where('email', $legacyUser->email)->first();
+                            if ($user) {
+                                $before = $user->getRoleNames()->toArray();
+                            }
+                        }
+
                         $this->syncUser($legacyUser);
+
+                        if ($debug) {
+                            // Check roles after synchronization for debugging
+                            $user = User::where('email', $legacyUser->email)->first();
+                            if ($user) {
+                                $after = $user->getRoleNames()->toArray();
+
+                                foreach ($after as $role) {
+                                    if (! isset($userStats['roles'][$role])) {
+                                        $userStats['roles'][$role] = 0;
+                                    }
+                                    $userStats['roles'][$role]++;
+                                }
+
+                                $this->info("User {$user->email} roles: ".implode(', ', $after));
+
+                                if ($before) {
+                                    $added = array_diff($after, $before);
+                                    $removed = array_diff($before, $after);
+
+                                    if (! empty($added)) {
+                                        $this->info('Roles added: '.implode(', ', $added));
+                                    }
+
+                                    if (! empty($removed)) {
+                                        $this->info('Roles removed: '.implode(', ', $removed));
+                                    }
+                                }
+                            }
+                        }
                     } catch (\Exception $e) {
                         $this->error('Error importing user: '.$legacyUser->email);
                         $this->error($e->getMessage());
@@ -68,28 +246,61 @@ class SyncUsersFromLegacyOsm2cai extends Command
             }
         });
 
+        if ($debug) {
+            $this->info("\nSync statistics:");
+            $this->info("Total legacy users matching criteria: {$userStats['total']}");
+            $this->info("Total users processed: {$userStats['processed']}");
+            $this->info("\nRole counts after sync:");
+
+            foreach ($userStats['roles'] as $role => $count) {
+                $this->info("- $role: $count users");
+            }
+
+            // Current role statistics in the system
+            $this->info("\nCurrent role counts in system:");
+            $roles = Role::all();
+            foreach ($roles as $role) {
+                $count = $role->users()->count();
+                $this->info("- {$role->name}: $count users");
+            }
+
+            // Show specific statistics for Local Referents
+            if ($this->option('role') == 'Local Referent' || ! $this->option('role')) {
+                $this->info("\nLocal Referent Details:");
+                $usersWithProvinces = User::has('provinces')->count();
+                $usersWithAreas = User::has('areas')->count();
+                $usersWithSectors = User::has('sectors')->count();
+                $this->info("- Users with provinces: $usersWithProvinces");
+                $this->info("- Users with areas: $usersWithAreas");
+                $this->info("- Users with sectors: $usersWithSectors");
+
+                $localRefCount = User::role('Local Referent')->count();
+                $this->info("- Total with 'Local Referent' role: $localRefCount");
+            }
+        }
+
         $this->info('Import completed.');
     }
 
     /**
-     * Precarica dati frequentemente utilizzati nelle cache
+     * Preload frequently used data into caches
      */
     private function preloadCaches()
     {
-        // Precarica i dati dei modelli
+        // Preload model data
         $this->modelCache['clubs'] = Club::all()->keyBy('cai_code');
         $this->modelCache['regions'] = Region::all()->keyBy('osmfeatures_id');
         $this->modelCache['provinces'] = Province::all();
         $this->modelCache['areas'] = Area::all()->keyBy('name');
         $this->modelCache['sectors'] = Sector::all()->keyBy('name');
 
-        // Precarica i dati dal database legacy
+        // Preload data from legacy database
         $this->legacyCache['sections'] = $this->legacyDbConnection->table('sections')->get()->keyBy('id');
         $this->legacyCache['regions'] = $this->legacyDbConnection->table('regions')->get()->keyBy('id');
     }
 
     /**
-     * Sincronizza un singolo utente
+     * Synchronize a single user
      */
     private function syncUser($legacyUser)
     {
@@ -117,7 +328,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         $shouldHaveRegionalReferent = false;
         $shouldHaveClubManager = false;
 
-        // Sync the provinces - ottimizzato per ridurre le query
+        // Sync the provinces - optimized to reduce queries
         $provinceIds = $this->legacyDbConnection
             ->table('province_user')
             ->where('user_id', $legacyUser->id)
@@ -125,7 +336,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ->toArray();
 
         if (! empty($provinceIds)) {
-            // Recupera i codici provincia una sola volta se non sono in cache
+            // Retrieve province codes only once if not in cache
             if (! isset($this->legacyCache['provinceCodes_'.implode('_', $provinceIds)])) {
                 $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)] = $this->legacyDbConnection
                     ->table('provinces')
@@ -159,7 +370,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $user->provinces()->detach();
         }
 
-        // Sync the areas - ottimizzato
+        // Sync the areas
         $areaIds = $this->legacyDbConnection
             ->table('area_user')
             ->where('user_id', $legacyUser->id)
@@ -167,7 +378,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ->toArray();
 
         if (! empty($areaIds)) {
-            // Recupera i nomi delle aree una sola volta se non sono in cache
+            // Retrieve area names only once if not in cache
             if (! isset($this->legacyCache['areaNames_'.implode('_', $areaIds)])) {
                 $this->legacyCache['areaNames_'.implode('_', $areaIds)] = $this->legacyDbConnection
                     ->table('areas')
@@ -179,7 +390,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $areaNames = $this->legacyCache['areaNames_'.implode('_', $areaIds)];
 
             if (! empty($areaNames)) {
-                $areas = $this->modelCache['areas']->only($areaNames);
+                $areas = $this->modelCache['areas']->whereIn('name', $areaNames);
                 if ($areas->isNotEmpty()) {
                     $user->areas()->sync($areas->pluck('id'));
                     $user->removeRole('Guest');
@@ -195,7 +406,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $user->areas()->detach();
         }
 
-        // Sync the sectors - ottimizzato
+        // Sync the sectors - optimized
         $sectorIds = $this->legacyDbConnection
             ->table('sector_user')
             ->where('user_id', $legacyUser->id)
@@ -203,7 +414,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             ->toArray();
 
         if (! empty($sectorIds)) {
-            // Recupera i nomi dei settori una sola volta se non sono in cache
+            // Retrieve sector names only once if not in cache
             if (! isset($this->legacyCache['sectorNames_'.implode('_', $sectorIds)])) {
                 $this->legacyCache['sectorNames_'.implode('_', $sectorIds)] = $this->legacyDbConnection
                     ->table('sectors')
@@ -215,7 +426,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $sectorNames = $this->legacyCache['sectorNames_'.implode('_', $sectorIds)];
 
             if (! empty($sectorNames)) {
-                $sectors = $this->modelCache['sectors']->only($sectorNames);
+                $sectors = $this->modelCache['sectors']->whereIn('name', $sectorNames);
                 if ($sectors->isNotEmpty()) {
                     $user->sectors()->sync($sectors->pluck('id'));
                     $user->removeRole('Guest');
@@ -231,7 +442,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $user->sectors()->detach();
         }
 
-        // Sync the club - ottimizzato
+        // Sync the club
         $clubId = $legacyUser->section_id;
         $user->club_id = null;
 
@@ -242,7 +453,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             }
         }
 
-        // Sync the region - ottimizzato
+        // Sync the region
         $user->region_id = null;
         $regionId = $legacyUser->region_id;
 
@@ -256,7 +467,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             }
         }
 
-        // Sync the managed section - ottimizzato
+        // Sync the managed section
         $user->managed_club_id = null;
         $managedSectionId = $legacyUser->manager_section_id;
 
