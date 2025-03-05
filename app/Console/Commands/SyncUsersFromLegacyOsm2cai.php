@@ -50,7 +50,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
         $userStats = [
             'total' => 0,
             'processed' => 0,
-            'roles' => []
+            'roles' => [],
         ];
 
         // Use chunk method to process users in batches
@@ -157,7 +157,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if ($debug) {
             // Verifica count utenti unici nelle relazioni territoriali
-            $legacyCount = $this->legacyDbConnection->select("
+            $legacyCount = $this->legacyDbConnection->select('
                 SELECT COUNT(DISTINCT user_id) AS utenti_unici
                 FROM (
                     SELECT user_id FROM area_user
@@ -166,9 +166,9 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     UNION ALL
                     SELECT user_id FROM province_user
                 ) AS combined_users
-            ")[0]->utenti_unici;
+            ')[0]->utenti_unici;
 
-            $currentCount = DB::select("
+            $currentCount = DB::select('
                 SELECT COUNT(DISTINCT user_id) AS utenti_unici
                 FROM (
                     SELECT user_id FROM area_user
@@ -177,7 +177,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     UNION ALL
                     SELECT user_id FROM province_user
                 ) AS combined_users
-            ")[0]->utenti_unici;
+            ')[0]->utenti_unici;
 
             $this->info("Utenti unici con relazioni territoriali - Legacy: $legacyCount, Attuale: $currentCount");
         }
@@ -188,7 +188,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
             try {
                 foreach ($legacyUsers as $legacyUser) {
-                    $this->info('Importing user: ' . $legacyUser->email);
+                    $this->info('Importing user: '.$legacyUser->email);
                     $userStats['processed']++;
 
                     try {
@@ -210,30 +210,30 @@ class SyncUsersFromLegacyOsm2cai extends Command
                                 $after = $user->getRoleNames()->toArray();
 
                                 foreach ($after as $role) {
-                                    if (!isset($userStats['roles'][$role])) {
+                                    if (! isset($userStats['roles'][$role])) {
                                         $userStats['roles'][$role] = 0;
                                     }
                                     $userStats['roles'][$role]++;
                                 }
 
-                                $this->info("User {$user->email} roles: " . implode(', ', $after));
+                                $this->info("User {$user->email} roles: ".implode(', ', $after));
 
                                 if ($before) {
                                     $added = array_diff($after, $before);
                                     $removed = array_diff($before, $after);
 
-                                    if (!empty($added)) {
-                                        $this->info("Roles added: " . implode(', ', $added));
+                                    if (! empty($added)) {
+                                        $this->info('Roles added: '.implode(', ', $added));
                                     }
 
-                                    if (!empty($removed)) {
-                                        $this->info("Roles removed: " . implode(', ', $removed));
+                                    if (! empty($removed)) {
+                                        $this->info('Roles removed: '.implode(', ', $removed));
                                     }
                                 }
                             }
                         }
                     } catch (\Exception $e) {
-                        $this->error('Error importing user: ' . $legacyUser->email);
+                        $this->error('Error importing user: '.$legacyUser->email);
                         $this->error($e->getMessage());
                         continue;
                     }
@@ -242,7 +242,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
-                $this->error('Error during transaction: ' . $e->getMessage());
+                $this->error('Error during transaction: '.$e->getMessage());
             }
         });
 
@@ -265,7 +265,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             }
 
             // Show specific statistics for Local Referents
-            if ($this->option('role') == 'Local Referent' || !$this->option('role')) {
+            if ($this->option('role') == 'Local Referent' || ! $this->option('role')) {
                 $this->info("\nLocal Referent Details:");
                 $usersWithProvinces = User::has('provinces')->count();
                 $usersWithAreas = User::has('areas')->count();
@@ -337,15 +337,15 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($provinceIds)) {
             // Retrieve province codes only once if not in cache
-            if (! isset($this->legacyCache['provinceCodes_' . implode('_', $provinceIds)])) {
-                $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['provinceCodes_'.implode('_', $provinceIds)])) {
+                $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)] = $this->legacyDbConnection
                     ->table('provinces')
                     ->whereIn('id', $provinceIds)
                     ->pluck('code')
                     ->toArray();
             }
 
-            $provinceCodes = $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)];
+            $provinceCodes = $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)];
 
             if (! empty($provinceCodes)) {
                 $provinces = $this->modelCache['provinces']->filter(function ($province) use ($provinceCodes) {
@@ -379,15 +379,15 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($areaIds)) {
             // Retrieve area names only once if not in cache
-            if (! isset($this->legacyCache['areaNames_' . implode('_', $areaIds)])) {
-                $this->legacyCache['areaNames_' . implode('_', $areaIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['areaNames_'.implode('_', $areaIds)])) {
+                $this->legacyCache['areaNames_'.implode('_', $areaIds)] = $this->legacyDbConnection
                     ->table('areas')
                     ->whereIn('id', $areaIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $areaNames = $this->legacyCache['areaNames_' . implode('_', $areaIds)];
+            $areaNames = $this->legacyCache['areaNames_'.implode('_', $areaIds)];
 
             if (! empty($areaNames)) {
                 $areas = $this->modelCache['areas']->whereIn('name', $areaNames);
@@ -415,15 +415,15 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($sectorIds)) {
             // Retrieve sector names only once if not in cache
-            if (! isset($this->legacyCache['sectorNames_' . implode('_', $sectorIds)])) {
-                $this->legacyCache['sectorNames_' . implode('_', $sectorIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['sectorNames_'.implode('_', $sectorIds)])) {
+                $this->legacyCache['sectorNames_'.implode('_', $sectorIds)] = $this->legacyDbConnection
                     ->table('sectors')
                     ->whereIn('id', $sectorIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $sectorNames = $this->legacyCache['sectorNames_' . implode('_', $sectorIds)];
+            $sectorNames = $this->legacyCache['sectorNames_'.implode('_', $sectorIds)];
 
             if (! empty($sectorNames)) {
                 $sectors = $this->modelCache['sectors']->whereIn('name', $sectorNames);
@@ -442,7 +442,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $user->sectors()->detach();
         }
 
-        // Sync the club 
+        // Sync the club
         $clubId = $legacyUser->section_id;
         $user->club_id = null;
 
