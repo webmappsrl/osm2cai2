@@ -19,7 +19,7 @@ class AreaFactory extends Factory
         return [
             'code' => $this->faker->regexify('[A-Z]{1}'),
             'name' => $this->faker->word,
-            'geometry' => "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))",
+            'geometry' => 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))',
             'full_code' => $this->faker->regexify('[A-Z]{4}'),
             'num_expected' => $this->faker->numberBetween(1, 100),
         ];

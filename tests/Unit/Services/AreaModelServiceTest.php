@@ -2,18 +2,22 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
 use App\Models\Area;
 use App\Services\AreaModelService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
+
 class AreaModelServiceTest extends TestCase
 {
     use DatabaseTransactions;
+
     protected $area;
+
     protected $areaService;
 
     const WKT_POLYGON = 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,7 +35,7 @@ class AreaModelServiceTest extends TestCase
 
         $this->areaService = new AreaModelService();
     }
-    
+
     protected function convertPolygonToWKB(string $wktPolygon): string
     {
         $result = DB::selectOne(
@@ -39,13 +43,14 @@ class AreaModelServiceTest extends TestCase
             [$wktPolygon]
         );
         $wkb = is_resource($result->wkb) ? stream_get_contents($result->wkb) : $result->wkb;
+
         return strtoupper(bin2hex($wkb));
     }
-    
+
     public function testComputeGeometryBySectors()
     {
         $this->assertEquals(
-            $this->convertPolygonToWKB(self::WKT_POLYGON), 
+            $this->convertPolygonToWKB(self::WKT_POLYGON),
             $this->areaService->computeGeometryBySectors($this->area)
         );
     }
