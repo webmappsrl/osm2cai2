@@ -9994,7 +9994,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-develop",
+            "version": "dev-fix/Nova5Compatibility_oc5080",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -10030,7 +10030,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-develop",
+            "version": "dev-fix/Nova5Compatibility_oc5080",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
