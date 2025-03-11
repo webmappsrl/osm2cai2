@@ -19,7 +19,6 @@ class GeometryServiceTest extends TestCase
     ];
     protected $geoJsonLineString = '{"type": "LineString", "coordinates": [[1,2],[3,4]]}';
     protected $geoJsonPoint = '{"type":"Point","coordinates":[125.6,10.1]}';
-    protected $jsonText = '{"type": "FeatureCollection", "features": [{"geometry": {"type": "Point", "coordinates": [125.6, 10.1]}}]}';
     protected $encodedGeoJsonSimpleArray;
     protected $encodedGeoJsonLineString;
     public function setUp(): void
@@ -70,9 +69,7 @@ class GeometryServiceTest extends TestCase
           ST_Transform( ST_GeomFromGeoJSON('".$this->geoJsonLineString."' ) , 3857 )
         )
     ) as g ";
-     
         $this->testIfRawQueryGetsCalled($expectedQuery);
-
         DB::shouldReceive('select')
             ->once()
             ->with($expectedQuery)
@@ -99,28 +96,111 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals('geometry_4326', $result);
     }
 
-    public function testTextToGeojsonWithValidJsonFeatureCollection()
+    public function testTextToGeojsonWithValidLineStringJson()
     {
-        $result = $this->geometryService->textToGeojson($this->jsonText);
+        $lineStringText = '{
+            "type": "LineString", 
+            "coordinates": [[0, 0], [1, 1]]
+        }';
+
+        $result = $this->geometryService->textToGeojson($lineStringText);
+
+        $this->assertEquals(["type" => "LineString", "coordinates" => [[0, 0], [1, 1]]], $result);
+    }
+
+    public function testTextToGeojsonWithValidFeatureCollectionJson(){
+
+        $featureCollectionText = '{
+            "type": "FeatureCollection", 
+            "features": [
+                {"geometry": {"type": "Point", "coordinates": [125.6, 10.1]}}
+            ]
+        }';
+
+        $result = $this->geometryService->textToGeojson($featureCollectionText);
 
         $this->assertEquals(["type" => "Point", "coordinates" => [125.6, 10.1]], $result);
     }
 
-    public function testTextToGeojsonWithInvalidText()
-    {
-        $text = 'invalid text';
+    public function testTextToGeojsonWithValidGeometryCollectionJson(){
+        $geometryCollectionText = '{
+            "type": "GeometryCollection",
+            "geometries": [
+              {"type": "LineString", "coordinates": [[0, 0], [1, 1]]},
+              {"type": "Point", "coordinates": [0, 0]}
+            ]
+        }';
 
-        set_error_handler(function($errno, $errstr, $errfile, $errline) {
-            throw new \ErrorException($errstr, $errno, 0, $errfile, $errline);
-        });
+        $result = $this->geometryService->textToGeojson($geometryCollectionText);
+
+        $this->assertEquals(["type" => "LineString", "coordinates" => [[0, 0], [1, 1]]], $result);
+    }
+
+    public function testTextToGeoJsonWithValidFeatureJson()
+    {
+        $featureText = '{
+            "type": "Feature",
+            "geometry": {"type": "LineString", "coordinates": [[0, 0], [1, 1]]}
+        }';
+
+        $result = $this->geometryService->textToGeojson($featureText);
+
+        $this->assertEquals(["type" => "LineString", "coordinates" => [[0, 0], [1, 1]]], $result);
+    }
+
+    public function testTextToGeoJsonWithValidXmlGpxFile()
+    {
+        $xmlText = '<?xml version="1.0" encoding="UTF-8"?>
+            <gpx version="1.1" creator="Example Creator">
+                <trk>
+                    <name>Example GPX Track</name>
+                    <trkseg>
+                        <trkpt lat="4" lon="5">
+                            <ele>4.46</ele>
+                            <time>2009-10-17T18:37:26Z</time>
+                        </trkpt>
+                        <trkpt lat="3" lon="2">
+                            <ele>4.94</ele>
+                            <time>2009-10-17T18:37:31Z</time>
+                        </trkpt>
+                    </trkseg>
+                </trk>
+            </gpx>
+            ';
         
-        try {
-            $this->expectException(\ErrorException::class);
-            $this->expectExceptionMessage('Undefined variable $contentGeometry');
-            $this->geometryService->textToGeojson($text);
-        } finally {
-            restore_error_handler();
-        }
+        $result = $this->geometryService->textToGeojson($xmlText);
+
+        $this->assertEquals(["type" => "LineString", "coordinates" => [[5, 4], [2, 3]]], $result);
+    }
+
+    public function testTextToGeoJsonWithValidKmlFile()
+    {
+        $kmlText = '<?xml version="1.0" encoding="UTF-8"?>
+            <kml xmlns="http://www.opengis.net/kml/2.2">
+            <Document>
+                <Placemark>
+                <name>Example KML LineString</name>
+                <LineString>
+                    <coordinates>
+                    -12,4 -13,8
+                    </coordinates>
+                </LineString>
+                </Placemark>
+            </Document>
+            </kml>
+        ';
+
+        $result = $this->geometryService->textToGeojson($kmlText);
+
+        $this->assertEquals(["type" => "LineString", "coordinates" => [[-12, 4], [-13, 8]]], $result);
+    }
+
+    public function testTextToGeojsonWithInvalidOrNullText()
+    {
+        $invalidText = 'invalid text';
+        $emptyText = null;
+        $this->assertNull($this->geometryService->textToGeojson($invalidText));
+        $this->assertNull($this->geometryService->textToGeojson($emptyText));
     }
 
     public function testGetGeometryTypeForHikingRoutes()
@@ -164,8 +244,9 @@ class GeometryServiceTest extends TestCase
 
     public function testGetCentroidReturnsCentroid()
     {
-        $result = $this->geometryService->getCentroid($this->geoJsonPoint);
-        $this->assertEquals($this->geoJsonPoint, $result);
+        $expectedCentre = DB::select("select ST_AsGeoJSON(ST_Centroid('".$this->geoJsonLineString."')) as g")[0]->g;
+        $result = $this->geometryService->getCentroid($this->geoJsonLineString);
+        $this->assertEquals($expectedCentre, $result);
     }
 
     protected function tearDown(): void

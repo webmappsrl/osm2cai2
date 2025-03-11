@@ -70,7 +70,7 @@ class GeometryService
 
     public function textToGeojson($text)
     {
-        $geometry = $contentType = null;
+        $contentGeometry = $contentType = null;
         if ($text) {
             if (strpos($text, '<?xml') !== false && strpos($text, '<?xml') < 10) {
                 $geojson = '';
@@ -119,9 +119,8 @@ class GeometryService
                         break;
                 }
             }
-
-            return $contentGeometry;
         }
+        return $contentGeometry;
     }
 
     /**
