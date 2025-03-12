@@ -120,6 +120,7 @@ class GeometryService
                 }
             }
         }
+
         return $contentGeometry;
     }
 

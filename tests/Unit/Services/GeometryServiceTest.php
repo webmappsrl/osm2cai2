@@ -2,25 +2,31 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
 use App\Services\GeometryService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Mockery;
+use Tests\TestCase;
 
 class GeometryServiceTest extends TestCase
 {
     use DatabaseTransactions;
 
     protected $geometryService;
+
     protected $geoJsonSimpleArray = [
-        "type" => "Point",
-        "coordinates" => [125.6, 10.1]
+        'type' => 'Point',
+        'coordinates' => [125.6, 10.1],
     ];
+
     protected $geoJsonLineString = '{"type": "LineString", "coordinates": [[1,2],[3,4]]}';
+
     protected $geoJsonPoint = '{"type":"Point","coordinates":[125.6,10.1]}';
+
     protected $encodedGeoJsonSimpleArray;
+
     protected $encodedGeoJsonLineString;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -38,7 +44,7 @@ class GeometryServiceTest extends TestCase
         DB::shouldReceive('select')
             ->once()
             ->with("select (ST_Force3D(ST_GeomFromGeoJSON('".$this->encodedGeoJsonSimpleArray."'))) as g ")
-            ->andReturn([(object)['g' => 'geometry_value']]);
+            ->andReturn([(object) ['g' => 'geometry_value']]);
 
         $result = $this->geometryService->geojsonToGeometry($this->geoJsonSimpleArray);
         $this->assertEquals('geometry_value', $result);
@@ -56,7 +62,7 @@ class GeometryServiceTest extends TestCase
         DB::shouldReceive('select')
             ->once()
             ->with($expectedQuery)
-            ->andReturn([(object)['g' => 'multilinestring_geometry']]);
+            ->andReturn([(object) ['g' => 'multilinestring_geometry']]);
 
         $result = $this->geometryService->geojsonToMultilinestringGeometry($geojson);
         $this->assertEquals('multilinestring_geometry', $result);
@@ -73,7 +79,7 @@ class GeometryServiceTest extends TestCase
         DB::shouldReceive('select')
             ->once()
             ->with($expectedQuery)
-            ->andReturn([(object)['g' => 'multilinestring_geometry_3857']]);
+            ->andReturn([(object) ['g' => 'multilinestring_geometry_3857']]);
 
         $result = $this->geometryService->geojsonToMultilinestringGeometry3857($this->geoJsonLineString);
         $this->assertEquals('multilinestring_geometry_3857', $result);
@@ -88,7 +94,7 @@ class GeometryServiceTest extends TestCase
         DB::shouldReceive('select')
             ->once()
             ->with($expectedQuery)
-            ->andReturn([(object)['g' => 'geometry_4326']]);
+            ->andReturn([(object) ['g' => 'geometry_4326']]);
 
         $result = $this->geometryService->geometryTo4326Srid($this->geoJsonPoint);
         $this->assertEquals('geometry_4326', $result);
@@ -103,11 +109,11 @@ class GeometryServiceTest extends TestCase
 
         $result = $this->geometryService->textToGeojson($lineStringText);
 
-        $this->assertEquals(["type" => "LineString", "coordinates" => [[0, 0], [1, 1]]], $result);
+        $this->assertEquals(['type' => 'LineString', 'coordinates' => [[0, 0], [1, 1]]], $result);
     }
 
-    public function testTextToGeojsonWithValidFeatureCollectionJson(){
-
+    public function testTextToGeojsonWithValidFeatureCollectionJson()
+    {
         $featureCollectionText = '{
             "type": "FeatureCollection", 
             "features": [
@@ -117,10 +123,11 @@ class GeometryServiceTest extends TestCase
 
         $result = $this->geometryService->textToGeojson($featureCollectionText);
 
-        $this->assertEquals(["type" => "Point", "coordinates" => [125.6, 10.1]], $result);
+        $this->assertEquals(['type' => 'Point', 'coordinates' => [125.6, 10.1]], $result);
     }
 
-    public function testTextToGeojsonWithValidGeometryCollectionJson(){
+    public function testTextToGeojsonWithValidGeometryCollectionJson()
+    {
         $geometryCollectionText = '{
             "type": "GeometryCollection",
             "geometries": [
@@ -131,7 +138,7 @@ class GeometryServiceTest extends TestCase
 
         $result = $this->geometryService->textToGeojson($geometryCollectionText);
 
-        $this->assertEquals(["type" => "LineString", "coordinates" => [[0, 0], [1, 1]]], $result);
+        $this->assertEquals(['type' => 'LineString', 'coordinates' => [[0, 0], [1, 1]]], $result);
     }
 
     public function testTextToGeoJsonWithValidFeatureJson()
@@ -143,7 +150,7 @@ class GeometryServiceTest extends TestCase
 
         $result = $this->geometryService->textToGeojson($featureText);
 
-        $this->assertEquals(["type" => "LineString", "coordinates" => [[0, 0], [1, 1]]], $result);
+        $this->assertEquals(['type' => 'LineString', 'coordinates' => [[0, 0], [1, 1]]], $result);
     }
 
     public function testTextToGeoJsonWithValidXmlGpxFile()
@@ -165,10 +172,10 @@ class GeometryServiceTest extends TestCase
                 </trk>
             </gpx>
             ';
-        
+
         $result = $this->geometryService->textToGeojson($xmlText);
 
-        $this->assertEquals(["type" => "LineString", "coordinates" => [[5, 4], [2, 3]]], $result);
+        $this->assertEquals(['type' => 'LineString', 'coordinates' => [[5, 4], [2, 3]]], $result);
     }
 
     public function testTextToGeoJsonWithValidKmlFile()
@@ -190,7 +197,7 @@ class GeometryServiceTest extends TestCase
 
         $result = $this->geometryService->textToGeojson($kmlText);
 
-        $this->assertEquals(["type" => "LineString", "coordinates" => [[-12, 4], [-13, 8]]], $result);
+        $this->assertEquals(['type' => 'LineString', 'coordinates' => [[-12, 4], [-13, 8]]], $result);
     }
 
     public function testTextToGeojsonWithInvalidOrNullText()
@@ -208,11 +215,11 @@ class GeometryServiceTest extends TestCase
 
         DB::shouldReceive('selectOne')
             ->once()
-            ->with(\Mockery::on(function($query) use ($table, $geometryColumn) {
+            ->with(Mockery::on(function ($query) use ($table, $geometryColumn) {
                 return strpos($query, "FROM {$table}") !== false
-                    && strpos($query, "CASE") !== false;
+                    && strpos($query, 'CASE') !== false;
             }))
-            ->andReturn((object)['geom_type' => 'ST_Point']);
+            ->andReturn((object) ['geom_type' => 'ST_Point']);
 
         $result = $this->geometryService->getGeometryType($table, $geometryColumn);
         $this->assertEquals('Point', $result);
@@ -225,11 +232,11 @@ class GeometryServiceTest extends TestCase
 
         DB::shouldReceive('selectOne')
             ->once()
-            ->with(\Mockery::on(function($query) use ($table, $geometryColumn) {
+            ->with(Mockery::on(function ($query) use ($table, $geometryColumn) {
                 return strpos($query, "FROM {$table}") !== false
                     && strpos($query, "ST_GeometryType({$geometryColumn})") !== false;
             }))
-            ->andReturn((object)['geom_type' => 'ST_LineString']);
+            ->andReturn((object) ['geom_type' => 'ST_LineString']);
 
         $result = $this->geometryService->getGeometryType($table, $geometryColumn);
         $this->assertEquals('LineString', $result);
@@ -249,7 +256,7 @@ class GeometryServiceTest extends TestCase
 
     protected function tearDown(): void
     {
-        \Mockery::close();
+        Mockery::close();
         parent::tearDown();
     }
 }
