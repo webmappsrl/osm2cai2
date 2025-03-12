@@ -54,23 +54,23 @@ class GeometryService
      */
     public function geojsonToMultilinestringGeometry3857($geojson)
     {
-        return DB::select(DB::raw("select (
+        return DB::select("select (
         ST_Multi(
           ST_Transform( ST_GeomFromGeoJSON('".$geojson."' ) , 3857 )
         )
-    ) as g "))[0]->g;
+    ) as g ")[0]->g;
     }
 
     public function geometryTo4326Srid($geometry)
     {
-        return DB::select(DB::raw("select (
+        return DB::select("select (
       ST_Transform('".$geometry."', 4326)
-    ) as g "))[0]->g;
+    ) as g ")[0]->g;
     }
 
     public function textToGeojson($text)
     {
-        $geometry = $contentType = null;
+        $contentGeometry = $contentType = null;
         if ($text) {
             if (strpos($text, '<?xml') !== false && strpos($text, '<?xml') < 10) {
                 $geojson = '';
@@ -119,9 +119,9 @@ class GeometryService
                         break;
                 }
             }
-
-            return $contentGeometry;
         }
+
+        return $contentGeometry;
     }
 
     /**
