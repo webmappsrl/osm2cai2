@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2.0",
         "abordage/nova-html-card": "^0.3.1",
+        "cweagans/composer-patches": "^1.7",
         "darkaonline/l5-swagger": "^8.6",
         "dkulyk/nova-tabs": "^1.1",
         "ebess/advanced-nova-media-library": "^4.2",
@@ -39,8 +40,8 @@
         "symm/gisconverter": "^1.0",
         "tymon/jwt-auth": "^2.1",
         "webmapp/wm-osmfeatures": "*",
-        "wm/map-multi-polygon": "v0.0.4",
-        "wm/map-point": "v0.0.10",
+        "wm/map-multi-polygon": "dev-main#7128eb0",
+        "wm/map-point": "*",
         "wm/osm2cai-map-multi-linestring": "*",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
@@ -86,6 +87,14 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "patches": {
+            "wm/map-multi-polygon": {
+                "Force compatibility to Nova 4": "./patches/map-multi-polygon.patch"
+            },
+            "wm/map-point": {
+                "Force compatibility to Nova 4": "./patches/map-point.patch"
+            }
         }
     },
     "config": {
@@ -93,6 +102,7 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
+            "cweagans/composer-patches": true,
             "pestphp/pest-plugin": true
         }
     },

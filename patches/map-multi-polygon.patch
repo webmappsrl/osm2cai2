@@ -1,0 +1,22 @@
+diff --git a/src/MapMultiPolygon.php b/src/MapMultiPolygon.php
+index 0247fd7..d3d29e4 100644
+--- a/src/MapMultiPolygon.php
++++ b/src/MapMultiPolygon.php
+@@ -19,7 +19,7 @@ class MapMultiPolygon extends Field
+     /**
+      * Resolve the field's value.
+      */
+-    public function resolve($resource, ?string $attribute = null): void
++    public function resolve($resource, $attribute = null): void
+     {
+         parent::resolve($resource, $attribute = null);
+         $this->zone = $this->geometryToGeojson($this->value);
+@@ -28,7 +28,7 @@ class MapMultiPolygon extends Field
+             $this->withMeta(['center' => $this->zone['center']]);
+         }
+     }
+-    public function fillModelWithData(object $model, mixed $value, string $attribute): void
++    public function fillModelWithData($model, mixed $value, string $attribute): void
+     {
+         $newValue = $this->geojsonToGeometry($value);
+         $oldAttribute = $this->geometryToGeojson($model->{$attribute});
