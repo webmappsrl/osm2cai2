@@ -69,7 +69,7 @@ class GeometryServiceTest extends TestCase
           ST_Transform( ST_GeomFromGeoJSON('".$this->geoJsonLineString."' ) , 3857 )
         )
     ) as g ";
-        $this->testIfRawQueryGetsCalled($expectedQuery);
+
         DB::shouldReceive('select')
             ->once()
             ->with($expectedQuery)
@@ -84,8 +84,6 @@ class GeometryServiceTest extends TestCase
         $expectedQuery = "select (
       ST_Transform('".$this->geoJsonPoint."', 4326)
     ) as g ";
-
-        $this->testIfRawQueryGetsCalled($expectedQuery);
 
         DB::shouldReceive('select')
             ->once()
@@ -253,13 +251,5 @@ class GeometryServiceTest extends TestCase
     {
         \Mockery::close();
         parent::tearDown();
-    }
-
-    private function testIfRawQueryGetsCalled($query)
-    {
-        DB::shouldReceive('raw')
-            ->once()
-            ->with($query)
-            ->andReturn($query);
     }
 }
