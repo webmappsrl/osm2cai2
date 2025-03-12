@@ -6,15 +6,21 @@ use Tests\TestCase;
 use Illuminate\Support\Facades\Http;
 use App\Services\OsmService;
 use App\Models\HikingRoute;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Artisan;
 use Mockery;
 class OsmServiceTest extends TestCase
 {
+    use DatabaseTransactions;
     protected $osmService;
     protected $hikingRouteModel;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        Artisan::call('wm-osmfeatures:initialize-tables', ['--table' => 'hiking_routes']);
+
         $this->osmService = new OsmService();
         http::fake([
             'https://www.openstreetmap.org/api/0.6/relation/1' => 
