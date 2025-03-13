@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.0.0 (2025-03-13)
+
+
+### Features
+
+* Add OSM2CAI sync shell script and fixed UGC import command ([ac36fac](https://github.com/webmappsrl/osm2cai2/commit/ac36facfed8a16d5ece5b048840f54a862014144))
+* Enhance OSM2CAI user synchronization with advanced filtering and debugging options ([8b5057c](https://github.com/webmappsrl/osm2cai2/commit/8b5057c6153e911fe9058407167de1164e2854b3))
+* enhanced ugc media sync ([df82a49](https://github.com/webmappsrl/osm2cai2/commit/df82a490e8b6a297f54a34a37541a298bc23e4d2))
+* enhanced ugc media sync ([0ffa4e4](https://github.com/webmappsrl/osm2cai2/commit/0ffa4e43e6b600bae0cf8de5023f95ed9d8c3131))
+* new query (Users + HR) ([0c6bd1e](https://github.com/webmappsrl/osm2cai2/commit/0c6bd1e93e625dcd2b5da9f35c29a841da601acd))
+* query check for migration ([087a946](https://github.com/webmappsrl/osm2cai2/commit/087a9466092dd4bbde16b3de962b3150b9875838))
+
+
+### Bug Fixes
+
+* improve geometry extraction strategy for UGC media coordinates ([5cd5a05](https://github.com/webmappsrl/osm2cai2/commit/5cd5a05e8b002a4bee527b629bcc2c23841f5994))
+* migration check tool ([09fe7e8](https://github.com/webmappsrl/osm2cai2/commit/09fe7e82b969fffcfebc36dc0ad9b2c376ec9878))
+* resolve minor syntax and formatting issues in UGC sync command ([77e6d3e](https://github.com/webmappsrl/osm2cai2/commit/77e6d3e6a08b9fbae2293a524ada91248a7d1f7f))
+* typo in command signature ([ddeb2c9](https://github.com/webmappsrl/osm2cai2/commit/ddeb2c97b4b13959916a47bc33f6f75e9f9d95eb))
+* typo in osm2cai-sync.sh ([79d66d0](https://github.com/webmappsrl/osm2cai2/commit/79d66d02270a29244864366576115d52fb3ab898))
+* unauthorized migration check route ([e00eda8](https://github.com/webmappsrl/osm2cai2/commit/e00eda8dac3f930024a7e4c81f90a4d8cbe1e0d8))
+
+
+### Miscellaneous Chores
+
+* added pre-sync script ([a2ec208](https://github.com/webmappsrl/osm2cai2/commit/a2ec208992b7966f82e9f23889a3ce4020fb82c7))
+* added pre-sync script ([8967df1](https://github.com/webmappsrl/osm2cai2/commit/8967df1e3b1e1e8fee71f1d2d353730255f4d9f2))
+* updated queries ([e588b0b](https://github.com/webmappsrl/osm2cai2/commit/e588b0b49e12bc78180094f7603a2a120ff4e9aa))
+* updated queries ([796eaa1](https://github.com/webmappsrl/osm2cai2/commit/796eaa1b3aada2b2ca4c7eb58cdcb8d68546692d))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
