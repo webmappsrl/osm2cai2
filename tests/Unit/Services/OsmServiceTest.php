@@ -2,23 +2,26 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use Illuminate\Support\Facades\Http;
-use App\Services\OsmService;
 use App\Models\HikingRoute;
+use App\Models\Sector;
+use App\Services\OsmService;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use App\Models\Sector;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Mockery;
+use Tests\TestCase;
 
 class OsmServiceTest extends TestCase
 {
     use DatabaseTransactions;
+
     protected $osmService;
+
     protected $hikingRouteModel;
+
     const HIKING_ROUTE_EXPECTED_DATA = [
         'name' => 'Test Hiking Route',
         'ref' => 'TR-123',
@@ -26,7 +29,9 @@ class OsmServiceTest extends TestCase
         'distance' => '5.2',
         'osm_id' => 1,
     ];
+
     const HIKING_ROUTE_EXPECTED_GEOJSON = '{"type": "LineString", "coordinates": [[1,2],[3,4]]}';
+
     const HIKING_ROUTE_EXPECTED_GPX = '<?xml version="1.0" encoding="UTF-8"?>
                 <gpx version="1.1">
                     <trk>
@@ -36,7 +41,9 @@ class OsmServiceTest extends TestCase
                         </trkseg>
                     </trk>
                 </gpx>';
+
     const HIKING_ROUTE_EXPECTED_GEOMETRY = '0105000020E610000001000000010200000002000000000000000000224000000000008046403333333333332240CDCCCCCCCC8C4640';
+
     const HIKING_ROUTE_EXPECTED_GEOMETRY_3857 = '0105000020110F000001000000010200000002000000B74D93D526932E4154C51D5FC4715541780781BB1EEA2E413FC6EB8C27815541';
 
     const OSM_RELATION_RESPONSE = '<?xml version="1.0" encoding="UTF-8"?>
@@ -60,7 +67,9 @@ class OsmServiceTest extends TestCase
                 </gpx>';
 
     protected $intersectingSector;
+
     protected $nonIntersectingSector;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -73,39 +82,32 @@ class OsmServiceTest extends TestCase
         }
 
         $this->osmService = new OsmService();
-        http::fake([
-            'https://www.openstreetmap.org/api/0.6/relation/1' =>
-            Http::response(self::OSM_RELATION_RESPONSE, 200),
+        Http::fake([
+            'https://www.openstreetmap.org/api/0.6/relation/1' => Http::response(self::OSM_RELATION_RESPONSE, 200),
 
-            'https://www.openstreetmap.org/api/0.6/relation/999' =>
-            Http::response(self::OSM_RELATION_RESPONSE, 404),
+            'https://www.openstreetmap.org/api/0.6/relation/999' => Http::response(self::OSM_RELATION_RESPONSE, 404),
 
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/geojson' =>
-            Http::response(self::HIKING_ROUTE_EXPECTED_GEOJSON, 200),
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/geojson' => Http::response(self::HIKING_ROUTE_EXPECTED_GEOJSON, 200),
 
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/geojson' =>
-            Http::response(self::HIKING_ROUTE_EXPECTED_GEOJSON, 404),
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/geojson' => Http::response(self::HIKING_ROUTE_EXPECTED_GEOJSON, 404),
 
-            'https://www.openstreetmap.org/api/0.6/relation/*' =>
-            Http::response(self::OSM_RELATION_RESPONSE, 200),
+            'https://www.openstreetmap.org/api/0.6/relation/*' => Http::response(self::OSM_RELATION_RESPONSE, 200),
 
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/gpx' =>
-            Http::response(self::GPX_RESPONSE, 200),
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/gpx' => Http::response(self::GPX_RESPONSE, 200),
 
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/gpx' =>
-            Http::response(self::GPX_RESPONSE, 404),
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/gpx' => Http::response(self::GPX_RESPONSE, 404),
         ]);
 
         // Disable model observers for Sector and HikingRoute
         Sector::withoutEvents(function () {
             $this->intersectingSector = Sector::factory()->create(
                 [
-                    'geometry' => DB::raw("ST_GeomFromText('POLYGON((8.95 44.95, 8.95 45.05, 9.05 45.05, 9.05 44.95, 8.95 44.95))', 4326)")
+                    'geometry' => DB::raw("ST_GeomFromText('POLYGON((8.95 44.95, 8.95 45.05, 9.05 45.05, 9.05 44.95, 8.95 44.95))', 4326)"),
                 ]
             );
             $this->nonIntersectingSector = Sector::factory()->create(
                 [
-                    'geometry' => DB::raw("ST_GeomFromText('POLYGON((9.2 45.2, 9.2 45.3, 9.3 45.3, 9.3 45.2, 9.2 45.2))', 4326)")
+                    'geometry' => DB::raw("ST_GeomFromText('POLYGON((9.2 45.2, 9.2 45.3, 9.3 45.3, 9.3 45.2, 9.2 45.2))', 4326)"),
                 ]
             );
         });
