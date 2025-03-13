@@ -17,7 +17,10 @@ class SectorFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->name,
+            'code' => $this->faker->randomLetter,
+            'full_code' => $this->faker->randomLetter.$this->faker->randomLetter,
+            'num_expected' => $this->faker->numberBetween(1, 10),
         ];
     }
 }

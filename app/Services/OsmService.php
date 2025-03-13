@@ -192,7 +192,7 @@ class OsmService
         if ($gpx) {
             $service = GeometryService::getService();
             $geojson = $service->textToGeojson($gpx);
-            $geometry = $service->geojsonToMultilinestringGeometry3857($geojson);
+            $geometry = $service->geojsonToMultilinestringGeometry3857(json_encode($geojson));
 
             return $geometry;
         }
