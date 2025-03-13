@@ -13,6 +13,7 @@ use Illuminate\Database\Schema\Blueprint;
 use App\Models\Sector;
 use Illuminate\Support\Facades\DB;
 use Mockery;
+
 class OsmServiceTest extends TestCase
 {
     use DatabaseTransactions;
@@ -37,6 +38,27 @@ class OsmServiceTest extends TestCase
                 </gpx>';
     const HIKING_ROUTE_EXPECTED_GEOMETRY = '0105000020E610000001000000010200000002000000000000000000224000000000008046403333333333332240CDCCCCCCCC8C4640';
     const HIKING_ROUTE_EXPECTED_GEOMETRY_3857 = '0105000020110F000001000000010200000002000000B74D93D526932E4154C51D5FC4715541780781BB1EEA2E413FC6EB8C27815541';
+
+    const OSM_RELATION_RESPONSE = '<?xml version="1.0" encoding="UTF-8"?>
+                <osm version="0.6">
+                    <relation id="12345">
+                        <tag k="name" v="Test Hiking Route"/>
+                        <tag k="ref" v="TR-123"/>
+                        <tag k="network" v="lwn"/>
+                        <tag k="distance" v="5.2"/>
+                    </relation>
+                </osm>';
+
+    const GPX_RESPONSE = '<?xml version="1.0" encoding="UTF-8"?>
+                <gpx version="1.1">
+                    <trk>
+                        <trkseg>
+                            <trkpt lat="45.0" lon="9.0"></trkpt>
+                            <trkpt lat="45.1" lon="9.1"></trkpt>
+                        </trkseg>
+                    </trk>
+                </gpx>';
+
     protected $intersectingSector;
     protected $nonIntersectingSector;
     protected function setUp(): void
@@ -52,86 +74,41 @@ class OsmServiceTest extends TestCase
 
         $this->osmService = new OsmService();
         http::fake([
-            'https://www.openstreetmap.org/api/0.6/relation/1' => 
-                Http::response('<?xml version="1.0" encoding="UTF-8"?>
-                <osm version="0.6">
-                    <relation id="12345">
-                        <tag k="name" v="Test Hiking Route"/>
-                        <tag k="ref" v="TR-123"/>
-                        <tag k="network" v="lwn"/>
-                        <tag k="distance" v="5.2"/>
-                    </relation>
-                </osm>',
-                200
-            ),
-            'https://www.openstreetmap.org/api/0.6/relation/999' => 
-                Http::response('<?xml version="1.0" encoding="UTF-8"?>
-                <osm version="0.6">
-                    <relation id="999">
-                        <tag k="name" v="Test Hiking Route"/>
-                        <tag k="ref" v="TR-123"/>
-                        <tag k="network" v="lwn"/>
-                        <tag k="distance" v="5.2"/>
-                    </relation>
-                </osm>',
-                404
-            ),
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/geojson' => 
-                Http::response('{"type": "LineString", "coordinates": [[1,2],[3,4]]}', 200),
-            
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/geojson' => 
-                Http::response('{"type": "LineString", "coordinates": [[1,2],[3,4]]}', 404),
+            'https://www.openstreetmap.org/api/0.6/relation/1' =>
+            Http::response(self::OSM_RELATION_RESPONSE, 200),
 
-            'https://www.openstreetmap.org/api/0.6/relation/*' => Http::response(
-                '<?xml version="1.0" encoding="UTF-8"?>
-                <osm version="0.6">
-                    <relation id="12345">
-                        <tag k="name" v="Test Hiking Route"/>
-                        <tag k="ref" v="TR-123"/>
-                        <tag k="network" v="lwn"/>
-                        <tag k="distance" v="5.2"/>
-                    </relation>
-                </osm>',
-                200
-            ),
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/gpx' => Http::response(
-                '<?xml version="1.0" encoding="UTF-8"?>
-                <gpx version="1.1">
-                    <trk>
-                        <trkseg>
-                            <trkpt lat="45.0" lon="9.0"></trkpt>
-                            <trkpt lat="45.1" lon="9.1"></trkpt>
-                        </trkseg>
-                    </trk>
-                </gpx>',
-                200
-            ),
-            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/gpx' => 
-                Http::response(
-                    '<?xml version="1.0" encoding="UTF-8"?>
-                    <gpx version="1.1">
-                        <trk>
-                            <trkseg>
-                                <trkpt lat="45.0" lon="9.0"></trkpt>
-                                <trkpt lat="45.1" lon="9.1"></trkpt>
-                            </trkseg>
-                        </trk>
-                    </gpx>',
-                    404
-                ),
-            
+            'https://www.openstreetmap.org/api/0.6/relation/999' =>
+            Http::response(self::OSM_RELATION_RESPONSE, 404),
+
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/geojson' =>
+            Http::response(self::HIKING_ROUTE_EXPECTED_GEOJSON, 200),
+
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/geojson' =>
+            Http::response(self::HIKING_ROUTE_EXPECTED_GEOJSON, 404),
+
+            'https://www.openstreetmap.org/api/0.6/relation/*' =>
+            Http::response(self::OSM_RELATION_RESPONSE, 200),
+
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/1/geometry/gpx' =>
+            Http::response(self::GPX_RESPONSE, 200),
+
+            'https://hiking.waymarkedtrails.org/api/v1/details/relation/999/geometry/gpx' =>
+            Http::response(self::GPX_RESPONSE, 404),
         ]);
 
-        $this->intersectingSector = Sector::factory()->create(
-            [
-                'geometry' => DB::raw("ST_GeomFromText('POLYGON((8.95 44.95, 8.95 45.05, 9.05 45.05, 9.05 44.95, 8.95 44.95))', 4326)")
-            ]
-        );
-        $this->nonIntersectingSector = Sector::factory()->create(
-            [
-                'geometry' => DB::raw("ST_GeomFromText('POLYGON((9.2 45.2, 9.2 45.3, 9.3 45.3, 9.3 45.2, 9.2 45.2))', 4326)")
-            ]
-        );
+        // Disable model observers for Sector and HikingRoute
+        Sector::withoutEvents(function () {
+            $this->intersectingSector = Sector::factory()->create(
+                [
+                    'geometry' => DB::raw("ST_GeomFromText('POLYGON((8.95 44.95, 8.95 45.05, 9.05 45.05, 9.05 44.95, 8.95 44.95))', 4326)")
+                ]
+            );
+            $this->nonIntersectingSector = Sector::factory()->create(
+                [
+                    'geometry' => DB::raw("ST_GeomFromText('POLYGON((9.2 45.2, 9.2 45.3, 9.3 45.3, 9.3 45.2, 9.2 45.2))', 4326)")
+                ]
+            );
+        });
     }
 
     /** @test */
@@ -202,7 +179,7 @@ class OsmServiceTest extends TestCase
         $geometry = $this->osmService->getHikingRouteGeometry3857(1);
         $this->assertEquals(self::HIKING_ROUTE_EXPECTED_GEOMETRY_3857, $geometry);
     }
-    
+
     /** @test */
     public function getHikingRouteGeometry3857ReturnsFalseIfRelationIdIsNotValidOrEmpty()
     {
@@ -211,7 +188,7 @@ class OsmServiceTest extends TestCase
         $this->assertFalse($geometryFalse);
         $this->assertFalse($geometryEmpty);
     }
-    
+
     /** @test */
     public function getHikingRouteGpxReturnsFalseIfRelationIdIsNotValid()
     {
@@ -222,40 +199,43 @@ class OsmServiceTest extends TestCase
     /** @test */
     public function updateHikingRouteModelWithOsmDataWorksAsExpected()
     {
-        $firstHikingRoute = HikingRoute::factory()->create(
-            [
-                'geometry' => null,
-                'osmfeatures_data' => [
-                    'properties' => [
-                        'osm_id' => 1,
+        HikingRoute::withoutEvents(function () {
+            $firstHikingRoute = HikingRoute::factory()->create(
+                [
+                    'geometry' => null,
+                    'osmfeatures_data' => [
+                        'properties' => [
+                            'osm_id' => 1,
+                        ],
                     ],
-                ],
-            ]
-        );
-        $secondHikingRoute = HikingRoute::factory()->create(
-            [
-                'geometry' => null,
-                'osmfeatures_data' => [
-                    'properties' => [
-                        'osm_id' => 1,
+                ]
+            );
+            $secondHikingRoute = HikingRoute::factory()->create(
+                [
+                    'geometry' => null,
+                    'osmfeatures_data' => [
+                        'properties' => [
+                            'osm_id' => 1,
+                        ],
                     ],
-                ],
-            ]
-        );
-        $this->assertTrue($this->osmService->updateHikingRouteModelWithOsmData($firstHikingRoute, $this->osmService->getHikingRoute(1)));
-        $this->assertTrue($this->osmService->updateHikingRouteModelWithOsmData($secondHikingRoute, null));
-        $this->assertConditionsForHikingRoute($firstHikingRoute);
-        $this->assertConditionsForHikingRoute($secondHikingRoute);
+                ]
+            );
+            $this->assertTrue($this->osmService->updateHikingRouteModelWithOsmData($firstHikingRoute, $this->osmService->getHikingRoute(1)));
+            $this->assertTrue($this->osmService->updateHikingRouteModelWithOsmData($secondHikingRoute, null));
+            $this->assertConditionsForHikingRoute($firstHikingRoute);
+            $this->assertConditionsForHikingRoute($secondHikingRoute);
+        });
     }
 
-    private function assertConditionsForHikingRoute($hikingRoute){
+    private function assertConditionsForHikingRoute($hikingRoute)
+    {
         $this->assertDatabaseHas('hiking_routes', [
             'id' => $hikingRoute->id,
             'osmfeatures_data->geometry->type' => 'MultiLineString',
             'osmfeatures_data->properties->osm_id' => 1,
             'osmfeatures_data->properties->name'   => self::HIKING_ROUTE_EXPECTED_DATA['name'],
             'osmfeatures_data->properties->ref'    => self::HIKING_ROUTE_EXPECTED_DATA['ref'],
-            'osmfeatures_data->properties->network'=> self::HIKING_ROUTE_EXPECTED_DATA['network'],
+            'osmfeatures_data->properties->network' => self::HIKING_ROUTE_EXPECTED_DATA['network'],
             'osmfeatures_data->properties->distance' => self::HIKING_ROUTE_EXPECTED_DATA['distance'],
         ]);
 
