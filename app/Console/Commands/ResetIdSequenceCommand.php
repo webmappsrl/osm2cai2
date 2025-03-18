@@ -24,7 +24,7 @@ class ResetIdSequenceCommand extends Command
 
     /**
      * List of tables that must be included in the reset
-     * 
+     *
      * @var array
      */
     protected $requiredTables = [
@@ -36,7 +36,7 @@ class ResetIdSequenceCommand extends Command
         'areas',
         'itineraries',
         'mountain_groups',
-        'cai_huts'
+        'cai_huts',
     ];
 
     /**
@@ -48,13 +48,13 @@ class ResetIdSequenceCommand extends Command
 
         // Verify tables exist and have ID column
         foreach ($tableNames as $key => $tableName) {
-            if (!Schema::hasTable($tableName) || !Schema::hasColumn($tableName, 'id')) {
+            if (! Schema::hasTable($tableName) || ! Schema::hasColumn($tableName, 'id')) {
                 $this->warn("Required table {$tableName} does not exist or doesn't have an ID column");
                 unset($tableNames[$key]);
             }
         }
 
-        $this->info('Processing ' . count($tableNames) . ' required tables');
+        $this->info('Processing '.count($tableNames).' required tables');
 
         $bar = $this->output->createProgressBar(count($tableNames));
         $bar->start();
@@ -82,13 +82,13 @@ class ResetIdSequenceCommand extends Command
         $maxId = $result ?? 0;
 
         // PostgreSQL-specific sequence reset
-        $sequenceName = $tableName . '_id_seq';
+        $sequenceName = $tableName.'_id_seq';
 
         try {
-            DB::statement("ALTER SEQUENCE {$sequenceName} RESTART WITH " . ($maxId + 1));
-            $this->line("  - Reset sequence for table {$tableName} to " . ($maxId + 1));
+            DB::statement("ALTER SEQUENCE {$sequenceName} RESTART WITH ".($maxId + 1));
+            $this->line("  - Reset sequence for table {$tableName} to ".($maxId + 1));
         } catch (\Exception $e) {
-            $this->warn("  - Failed to reset sequence for table {$tableName}: " . $e->getMessage());
+            $this->warn("  - Failed to reset sequence for table {$tableName}: ".$e->getMessage());
         }
     }
 }
