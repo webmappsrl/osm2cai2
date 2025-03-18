@@ -20,7 +20,7 @@
         "imumz/nova-4-field-map": "^1.0",
         "interaction-design-foundation/nova-html-card": "^3.3",
         "kongulov/nova-tab-translatable": "^2.1",
-        "laravel/framework": "^11.0",
+        "laravel/framework": "11.38.*",
         "laravel/horizon": "^5.25",
         "laravel/nova": "^4.33",
         "laravel/prompts": "^0.1.19",
