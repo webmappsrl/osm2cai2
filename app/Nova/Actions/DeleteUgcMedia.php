@@ -55,7 +55,7 @@ class DeleteUgcMedia extends Action
 
             return Action::message(__('Image deleted successfully!'));
         } catch (\Exception $e) {
-            return Action::danger(__('Error while deleting image: ') . $e->getMessage());
+            return Action::danger(__('Error while deleting image: ').$e->getMessage());
         }
     }
 
