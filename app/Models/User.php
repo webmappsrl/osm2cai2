@@ -4,15 +4,16 @@ namespace App\Models;
 
 use App\Models\Area;
 use App\Models\Club;
-use App\Models\HikingRoute;
-use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use App\Models\UgcPoi;
+use App\Models\Province;
 use App\Models\UgcTrack;
-use Illuminate\Database\Eloquent\Collection;
+use App\Models\HikingRoute;
 use Laravel\Nova\Auth\Impersonatable;
 use Wm\WmPackage\Models\User as WmUser;
+use Spatie\Permission\Models\Permission;
+use Illuminate\Database\Eloquent\Collection;
 
 class User extends WmUser
 {
@@ -231,5 +232,53 @@ class User extends WmUser
     public function canManageClub(Club $club): bool
     {
         return $this->hasRole('Administrator') || $this->hasRole('National Referent') || ($this->hasRole('Regional Referent') && $this->region_id == $club->region_id) || (! is_null($this->managedClub) && $this->managedClub->id == $club->id);
+    }
+
+    /**
+     * Check if user is a validator for the specified form ID
+     *
+     * @param string|null $formId The form ID to check validation permissions for
+     * @return bool
+     */
+    public function isValidatorForFormId($formId)
+    {
+        // If no form ID is provided, allow validation for all forms
+        if (empty($formId)) {
+            return true;
+        }
+
+        // Special case for water form
+        if ($formId === 'water') {
+            return $this->hasPermissionTo('validate source surveys');
+        }
+
+        // Format the form ID for permission name
+        $formattedFormId = $this->formatFormIdForPermission($formId);
+        $permissionName = 'validate ' . $formattedFormId;
+
+        // If permission doesn't exist in the system, allow validation
+        if (! Permission::where('name', $permissionName)->exists()) {
+            return false;
+        }
+
+        return $this->hasPermissionTo($permissionName);
+    }
+
+    /**
+     * Format form ID for permission name
+     *
+     * @param string $formId The form ID to format
+     * @return string
+     */
+    protected function formatFormIdForPermission(string $formId): string
+    {
+        $formId = str_replace('_', ' ', $formId);
+
+        // Add plural 's' if not already present
+        if (! str_ends_with($formId, 's')) {
+            $formId .= 's';
+        }
+
+        return $formId;
     }
 }
