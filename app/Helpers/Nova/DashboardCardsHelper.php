@@ -1029,7 +1029,7 @@ class DashboardCardsHelper
 
             $row = new Row(
                 new Cell("{$item->full_code}"),
-                new Cell($sector->human_name),
+                new Cell($sector->human_name ?? $sector->name),
                 new Cell($item->tot1),
                 new Cell($item->tot2),
                 new Cell($item->tot3),

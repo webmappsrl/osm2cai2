@@ -47,8 +47,8 @@ class DeleteUgcMedia extends Action
             Storage::disk('public')->delete($ugcMedia->relative_url);
 
             // Dissociare l'immagine sia da ugc_poi che da ugc_track
-            $ugcMedia->ugc_poi()->dissociate();
-            $ugcMedia->ugc_track()->dissociate();
+            $ugcMedia->ugcPoi()->dissociate();
+            $ugcMedia->ugcTrack()->dissociate();
             $ugcMedia->save();
 
             $ugcMedia->delete();
