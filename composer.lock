@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "053d06ed5c05085e885b5a3b712dd32b",
+    "content-hash": "ace7f77b579cac16f8a9b19912f22c6f",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -839,54 +839,6 @@
                 "source": "https://github.com/dflydev/dflydev-dot-access-data/tree/v3.0.3"
             },
             "time": "2024-07-08T12:26:09+00:00"
-        },
-        {
-            "name": "dkulyk/nova-tabs",
-            "version": "1.1.9",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/dkulyk/nova-tabs.git",
-                "reference": "20968961c0fedd4074b8744175cdfdb3e8f76ae0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/dkulyk/nova-tabs/zipball/20968961c0fedd4074b8744175cdfdb3e8f76ae0",
-                "reference": "20968961c0fedd4074b8744175cdfdb3e8f76ae0",
-                "shasum": ""
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.0-dev"
-                },
-                "laravel": {
-                    "providers": [
-                        "DKulyk\\Nova\\TabsServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "DKulyk\\Nova\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Dmytro Kulyk",
-                    "email": "lnkvisitor.ts@gmail.com"
-                }
-            ],
-            "description": "Another Laravel Nova Tabs Package",
-            "support": {
-                "issues": "https://github.com/dkulyk/nova-tabs/issues",
-                "source": "https://github.com/dkulyk/nova-tabs/tree/1.1.9"
-            },
-            "abandoned": true,
-            "time": "2021-03-18T10:26:17+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -2187,52 +2139,6 @@
                 "source": "https://github.com/idezdigital/nova-date-range-filter/tree/2.2.0"
             },
             "time": "2024-04-15T18:25:19+00:00"
-        },
-        {
-            "name": "imumz/nova-4-field-map",
-            "version": "v1.0.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/iMuMz/Nova4FieldMap.git",
-                "reference": "cc197d0e22dbc14af44a4c2b26fcdb547c310b5d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/iMuMz/Nova4FieldMap/zipball/cc197d0e22dbc14af44a4c2b26fcdb547c310b5d",
-                "reference": "cc197d0e22dbc14af44a4c2b26fcdb547c310b5d",
-                "shasum": ""
-            },
-            "require": {
-                "laravel/nova": "^4.0",
-                "php": "^7.3|^8.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Imumz\\Nova4FieldMap\\FieldServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Imumz\\Nova4FieldMap\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A Laravel Nova field.",
-            "keywords": [
-                "laravel",
-                "nova"
-            ],
-            "support": {
-                "issues": "https://github.com/iMuMz/Nova4FieldMap/issues",
-                "source": "https://github.com/iMuMz/Nova4FieldMap/tree/v1.0.4"
-            },
-            "time": "2024-03-26T09:44:09+00:00"
         },
         {
             "name": "inertiajs/inertia-laravel",
@@ -9994,7 +9900,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-main",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -10030,7 +9936,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-main",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",

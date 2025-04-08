@@ -2,10 +2,10 @@
 
 namespace App\Traits\Nova;
 
-use DKulyk\Nova\Tabs;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
+use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Fields\Field;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 trait WmNovaFieldsTrait
 {
@@ -57,7 +57,7 @@ trait WmNovaFieldsTrait
         }
 
         $tabs = new Tabs($tabsLabel, [
-            ' ' => $fields,
+            $tabsLabel => $fields,
         ]);
 
         return $tabs;
