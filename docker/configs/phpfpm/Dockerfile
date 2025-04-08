@@ -1,4 +1,4 @@
-FROM php:8.2.15-fpm
+FROM php:8.4-fpm
 
 USER root
 
@@ -8,12 +8,15 @@ ADD www.conf /usr/local/etc/php-fpm.d/www.conf
 ADD zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 ADD php.ini /usr/local/etc/php/php.ini
 
-ENV TZ 'Europe/Rome'
+ENV TZ='Europe/Rome'
 
+#permissions
 RUN chown -R www-data:www-data /var/www \
-    && chown  www-data:www-data /usr/local/etc/php-fpm.d/www.conf \
-    && chown -R www-data:www-data /usr/local/etc/php-fpm.d/zz-docker.conf \
-    && apt-get update && apt-get install -y \
+    && chown www-data:www-data /usr/local/etc/php-fpm.d/www.conf \
+    && chown -R www-data:www-data /usr/local/etc/php-fpm.d/zz-docker.conf
+
+#apt packages
+RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libmcrypt-dev \
@@ -49,8 +52,12 @@ RUN chown -R www-data:www-data /var/www \
     supervisor \
     gdal-bin \
     zip \
-    nodejs npm \
-    && docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp \
+    nodejs \
+    npm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+#php extensions
+RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-configure intl \
     && docker-php-ext-install -j$(nproc) \
     gd \
@@ -64,16 +71,14 @@ RUN chown -R www-data:www-data /var/www \
     exif \
     && docker-php-ext-install pcntl \
     && pecl install redis \
-    && pecl install imagick \
-    && pecl install apcu \
-    && docker-php-ext-enable apcu \
-    && docker-php-ext-enable exif \
-    && docker-php-ext-enable imagick \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-enable exif
 
 RUN curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer \
-    && ln -s /usr/local/bin/composer /usr/bin/composer
+    && if [ ! -f /usr/bin/composer ]; then ln -s /usr/local/bin/composer /usr/bin/composer; fi
+
+# Verifica la versione di PHP
+RUN php -v
 
 ENV HOME /var/www
 WORKDIR /var/www

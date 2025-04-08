@@ -8,14 +8,14 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2.0",
+        "php": "^8.4.0",
         "abordage/nova-html-card": "^0.3.1",
         "cweagans/composer-patches": "^1.7",
         "darkaonline/l5-swagger": "^8.6",
         "ebess/advanced-nova-media-library": "^4.2",
-        "eminiarts/nova-tabs": "^2.2",
+        "eminiarts/nova-tabs": "dev-master",
         "guzzlehttp/guzzle": "^7.2",
-        "idez/nova-date-range-filter": "^2.2",
+        "idez/nova-date-range-filter": "dev-master",
         "interaction-design-foundation/nova-html-card": "^3.3",
         "kongulov/nova-tab-translatable": "^2.1",
         "laravel/framework": "11.38.*",
@@ -25,7 +25,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
-        "m-a-k-o/nova-custom-table-card": "^4.0",
+        "m-a-k-o/nova-custom-table-card": "dev-master",
         "maatwebsite/excel": "^3.1",
         "outl1ne/nova-multiselect-field": "^4.6",
         "predis/predis": "^2.2",
@@ -126,6 +126,18 @@
         {
             "type": "path",
             "url": "./nova-components/osm2cai-map-multi-linestring"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/k8n/nova-tabs"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/whitespacecode/nova-date-range-filter"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/MagicByteTeam/nova-custom-table-card"
         }
     ]
 }
