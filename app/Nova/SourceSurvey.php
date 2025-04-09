@@ -12,6 +12,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
+use Laravel\Nova\Panel;
 
 class SourceSurvey extends AbstractValidationResource
 {
@@ -32,7 +33,7 @@ class SourceSurvey extends AbstractValidationResource
      */
     public static function getLabel(): string
     {
-        return __('Water Source');
+        return __('Acqua Sorgente');
     }
 
     /**
@@ -55,7 +56,7 @@ class SourceSurvey extends AbstractValidationResource
         $surveyFields = $this->prepareSurveyFields();
 
         // Integration of fields into tabs
-        $fields = $this->integrateFieldsIntoTabs($fields, $surveyFields);
+        $fields = $this->integrateFieldsIntoPanel($fields, $surveyFields);
 
         return array_merge($fields, [$hasPhotosField]);
     }
@@ -92,30 +93,23 @@ class SourceSurvey extends AbstractValidationResource
      * @param array $surveyFields Specific fields to add
      * @return array
      */
-    private function integrateFieldsIntoTabs(array $fields, array $surveyFields): array
+    private function integrateFieldsIntoPanel(array $fields, array $surveyFields): array
     {
-        // Checks if a Tabs object already exists in the fields
-        $tabIndex = array_search(Tabs::class, array_map('get_class', $fields));
+        // Find the existing Panel in the fields
+        foreach ($fields as $key => $field) {
+            if ($field instanceof Panel) {
+                // Add survey fields to the existing panel
+                $existingFields = $field->data;
+                $updatedFields = array_merge($existingFields, $surveyFields);
 
-        // Creates a tab for water source fields
-        $aquaTab = Tab::make(__('WATER SOURCE'), $surveyFields);
-
-        if ($tabIndex !== false) {
-            // If a tab already exists, integrate the new one
-            $existingTab = $fields[$tabIndex];
-
-            // Creates a new Tabs object combining existing tabs with the new one
-            $newTabs = new Tabs(
-                __('Details'),
-                array_merge([$aquaTab], $existingTab->tabs)
-            );
-
-            // Replaces the existing tab with the updated one
-            $fields[$tabIndex] = $newTabs;
-        } else {
-            // If no tab exists, create a new one
-            $fields[] = new Tabs(__('Details'), [$aquaTab]);
+                // Replace the existing panel with updated fields
+                $fields[$key] = Panel::make($field->name, $updatedFields);
+                return $fields;
+            }
         }
+
+        // If no panel exists, create a new one
+        $fields[] = Panel::make(__('Details'), $surveyFields);
 
         return $fields;
     }
