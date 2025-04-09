@@ -74,7 +74,7 @@ class SourceSurvey extends AbstractValidationResource
                 return $this->calculateFlowRate();
             })
             ->readonly()
-            ->help(__('This data is automatically calculated based on the entered data'));
+            ->help(__('Questo dato è calcolato automaticamente in base ai dati inseriti'));
 
         // Field for flow rate validation
         $waterFlowRateValidatedField = Select::make(__('Flow Rate Validation'), 'water_flow_rate_validated')
