@@ -83,8 +83,14 @@
         ]
     },
     "extra": {
+        "enable-patching": true,
         "laravel": {
             "dont-discover": []
+        },
+        "patches": {
+            "apereo/phpcas": {
+                "Force compatibility to php 8.4": "./patches/php-cas.patch"
+            }
         }
     },
     "config": {

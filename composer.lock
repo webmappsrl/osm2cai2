@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d551dce6a5cc291bfeda18c6f0474ec",
+    "content-hash": "ce1a4a481d0e88b30322e14054f1d89e",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -12472,7 +12472,7 @@
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
-                "reference": "8f7eacd7cecf1f6e306242dd36702f637f70a315"
+                "reference": "33f27d5366b43b0ad3a228c704e0573708ef7548"
             },
             "require": {
                 "chelout/laravel-relationship-events": "^2.0 || ^3.0",
@@ -12534,7 +12534,7 @@
                 },
                 "patches": {
                     "chelout/laravel-relationship-events": {
-                        "Add compatibility for Laravel 12": "patches/laravel-relationship-events_laravel-12.diff"
+                        "Add compatibility for Laravel 12": "https://raw.githubusercontent.com/webmappsrl/wm-package/refs/heads/develop/patches/laravel-relationship-events_laravel-12.diff"
                     }
                 }
             },
