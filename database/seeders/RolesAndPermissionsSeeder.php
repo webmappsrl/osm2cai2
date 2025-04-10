@@ -20,11 +20,11 @@ class RolesAndPermissionsSeeder extends Seeder
         RolesAndPermissionsService::seedDatabase();
 
         // Create roles if they don't exist
-        Role::firstOrCreate(['name' => 'Itinerary Manager']);
-        Role::firstOrCreate(['name' => 'National Referent']);
-        Role::firstOrCreate(['name' => 'Regional Referent']);
-        Role::firstOrCreate(['name' => 'Local Referent']);
-        Role::firstOrCreate(['name' => 'Club Manager']);
+        Role::firstOrCreate(['name' => 'Itinerary Manager', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'National Referent', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Regional Referent', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Local Referent', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Club Manager', 'guard_name' => 'web']);
 
         // Create permissions
         Permission::firstOrCreate(['name' => 'validate archaeological sites']);
