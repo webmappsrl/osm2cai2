@@ -33,6 +33,9 @@ class E2ETestDbSeeder extends Seeder
         //wipe the database
         Artisan::call('migrate:fresh');
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+
         // Create users with roles
         $this->call(DatabaseSeeder::class);
 
