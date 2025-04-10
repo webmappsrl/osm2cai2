@@ -4,16 +4,17 @@ namespace App\Models;
 
 use App\Models\Area;
 use App\Models\Club;
-use App\Models\HikingRoute;
-use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use App\Models\UgcPoi;
+use App\Models\Province;
 use App\Models\UgcTrack;
-use Illuminate\Database\Eloquent\Collection;
+use App\Models\HikingRoute;
 use Laravel\Nova\Auth\Impersonatable;
-use Spatie\Permission\Models\Permission;
 use Wm\WmPackage\Models\User as WmUser;
+use Spatie\Permission\Models\Permission;
+use Illuminate\Database\Eloquent\Collection;
+use Wm\WmPackage\Database\Factories\UserFactory;
 
 class User extends WmUser
 {
@@ -254,7 +255,7 @@ class User extends WmUser
 
         // Format the form ID for permission name
         $formattedFormId = $this->formatFormIdForPermission($formId);
-        $permissionName = 'validate '.$formattedFormId;
+        $permissionName = 'validate ' . $formattedFormId;
 
         // If permission doesn't exist in the system, allow validation
         if (! Permission::where('name', $permissionName)->exists()) {
@@ -280,5 +281,10 @@ class User extends WmUser
         }
 
         return $formId;
+    }
+
+    protected static function newFactory()
+    {
+        return UserFactory::new();
     }
 }
