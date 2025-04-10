@@ -42,7 +42,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 $user->assignRole('Guest');
                 $user->roles()->detach($user->roles()->where('name', '!=', 'Guest')->pluck('id'));
             }
-            User::where('email', 'team@webmapp.it')->first()->assignRole('Administrator');
+            $adminUser = User::where('email', 'team@webmapp.it')->first();
+            if ($adminUser) {
+                $adminUser->assignRole('Administrator');
+            }
         }
     }
 }
