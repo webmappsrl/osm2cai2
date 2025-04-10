@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        // Ensure roles exist before assigning them
+        Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
+
         //create admin user
         $admin = User::where('email', 'team@webmapp.it')->first();
         $nationalReferent = User::where('email', 'referenteNazionale@webmapp.it')->first();
@@ -26,18 +29,27 @@ class DatabaseSeeder extends Seeder
 
             // if the user already have the role, skip
             if (! $user->hasRole('Administrator')) {
-                $user->roles()->attach(Role::where('name', 'Administrator')->first());
+                $user->assignRole('Administrator');
+            }
+        } else {
+            // Ensure existing admin has the role
+            if (! $admin->hasRole('Administrator')) {
+                $admin->assignRole('Administrator');
             }
         }
+
         if (! $nationalReferent) {
             $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Referente Nazionale']);
 
             // if the user already have the role, skip
             if (! $user->hasRole('National Referent')) {
-                $user->roles()->attach(Role::where('name', 'National Referent')->first());
+                $user->assignRole('National Referent');
+            }
+        } else {
+            // Ensure existing national referent has the role
+            if (! $nationalReferent->hasRole('National Referent')) {
+                $nationalReferent->assignRole('National Referent');
             }
         }
-
-        Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
     }
 }

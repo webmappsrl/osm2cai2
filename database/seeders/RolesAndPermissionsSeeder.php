@@ -19,33 +19,48 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         RolesAndPermissionsService::seedDatabase();
 
+        // Create roles if they don't exist
         Role::firstOrCreate(['name' => 'Itinerary Manager']);
         Role::firstOrCreate(['name' => 'National Referent']);
         Role::firstOrCreate(['name' => 'Regional Referent']);
         Role::firstOrCreate(['name' => 'Local Referent']);
         Role::firstOrCreate(['name' => 'Club Manager']);
 
+        // Create permissions
         Permission::firstOrCreate(['name' => 'validate archaeological sites']);
         Permission::firstOrCreate(['name' => 'validate geological sites']);
         Permission::firstOrCreate(['name' => 'validate archaeological areas']);
         Permission::firstOrCreate(['name' => 'validate signs']);
 
+        // Assign permissions to admin role
         $adminRole = Role::where('name', 'Administrator')->first();
         $adminRole->givePermissionTo('validate archaeological sites');
         $adminRole->givePermissionTo('validate geological sites');
         $adminRole->givePermissionTo('validate archaeological areas');
 
-        //get all users except team@webmapp.it and assign to them the guest role
-        $users = User::whereDoesntHave('roles')->where('email', '!=', ['team@webmapp.it', 'referenteNazionale@webmapp.it'])->get();
+        // Assign role Guest to users without roles (except specific emails)
+        $protectedEmails = ['team@webmapp.it', 'referenteNazionale@webmapp.it'];
+
+        $users = User::whereDoesntHave('roles')
+            ->whereNotIn('email', $protectedEmails)
+            ->get();
+
         if ($users->count() > 0) {
             foreach ($users as $user) {
                 $user->assignRole('Guest');
                 $user->roles()->detach($user->roles()->where('name', '!=', 'Guest')->pluck('id'));
             }
-            $adminUser = User::where('email', 'team@webmapp.it')->first();
-            if ($adminUser) {
-                $adminUser->assignRole('Administrator');
-            }
+        }
+
+        // Make sure admin and national referent have the correct roles
+        $adminUser = User::where('email', 'team@webmapp.it')->first();
+        if ($adminUser && !$adminUser->hasRole('Administrator')) {
+            $adminUser->assignRole('Administrator');
+        }
+
+        $nationalReferent = User::where('email', 'referenteNazionale@webmapp.it')->first();
+        if ($nationalReferent && !$nationalReferent->hasRole('National Referent')) {
+            $nationalReferent->assignRole('National Referent');
         }
     }
 }
