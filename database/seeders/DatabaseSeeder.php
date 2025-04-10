@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         $nationalReferent = User::where('email', 'referenteNazionale@webmapp.it')->first();
 
         if (! $admin) {
-            $user = User::factory()->create();
+            $user = User::factory()->create(['email' => 'team@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Webmapp Team']);
 
             // if the user already have the role, skip
             if (! $user->hasRole('Administrator')) {
