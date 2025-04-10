@@ -313,6 +313,30 @@ HTML;
         $zipPath = 'shape_files/zip/'.$name.'.zip';
 
         return $zipPath;
+
+    }
+    
+    public function surveyData()
+    {
+        $validatedCount = UgcPoi::where('form_id', 'water')
+            ->where('validated', 'valid')
+            ->count();
+    
+        $pendingCount = UgcPoi::where('form_id', 'water')
+            ->where('validated', '!=', 'valid')
+            ->count();
+    
+        $validatorsCount = DB::table('users')
+            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('roles.name', 'Validator')
+            ->count();
+    
+        return response()->json([
+            'validated' => $validatedCount,
+            'pending' => $pendingCount,
+            'validators' => $validatorsCount,
+        ]);
     }
 
     public function surveyData()
