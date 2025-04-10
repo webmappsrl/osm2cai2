@@ -2230,6 +2230,50 @@
                 }
             }
         },
+        "/api/v2/source_survey/monitorings": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "summary": "Get Monitoring Data",
+                "description": "Returns the count of validated, pending, and validator users for ACQUA SORGENTE surveys.",
+                "operationId": "getMonitoringData",
+                "responses": {
+                    "200": {
+                        "description": "Successful response with counts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "validated": {
+                                            "type": "integer",
+                                            "description": "Count of validated ACQUA SORGENTE surveys.",
+                                            "example": 897
+                                        },
+                                        "pending": {
+                                            "type": "integer",
+                                            "description": "Count of pending ACQUA SORGENTE surveys.",
+                                            "example": 367
+                                        },
+                                        "validators": {
+                                            "type": "integer",
+                                            "description": "Count of users with the role 'Validator'.",
+                                            "example": 40
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "validated": 120,
+                                    "pending": 45,
+                                    "validators": 10
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/hiking-routes/region/{region_code}/{sda}": {
             "get": {
                 "tags": [
@@ -2774,6 +2818,7 @@
                 }
             }
         }
+        
     },
     "components": {
         "parameters": {

@@ -118,6 +118,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/survey.kml', [SourceSurveyController::class, 'surveyKml'])->name('survey-kml');
         Route::get('/survey.shp', [SourceSurveyController::class, 'surveyShapefile'])->name('survey-shapefile');
         Route::get('/overlay.geojson', [SourceSurveyController::class, 'overlayGeoJson'])->name('overlay-geojson');
+        Route::get('/monitorings', [SourceSurveyController::class, 'surveyData'])->name('monitorings');
     });
 
     //mitur_abruzzo
