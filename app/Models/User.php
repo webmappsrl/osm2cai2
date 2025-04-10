@@ -34,7 +34,6 @@ class User extends WmUser
         'phone',
     ];
 
-    protected $guard_name = 'web';
 
     public function EcPois()
     {

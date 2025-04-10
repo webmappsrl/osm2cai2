@@ -27,16 +27,25 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'Club Manager', 'guard_name' => 'web']);
 
         // Create permissions
-        Permission::firstOrCreate(['name' => 'validate archaeological sites']);
-        Permission::firstOrCreate(['name' => 'validate geological sites']);
-        Permission::firstOrCreate(['name' => 'validate archaeological areas']);
-        Permission::firstOrCreate(['name' => 'validate signs']);
+        Permission::firstOrCreate(['name' => 'validate archaeological sites', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'validate geological sites', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'validate archaeological areas', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'validate signs', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'validate source surveys', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'validate pois', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'validate tracks', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'validate paths', 'guard_name' => 'web']);
 
         // Assign permissions to admin role
         $adminRole = Role::where('name', 'Administrator')->first();
         $adminRole->givePermissionTo('validate archaeological sites');
         $adminRole->givePermissionTo('validate geological sites');
         $adminRole->givePermissionTo('validate archaeological areas');
+        $adminRole->givePermissionTo('validate signs');
+        $adminRole->givePermissionTo('validate source surveys');
+        $adminRole->givePermissionTo('validate pois');
+        $adminRole->givePermissionTo('validate tracks');
+        $adminRole->givePermissionTo('validate paths');
 
         // Assign role Guest to users without roles (except specific emails)
         $protectedEmails = ['team@webmapp.it', 'referenteNazionale@webmapp.it'];
