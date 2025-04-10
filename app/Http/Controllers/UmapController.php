@@ -20,7 +20,10 @@ class UmapController extends Controller
 {
     public function pois()
     {
-        $pois = UgcPoi::where('form_id', 'poi')->whereIn('raw_data->waypointtype', ['flora', 'fauna', 'habitat'])->whereNotNull('geometry')->get();
+        $pois = UgcPoi::where('form_id', 'poi')
+            ->whereRaw("LOWER(raw_data->>'waypointtype') IN (?, ?, ?)", ['flora', 'fauna', 'habitat'])
+            ->whereNotNull('geometry')
+            ->get();
 
         return response()->json(['type' => 'FeatureCollection', 'features' => UgcpoiUmapResource::collection($pois)]);
     }
