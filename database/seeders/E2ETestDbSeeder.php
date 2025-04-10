@@ -30,8 +30,8 @@ class E2ETestDbSeeder extends Seeder
         //wipe the database
         Artisan::call('migrate:fresh');
 
-        $this->call(RolesAndPermissionsSeeder::class);
         $this->call(DatabaseSeeder::class);
+        $this->call(RolesAndPermissionsSeeder::class);
         $this->call(RegionSeeder::class);
     }
 }
