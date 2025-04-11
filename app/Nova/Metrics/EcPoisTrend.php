@@ -3,14 +3,17 @@
 namespace App\Nova\Metrics;
 
 use App\Models\EcPoi;
-use Carbon\CarbonImmutable;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Metrics\Trend;
-use Laravel\Nova\Metrics\TrendDateExpressionFactory;
 use Laravel\Nova\Nova;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Arr;
+use Laravel\Nova\Metrics\Trend;
+use Illuminate\Support\Facades\DB;
+use Laravel\Nova\Metrics\TrendResult;
+use Illuminate\Database\Eloquent\Model;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Contracts\Database\Query\Expression;
+use Laravel\Nova\Metrics\TrendDateExpressionFactory;
 
 class EcPoisTrend extends Trend
 {
@@ -51,8 +54,14 @@ class EcPoisTrend extends Trend
      * @param  string|null  $dateColumn
      * @return \Laravel\Nova\Metrics\TrendResult
      */
-    protected function aggregate($request, $model, $unit, $function, $column, $dateColumn = null)
-    {
+    protected function aggregate(
+        NovaRequest $request,
+        Builder|Model|string $model,
+        string $unit,
+        string $function,
+        Expression|string|null $column,
+        ?string $dateColumn = null
+    ): TrendResult {
         $query = $model instanceof Builder ? $model : (new $model)->newQuery();
 
         $timezone = Nova::resolveUserTimezone($request) ?? $this->getDefaultTimezone($request);
@@ -155,6 +164,6 @@ class EcPoisTrend extends Trend
         //     md5($request->input('filter', 'no-filter'))
         // );
 
-        return 'nova.metric.'.$this->uriKey();
+        return 'nova.metric.' . $this->uriKey();
     }
 }
