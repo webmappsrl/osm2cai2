@@ -37,7 +37,7 @@ class SyncUgcFromGeohub extends Command
         parent::__construct();
     }
 
-    private $baseApiUrl = 'https://geohub.webmapp.it/api/ugc/';
+    private $baseApiUrl = 'http://host.docker.internal:8000/api/ugc/';
 
     private $apps = [
         20 => 'it.webmapp.sicai',
@@ -45,7 +45,7 @@ class SyncUgcFromGeohub extends Command
         58 => 'it.webmapp.acquasorgente',
     ];
 
-    private $types = ['track'];
+    private $types = ['poi', 'track', 'media'];
 
     private $createdElements = [
         'poi' => 0,
@@ -122,7 +122,7 @@ class SyncUgcFromGeohub extends Command
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
         $data = curl_exec($ch);
         if ($data === false) {
             Log::channel('import-ugc')->error("Failed to fetch content from URL: $url");
@@ -139,7 +139,7 @@ class SyncUgcFromGeohub extends Command
         Log::channel('import-ugc')->info("Controllo $type con geohub id $id");
         $this->info("Controllo $type con geohub id $id");
         $model = $this->getModel($type, $id);
-        $geoJson = $this->getGeojson("https://geohub.webmapp.it/api/ugc/{$type}/geojson/{$id}/osm2cai");
+        $geoJson = $this->getGeojson("http://host.docker.internal:8000/api/ugc/{$type}/geojson/{$id}/osm2cai");
 
         $needsUpdate = $model->wasRecentlyCreated ||
             $model->updated_at < $updated_at;
@@ -151,7 +151,7 @@ class SyncUgcFromGeohub extends Command
                 $this->info("Creato nuovo $type con id $id");
                 Log::channel('import-ugc')->info("Creato nuovo $type con id $id");
             } else {
-                $this->updatedElements[] = ucfirst($type).' with id '.$id.' updated';
+                $this->updatedElements[] = ucfirst($type) . ' with id ' . $id . ' updated';
                 $this->info("Aggiornato $type con geohub id $id");
                 Log::channel('import-ugc')->info("Aggiornato $type con geohub id $id");
             }
@@ -160,7 +160,7 @@ class SyncUgcFromGeohub extends Command
 
     private function getModel($type, $id)
     {
-        $model = 'App\Models\Ugc'.ucfirst($type);
+        $model = 'App\Models\Ugc' . ucfirst($type);
 
         return $model::firstOrCreate(['geohub_id' => $id]);
     }
@@ -182,12 +182,14 @@ class SyncUgcFromGeohub extends Command
         Log::channel('import-ugc')->info("Aggiornamento $type con id $id");
         $this->info("Aggiornamento $type con id $id");
 
+        $rawData = $this->getRawData($geoJson);
+
         $data = [
             'name' => $geoJson['properties']['name'] ?? null,
-            'raw_data' => isset($geoJson['properties']['raw_data']) ? json_decode($geoJson['properties']['raw_data'], true) : null,
+            'raw_data' => $rawData,
             'updated_at' => $geoJson['properties']['updated_at'] ?? null,
             'taxonomy_wheres' => $geoJson['properties']['taxonomy_wheres'] ?? null,
-            'app_id' => 'geohub_'.$appId,
+            'app_id' => 'geohub_' . $appId,
         ];
 
         $user = User::where('email', $geoJson['properties']['user_email'])->first();
@@ -197,12 +199,11 @@ class SyncUgcFromGeohub extends Command
             if ($model instanceof UgcTrack) {
                 $data['geometry'] = GeometryService::getService()->geojsonToGeometry($geoJson['geometry']);
             } else {
-                $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\''.json_encode($geoJson['geometry']).'\'), 4326)');
+                $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\'' . json_encode($geoJson['geometry']) . '\'), 4326)');
             }
         }
 
         if ($model instanceof UgcPoi) {
-            $rawData = json_decode($geoJson['properties']['raw_data'], true);
             $data['form_id'] = $rawData['id'] ?? null;
         }
 
@@ -211,7 +212,7 @@ class SyncUgcFromGeohub extends Command
         if ($user) {
             $model->user_id = $user->id;
         } else {
-            Log::channel('import-ugc')->info('Utente con email '.$geoJson['properties']['user_email'].' non trovato');
+            Log::channel('import-ugc')->info('Utente con email ' . $geoJson['properties']['user_email'] . ' non trovato');
         }
 
         if ($model instanceof UgcMedia) {
@@ -232,5 +233,17 @@ class SyncUgcFromGeohub extends Command
         $model->save();
         Log::channel('import-ugc')->info('Aggiornamento completato');
         $this->info('Aggiornamento completato');
+    }
+
+    private function getRawData($geoJson)
+    {
+        $rawData = $geoJson['properties']['raw_data'] ?? null;
+        if ($rawData) {
+            if (is_string($rawData)) {
+                $rawData = json_decode($rawData, true);
+            }
+        }
+
+        return $rawData;
     }
 }
