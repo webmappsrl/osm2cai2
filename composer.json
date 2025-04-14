@@ -20,7 +20,7 @@
         "kongulov/nova-tab-translatable": "^2.1.5",
         "laravel/framework": "11.38.*",
         "laravel/horizon": "^5.25",
-        "laravel/nova": "^4.0|^5.0",
+        "laravel/nova": "^5.0",
         "laravel/prompts": "^0.1.19",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.7",
