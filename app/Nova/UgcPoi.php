@@ -118,7 +118,7 @@ class UgcPoi extends AbstractUgc
             ])->hideFromIndex(),
             Number::make('Elevation', 'raw_data->position->altitude')->step(.0000000000001)->hideFromIndex(),
             $this->getCodeField('Form data', ['id', 'form_id', 'waypointtype', 'key', 'date', 'title']),
-            $this->getCodeField('Device data', ['position', 'displayPosition', 'city', 'date']),
+            $this->getCodeField('Device data', ['device']),
             $this->getCodeField('Nominatim'),
             $this->getCodeField('Raw data'),
         ];
