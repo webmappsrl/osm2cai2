@@ -139,12 +139,6 @@ class UgcTrack extends AbstractUgc
     {
         $parentActions = parent::actions($request);
         $specificActions = [
-            (new DownloadGeojsonZip())
-                ->canSee(function ($request) {
-                    return true;
-                })->canRun(function ($request) {
-                    return true;
-                }),
             (new EditFields('Validate Resource', ['validated'], $this))->canSee(function () {
                 return auth()->user()->hasPermissionTo('validate tracks');
             }),
