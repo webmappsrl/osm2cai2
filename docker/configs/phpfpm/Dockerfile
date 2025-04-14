@@ -77,9 +77,6 @@ RUN curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer \
     && if [ ! -f /usr/bin/composer ]; then ln -s /usr/local/bin/composer /usr/bin/composer; fi
 
-# Verifica la versione di PHP
-RUN php -v
-
 ENV HOME /var/www
 WORKDIR /var/www
 
