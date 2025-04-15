@@ -53,12 +53,47 @@ class UgcPoiPolicy
      */
     public function update(User $user, UgcPoi $ugcPoi)
     {
-        $user_can_update = $user->hasRole('Administrator') || ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated');
+        // User must have at least one permission
+        if (count($user->getAllPermissions()) < 1) {
+            return false;
+        }
 
-        $permission = $ugcPoi->form_id === 'water' ? 'source surveys' : str_replace('_', ' ', $ugcPoi->form_id).(! str_ends_with($ugcPoi->form_id, 's') ? 's' : '');
-        $permission = 'validate '.$permission;
+        // Allow update if no form_id is specified
+        if (empty($ugcPoi->form_id)) {
+            return true;
+        }
 
-        return $user_can_update || $user->hasPermissionTo($permission);
+        // Check if user is admin or the owner of a non-validated POI
+        $isAdminOrOwner = $user->hasRole('Administrator') ||
+            ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated');
+
+        // Determine the permission name based on form_id
+        $permissionName = $this->getPermissionNameFromFormId($ugcPoi->form_id);
+
+        // User can update if they are admin/owner or have the specific permission
+        return $isAdminOrOwner || $user->hasPermissionTo($permissionName);
+    }
+
+    /**
+     * Get the permission name from the form ID.
+     *
+     * @param  string  $formId
+     * @return string
+     */
+    private function getPermissionNameFromFormId(string $formId): string
+    {
+        if ($formId === 'water') {
+            $resourceName = 'source surveys';
+        } else {
+            $resourceName = str_replace('_', ' ', $formId);
+
+            // Add 's' at the end if not already plural
+            if (!str_ends_with($resourceName, 's')) {
+                $resourceName .= 's';
+            }
+        }
+
+        return 'validate ' . $resourceName;
     }
 
     /**
@@ -70,7 +105,9 @@ class UgcPoiPolicy
      */
     public function delete(User $user, UgcPoi $ugcPoi)
     {
-        return $user->hasRole('Administrator') || ($user->id === $ugcPoi->user_id && $ugcPoi->validated !== 'valid');
+        // Admin can delete any POI, owner can delete only if not validated
+        return $user->hasRole('Administrator') ||
+            ($user->id === $ugcPoi->user_id && $ugcPoi->validated !== 'valid');
     }
 
     /**
