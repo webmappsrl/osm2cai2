@@ -76,22 +76,6 @@ class SyncUgcFromGeohub extends Command
 
     private $baseApiUrl = 'https://geohub.webmapp.it/api/ugc/';
 
-    private $apps = [
-        20 => 'it.webmapp.sicai',
-        26 => 'it.webmapp.osm2cai',
-        58 => 'it.webmapp.acquasorgente',
-    ];
-
-    private $types = ['poi', 'track', 'media'];
-
-    private $createdElements = [
-        'poi' => 0,
-        'track' => 0,
-        'media' => 0,
-    ];
-
-    private $updatedElements = [];
-
     /**
      * Execute the console command.
      *
