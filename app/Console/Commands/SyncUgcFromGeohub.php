@@ -31,6 +31,7 @@ class SyncUgcFromGeohub extends Command
      * Geohub API configuration
      */
     private string $geohubBaseUrl = 'https://geohub.webmapp.it';
+
     private string $geohubApiUrl = '/api/ugc/';
 
     /**
@@ -55,6 +56,7 @@ class SyncUgcFromGeohub extends Command
         'track' => 0,
         'media' => 0,
     ];
+
     private array $updatedElements = [];
 
     /**
@@ -92,7 +94,7 @@ class SyncUgcFromGeohub extends Command
 
         return [
             'createdElements' => $this->createdElements,
-            'updatedElements' => $this->updatedElements
+            'updatedElements' => $this->updatedElements,
         ];
     }
 
@@ -113,12 +115,12 @@ class SyncUgcFromGeohub extends Command
     {
         $this->logInfo("Avvio sync per l'app con ID $appId");
 
-        if (!$this->validateAppId($appId)) {
+        if (! $this->validateAppId($appId)) {
             return;
         }
 
         $typesToSync = $this->getTypesToSync($type);
-        if ($type && !$typesToSync) {
+        if ($type && ! $typesToSync) {
             return;
         }
 
@@ -133,10 +135,12 @@ class SyncUgcFromGeohub extends Command
      */
     private function validateAppId($appId): bool
     {
-        if (!array_key_exists($appId, $this->apps)) {
+        if (! array_key_exists($appId, $this->apps)) {
             $this->logError("ID app non valido: $appId");
+
             return false;
         }
+
         return true;
     }
 
@@ -145,12 +149,13 @@ class SyncUgcFromGeohub extends Command
      */
     private function getTypesToSync(?string $type): ?array
     {
-        if (!$type) {
+        if (! $type) {
             return $this->types;
         }
 
-        if (!in_array($type, $this->types)) {
+        if (! in_array($type, $this->types)) {
             $this->logError("Tipo non valido: $type");
+
             return null;
         }
 
@@ -175,6 +180,7 @@ class SyncUgcFromGeohub extends Command
         $list = $this->fetchContentList($endpoint);
         if (empty($list)) {
             $this->logInfo("Nessun elemento da sincronizzare per $type da $endpoint");
+
             return;
         }
 
@@ -189,6 +195,7 @@ class SyncUgcFromGeohub extends Command
     private function fetchContentList(string $endpoint): array
     {
         $content = $this->getContent($endpoint);
+
         return json_decode($content, true) ?? [];
     }
 
@@ -211,6 +218,7 @@ class SyncUgcFromGeohub extends Command
         }
 
         curl_close($ch);
+
         return $data;
     }
 
@@ -224,7 +232,7 @@ class SyncUgcFromGeohub extends Command
         $model = $this->getModel($type, $id);
         $geoJson = $this->getGeojson($this->buildElementUrl($type, $id));
 
-        if (!$this->needsUpdate($model, $updated_at)) {
+        if (! $this->needsUpdate($model, $updated_at)) {
             return;
         }
 
@@ -253,11 +261,11 @@ class SyncUgcFromGeohub extends Command
      */
     private function updateSyncStatistics($model, string $type, $id): void
     {
-        if (!$model->wasRecentlyDeleted) {
+        if (! $model->wasRecentlyDeleted) {
             if ($model->wasRecentlyCreated) {
                 $this->createdElements[$type]++;
             } else {
-                $this->updatedElements[] = ucfirst($type) . ' with id ' . $id . ' updated';
+                $this->updatedElements[] = ucfirst($type).' with id '.$id.' updated';
             }
         }
     }
@@ -267,7 +275,8 @@ class SyncUgcFromGeohub extends Command
      */
     private function getModel(string $type, $id)
     {
-        $modelClass = 'App\Models\Ugc' . ucfirst($type);
+        $modelClass = 'App\Models\Ugc'.ucfirst($type);
+
         return $modelClass::firstOrCreate(['geohub_id' => $id]);
     }
 
@@ -301,7 +310,7 @@ class SyncUgcFromGeohub extends Command
         $this->processGeometry($model, $geoJson, $data);
         $this->processModelSpecificData($model, $rawData, $geoJson);
 
-        if ($model instanceof UgcMedia && !$this->processMediaData($model, $geoJson, $data)) {
+        if ($model instanceof UgcMedia && ! $this->processMediaData($model, $geoJson, $data)) {
             return;
         }
 
@@ -320,7 +329,7 @@ class SyncUgcFromGeohub extends Command
             'raw_data' => $rawData,
             'updated_at' => $geoJson['properties']['updated_at'] ?? null,
             'taxonomy_wheres' => $geoJson['properties']['taxonomy_wheres'] ?? null,
-            'app_id' => 'geohub_' . $appId,
+            'app_id' => 'geohub_'.$appId,
         ];
     }
 
@@ -329,14 +338,14 @@ class SyncUgcFromGeohub extends Command
      */
     private function processGeometry($model, array $geoJson, array &$data): void
     {
-        if (!isset($geoJson['geometry']) || $geoJson['geometry'] == null) {
+        if (! isset($geoJson['geometry']) || $geoJson['geometry'] == null) {
             return;
         }
 
         if ($model instanceof UgcTrack) {
             $data['geometry'] = GeometryService::getService()->geojsonToGeometry($geoJson['geometry']);
         } else {
-            $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\'' . json_encode($geoJson['geometry']) . '\'), 4326)');
+            $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\''.json_encode($geoJson['geometry']).'\'), 4326)');
         }
     }
 
@@ -349,8 +358,8 @@ class SyncUgcFromGeohub extends Command
         $user = User::where('email', $geoJson['properties']['user_email'] ?? '')->first();
         if ($user) {
             $model->user_id = $user->id;
-        } else if (isset($geoJson['properties']['user_email'])) {
-            $this->logInfo('Utente con email ' . $geoJson['properties']['user_email'] . ' non trovato');
+        } elseif (isset($geoJson['properties']['user_email'])) {
+            $this->logInfo('Utente con email '.$geoJson['properties']['user_email'].' non trovato');
         }
 
         // Set form ID for POIs
@@ -361,19 +370,20 @@ class SyncUgcFromGeohub extends Command
 
     /**
      * Process media-specific data
-     * 
+     *
      * @return bool Whether to continue processing the media
      */
     private function processMediaData(UgcMedia $model, array $geoJson, array &$data): bool
     {
         // Set media URL
         $relativeUrl = $geoJson['properties']['relative_url'] ?? null;
-        if (!$relativeUrl) {
+        if (! $relativeUrl) {
             $this->logInfo('Media skipped: no relative URL');
             $model->delete();
+
             return false;
         }
-        $data['relative_url'] = $this->geohubBaseUrl . '/storage/' . $relativeUrl;
+        $data['relative_url'] = $this->geohubBaseUrl.'/storage/'.$relativeUrl;
 
         // Extract related IDs
         $poisGeohubIds = $geoJson['properties']['ugc_pois'] ?? [];
@@ -383,6 +393,7 @@ class SyncUgcFromGeohub extends Command
         if (empty($poisGeohubIds) && empty($tracksGeohubIds)) {
             $this->logInfo('Media skipped: no associated POIs or tracks');
             $model->delete();
+
             return false;
         }
 
