@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.0.0 (2025-04-15)
+
+
+### Features
+
+* add monitoring data retrieval oc: 5274 ([#168](https://github.com/webmappsrl/osm2cai2/issues/168)) ([419a152](https://github.com/webmappsrl/osm2cai2/commit/419a152c0dc9000f132d59818dd281cba34ba678))
+* Added new tests for GeometryService oc:4553 ([#157](https://github.com/webmappsrl/osm2cai2/issues/157)) ([6ed2fac](https://github.com/webmappsrl/osm2cai2/commit/6ed2face0b4b676e30333835492f0b8ef7985806))
+* Added some tests for HikingRouteDescriptionService oc:4554 ([#158](https://github.com/webmappsrl/osm2cai2/issues/158)) ([4d720c9](https://github.com/webmappsrl/osm2cai2/commit/4d720c927a14f05e2beb8cf12d20da18722c1f72))
+* Added tests for AreaModelService and factory for Area oc:4552 ([#155](https://github.com/webmappsrl/osm2cai2/issues/155)) ([e88660d](https://github.com/webmappsrl/osm2cai2/commit/e88660da089aa373520c5dec9a9b216e34069a3c))
+* Added tests for OsmService oc:4555 ([#161](https://github.com/webmappsrl/osm2cai2/issues/161)) ([43eb198](https://github.com/webmappsrl/osm2cai2/commit/43eb198bd214088af7695b9538b7425e3396750e))
+* Enhance OSM2CAI user synchronization with advanced filtering and debugging options ([8b5057c](https://github.com/webmappsrl/osm2cai2/commit/8b5057c6153e911fe9058407167de1164e2854b3))
+* enhanced ugc media sync ([df82a49](https://github.com/webmappsrl/osm2cai2/commit/df82a490e8b6a297f54a34a37541a298bc23e4d2))
+* enhanced ugc media sync ([0ffa4e4](https://github.com/webmappsrl/osm2cai2/commit/0ffa4e43e6b600bae0cf8de5023f95ed9d8c3131))
+
+
+### Bug Fixes
+
+* add compatibility to nova 5 for geometric fields ([fdc4ec5](https://github.com/webmappsrl/osm2cai2/commit/fdc4ec568d88eeaf093dab0abf9a5a72ee4a36a7))
+* add compatibility to nova 5 oc 5080 ([35329d8](https://github.com/webmappsrl/osm2cai2/commit/35329d8ae1efc34f5854a0af383ff0b3e4980de1))
+* improve geometry extraction strategy for UGC media coordinates ([5cd5a05](https://github.com/webmappsrl/osm2cai2/commit/5cd5a05e8b002a4bee527b629bcc2c23841f5994))
+* nova compatibility with geometries field oc:5080 ([7fdfba2](https://github.com/webmappsrl/osm2cai2/commit/7fdfba2fc983324f90f289dcdcb364dd22a94df1))
+* resolve minor syntax and formatting issues in UGC sync command ([77e6d3e](https://github.com/webmappsrl/osm2cai2/commit/77e6d3e6a08b9fbae2293a524ada91248a7d1f7f))
+
+
+### Miscellaneous Chores
+
+* Add ResetIdSequenceCommand to reset ID sequences in specified tables ([1a3c0a0](https://github.com/webmappsrl/osm2cai2/commit/1a3c0a0a97d0203c2732c335a2a7c6d2e0aacd60))
+* added pre-sync script ([a2ec208](https://github.com/webmappsrl/osm2cai2/commit/a2ec208992b7966f82e9f23889a3ce4020fb82c7))
+* removed unused patch ([31561cf](https://github.com/webmappsrl/osm2cai2/commit/31561cf2da49e79fed96b6d4beae9c6aa43a4901))
+* updated queries ([e588b0b](https://github.com/webmappsrl/osm2cai2/commit/e588b0b49e12bc78180094f7603a2a120ff4e9aa))
+* updated queries ([796eaa1](https://github.com/webmappsrl/osm2cai2/commit/796eaa1b3aada2b2ca4c7eb58cdcb8d68546692d))
+
 ## [1.16.0](https://github.com/webmappsrl/osm2cai2/compare/v1.15.0...v1.16.0) (2024-05-09)
 
 
