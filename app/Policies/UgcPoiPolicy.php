@@ -88,12 +88,12 @@ class UgcPoiPolicy
             $resourceName = str_replace('_', ' ', $formId);
 
             // Add 's' at the end if not already plural
-            if (! str_ends_with($resourceName, 's')) {
+            if (!str_ends_with($resourceName, 's')) {
                 $resourceName .= 's';
             }
         }
 
-        return 'validate '.$resourceName;
+        return 'validate ' . $resourceName;
     }
 
     /**
