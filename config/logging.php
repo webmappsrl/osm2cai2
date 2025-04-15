@@ -58,8 +58,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
         ],
         'import-ugc' => [
-            'driver' => 'stack',
-            'channels' => ['single'],
+            'driver' => 'single',
             'path' => storage_path('logs/import-ugc.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
