@@ -78,7 +78,7 @@ describe('Dashboard Tests', () => {
 
   it('National referent user login and dashboard verification', () => {
     // Test per l'utente referente nazionale
-    cy.get('#email', { timeout: timeout }).type(Cypress.env('referentEmail'))
+    cy.get('#username', { timeout: timeout }).type(Cypress.env('referentEmail'))
     cy.get('#password', { timeout: timeout }).type(Cypress.env('referentPassword'))
     cy.get('button[type="submit"]', { timeout: timeout }).click()
 
