@@ -512,16 +512,4 @@ class SyncUgcFromGeohub extends Command
         Log::channel(self::LOG_CHANNEL)->error($message);
         $this->error($message);
     }
-
-    private function getRawData($geoJson)
-    {
-        $rawData = $geoJson['properties']['raw_data'] ?? null;
-        if ($rawData) {
-            if (is_string($rawData)) {
-                $rawData = json_decode($rawData, true);
-            }
-        }
-
-        return $rawData;
-    }
 }
