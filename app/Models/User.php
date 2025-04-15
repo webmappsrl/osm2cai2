@@ -288,9 +288,4 @@ class User extends WmUser
     {
         return UserFactory::new();
     }
-
-    public function getMorphClass()
-    {
-        return 'Wm\WmPackage\Models\User';
-    }
 }

@@ -7,7 +7,7 @@ describe('Dashboard Tests', () => {
 
   it('Admin user login and dashboard verification', () => {
     // Test per l'utente admin
-    cy.get('#email', { timeout: timeout }).type(Cypress.env('adminEmail'))
+    cy.get('#username', { timeout: timeout }).type(Cypress.env('adminEmail'))
     cy.get('#password', { timeout: timeout }).type(Cypress.env('adminPassword'))
     cy.get('button[type="submit"]', { timeout: timeout }).click()
 
