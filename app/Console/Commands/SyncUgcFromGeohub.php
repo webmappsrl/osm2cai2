@@ -43,10 +43,12 @@ class SyncUgcFromGeohub extends Command
         58 => 'it.webmapp.acquasorgente',
     ];
 
+  
     /**
      * Supported content types
      */
     private array $types = ['poi', 'track', 'media'];
+
 
     /**
      * Sync statistics
@@ -98,6 +100,7 @@ class SyncUgcFromGeohub extends Command
         ];
     }
 
+
     /**
      * Sync all configured applications
      */
@@ -108,10 +111,12 @@ class SyncUgcFromGeohub extends Command
         }
     }
 
+
     /**
      * Sync a specific application
      */
     private function syncApp($appId, ?string $type = null): void
+
     {
         $this->logInfo("Avvio sync per l'app con ID $appId");
 
@@ -126,6 +131,7 @@ class SyncUgcFromGeohub extends Command
 
         foreach ($typesToSync as $currentType) {
             $endpoint = $this->buildEndpointUrl($currentType, $appId);
+
             $this->syncType($currentType, $endpoint, $appId);
         }
     }
@@ -310,6 +316,7 @@ class SyncUgcFromGeohub extends Command
         $this->processGeometry($model, $geoJson, $data);
         $this->processModelSpecificData($model, $rawData, $geoJson);
 
+
         if ($model instanceof UgcMedia && ! $this->processMediaData($model, $geoJson, $data)) {
             return;
         }
@@ -346,8 +353,10 @@ class SyncUgcFromGeohub extends Command
             $data['geometry'] = GeometryService::getService()->geojsonToGeometry($geoJson['geometry']);
         } else {
             $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\''.json_encode($geoJson['geometry']).'\'), 4326)');
+
         }
     }
+
 
     /**
      * Process model-specific data
@@ -356,6 +365,7 @@ class SyncUgcFromGeohub extends Command
     {
         // Set user if available
         $user = User::where('email', $geoJson['properties']['user_email'] ?? '')->first();
+
         if ($user) {
             $model->user_id = $user->id;
         } elseif (isset($geoJson['properties']['user_email'])) {
@@ -464,5 +474,18 @@ class SyncUgcFromGeohub extends Command
     {
         Log::channel(self::LOG_CHANNEL)->error($message);
         $this->error($message);
+
+    }
+
+    private function getRawData($geoJson)
+    {
+        $rawData = $geoJson['properties']['raw_data'] ?? null;
+        if ($rawData) {
+            if (is_string($rawData)) {
+                $rawData = json_decode($rawData, true);
+            }
+        }
+
+        return $rawData;
     }
 }
