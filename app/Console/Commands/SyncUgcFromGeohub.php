@@ -74,6 +74,24 @@ class SyncUgcFromGeohub extends Command
         parent::__construct();
     }
 
+    private $baseApiUrl = 'https://geohub.webmapp.it/api/ugc/';
+
+    private $apps = [
+        20 => 'it.webmapp.sicai',
+        26 => 'it.webmapp.osm2cai',
+        58 => 'it.webmapp.acquasorgente',
+    ];
+
+    private $types = ['poi', 'track', 'media'];
+
+    private $createdElements = [
+        'poi' => 0,
+        'track' => 0,
+        'media' => 0,
+    ];
+
+    private $updatedElements = [];
+
     /**
      * Execute the console command.
      *
@@ -98,20 +116,14 @@ class SyncUgcFromGeohub extends Command
         ];
     }
 
-    /**
-     * Sync all configured applications
-     */
-    private function syncAllApps(?string $type = null): void
+    private function syncAllApps($type = null)
     {
-        foreach (array_keys($this->apps) as $appId) {
+        foreach ($this->apps as $appId => $appName) {
             $this->syncApp($appId, $type);
         }
     }
 
-    /**
-     * Sync a specific application
-     */
-    private function syncApp($appId, ?string $type = null): void
+    private function syncApp($appId, $type = null)
     {
         $this->logInfo("Avvio sync per l'app con ID $appId");
 
@@ -119,13 +131,17 @@ class SyncUgcFromGeohub extends Command
             return;
         }
 
-        $typesToSync = $this->getTypesToSync($type);
-        if ($type && ! $typesToSync) {
+        $typesToSync = $type ? [$type] : $this->types;
+
+        if ($type && ! in_array($type, $this->types)) {
+            Log::channel('import-ugc')->error("Tipo non valido: $type");
+            $this->error("Tipo non valido: $type");
+
             return;
         }
 
         foreach ($typesToSync as $currentType) {
-            $endpoint = $this->buildEndpointUrl($currentType, $appId);
+            $endpoint = "{$this->baseApiUrl}{$currentType}/geojson/{$appId}/list";
             $this->syncType($currentType, $endpoint, $appId);
         }
     }
@@ -208,7 +224,6 @@ class SyncUgcFromGeohub extends Command
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
-
         $data = curl_exec($ch);
         if ($data === false) {
             $errorMessage = "Failed to fetch content from URL: $url";
@@ -305,26 +320,8 @@ class SyncUgcFromGeohub extends Command
         $this->logInfo("Aggiornamento $type con id $id");
 
         $rawData = $this->getRawData($geoJson);
-        $data = $this->prepareBaseData($geoJson, $rawData, $appId);
 
-        $this->processGeometry($model, $geoJson, $data);
-        $this->processModelSpecificData($model, $rawData, $geoJson);
-
-        if ($model instanceof UgcMedia && ! $this->processMediaData($model, $geoJson, $data)) {
-            return;
-        }
-
-        $model->fill($data);
-        $model->save();
-        $this->logInfo('Aggiornamento completato');
-    }
-
-    /**
-     * Prepare base data for all model types
-     */
-    private function prepareBaseData(array $geoJson, ?array $rawData, $appId): array
-    {
-        return [
+        $data = [
             'name' => $geoJson['properties']['name'] ?? null,
             'raw_data' => $rawData,
             'updated_at' => $geoJson['properties']['updated_at'] ?? null,
@@ -342,127 +339,62 @@ class SyncUgcFromGeohub extends Command
             return;
         }
 
-        if ($model instanceof UgcTrack) {
-            $data['geometry'] = GeometryService::getService()->geojsonToGeometry($geoJson['geometry']);
-        } else {
-            $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\''.json_encode($geoJson['geometry']).'\'), 4326)');
+        if ($model instanceof UgcPoi) {
+            $data['form_id'] = $rawData['id'] ?? null;
         }
     }
 
-    /**
-     * Process model-specific data
-     */
-    private function processModelSpecificData($model, ?array $rawData, array $geoJson): void
-    {
-        // Set user if available
-        $user = User::where('email', $geoJson['properties']['user_email'] ?? '')->first();
         if ($user) {
             $model->user_id = $user->id;
         } elseif (isset($geoJson['properties']['user_email'])) {
             $this->logInfo('Utente con email '.$geoJson['properties']['user_email'].' non trovato');
         }
+        if ($model instanceof UgcMedia) {
+            // Set media URL from geojson properties
+            $data['relative_url'] = $geoJson['properties']['url'] ?? null;
 
-        // Set form ID for POIs
-        if ($model instanceof UgcPoi && $rawData) {
-            $model->form_id = $rawData['id'] ?? null;
+            // Extract related POIs and tracks IDs
+            $poisGeohubIds = $geoJson['properties']['ugc_pois'] ?? [];
+            $tracksGeohubIds = $geoJson['properties']['ugc_tracks'] ?? [];
+
+            // Skip syncing if media has no associated POIs or tracks
+            if (empty($poisGeohubIds) && empty($tracksGeohubIds)) {
+                Log::channel('import-ugc')->info('Media skipped: no associated POIs or tracks');
+
+                return;
+            }
+
+            // Associate with POI if available
+            if (! empty($poisGeohubIds)) {
+                $poisIds = UgcPoi::whereIn('geohub_id', $poisGeohubIds)
+                    ->pluck('id')
+                    ->toArray();
+                $model->ugc_poi_id = $poisIds[0] ?? null;
+            }
+
+            // Associate with track if available
+            if (! empty($tracksGeohubIds)) {
+                $tracksIds = UgcTrack::whereIn('geohub_id', $tracksGeohubIds)
+                    ->pluck('id')
+                    ->toArray();
+                $model->ugc_track_id = $tracksIds[0] ?? null;
+            }
         }
+        $model->fill($data);
+        $model->save();
+        Log::channel('import-ugc')->info('Aggiornamento completato');
+        $this->info('Aggiornamento completato');
     }
 
-    /**
-     * Process media-specific data
-     *
-     * @return bool Whether to continue processing the media
-     */
-    private function processMediaData(UgcMedia $model, array $geoJson, array &$data): bool
-    {
-        // Set media URL
-        $relativeUrl = $geoJson['properties']['relative_url'] ?? null;
-        if (! $relativeUrl) {
-            $this->logInfo('Media skipped: no relative URL');
-            $model->delete();
-
-            return false;
-        }
-        $data['relative_url'] = $this->geohubBaseUrl.'/storage/'.$relativeUrl;
-
-        // Extract related IDs
-        $poisGeohubIds = $geoJson['properties']['ugc_pois'] ?? [];
-        $tracksGeohubIds = $geoJson['properties']['ugc_tracks'] ?? [];
-
-        // Skip if no associations
-        if (empty($poisGeohubIds) && empty($tracksGeohubIds)) {
-            $this->logInfo('Media skipped: no associated POIs or tracks');
-            $model->delete();
-
-            return false;
-        }
-
-        $this->associateMediaWithPois($model, $poisGeohubIds);
-        $this->associateMediaWithTracks($model, $tracksGeohubIds);
-
-        return true;
-    }
-
-    /**
-     * Associate media with POIs
-     */
-    private function associateMediaWithPois(UgcMedia $model, array $poisGeohubIds): void
-    {
-        if (empty($poisGeohubIds)) {
-            return;
-        }
-
-        $poisIds = UgcPoi::whereIn('geohub_id', $poisGeohubIds)
-            ->pluck('id')
-            ->toArray();
-
-        $model->ugc_poi_id = $poisIds[0] ?? null;
-    }
-
-    /**
-     * Associate media with tracks
-     */
-    private function associateMediaWithTracks(UgcMedia $model, array $tracksGeohubIds): void
-    {
-        if (empty($tracksGeohubIds)) {
-            return;
-        }
-
-        $tracksIds = UgcTrack::whereIn('geohub_id', $tracksGeohubIds)
-            ->pluck('id')
-            ->toArray();
-
-        $model->ugc_track_id = $tracksIds[0] ?? null;
-    }
-
-    /**
-     * Extract raw data from GeoJSON
-     */
-    private function getRawData(array $geoJson): ?array
+    private function getRawData($geoJson)
     {
         $rawData = $geoJson['properties']['raw_data'] ?? null;
-        if ($rawData && is_string($rawData)) {
-            $rawData = json_decode($rawData, true);
+        if ($rawData) {
+            if (is_string($rawData)) {
+                $rawData = json_decode($rawData, true);
+            }
         }
 
         return $rawData;
-    }
-
-    /**
-     * Log info message to both console and log file
-     */
-    private function logInfo(string $message): void
-    {
-        Log::channel(self::LOG_CHANNEL)->info($message);
-        $this->info($message);
-    }
-
-    /**
-     * Log error message to both console and log file
-     */
-    private function logError(string $message): void
-    {
-        Log::channel(self::LOG_CHANNEL)->error($message);
-        $this->error($message);
     }
 }
