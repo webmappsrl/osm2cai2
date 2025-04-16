@@ -72,8 +72,9 @@ class HikingRoute extends OsmfeaturesResource
      * @var array
      */
     public static $search = [
-        'id',
-        'osmfeatures_id',
+        'osmfeatures_data->properties->ref',
+        'osmfeatures_data->properties->ref_REI',
+        'osmfeatures_data->properties->osm_id',
     ];
 
     public function title()

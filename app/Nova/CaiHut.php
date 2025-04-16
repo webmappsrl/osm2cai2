@@ -28,7 +28,7 @@ class CaiHut extends Resource
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'name';
 
     public static function label()
     {
