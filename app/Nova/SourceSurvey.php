@@ -6,12 +6,12 @@ use App\Enums\ValidatedStatusEnum;
 use App\Nova\AbstractValidationResource;
 use App\Nova\Filters\ValidatedFilter;
 use App\Nova\Filters\WaterFlowValidatedFilter;
+use Eminiarts\Tabs\Tab;
+use Eminiarts\Tabs\Tabs;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
-use Eminiarts\Tabs\Tab;
-use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Panel;
 
 class SourceSurvey extends AbstractValidationResource
@@ -82,7 +82,7 @@ class SourceSurvey extends AbstractValidationResource
 
         return [
             $flowRateField,
-            $waterFlowRateValidatedField
+            $waterFlowRateValidatedField,
         ];
     }
 
@@ -104,6 +104,7 @@ class SourceSurvey extends AbstractValidationResource
 
                 // Replace the existing panel with updated fields
                 $fields[$key] = Panel::make($field->name, $updatedFields);
+
                 return $fields;
             }
         }
@@ -177,6 +178,7 @@ class SourceSurvey extends AbstractValidationResource
         }
 
         $value = preg_replace('/[^0-9,]/', '', $value);
+
         return str_replace(',', '.', $value);
     }
 

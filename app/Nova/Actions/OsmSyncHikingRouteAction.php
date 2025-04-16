@@ -45,13 +45,13 @@ class OsmSyncHikingRouteAction extends Action
             if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
                 $service->updateHikingRouteModelWithOsmData($model);
 
-                return Action::redirect('/resources/hiking-routes/' . $model->id);
+                return Action::redirect('/resources/hiking-routes/'.$model->id);
             }
             if ($user->hasRole('Regional Referent')) {
                 if ($model->regions->pluck('id')->contains($user->region->id)) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/' . $model->id);
+                    return Action::redirect('/resources/hiking-routes/'.$model->id);
                 } else {
                     return Action::danger('You are not authorized to perform this action');
                 }
@@ -60,22 +60,22 @@ class OsmSyncHikingRouteAction extends Action
                 if (! $sectors->intersect($user->sectors)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/' . $model->id);
+                    return Action::redirect('/resources/hiking-routes/'.$model->id);
                 } elseif (! $areas->intersect($user->areas)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/' . $model->id);
+                    return Action::redirect('/resources/hiking-routes/'.$model->id);
                 } elseif (! $provinces->intersect($user->provinces)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/' . $model->id);
+                    return Action::redirect('/resources/hiking-routes/'.$model->id);
                 } else {
                     return Action::danger('You are not authorized to perform this action');
                 }
             }
         }
 
-        return Action::redirect('/resources/hiking-routes/' . $model->id);
+        return Action::redirect('/resources/hiking-routes/'.$model->id);
     }
 
     /**

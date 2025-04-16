@@ -63,12 +63,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Make sure admin and national referent have the correct roles
         $adminUser = User::where('email', 'team@webmapp.it')->first();
-        if ($adminUser && !$adminUser->hasRole('Administrator')) {
+        if ($adminUser && ! $adminUser->hasRole('Administrator')) {
             $adminUser->assignRole('Administrator');
         }
 
         $nationalReferent = User::where('email', 'referenteNazionale@webmapp.it')->first();
-        if ($nationalReferent && !$nationalReferent->hasRole('National Referent')) {
+        if ($nationalReferent && ! $nationalReferent->hasRole('National Referent')) {
             $nationalReferent->assignRole('National Referent');
         }
     }

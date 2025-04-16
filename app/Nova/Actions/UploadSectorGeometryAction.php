@@ -56,7 +56,7 @@ class UploadSectorGeometryAction extends Action
         } catch (Throwable $t) {
             Log::error($t->getMessage());
 
-            return Action::danger(__('Unable to update geometry. Something went wrong: ' . $t->getMessage()));
+            return Action::danger(__('Unable to update geometry. Something went wrong: '.$t->getMessage()));
         }
     }
 

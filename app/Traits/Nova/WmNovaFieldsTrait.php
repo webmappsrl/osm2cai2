@@ -2,12 +2,12 @@
 
 namespace App\Traits\Nova;
 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Panel;
 use Laravel\Nova\Tabs\Tab;
 use Laravel\Nova\Tabs\Tabs;
-use Laravel\Nova\Fields\Field;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
-use Laravel\Nova\Panel;
 
 trait WmNovaFieldsTrait
 {

@@ -35,7 +35,6 @@ class E2ETestDbSeeder extends Seeder
 
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-
         // Create users with roles
         $this->call(DatabaseSeeder::class);
 

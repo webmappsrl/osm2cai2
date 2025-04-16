@@ -144,7 +144,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(ArchaeologicalSite::class),
                         MenuItem::resource(ArchaeologicalArea::class),
                         MenuItem::resource(GeologicalSite::class),
-                    ])->icon('none')->collapsable()
+                    ])->icon('none')->collapsable(),
                 ])->icon('eye')->collapsable(),
 
                 // Tools

@@ -3,17 +3,17 @@
 namespace App\Nova\Metrics;
 
 use App\Models\EcPoi;
-use Laravel\Nova\Nova;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Arr;
-use Laravel\Nova\Metrics\Trend;
-use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Metrics\TrendResult;
-use Illuminate\Database\Eloquent\Model;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Database\Query\Expression;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Metrics\Trend;
 use Laravel\Nova\Metrics\TrendDateExpressionFactory;
+use Laravel\Nova\Metrics\TrendResult;
+use Laravel\Nova\Nova;
 
 class EcPoisTrend extends Trend
 {
@@ -47,12 +47,12 @@ class EcPoisTrend extends Trend
      * Return a value result showing a aggregate over time.
      *
      * @param  NovaRequest  $request
-     * @param  Builder|class-string<\Illuminate\Database\Eloquent\Model>  $model
+     * @param  Builder|class-string<Model>  $model
      * @param  string  $unit
      * @param  string  $function
      * @param  \Illuminate\Database\Query\Expression|string  $column
      * @param  string|null  $dateColumn
-     * @return \Laravel\Nova\Metrics\TrendResult
+     * @return TrendResult
      */
     protected function aggregate(
         NovaRequest $request,
@@ -164,6 +164,6 @@ class EcPoisTrend extends Trend
         //     md5($request->input('filter', 'no-filter'))
         // );
 
-        return 'nova.metric.' . $this->uriKey();
+        return 'nova.metric.'.$this->uriKey();
     }
 }
