@@ -10,54 +10,126 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
+use Eminiarts\Tabs\Tab;
+use Eminiarts\Tabs\Tabs;
+use Laravel\Nova\Panel;
 
 class SourceSurvey extends AbstractValidationResource
 {
+    /**
+     * Returns the form identifier.
+     *
+     * @return string
+     */
     public static function getFormId(): string
     {
         return 'water';
     }
 
+    /**
+     * Returns the form label.
+     *
+     * @return string
+     */
     public static function getLabel(): string
     {
         return __('Acqua Sorgente');
     }
 
+    /**
+     * Gets the fields for the resource.
+     *
+     * @param Request $request
+     * @return array
+     */
     public function fields(Request $request)
     {
+        // Retrieves fields from parent class
         $fields = parent::fields($request);
+
+        // Defines the field to check for the presence of photos
         $hasPhotosField = Boolean::make(__('Has Photos'), function () {
             return $this->ugc_media->isNotEmpty();
-        })->hideFromDetail();
-        $flowRateField = Text::make(__('Flow Rate L/s'), 'raw_data->flow_rate')->resolveUsing(function ($value) {
-            return $this->calculateFlowRate();
-        })->readonly()->help(__('This data is automatically calculated based on the entered data'));
-        $waterFlowRateValidatedField = Select::make(__('Flow Rate Validation'), 'water_flow_rate_validated')->options($this->validatedStatusOptions());
+        })->hideFromIndex();
 
-        //the following fields are added to the ACQUA SORGENTE panel
-        $flowRateField->panel = __('ACQUA SORGENTE');
-        $waterFlowRateValidatedField->panel = __('ACQUA SORGENTE');
+        // Preparation of acqua sorgente specific fields
+        $surveyFields = $this->prepareSurveyFields();
 
-        $tabIndex = array_search(\DKulyk\Nova\Tabs::class, array_map('get_class', $fields));
-        if ($tabIndex !== false) {
-            $tab = $fields[$tabIndex];
-            array_push($tab->data, $flowRateField);
-            array_push($tab->data, $waterFlowRateValidatedField);
-        }
+        // Integration of fields into tabs
+        $fields = $this->integrateFieldsIntoPanel($fields, $surveyFields);
 
         return array_merge($fields, [$hasPhotosField]);
     }
 
-    public function filters(Request $request)
+    /**
+     * Prepares the specific fields for the water source.
+     *
+     * @return array
+     */
+    private function prepareSurveyFields(): array
     {
+        // Water flow rate field (calculated)
+        $flowRateField = Text::make(__('Flow Rate L/s'), 'raw_data->flow_rate')
+            ->resolveUsing(function ($value) {
+                return $this->calculateFlowRate();
+            })
+            ->readonly()
+            ->help(__('Questo dato è calcolato automaticamente in base ai dati inseriti'));
+
+        // Field for flow rate validation
+        $waterFlowRateValidatedField = Select::make(__('Flow Rate Validation'), 'water_flow_rate_validated')
+            ->options($this->validatedStatusOptions());
+
         return [
-            (new ValidatedFilter),
-            (new WaterFlowValidatedFilter),
+            $flowRateField,
+            $waterFlowRateValidatedField
         ];
     }
 
     /**
-     * Calculate the flow rate based on the raw data.
+     * Integrates specific fields into existing tabs or creates new tabs.
+     *
+     * @param array $fields Array of existing fields
+     * @param array $surveyFields Specific fields to add
+     * @return array
+     */
+    private function integrateFieldsIntoPanel(array $fields, array $surveyFields): array
+    {
+        // Find the existing Panel in the fields
+        foreach ($fields as $key => $field) {
+            if ($field instanceof Panel) {
+                // Add survey fields to the existing panel
+                $existingFields = $field->data;
+                $updatedFields = array_merge($existingFields, $surveyFields);
+
+                // Replace the existing panel with updated fields
+                $fields[$key] = Panel::make($field->name, $updatedFields);
+                return $fields;
+            }
+        }
+
+        // If no panel exists, create a new one
+        $fields[] = Panel::make(__('Details'), $surveyFields);
+
+        return $fields;
+    }
+
+    /**
+     * Defines the filters available for the resource.
+     *
+     * @param Request $request
+     * @return array
+     */
+    public function filters(Request $request)
+    {
+        return [
+            new ValidatedFilter,
+            new WaterFlowValidatedFilter,
+        ];
+    }
+
+    /**
+     * Calculates the water flow rate based on raw data.
      *
      * @return string
      */
@@ -81,29 +153,35 @@ class SourceSurvey extends AbstractValidationResource
             $this->save();
 
             return $flowRate;
-        } else {
-            $rawData = $this->raw_data;
-            $rawData['flow_rate'] = 'N/A';
-            $this->raw_data = $rawData;
-            $this->save();
-
-            return 'N/A';
         }
+
+        // If not validated, returns N/A
+        $rawData = $this->raw_data;
+        $rawData['flow_rate'] = 'N/A';
+        $this->raw_data = $rawData;
+        $this->save();
+
+        return 'N/A';
     }
 
+    /**
+     * Formats a numeric value for calculation.
+     *
+     * @param string $value
+     * @return string
+     */
     private function formatNumericValue($value)
     {
         if (strpos($value, '.') !== false) {
             return $value;
-        } else {
-            $value = preg_replace('/[^0-9,]/', '', $value);
-
-            return str_replace(',', '.', $value);
         }
+
+        $value = preg_replace('/[^0-9,]/', '', $value);
+        return str_replace(',', '.', $value);
     }
 
     /**
-     * Get the fields available for CSV export.
+     * Gets the fields available for CSV export.
      *
      * @return array
      */

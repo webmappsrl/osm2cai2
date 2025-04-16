@@ -16,9 +16,9 @@ use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Wm\WmPackage\Nova\AbstractUser;
+use Wm\WmPackage\Nova\AbstractUserResource;
 
-class User extends AbstractUser
+class User extends AbstractUserResource
 {
     /**
      * The model the resource corresponds to.

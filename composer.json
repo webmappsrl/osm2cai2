@@ -8,28 +8,26 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2.0",
-        "abordage/nova-html-card": "^0.3.1",
+        "php": "^8.4.0",
+        "abordage/nova-html-card": "^1.1.1",
         "cweagans/composer-patches": "^1.7",
         "darkaonline/l5-swagger": "^8.6",
-        "dkulyk/nova-tabs": "^1.1",
-        "ebess/advanced-nova-media-library": "^4.2",
-        "eminiarts/nova-tabs": "^2.2",
+        "ebess/advanced-nova-media-library": "^5.0",
+        "eminiarts/nova-tabs": "dev-master",
         "guzzlehttp/guzzle": "^7.2",
-        "idez/nova-date-range-filter": "^2.2",
-        "imumz/nova-4-field-map": "^1.0",
-        "interaction-design-foundation/nova-html-card": "^3.3",
-        "kongulov/nova-tab-translatable": "^2.1",
+        "idez/nova-date-range-filter": "dev-master",
+        "interaction-design-foundation/nova-html-card": "^3.4.0",
+        "kongulov/nova-tab-translatable": "^2.1.5",
         "laravel/framework": "11.38.*",
         "laravel/horizon": "^5.25",
-        "laravel/nova": "^4.33",
+        "laravel/nova": "^5.0",
         "laravel/prompts": "^0.1.19",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
-        "m-a-k-o/nova-custom-table-card": "^4.0",
+        "m-a-k-o/nova-custom-table-card": "dev-master",
         "maatwebsite/excel": "^3.1",
-        "outl1ne/nova-multiselect-field": "^4.6",
+        "outl1ne/nova-multiselect-field": "^5.0.1",
         "predis/predis": "^2.2",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
         "spatie/db-dumper": "^3.3",
@@ -40,7 +38,7 @@
         "symm/gisconverter": "^1.0",
         "tymon/jwt-auth": "^2.1",
         "webmapp/wm-osmfeatures": "*",
-        "wm/map-multi-polygon": "dev-main#7128eb0",
+        "wm/map-multi-polygon": "*",
         "wm/map-point": "*",
         "wm/osm2cai-map-multi-linestring": "*",
         "wm/wm-internal": "*",
@@ -85,15 +83,13 @@
         ]
     },
     "extra": {
+        "enable-patching": true,
         "laravel": {
             "dont-discover": []
         },
         "patches": {
-            "wm/map-multi-polygon": {
-                "Force compatibility to Nova 4": "./patches/map-multi-polygon.patch"
-            },
-            "wm/map-point": {
-                "Force compatibility to Nova 4": "./patches/map-point.patch"
+            "apereo/phpcas": {
+                "Force compatibility to php 8.4": "./patches/php-cas.patch"
             }
         }
     },
@@ -103,7 +99,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "cweagans/composer-patches": true,
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "dev",
@@ -128,6 +125,18 @@
         {
             "type": "path",
             "url": "./nova-components/osm2cai-map-multi-linestring"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/k8n/nova-tabs"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/whitespacecode/nova-date-range-filter"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/MagicByteTeam/nova-custom-table-card"
         }
     ]
 }

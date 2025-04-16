@@ -209,7 +209,6 @@ class SyncUgcFromGeohub extends Command
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
-
         $data = curl_exec($ch);
         if ($data === false) {
             $errorMessage = "Failed to fetch content from URL: $url";
@@ -266,7 +265,7 @@ class SyncUgcFromGeohub extends Command
             if ($model->wasRecentlyCreated) {
                 $this->createdElements[$type]++;
             } else {
-                $this->updatedElements[] = ucfirst($type).' with id '.$id.' updated';
+                $this->updatedElements[] = ucfirst($type) . ' with id ' . $id . ' updated';
             }
         }
     }
@@ -276,7 +275,7 @@ class SyncUgcFromGeohub extends Command
      */
     private function getModel(string $type, $id)
     {
-        $modelClass = 'App\Models\Ugc'.ucfirst($type);
+        $modelClass = 'App\Models\Ugc' . ucfirst($type);
 
         return $modelClass::firstOrCreate(['geohub_id' => $id]);
     }
@@ -330,7 +329,7 @@ class SyncUgcFromGeohub extends Command
             'raw_data' => $rawData,
             'updated_at' => $geoJson['properties']['updated_at'] ?? null,
             'taxonomy_wheres' => $geoJson['properties']['taxonomy_wheres'] ?? null,
-            'app_id' => 'geohub_'.$appId,
+            'app_id' => 'geohub_' . $appId,
         ];
     }
 
@@ -346,7 +345,7 @@ class SyncUgcFromGeohub extends Command
         if ($model instanceof UgcTrack) {
             $data['geometry'] = GeometryService::getService()->geojsonToGeometry($geoJson['geometry']);
         } else {
-            $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\''.json_encode($geoJson['geometry']).'\'), 4326)');
+            $data['geometry'] = DB::raw('ST_Transform(ST_GeomFromGeoJSON(\'' . json_encode($geoJson['geometry']) . '\'), 4326)');
         }
     }
 
@@ -361,7 +360,7 @@ class SyncUgcFromGeohub extends Command
         if ($user) {
             $model->user_id = $user->id;
         } elseif (isset($geoJson['properties']['user_email'])) {
-            $this->logInfo('Utente con email '.$geoJson['properties']['user_email'].' non trovato');
+            $this->logInfo('Utente con email ' . $geoJson['properties']['user_email'] . ' non trovato');
         }
 
         // Set form ID for POIs
@@ -385,7 +384,7 @@ class SyncUgcFromGeohub extends Command
 
             return false;
         }
-        $data['relative_url'] = $this->geohubBaseUrl.'/storage/'.$relativeUrl;
+        $data['relative_url'] = $this->geohubBaseUrl . '/storage/' . $relativeUrl;
 
         // Extract related IDs
         $poisGeohubIds = $geoJson['properties']['ugc_pois'] ?? [];

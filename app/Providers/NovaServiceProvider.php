@@ -144,10 +144,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(ArchaeologicalSite::class),
                         MenuItem::resource(ArchaeologicalArea::class),
                         MenuItem::resource(GeologicalSite::class),
-                    ])->icon('none')->collapsable(),
-                    MenuSection::make(__('Export'), [
-                        MenuItem::link(__('Esporta Rilievi'), '/dashboards/main'),
-                    ])->icon('download')->collapsable(),
+                    ])->icon('none')->collapsable()
                 ])->icon('eye')->collapsable(),
 
                 // Tools
@@ -273,7 +270,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function register()
     {
-        //
+        parent::register();
     }
 
     //create a footer

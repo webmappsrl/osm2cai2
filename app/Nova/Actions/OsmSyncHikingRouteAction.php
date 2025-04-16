@@ -2,22 +2,13 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\HikingRoute;
 use App\Services\OsmService;
-use Carbon\Carbon;
-use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
-use Imumz\LeafletMap\LeafletMap;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class OsmSyncHikingRouteAction extends Action
@@ -54,13 +45,13 @@ class OsmSyncHikingRouteAction extends Action
             if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
                 $service->updateHikingRouteModelWithOsmData($model);
 
-                return Action::redirect('/resources/hiking-routes/'.$model->id);
+                return Action::redirect('/resources/hiking-routes/' . $model->id);
             }
             if ($user->hasRole('Regional Referent')) {
                 if ($model->regions->pluck('id')->contains($user->region->id)) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    return Action::redirect('/resources/hiking-routes/' . $model->id);
                 } else {
                     return Action::danger('You are not authorized to perform this action');
                 }
@@ -69,22 +60,22 @@ class OsmSyncHikingRouteAction extends Action
                 if (! $sectors->intersect($user->sectors)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    return Action::redirect('/resources/hiking-routes/' . $model->id);
                 } elseif (! $areas->intersect($user->areas)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    return Action::redirect('/resources/hiking-routes/' . $model->id);
                 } elseif (! $provinces->intersect($user->provinces)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
 
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    return Action::redirect('/resources/hiking-routes/' . $model->id);
                 } else {
                     return Action::danger('You are not authorized to perform this action');
                 }
             }
         }
 
-        return Action::redirect('/resources/hiking-routes/'.$model->id);
+        return Action::redirect('/resources/hiking-routes/' . $model->id);
     }
 
     /**
