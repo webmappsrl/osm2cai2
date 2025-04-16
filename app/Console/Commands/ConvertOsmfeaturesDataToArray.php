@@ -44,14 +44,14 @@ class ConvertOsmfeaturesDataToArray extends Command
         $count = 0;
         $stringJsonRecords = [];
 
-        $this->info('Totale record trovati: ' . $hikingRoutes->count());
+        $this->info('Totale record trovati: '.$hikingRoutes->count());
         $this->newLine();
 
         $bar = $this->output->createProgressBar($hikingRoutes->count());
         $bar->start();
 
         foreach ($hikingRoutes as $route) {
-            if (is_string($route->osmfeatures_data) && !empty($route->osmfeatures_data)) {
+            if (is_string($route->osmfeatures_data) && ! empty($route->osmfeatures_data)) {
                 try {
                     $decodedData = json_decode($route->osmfeatures_data, true);
 
@@ -62,12 +62,12 @@ class ConvertOsmfeaturesDataToArray extends Command
 
                         $stringJsonRecords[] = [
                             'id' => $route->id,
-                            'osm_id' => $decodedData['properties']['osm_id'] ?? 'N/A'
+                            'osm_id' => $decodedData['properties']['osm_id'] ?? 'N/A',
                         ];
 
                         $count++;
                     } else {
-                        $this->error("Errore nella conversione JSON per il record ID: {$route->id}. Errore: " . json_last_error_msg());
+                        $this->error("Errore nella conversione JSON per il record ID: {$route->id}. Errore: ".json_last_error_msg());
                     }
                 } catch (\Exception $e) {
                     $this->error("Eccezione durante l'elaborazione del record ID: {$route->id}. Errore: {$e->getMessage()}");
