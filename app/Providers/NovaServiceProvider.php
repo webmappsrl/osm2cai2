@@ -155,9 +155,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
                     MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
                     MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
-                    MenuItem::externalLink(__('Sync UGC'), route('import-ugc'))->canSee(function () {
-                        return auth()->user()->hasRole('Administrator');
-                    })->openInNewTab(),
                     MenuItem::externalLink(__('Migration check'), route('migration-check'))->canSee(function () {
                         return auth()->user()->hasRole('Administrator');
                     })->openInNewTab(),
