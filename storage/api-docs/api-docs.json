@@ -108,14 +108,14 @@
                 }
             }
         },
-        "/api/v2/ecpois/{hr_osm_id}/{type}": {
+        "/api/v2/ecpois/osm/{hr_osm_id}/{type}": {
             "get": {
                 "tags": [
                     "Api V2"
                 ],
                 "summary": "Get EcPOIs in a 1km buffer from the HikingRoutes defined by OSM ID",
                 "description": "Returns a list of Ec POIs around 1km from a specific OSM hiking route ID and of a specified type",
-                "operationId": "e4022340642c87a13b05eaac66ecee72",
+                "operationId": "91f3f11f8731dc75060881b68ba065e1",
                 "parameters": [
                     {
                         "name": "hr_osm_id",
@@ -506,6 +506,18 @@
                     "Api V2"
                 ],
                 "operationId": "1b2d4cea7f8bd7a8edecd15b09cff3ca",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The OSM2CAI ID of a specific Hiking Route (e.g. 2421)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Returns the geojson of a Hiking Route based on the given OSM2CAI ID.",
@@ -2771,20 +2783,6 @@
                             }
                         }
                     }
-                }
-            }
-        }
-    },
-    "components": {
-        "parameters": {
-            "id": {
-                "name": "id",
-                "in": "path",
-                "description": "The OSM2CAI ID of a specific Hiking Route (e.g. 2421)",
-                "required": true,
-                "schema": {
-                    "type": "integer",
-                    "format": "int64"
                 }
             }
         }

@@ -77,7 +77,7 @@ Route::prefix('v2')->group(function () {
     Route::get('/itinerary/{id}', [ItineraryController::class, 'show'])->name('v2-itinerary-id');
     Route::get('/ecpois/bb/{bounding_box}/{type}', [EcPoiController::class, 'indexByBoundingBox'])->name('v2-ecpois-by-bb');
     Route::get('/ecpois/{hr_osm2cai_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteId'])->name('v2-ecpois-by-osm2caiId');
-    Route::get('/ecpois/{hr_osm_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteOsmId'])->name('v2-ecpois-by-OsmId');
+    Route::get('/ecpois/osm/{hr_osm_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteOsmId'])->name('v2-ecpois-by-OsmId');
 
     //Export
     Route::prefix('export')->name('export')->group(function () {
