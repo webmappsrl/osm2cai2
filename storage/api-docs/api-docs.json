@@ -11,7 +11,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:4434",
+            "url": "http://localhost:8008",
             "description": "API Server"
         }
     ],
