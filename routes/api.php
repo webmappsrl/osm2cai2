@@ -15,8 +15,8 @@ use App\Http\Controllers\SourceSurveyController;
 use App\Http\Controllers\UmapController;
 use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 use Illuminate\Support\Facades\Route;
-use Wm\WmPackage\Http\Controllers\UgcPoiController;
-use Wm\WmPackage\Http\Controllers\UgcTrackController;
+use Wm\WmPackage\Http\Controllers\Api\UgcPoiController;
+use Wm\WmPackage\Http\Controllers\Api\UgcTrackController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,8 +43,8 @@ Route::prefix('kml')->name('kml.')->group(function () {
 Route::prefix('geojson')->name('geojson.')->group(function () {
     Route::get('/{modelType}/{id}', [GeojsonController::class, 'download']);
     Route::prefix('ugc')->name('ugc.')->group(function () {
-        Route::get('/ugcpoi/{ids}', [UgcPoiController::class, 'geojson'])->name('ugcpoi');
-        Route::get('/ugctrack/{ids}', [UgcTrackController::class, 'geojson'])->name('ugctrack');
+        Route::get('/ugcpoi/{ids}', [UgcPoiController::class, 'downloadGeojson'])->name('ugcpoi');
+        Route::get('/ugctrack/{ids}', [UgcTrackController::class, 'downloadGeojson'])->name('ugctrack');
     });
 });
 
