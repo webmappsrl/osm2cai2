@@ -2,32 +2,33 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Nova;
+use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\File;
+use Laravel\Nova\Fields\Text;
 use App\Helpers\Osm2caiHelper;
-use App\Nova\Actions\BulkSectorsModeratorAssignAction;
-use App\Nova\Actions\DownloadCsvCompleteAction;
-use App\Nova\Actions\DownloadGeojson;
-use App\Nova\Actions\DownloadKml;
-use App\Nova\Actions\DownloadShape;
-use App\Nova\Actions\SectorAssignModerator;
-use App\Nova\Actions\UploadSectorGeometryAction;
+use Laravel\Nova\Fields\Number;
 use App\Nova\Filters\AreaFilter;
-use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Actions\DownloadKml;
 use App\Nova\Filters\RegionFilter;
+use Illuminate\Support\Facades\DB;
+use Laravel\Nova\Fields\BelongsTo;
+use App\Nova\Actions\DownloadShape;
+use App\Nova\Filters\ProvinceFilter;
+use App\Nova\Actions\DownloadGeojson;
+use Illuminate\Support\Facades\Cache;
+use Laravel\Nova\Fields\BelongsToMany;
+use Wm\MapMultiPolygon\MapMultiPolygon;
+use App\Nova\Actions\SectorAssignModerator;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Lenses\NoNameSectorsColumnsLens;
 use App\Nova\Lenses\NoNumExpectedColumnsLens;
-use App\Nova\Lenses\NoResponsabileSectorsColumnsLens;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Nova\Actions\DownloadCsvCompleteAction;
+use App\Nova\Actions\UploadSectorGeometryAction;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Nova;
-use Wm\MapMultiPolygon\MapMultiPolygon;
+use App\Nova\Lenses\NoResponsabileSectorsColumnsLens;
+use App\Nova\Actions\BulkSectorsModeratorAssignAction;
 
 class Sector extends Resource
 {
@@ -126,7 +127,7 @@ class Sector extends Resource
         if (! is_null($request['resourceId'])) {
             $sector = self::find($request['resourceId']);
 
-            $numbers = Cache::remember('sector_'.$request['resourceId'].'_numbers', 60, function () use ($request) {
+            $numbers = Cache::remember('sector_' . $request['resourceId'] . '_numbers', 60, function () use ($request) {
                 return DB::table('hiking_route_sector')
                     ->join('hiking_routes', 'hiking_route_sector.hiking_route_id', '=', 'hiking_routes.id')
                     ->where('hiking_route_sector.sector_id', $request['resourceId'])
@@ -146,7 +147,7 @@ class Sector extends Resource
                 4 => $numbers->tot4,
             ];
 
-            $sal = Cache::remember('sector_'.$request['resourceId'].'_sal', 60, function () use ($sector) {
+            $sal = Cache::remember('sector_' . $request['resourceId'] . '_sal', 60, function () use ($sector) {
                 return $sector->getSal();
             });
 
@@ -225,7 +226,7 @@ class Sector extends Resource
             $filter = base64_encode(json_encode($availableFilters));
 
             // Build the URL
-            $link = trim(Nova::path(), '/').'/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens?hiking-routes_filter='.$filter;
+            $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
             $exploreUrl = $link;
         }
 
