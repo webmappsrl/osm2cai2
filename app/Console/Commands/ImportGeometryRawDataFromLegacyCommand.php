@@ -36,6 +36,7 @@ class ImportGeometryRawDataFromLegacyCommand extends Command
 
         if ($totalRoutes === 0) {
             $this->info('No hiking routes with null geometry_raw_data found.');
+
             return 0;
         }
 
@@ -71,7 +72,7 @@ class ImportGeometryRawDataFromLegacyCommand extends Command
                     if ($legacyRoutes->has($osmId)) {
                         $updates[] = [
                             'id' => $hikingRoute->id,
-                            'geometry_raw_data' => $legacyRoutes[$osmId]->geometry_raw_data
+                            'geometry_raw_data' => $legacyRoutes[$osmId]->geometry_raw_data,
                         ];
                         $updated++;
                     } else {
@@ -82,7 +83,7 @@ class ImportGeometryRawDataFromLegacyCommand extends Command
                 }
 
                 // Perform batch update if we have updates
-                if (!empty($updates)) {
+                if (! empty($updates)) {
                     DB::transaction(function () use ($updates) {
                         foreach ($updates as $update) {
                             HikingRoute::where('id', $update['id'])

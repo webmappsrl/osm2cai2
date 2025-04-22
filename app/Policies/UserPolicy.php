@@ -17,7 +17,9 @@ class UserPolicy
      *
      * @return void
      */
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     public function viewAny(User $user): bool
     {
@@ -92,7 +94,7 @@ class UserPolicy
 
     /**
      * Check if user has permission to manage territory associations
-     * 
+     *
      * @param User $user
      * @return bool
      */

@@ -48,12 +48,14 @@ class AssociateClubsToHikingRoutesCommand extends Command
         $modelId = $this->option('id');
 
         // Validate model type if ID is provided
-        if ($modelId && !$modelType) {
+        if ($modelId && ! $modelType) {
             $this->error('The --model option (Club or HikingRoute) is required when specifying an --id.');
+
             return 1;
         }
-        if ($modelType && !in_array($modelType, ['Club', 'HikingRoute'])) {
+        if ($modelType && ! in_array($modelType, ['Club', 'HikingRoute'])) {
             $this->error('Invalid --model specified. Use Club or HikingRoute.');
+
             return 1;
         }
 
@@ -61,16 +63,16 @@ class AssociateClubsToHikingRoutesCommand extends Command
         if ($modelType && $modelId) {
             // Dispatch for a specific model instance
             $this->info("Dispatching job for {$modelType} ID: {$modelId}");
-            SyncClubHikingRouteRelationJob::dispatch($modelType, (int)$modelId); // Pass type and ID
+            SyncClubHikingRouteRelationJob::dispatch($modelType, (int) $modelId); // Pass type and ID
         } elseif ($modelType === 'Club') {
-            $this->info("Dispatching jobs for all Clubs...");
+            $this->info('Dispatching jobs for all Clubs...');
             Club::chunk(100, function ($clubs) {
                 foreach ($clubs as $club) {
                     SyncClubHikingRouteRelationJob::dispatch('Club', $club->id);
                 }
             });
         } elseif ($modelType === 'HikingRoute') {
-            $this->info("Dispatching jobs for all Hiking Routes...");
+            $this->info('Dispatching jobs for all Hiking Routes...');
             HikingRoute::chunk(100, function ($routes) {
                 foreach ($routes as $route) {
                     SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $route->id);

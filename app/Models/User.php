@@ -5,14 +5,14 @@ namespace App\Models;
 use App\Models\Area;
 use App\Models\Club;
 use App\Models\HikingRoute;
+use App\Models\Pivots\AreaUser;
+use App\Models\Pivots\ProvinceUser;
+use App\Models\Pivots\SectorUser;
 use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use App\Models\UgcPoi;
 use App\Models\UgcTrack;
-use App\Models\Pivots\AreaUser;
-use App\Models\Pivots\ProvinceUser;
-use App\Models\Pivots\SectorUser;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Nova\Auth\Impersonatable;
@@ -259,7 +259,7 @@ class User extends WmUser
 
         // Format the form ID for permission name
         $formattedFormId = $this->formatFormIdForPermission($formId);
-        $permissionName = 'validate ' . $formattedFormId;
+        $permissionName = 'validate '.$formattedFormId;
 
         // If permission doesn't exist in the system, allow validation
         if (! Permission::where('name', $permissionName)->exists()) {
@@ -305,7 +305,6 @@ class User extends WmUser
      */
     public function checkAndAssignLocalReferentRole(): void
     {
-
         $this->refresh();
 
         $hasTerritoryAssociations = $this->provinces()->exists() ||
@@ -316,13 +315,12 @@ class User extends WmUser
         $isHigherRole = $this->hasAnyRole($higherRoles);
         $hasLocalRole = $this->hasRole('Local Referent');
 
-
         if ($hasTerritoryAssociations) {
-            if (!$isHigherRole && !$hasLocalRole) {
+            if (! $isHigherRole && ! $hasLocalRole) {
                 $this->assignRole('Local Referent');
             }
         } else {
-            if (!$isHigherRole && $hasLocalRole) {
+            if (! $isHigherRole && $hasLocalRole) {
                 $this->removeRole('Local Referent');
             }
         }

@@ -6,12 +6,12 @@ use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\File;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Illuminate\Support\Facades\Log;
 
 class UploadValidationRawDataAction extends Action
 {
@@ -97,8 +97,9 @@ class UploadValidationRawDataAction extends Action
             $content = Storage::disk('local')->get($path);
             $geom = $model->fileToGeometry($content);
 
-            if (!$geom) {
+            if (! $geom) {
                 Storage::disk('local')->delete($path);
+
                 return Action::danger('Unable to update geometry. The uploaded file does not contain a valid geometry or could not be processed.');
             }
 
@@ -107,8 +108,9 @@ class UploadValidationRawDataAction extends Action
 
             return Action::message('File uploaded and geometry updated successfully!');
         } catch (\Exception $e) {
-            Log::error("Error processing geometry upload for HikingRoute ID {$model->id}: " . $e->getMessage());
+            Log::error("Error processing geometry upload for HikingRoute ID {$model->id}: ".$e->getMessage());
             Storage::disk('local')->delete($path);
+
             return Action::danger('An error occurred while processing the file. Please check the logs.');
         }
     }
