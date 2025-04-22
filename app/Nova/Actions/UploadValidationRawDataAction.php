@@ -6,6 +6,7 @@ use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
@@ -79,22 +80,39 @@ class UploadValidationRawDataAction extends Action
             return Action::danger('Unable to update geometry. Please enter a valid file.');
         }
 
-        $path = $fields->geometry->storeAs(
+        $file = $fields->geometry;
+        $extension = $file->getClientOriginalExtension();
+        $allowedExtensions = ['gpx', 'kml', 'geojson'];
+
+        if (! in_array(strtolower($extension), $allowedExtensions)) {
+            return Action::danger('Invalid file type. Please upload a GPX, KML, or GeoJSON file.');
+        }
+
+        $path = $file->storeAs(
             'local',
-            explode('.', $fields->geometry->hashName())[0].'.'.$fields->geometry->getClientOriginalExtension()
+            $file->hashName()
         );
 
-        $content = Storage::get($path);
-        $jsonDecoded = json_decode($content, true);
-        if (isset($jsonDecoded['features']) && count($jsonDecoded['features']) < 1) {
-            return Action::danger('Unable to update geometry. The uploaded file does not contain a valid geometry.');
+        try {
+            $content = Storage::disk('local')->get($path);
+            $geom = $model->fileToGeometry($content);
+
+            if (! $geom) {
+                Storage::disk('local')->delete($path);
+
+                return Action::danger('Unable to update geometry. The uploaded file does not contain a valid geometry or could not be processed.');
+            }
+
+            $model->geometry_raw_data = $geom;
+            $model->save();
+
+            return Action::message('File uploaded and geometry updated successfully!');
+        } catch (\Exception $e) {
+            Log::error("Error processing geometry upload for HikingRoute ID {$model->id}: ".$e->getMessage());
+            Storage::disk('local')->delete($path);
+
+            return Action::danger('An error occurred while processing the file. Please check the logs.');
         }
-        $geom = $model->fileToGeometry($content);
-
-        $model->geometry_raw_data = $geom;
-        $model->save();
-
-        return Action::message('File uploaded and geometry updated successfully!');
     }
 
     /**
@@ -107,8 +125,9 @@ class UploadValidationRawDataAction extends Action
         $confirmText = 'WARNING: the file that will be uploaded will be used exclusively to be compared with the track present in the Cadastre/OpenStreetMap; in case of validation, the Cadastre/OpenStreetMap track (blue on the map) will be validated.';
 
         return [
-            File::make('Geometry')
-                ->help($confirmText),
+            File::make('Geometry', 'geometry')
+                ->help($confirmText)
+                ->acceptedTypes('.gpx,.kml,.geojson'),
         ];
     }
 }

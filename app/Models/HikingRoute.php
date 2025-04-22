@@ -8,6 +8,7 @@ use App\Jobs\CheckNearbyEcPoisJob;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Jobs\CheckNearbyNaturalSpringsJob;
 use App\Jobs\ComputeTdhJob;
+use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\Area;
 use App\Models\CaiHut;
 use App\Models\EcPoi;
@@ -24,6 +25,7 @@ use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -60,6 +62,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         'issues_user_id',
         'issues_description',
         'description_cai_it',
+        'geometry_raw_data',
     ];
 
     protected $casts = [
@@ -81,6 +84,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
     protected static function booted()
     {
         static::saved(function ($hikingRoute) {
+            SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
             if ($hikingRoute->isDirty('geometry')) {
                 $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
             }

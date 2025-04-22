@@ -64,31 +64,42 @@ class UserPolicy
 
     public function attachProvince(User $user, User $model, Province $province)
     {
-        return $user->hasRole('Administrator');
+        return $this->canManageTerritoryAssociations($user);
     }
 
     public function detachProvince(User $user, User $model, Province $province)
     {
-        return $user->hasRole('Administrator');
+        return $this->canManageTerritoryAssociations($user);
     }
 
     public function attachArea(User $user, User $model, Area $area)
     {
-        return $user->hasRole('Administrator');
+        return $this->canManageTerritoryAssociations($user);
     }
 
     public function detachArea(User $user, User $model, Area $area)
     {
-        return $user->hasRole('Administrator');
+        return $this->canManageTerritoryAssociations($user);
     }
 
     public function attachSector(User $user, User $model, Sector $sector)
     {
-        return $user->hasRole('Administrator');
+        return $this->canManageTerritoryAssociations($user);
     }
 
     public function detachSector(User $user, User $model, Sector $sector)
     {
-        return $user->hasRole('Administrator');
+        return $this->canManageTerritoryAssociations($user);
+    }
+
+    /**
+     * Check if user has permission to manage territory associations
+     *
+     * @param User $user
+     * @return bool
+     */
+    private function canManageTerritoryAssociations(User $user): bool
+    {
+        return $user->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent']);
     }
 }
