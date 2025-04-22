@@ -9,7 +9,7 @@ describe('Dashboard Tests', () => {
     // Test per l'utente admin
     cy.get('#username, #email', { timeout: timeout }).type(Cypress.env('adminEmail'))
     cy.get('#password', { timeout: timeout }).type(Cypress.env('adminPassword'))
-    cy.get('button[type="submit"]', { timeout: timeout }).click()
+    cy.get('button[type="submit"]', { timeout: timeout }).first().click()
 
     // 1.1 Verifica nome utente
     cy.get('.username-card', { timeout: timeout }).should('contain', 'Webmapp')
@@ -80,7 +80,7 @@ describe('Dashboard Tests', () => {
     // Test per l'utente referente nazionale
     cy.get('#username, #email', { timeout: timeout }).type(Cypress.env('referentEmail'))
     cy.get('#password', { timeout: timeout }).type(Cypress.env('referentPassword'))
-    cy.get('button[type="submit"]', { timeout: timeout }).click()
+    cy.get('button[type="submit"]', { timeout: timeout }).first().click()
 
     // 2.1 Verifica nome utente
     cy.get('.username-card', { timeout: timeout }).should('contain', 'Referente Nazionale')

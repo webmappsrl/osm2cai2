@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\Club;
 use App\Models\HikingRoute;
 use Illuminate\Console\Command;
@@ -13,19 +14,16 @@ class AssociateClubsToHikingRoutesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai:associate-clubs-to-hiking-routes';
+    protected $signature = 'osm2cai:associate-clubs-to-hiking-routes 
+                            {--model= : The model to process (Club or HikingRoute)}
+                            {--id= : The ID of the specific model to process}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Synchronize relationships between hiking routes and clubs.
-This command retrieves all existing clubs and iterates through each one. For each club, it searches for the corresponding hiking route using the "source_ref" field. If a matching hiking route is found, the club is associated with the hiking route.
-
-To ensure successful synchronization, verify that the "HikingRoute" and "Club" models have the appropriate "source_ref" and "cai_code" fields defined and that they are consistent with each other.
-
-';
+    protected $description = 'Dispatches jobs to synchronize relationships between hiking routes and clubs based on CAI code and source_ref.';
 
     /**
      * Create a new command instance.
@@ -44,28 +42,48 @@ To ensure successful synchronization, verify that the "HikingRoute" and "Club" m
      */
     public function handle()
     {
-        $this->info('[START] Sync relationships between hiking routes and clubs');
+        $this->info('[START] Dispatching jobs to sync relationships between hiking routes and clubs');
 
-        $clubs = Club::all();
+        $modelType = $this->option('model');
+        $modelId = $this->option('id');
 
-        //HikingRoute has a source_ref field that is the same as the cai_code field in Section, so we can use that to match them
-        foreach ($clubs as $club) {
-            $this->info('Syncing club '.$club->name.' with hiking routes source ref: '.$club->cai_code);
-
-            try {
-                $hikingRoutes = HikingRoute::where('osmfeatures_data->properties->source_ref', 'like', '%'.$club->cai_code.'%')->get();
-            } catch (\Exception $e) {
-                $this->error('Error syncing club '.$club->name.' with hiking routes source ref: '.$club->cai_code);
-                $this->error($e->getMessage());
-            }
-
-            if ($hikingRoutes->isNotEmpty()) {
-                $hikingRoutesId = $hikingRoutes->pluck('id')->toArray();
-                $club->hikingRoutes()->sync($hikingRoutesId);
-                $this->info('Synced club '.$club->name.' with hiking routes source ref: '.$club->cai_code.PHP_EOL);
-            }
+        // Validate model type if ID is provided
+        if ($modelId && !$modelType) {
+            $this->error('The --model option (Club or HikingRoute) is required when specifying an --id.');
+            return 1;
+        }
+        if ($modelType && !in_array($modelType, ['Club', 'HikingRoute'])) {
+            $this->error('Invalid --model specified. Use Club or HikingRoute.');
+            return 1;
         }
 
-        $this->info('[END] Sync relationships between hiking routes and sections');
+        // Dispatch the job with appropriate parameters
+        if ($modelType && $modelId) {
+            // Dispatch for a specific model instance
+            $this->info("Dispatching job for {$modelType} ID: {$modelId}");
+            SyncClubHikingRouteRelationJob::dispatch($modelType, (int)$modelId); // Pass type and ID
+        } elseif ($modelType === 'Club') {
+            $this->info("Dispatching jobs for all Clubs...");
+            Club::chunk(100, function ($clubs) {
+                foreach ($clubs as $club) {
+                    SyncClubHikingRouteRelationJob::dispatch('Club', $club->id);
+                }
+            });
+        } elseif ($modelType === 'HikingRoute') {
+            $this->info("Dispatching jobs for all Hiking Routes...");
+            HikingRoute::chunk(100, function ($routes) {
+                foreach ($routes as $route) {
+                    SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $route->id);
+                }
+            });
+        } else {
+            // Default behavior: dispatch one job to handle all clubs
+            $this->info('Dispatching job to process all clubs.');
+            SyncClubHikingRouteRelationJob::dispatch(); // No parameters means 'process all clubs' in the job
+        }
+
+        $this->info('[END] Job dispatching complete.');
+
+        return 0;
     }
 }

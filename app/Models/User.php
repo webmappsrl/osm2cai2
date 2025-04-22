@@ -10,7 +10,11 @@ use App\Models\Region;
 use App\Models\Sector;
 use App\Models\UgcPoi;
 use App\Models\UgcTrack;
+use App\Models\Pivots\AreaUser;
+use App\Models\Pivots\ProvinceUser;
+use App\Models\Pivots\SectorUser;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Nova\Auth\Impersonatable;
 use Spatie\Permission\Models\Permission;
 use Wm\WmPackage\Database\Factories\UserFactory;
@@ -54,19 +58,19 @@ class User extends WmUser
         return $this->belongsTo(Club::class, 'managed_club_id');
     }
 
-    public function provinces()
+    public function provinces(): BelongsToMany
     {
-        return $this->belongsToMany(Province::class, 'province_user', 'user_id', 'province_id');
+        return $this->belongsToMany(Province::class, 'province_user', 'user_id', 'province_id')->using(ProvinceUser::class);
     }
 
-    public function areas()
+    public function areas(): BelongsToMany
     {
-        return $this->belongsToMany(Area::class, 'area_user', 'user_id', 'area_id', 'id', 'id');
+        return $this->belongsToMany(Area::class, 'area_user', 'user_id', 'area_id')->using(AreaUser::class);
     }
 
-    public function sectors()
+    public function sectors(): BelongsToMany
     {
-        return $this->belongsToMany(Sector::class, 'sector_user', 'user_id', 'sector_id', 'id', 'id');
+        return $this->belongsToMany(Sector::class, 'sector_user', 'user_id', 'sector_id')->using(SectorUser::class);
     }
 
     public function ugcTracks()
@@ -255,7 +259,7 @@ class User extends WmUser
 
         // Format the form ID for permission name
         $formattedFormId = $this->formatFormIdForPermission($formId);
-        $permissionName = 'validate '.$formattedFormId;
+        $permissionName = 'validate ' . $formattedFormId;
 
         // If permission doesn't exist in the system, allow validation
         if (! Permission::where('name', $permissionName)->exists()) {
@@ -281,6 +285,47 @@ class User extends WmUser
         }
 
         return $formId;
+    }
+
+    /**
+     * Boot method - Remove chelout listeners if present.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        // Remove any chelout listeners previously added here
+        // parent::boot(); // Keep only if necessary
+    }
+
+    /**
+     * Checks/Assigns the Local Referent role. Called by Pivot Models when a link is created or deleted.
+     *
+     * @return void
+     */
+    public function checkAndAssignLocalReferentRole(): void
+    {
+
+        $this->refresh();
+
+        $hasTerritoryAssociations = $this->provinces()->exists() ||
+            $this->areas()->exists() ||
+            $this->sectors()->exists();
+
+        $higherRoles = ['Administrator', 'National Referent', 'Regional Referent'];
+        $isHigherRole = $this->hasAnyRole($higherRoles);
+        $hasLocalRole = $this->hasRole('Local Referent');
+
+
+        if ($hasTerritoryAssociations) {
+            if (!$isHigherRole && !$hasLocalRole) {
+                $this->assignRole('Local Referent');
+            }
+        } else {
+            if (!$isHigherRole && $hasLocalRole) {
+                $this->removeRole('Local Referent');
+            }
+        }
     }
 
     protected static function newFactory()
