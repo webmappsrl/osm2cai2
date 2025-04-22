@@ -17,6 +17,7 @@ use App\Nova\Lenses\NoNameSectorsColumnsLens;
 use App\Nova\Lenses\NoNumExpectedColumnsLens;
 use App\Nova\Lenses\NoResponsabileSectorsColumnsLens;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
