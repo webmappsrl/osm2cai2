@@ -81,13 +81,13 @@ class Province extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $areasCount = cache()->remember('province_'.$this->id.'_areas_count', 60 * 60 * 24, function () {
+        $areasCount = cache()->remember('province_' . $this->id . '_areas_count', 60 * 60 * 24, function () {
             return count($this->areas);
         });
-        $sectorsCount = cache()->remember('province_'.$this->id.'_sectors_count', 60 * 60 * 24, function () {
+        $sectorsCount = cache()->remember('province_' . $this->id . '_sectors_count', 60 * 60 * 24, function () {
             return 0;
         });
-        $code = cache()->remember('province_'.$this->id.'_code', 60 * 60 * 24, function () {
+        $code = cache()->remember('province_' . $this->id . '_code', 60 * 60 * 24, function () {
             return $this->osmfeatures_data['properties']['osm_tags']['short_name'] ?? $this->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
         });
 
@@ -104,7 +104,7 @@ class Province extends Resource
             Text::make('Full Code', function () use ($code) {
                 //if code is not null, add the region code
                 if ($code) {
-                    $code = $this->region ? $this->region->code.'.'.$code : $code;
+                    $code = $this->region ? $this->region->code . '.' . $code : $code;
                 }
 
                 return $code;
@@ -230,7 +230,7 @@ class Province extends Resource
             $filter = base64_encode(json_encode($availableFilters));
 
             // Build the URL
-            $link = trim(Nova::path(), '/').'/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens?hiking-routes_filter='.$filter;
+            $link = trim(Nova::path(), '/') . '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens?hiking-routes_filter=' . $filter;
             $exploreUrl = $link;
         }
 

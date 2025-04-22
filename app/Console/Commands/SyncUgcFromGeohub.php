@@ -169,6 +169,7 @@ class SyncUgcFromGeohub extends Command
      */
     private function buildEndpointUrl(string $type, $appId): string
     {
+
         return "{$this->geohubBaseUrl}{$this->geohubApiUrl}{$type}/geojson/{$appId}/list";
     }
 
@@ -210,6 +211,7 @@ class SyncUgcFromGeohub extends Command
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
+
         $data = curl_exec($ch);
         if ($data === false) {
             $errorMessage = "Failed to fetch content from URL: $url";
@@ -302,6 +304,7 @@ class SyncUgcFromGeohub extends Command
                 $this->createdElements[$type]++;
             } else {
                 $this->updatedElements[] = ucfirst($type).' with id '.$id.' updated';
+
             }
         }
     }
@@ -367,7 +370,7 @@ class SyncUgcFromGeohub extends Command
             'raw_data' => $rawData,
             'updated_at' => $geoJson['properties']['updated_at'] ?? null,
             'taxonomy_wheres' => $geoJson['properties']['taxonomy_wheres'] ?? null,
-            'app_id' => 'geohub_'.$appId,
+            'app_id' => 'geohub_' . $appId,
         ];
     }
 
