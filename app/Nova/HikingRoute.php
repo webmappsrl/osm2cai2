@@ -37,9 +37,6 @@ use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
-use Eminiarts\Tabs\Tab;
-use Eminiarts\Tabs\Tabs;
-use Eminiarts\Tabs\Traits\HasTabs;
 use Illuminate\Support\Arr;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
@@ -47,11 +44,10 @@ use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Tabs\Tab;
 
 class HikingRoute extends OsmfeaturesResource
 {
-    use HasTabs;
-
     /**
      * The model the resource corresponds to.
      *
@@ -168,7 +164,19 @@ class HikingRoute extends OsmfeaturesResource
                 return $this->ref_rei == $this->ref_rei_comp;
             })->onlyOnDetail(),
             Boolean::make(__('Geometry Sync'), 'geometry_sync')->onlyOnDetail(),
-        ], $this->getTabs());
+
+            Tab::group(__('Details'), [
+                Tab::make(__('Main'), $this->getMainTabFields()),
+                Tab::make(__('General'), $this->getGeneralTabFields()),
+                Tab::make(__('Tech'), $this->getTechTabFields()),
+                Tab::make(__('Other'), $this->getOtherTabFields()),
+                Tab::make(__('Content'), $this->getContentTabFields()),
+                Tab::make(__('Issues'), $this->getIssuesTabFields()),
+                Tab::make(__('POI'), $this->getPOITabFields()),
+                Tab::make(__('Huts'), $this->getHutsTabFields()),
+                Tab::make(__('Natural Springs'), $this->getNaturalSpringsTabFields()),
+            ]),
+        ]);
     }
 
     /**
@@ -496,28 +504,6 @@ class HikingRoute extends OsmfeaturesResource
         ];
 
         return $fields;
-    }
-
-    private function getTabs()
-    {
-        return [
-            Tabs::make(__('Metadata'), $this->getMetadataTabs()),
-        ];
-    }
-
-    private function getMetadataTabs()
-    {
-        return [
-            Tab::make(__('Main'), $this->getMainTabFields()),
-            Tab::make(__('General'), $this->getGeneralTabFields()),
-            Tab::make(__('Tech'), $this->getTechTabFields()),
-            Tab::make(__('Other'), $this->getOtherTabFields()),
-            Tab::make(__('Content'), $this->getContentTabFields()),
-            Tab::make(__('Issues'), $this->getIssuesTabFields()),
-            Tab::make(__('POI'), $this->getPOITabFields()),
-            Tab::make(__('Huts'), $this->getHutsTabFields()),
-            Tab::make(__('Natural Springs'), $this->getNaturalSpringsTabFields()),
-        ];
     }
 
     private function createField($label, $infomont, $osmPath, $modelAttribute = null, $isLink = false, $withCalculated = false)

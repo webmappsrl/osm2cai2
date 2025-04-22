@@ -21,4 +21,4 @@ jobs:
           username: ${{ secrets.USERNAMEDEV }}
           port: ${{ secrets.PORTDEV }}
           key: ${{ secrets.SSHKEYDEV }}
-          script: "source /var/www/html/geobox/scripts/aliases.sh && source /var/www/html/.zshrc && cd /root/html/osm2cai2 && git pull && docker exec php81_osm2cai2 bash scripts/deploy_dev.sh"
+          script: "cd /root/html/osm2cai2 && git pull && git submodule update --init --recursive && docker exec php81_osm2cai2 bash scripts/deploy_dev.sh"

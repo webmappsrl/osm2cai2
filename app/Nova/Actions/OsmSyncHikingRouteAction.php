@@ -2,22 +2,13 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\HikingRoute;
 use App\Services\OsmService;
-use Carbon\Carbon;
-use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
-use Imumz\LeafletMap\LeafletMap;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class OsmSyncHikingRouteAction extends Action

@@ -50,11 +50,9 @@ class EcPoiController extends Controller
         $type = strtoupper($type);
 
         $pois = EcPoi::whereRaw(
-            '
-        ST_Within(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326)) 
-        AND type = ?',
-            [$minLng, $minLat, $maxLng, $maxLat, $type]
-        )->where('type', $type)->get();
+            'ST_Within(geometry, ST_MakeEnvelope(?, ?, ?, ?, 4326))',
+            [$minLng, $minLat, $maxLng, $maxLat]
+        )->where('osmfeatures_data->properties->osm_type', $type)->get();
 
         $pois = $pois->mapWithKeys(function ($item) {
             return [$item['id'] => $item['updated_at']];
@@ -98,19 +96,17 @@ class EcPoiController extends Controller
      */
     public function indexByBufferFromHikingRouteId(string $id, string $type)
     {
-        $hr = HikingRoute::find($id);
-
         $pois = EcPoi::whereRaw(
-            'ST_DWithin(geometry, ST_GeomFromEWKB(?), 1000)',
-            [$hr->geometry]
-        )->where('type', $type)->get();
+            'ST_DWithin(geometry, (SELECT geometry FROM hiking_routes WHERE id = ?), 1000, true)',
+            [$id]
+        )->where('osmfeatures_data->properties->osm_type', $type)->get();
 
         return response()->json($pois);
     }
 
     /**
      * @OA\Get(
-     *     path="/api/v2/ecpois/{hr_osm_id}/{type}",
+     *     path="/api/v2/ecpois/osm/{hr_osm_id}/{type}",
      *     tags={"Api V2"},
      *     summary="Get EcPOIs in a 1km buffer from the HikingRoutes defined by OSM ID",
      *     description="Returns a list of Ec POIs around 1km from a specific OSM hiking route ID and of a specified type",
@@ -143,12 +139,11 @@ class EcPoiController extends Controller
      */
     public function indexByBufferFromHikingRouteOsmId(string $osmId, string $type)
     {
-        $hr = HikingRoute::getHikingRouteByOsmId($osmId);
-
+        $hr = HikingRoute::where('osmfeatures_data->properties->osm_id', $osmId)->first();
         $pois = EcPoi::whereRaw(
-            'ST_DWithin(geometry, ST_GeomFromEWKB(?), 1000)',
+            'ST_DWithin(geometry, ?, 1000, true)',
             [$hr->geometry]
-        )->where('type', $type)->get();
+        )->where('osmfeatures_data->properties->osm_type', $type)->get();
 
         return response()->json($pois);
     }

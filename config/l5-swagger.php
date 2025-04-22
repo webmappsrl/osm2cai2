@@ -292,7 +292,7 @@ return [
          * Constants which can be used in annotations
          */
         'constants' => [
-            'L5_SWAGGER_CONST_HOST' => env('APP_URL'),
+            'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST'),
         ],
     ],
 ];

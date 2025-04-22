@@ -439,6 +439,16 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-route/{id}",
      *      tags={"Api V2"},
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="The OSM2CAI ID of a specific Hiking Route (e.g. 2421)",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64"
+     *         )
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Returns the geojson of a Hiking Route based on the given OSM2CAI ID.",
@@ -498,17 +508,7 @@ class HikingRouteController extends Controller
      * {"type":"MultiLineString","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}}
      *             )
      *         )
-     *      ),
-     *      @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="The OSM2CAI ID of a specific Hiking Route (e.g. 2421)",
-     *         required=true,
-     *         @OA\Schema(
-     *             type="integer",
-     *             format="int64"
-     *         )
-     *     ),
+     *      )
      * )
      */
     public function show(int $id)

@@ -13,6 +13,7 @@ use App\Models\UgcTrack;
 use Illuminate\Database\Eloquent\Collection;
 use Laravel\Nova\Auth\Impersonatable;
 use Spatie\Permission\Models\Permission;
+use Wm\WmPackage\Database\Factories\UserFactory;
 use Wm\WmPackage\Models\User as WmUser;
 
 class User extends WmUser
@@ -280,5 +281,10 @@ class User extends WmUser
         }
 
         return $formId;
+    }
+
+    protected static function newFactory()
+    {
+        return UserFactory::new();
     }
 }

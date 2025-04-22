@@ -2,14 +2,16 @@
 
 namespace App\Traits\Nova;
 
-use DKulyk\Nova\Tabs;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Panel;
+use Laravel\Nova\Tabs\Tab;
+use Laravel\Nova\Tabs\Tabs;
 
 trait WmNovaFieldsTrait
 {
-    public function jsonForm(string $columnName, array $formSchema = null)
+    public function jsonForm(string $columnName, ?array $formSchema = null)
     {
         $this->ensureNovaIsInstalled();
 
@@ -50,17 +52,14 @@ trait WmNovaFieldsTrait
 
             $fields = $this->buildFieldsFromConfig($formConfig['fields'], $columnName, $modelType);
 
-            $tabsLabel = $formConfig['label']['it'] ?? $formConfig['label']['ït'] ?? $formConfig['label']['en'] ?? __('Form');
+            $panelLabel = $formConfig['label']['it'] ?? $formConfig['label']['ït'] ?? $formConfig['label']['en'] ?? __('Form');
         } else {
             $fields = $this->buildFieldsFromConfig($formSchema, $columnName, $this instanceof \App\Models\UgcTrack ? 'track' : 'poi');
-            $tabsLabel = __('Validation Permissions');
+            $panelLabel = __('Validation Permissions');
         }
 
-        $tabs = new Tabs($tabsLabel, [
-            ' ' => $fields,
-        ]);
-
-        return $tabs;
+        // Create a tab with the fields
+        return Panel::make($panelLabel, $fields);
     }
 
     protected function buildFieldsFromConfig(array $fieldsConfig, string $columnName, string $modelType): array

@@ -15,8 +15,8 @@ use App\Http\Controllers\SourceSurveyController;
 use App\Http\Controllers\UmapController;
 use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 use Illuminate\Support\Facades\Route;
-use Wm\WmPackage\Http\Controllers\UgcPoiController;
-use Wm\WmPackage\Http\Controllers\UgcTrackController;
+use Wm\WmPackage\Http\Controllers\Api\UgcPoiController;
+use Wm\WmPackage\Http\Controllers\Api\UgcTrackController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,8 +43,8 @@ Route::prefix('kml')->name('kml.')->group(function () {
 Route::prefix('geojson')->name('geojson.')->group(function () {
     Route::get('/{modelType}/{id}', [GeojsonController::class, 'download']);
     Route::prefix('ugc')->name('ugc.')->group(function () {
-        Route::get('/ugcpoi/{ids}', [UgcPoiController::class, 'geojson'])->name('ugcpoi');
-        Route::get('/ugctrack/{ids}', [UgcTrackController::class, 'geojson'])->name('ugctrack');
+        Route::get('/ugcpoi/{ids}', [UgcPoiController::class, 'downloadGeojson'])->name('ugcpoi');
+        Route::get('/ugctrack/{ids}', [UgcTrackController::class, 'downloadGeojson'])->name('ugctrack');
     });
 });
 
@@ -77,7 +77,7 @@ Route::prefix('v2')->group(function () {
     Route::get('/itinerary/{id}', [ItineraryController::class, 'show'])->name('v2-itinerary-id');
     Route::get('/ecpois/bb/{bounding_box}/{type}', [EcPoiController::class, 'indexByBoundingBox'])->name('v2-ecpois-by-bb');
     Route::get('/ecpois/{hr_osm2cai_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteId'])->name('v2-ecpois-by-osm2caiId');
-    Route::get('/ecpois/{hr_osm_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteOsmId'])->name('v2-ecpois-by-OsmId');
+    Route::get('/ecpois/osm/{hr_osm_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteOsmId'])->name('v2-ecpois-by-OsmId');
 
     //Export
     Route::prefix('export')->name('export')->group(function () {

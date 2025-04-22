@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Nova\AbstractUgc;
 use App\Nova\Actions\DownloadUgcCsv;
 use App\Nova\Filters\UgcFormIdFilter;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -54,7 +55,7 @@ class UgcPoi extends AbstractUgc
      * @param string $search The search term to filter by
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function applySearch($query, $search)
+    public static function applySearch(Builder $query, string $search): Builder
     {
         return $query->where(function ($query) use ($search) {
             $query->where('name', 'like', '%'.$search.'%')

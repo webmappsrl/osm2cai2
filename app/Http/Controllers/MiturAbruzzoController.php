@@ -56,7 +56,7 @@ class MiturAbruzzoController extends Controller
      */
     public function miturAbruzzoRegionList()
     {
-        $regions = Region::all();
+        $regions = Region::whereNotNull('geometry')->get();
 
         $formattedRegions = $regions->mapWithKeys(function ($region) {
             $formattedDate = $region->updated_at->toIso8601String();
@@ -1273,7 +1273,7 @@ class MiturAbruzzoController extends Controller
 
     public static function caiHutsMap($id)
     {
-        $caiHut = CaiHuts::findOrFail($id);
+        $caiHut = CaiHut::findOrFail($id);
 
         $geometry = DB::select('SELECT ST_AsText(geometry) AS geometry FROM cai_huts WHERE id = ?', [$id]);
         if (! $geometry) {
