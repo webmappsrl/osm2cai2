@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.1.0](https://github.com/webmappsrl/osm2cai2/compare/v1.0.0...v1.1.0) (2025-04-22)
+
+
+### Features
+
+* add monitoring data retrieval oc: 5274 ([#168](https://github.com/webmappsrl/osm2cai2/issues/168)) ([419a152](https://github.com/webmappsrl/osm2cai2/commit/419a152c0dc9000f132d59818dd281cba34ba678))
+* Added new tests for GeometryService oc:4553 ([#157](https://github.com/webmappsrl/osm2cai2/issues/157)) ([6ed2fac](https://github.com/webmappsrl/osm2cai2/commit/6ed2face0b4b676e30333835492f0b8ef7985806))
+* Added some tests for HikingRouteDescriptionService oc:4554 ([#158](https://github.com/webmappsrl/osm2cai2/issues/158)) ([4d720c9](https://github.com/webmappsrl/osm2cai2/commit/4d720c927a14f05e2beb8cf12d20da18722c1f72))
+* Added tests for AreaModelService and factory for Area oc:4552 ([#155](https://github.com/webmappsrl/osm2cai2/issues/155)) ([e88660d](https://github.com/webmappsrl/osm2cai2/commit/e88660da089aa373520c5dec9a9b216e34069a3c))
+* Added tests for OsmService oc:4555 ([#161](https://github.com/webmappsrl/osm2cai2/issues/161)) ([43eb198](https://github.com/webmappsrl/osm2cai2/commit/43eb198bd214088af7695b9538b7425e3396750e))
+* Enhance OSM2CAI user synchronization with advanced filtering and debugging options ([8b5057c](https://github.com/webmappsrl/osm2cai2/commit/8b5057c6153e911fe9058407167de1164e2854b3))
+
+
+### Bug Fixes
+
+* add compatibility to nova 5 for geometric fields ([fdc4ec5](https://github.com/webmappsrl/osm2cai2/commit/fdc4ec568d88eeaf093dab0abf9a5a72ee4a36a7))
+* add compatibility to nova 5 oc 5080 ([35329d8](https://github.com/webmappsrl/osm2cai2/commit/35329d8ae1efc34f5854a0af383ff0b3e4980de1))
+* duplicated method getRawData() ([827b7e4](https://github.com/webmappsrl/osm2cai2/commit/827b7e43a6807257201d15372f8ba7432fce0a81))
+* improve geometry extraction strategy for UGC media coordinates ([5cd5a05](https://github.com/webmappsrl/osm2cai2/commit/5cd5a05e8b002a4bee527b629bcc2c23841f5994))
+* nova compatibility with geometries field oc:5080 ([7fdfba2](https://github.com/webmappsrl/osm2cai2/commit/7fdfba2fc983324f90f289dcdcb364dd22a94df1))
+* nova global search for hiking routes, provinces and cai huts ([b2ccf74](https://github.com/webmappsrl/osm2cai2/commit/b2ccf7484fc4f2130f67e3e78534777da0b92676))
+* osmfeatures_data in update hiking route command OC:5336 ([6012f84](https://github.com/webmappsrl/osm2cai2/commit/6012f843b3e4cf19a13b969f033d339116214e15))
+* resolve minor syntax and formatting issues in UGC sync command ([77e6d3e](https://github.com/webmappsrl/osm2cai2/commit/77e6d3e6a08b9fbae2293a524ada91248a7d1f7f))
+
+
+### Miscellaneous Chores
+
+* Add ResetIdSequenceCommand to reset ID sequences in specified tables ([1a3c0a0](https://github.com/webmappsrl/osm2cai2/commit/1a3c0a0a97d0203c2732c335a2a7c6d2e0aacd60))
+* removed unused patch ([31561cf](https://github.com/webmappsrl/osm2cai2/commit/31561cf2da49e79fed96b6d4beae9c6aa43a4901))
+
 ## 1.0.0 (2025-04-15)
 
 
