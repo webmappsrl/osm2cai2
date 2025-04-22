@@ -169,7 +169,6 @@ class SyncUgcFromGeohub extends Command
      */
     private function buildEndpointUrl(string $type, $appId): string
     {
-
         return "{$this->geohubBaseUrl}{$this->geohubApiUrl}{$type}/geojson/{$appId}/list";
     }
 
@@ -304,7 +303,6 @@ class SyncUgcFromGeohub extends Command
                 $this->createdElements[$type]++;
             } else {
                 $this->updatedElements[] = ucfirst($type).' with id '.$id.' updated';
-
             }
         }
     }
@@ -370,7 +368,7 @@ class SyncUgcFromGeohub extends Command
             'raw_data' => $rawData,
             'updated_at' => $geoJson['properties']['updated_at'] ?? null,
             'taxonomy_wheres' => $geoJson['properties']['taxonomy_wheres'] ?? null,
-            'app_id' => 'geohub_' . $appId,
+            'app_id' => 'geohub_'.$appId,
         ];
     }
 

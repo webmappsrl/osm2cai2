@@ -44,7 +44,6 @@ class ConvertOsmfeaturesDataToArray extends Command
         $count = 0;
         $stringJsonRecords = [];
 
-
         $this->info('Totale record trovati: '.$hikingRoutes->count());
         $this->newLine();
 
@@ -52,7 +51,6 @@ class ConvertOsmfeaturesDataToArray extends Command
         $bar->start();
 
         foreach ($hikingRoutes as $route) {
-
             if (is_string($route->osmfeatures_data) && ! empty($route->osmfeatures_data)) {
                 try {
                     $decodedData = json_decode($route->osmfeatures_data, true);
