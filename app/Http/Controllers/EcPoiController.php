@@ -104,7 +104,6 @@ class EcPoiController extends Controller
         return response()->json($pois);
     }
 
-
     /**
      * @OA\Get(
      *     path="/api/v2/ecpois/osm/{hr_osm_id}/{type}",
@@ -140,7 +139,6 @@ class EcPoiController extends Controller
      */
     public function indexByBufferFromHikingRouteOsmId(string $osmId, string $type)
     {
-
         $hr = HikingRoute::where('osmfeatures_data->properties->osm_id', $osmId)->first();
         $pois = EcPoi::whereRaw(
             'ST_DWithin(geometry, ?, 1000, true)',

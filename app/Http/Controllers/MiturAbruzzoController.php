@@ -1299,7 +1299,7 @@ class MiturAbruzzoController extends Controller
         }
         $geometry = json_decode($geometry[0]->geom, true);
 
-        $hikingRoutesIntersectingIds = Cache::remember('hiking_routes_intersecting_' . $id, 60 * 24, function () use ($mountainGroup) {
+        $hikingRoutesIntersectingIds = Cache::remember('hiking_routes_intersecting_'.$id, 60 * 24, function () use ($mountainGroup) {
             return array_keys($mountainGroup->getIntersections(new HikingRoute())->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray());
         });
 
