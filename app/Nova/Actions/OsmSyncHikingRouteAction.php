@@ -2,6 +2,7 @@
 
 namespace App\Nova\Actions;
 
+use App\Models\HikingRoute;
 use App\Services\OsmService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -29,11 +30,7 @@ class OsmSyncHikingRouteAction extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         $user = auth()->user();
-
-        /**
-         * @var OsmService
-         */
-        $service = app()->make(OsmService::class);
+        $service = app(OsmService::class);
 
         foreach ($models as $model) {
             if ($model->osm2cai_status > 3) {
@@ -42,16 +39,20 @@ class OsmSyncHikingRouteAction extends Action
             $sectors = $model->sectors;
             $areas = $model->areas;
             $provinces = $model->provinces;
+
+            // Ensure osmfeatures_data and osm_id exist
+            if (! isset($model->osmfeatures_data['properties']['osm_id'])) {
+                return Action::danger('Hiking Route model '.$model->id.' does not have a valid osm_id in osmfeatures_data.');
+            }
+
             if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
                 $service->updateHikingRouteModelWithOsmData($model);
-
-                return Action::redirect('/resources/hiking-routes/'.$model->id);
+                continue;
             }
             if ($user->hasRole('Regional Referent')) {
                 if ($model->regions->pluck('id')->contains($user->region->id)) {
                     $service->updateHikingRouteModelWithOsmData($model);
-
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    continue;
                 } else {
                     return Action::danger('You are not authorized to perform this action');
                 }
@@ -59,23 +60,21 @@ class OsmSyncHikingRouteAction extends Action
             if ($user->hasRole('Local Referent')) {
                 if (! $sectors->intersect($user->sectors)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
-
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    continue;
                 } elseif (! $areas->intersect($user->areas)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
-
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    continue;
                 } elseif (! $provinces->intersect($user->provinces)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
-
-                    return Action::redirect('/resources/hiking-routes/'.$model->id);
+                    continue;
                 } else {
                     return Action::danger('You are not authorized to perform this action');
                 }
             }
         }
 
-        return Action::redirect('/resources/hiking-routes/'.$model->id);
+        // It always operates on a single model because showOnDetail is true
+        return Action::redirect('/resources/hiking-routes/'.$models->first()->id);
     }
 
     /**

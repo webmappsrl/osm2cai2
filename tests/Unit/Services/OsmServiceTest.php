@@ -222,8 +222,8 @@ class OsmServiceTest extends TestCase
                     ],
                 ]
             );
-            $this->assertTrue($this->osmService->updateHikingRouteModelWithOsmData($firstHikingRoute, $this->osmService->getHikingRoute(1)));
-            $this->assertTrue($this->osmService->updateHikingRouteModelWithOsmData($secondHikingRoute, null));
+            $this->assertInstanceOf(HikingRoute::class, $this->osmService->updateHikingRouteModelWithOsmData($firstHikingRoute, $this->osmService->getHikingRoute(1)));
+            $this->assertInstanceOf(HikingRoute::class, $this->osmService->updateHikingRouteModelWithOsmData($secondHikingRoute, null));
             $this->assertConditionsForHikingRoute($firstHikingRoute);
             $this->assertConditionsForHikingRoute($secondHikingRoute);
         });
@@ -234,11 +234,11 @@ class OsmServiceTest extends TestCase
         $this->assertDatabaseHas('hiking_routes', [
             'id' => $hikingRoute->id,
             'osmfeatures_data->geometry->type' => 'MultiLineString',
-            'osmfeatures_data->properties->osm_id' => 1,
-            'osmfeatures_data->properties->name'   => self::HIKING_ROUTE_EXPECTED_DATA['name'],
-            'osmfeatures_data->properties->ref'    => self::HIKING_ROUTE_EXPECTED_DATA['ref'],
-            'osmfeatures_data->properties->network' => self::HIKING_ROUTE_EXPECTED_DATA['network'],
-            'osmfeatures_data->properties->distance' => self::HIKING_ROUTE_EXPECTED_DATA['distance'],
+            'osmfeatures_data->properties->osm_tags->osm_id' => 1,
+            'osmfeatures_data->properties->osm_tags->name'   => self::HIKING_ROUTE_EXPECTED_DATA['name'],
+            'osmfeatures_data->properties->osm_tags->ref'    => self::HIKING_ROUTE_EXPECTED_DATA['ref'],
+            'osmfeatures_data->properties->osm_tags->network' => self::HIKING_ROUTE_EXPECTED_DATA['network'],
+            'osmfeatures_data->properties->osm_tags->distance' => self::HIKING_ROUTE_EXPECTED_DATA['distance'],
         ]);
 
         $this->assertTrue($hikingRoute->sectors->contains($this->intersectingSector->id));
