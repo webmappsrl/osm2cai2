@@ -15,8 +15,17 @@ RUN chown -R www-data:www-data /var/www \
     && chown www-data:www-data /usr/local/etc/php-fpm.d/www.conf \
     && chown -R www-data:www-data /usr/local/etc/php-fpm.d/zz-docker.conf
 
+# Add PostgreSQL PGDG repository to install correct client version
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gnupg \
+    lsb-release \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql-archive-keyring.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 #apt packages
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libmcrypt-dev \
@@ -50,6 +59,7 @@ RUN apt-get update && apt-get install -y \
     libosmium2-dev \
     libprotozero-dev \
     supervisor \
+    postgresql-client-16 \
     gdal-bin \
     zip \
     nodejs \
