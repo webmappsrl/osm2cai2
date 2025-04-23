@@ -5,11 +5,11 @@ namespace App\Nova\Actions;
 use App\Models\HikingRoute;
 use App\Services\OsmService;
 use Illuminate\Bus\Queueable;
-use Laravel\Nova\Actions\Action;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\ActionFields;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class OsmSyncHikingRouteAction extends Action
@@ -41,8 +41,8 @@ class OsmSyncHikingRouteAction extends Action
             $provinces = $model->provinces;
 
             // Ensure osmfeatures_data and osm_id exist
-            if (!isset($model->osmfeatures_data['properties']['osm_id'])) {
-                return Action::danger('Hiking Route model ' . $model->id . ' does not have a valid osm_id in osmfeatures_data.');
+            if (! isset($model->osmfeatures_data['properties']['osm_id'])) {
+                return Action::danger('Hiking Route model '.$model->id.' does not have a valid osm_id in osmfeatures_data.');
             }
 
             if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
@@ -74,7 +74,7 @@ class OsmSyncHikingRouteAction extends Action
         }
 
         // It always operates on a single model because showOnDetail is true
-        return Action::redirect('/resources/hiking-routes/' . $models->first()->id);
+        return Action::redirect('/resources/hiking-routes/'.$models->first()->id);
     }
 
     /**
