@@ -15,7 +15,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-
         // osm2cai:import-ugc-from-geohub
         $schedule->exec('docker exec -it php81_osm2cai2 php artisan osm2cai:import-ugc-from-geohub')
             ->dailyAt('00:00')
@@ -74,7 +73,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__ . '/Commands');
+        $this->load(__DIR__.'/Commands');
 
         require base_path('routes/console.php');
     }

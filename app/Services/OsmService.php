@@ -15,8 +15,11 @@ use Symfony\Component\String\Exception\RuntimeException;
 class OsmService
 {
     protected $http;
+
     protected $geometryService;
+
     protected $baseApiUrl = 'https://www.openstreetmap.org/api/0.6/';
+
     protected $baseWaymarkedUrl = 'https://hiking.waymarkedtrails.org/api/v1/details/relation/';
 
     public function __construct()
@@ -48,7 +51,7 @@ class OsmService
     {
         $instance = static::getService();
 
-        if (!$instance) {
+        if (! $instance) {
             throw new RuntimeException('OsmService has not been set.');
         }
 
@@ -57,7 +60,7 @@ class OsmService
 
     /**
      * Get allowed OSM relation API fields
-     * 
+     *
      * @return array
      */
     public function getRelationApiFieldsKey()
@@ -112,7 +115,7 @@ class OsmService
      */
     public function hikingRouteExists($relationId)
     {
-        return $this->http::head($this->baseApiUrl . 'relation/' . intval($relationId))->ok();
+        return $this->http::head($this->baseApiUrl.'relation/'.intval($relationId))->ok();
     }
 
     /**
@@ -123,9 +126,9 @@ class OsmService
      */
     public function getHikingRoute($relationId)
     {
-        $response = $this->http::get($this->baseApiUrl . 'relation/' . intval($relationId));
+        $response = $this->http::get($this->baseApiUrl.'relation/'.intval($relationId));
 
-        if (!$response->ok()) {
+        if (! $response->ok()) {
             return false;
         }
 
@@ -152,7 +155,8 @@ class OsmService
      */
     public function getHikingRouteGeojson($relationId)
     {
-        $response = $this->http::get($this->baseWaymarkedUrl . intval($relationId) . '/geometry/geojson');
+        $response = $this->http::get($this->baseWaymarkedUrl.intval($relationId).'/geometry/geojson');
+
         return $response->ok() ? $response->body() : false;
     }
 
@@ -164,7 +168,8 @@ class OsmService
      */
     public function getHikingRouteGpx($relationId)
     {
-        $response = $this->http::get($this->baseWaymarkedUrl . intval($relationId) . '/geometry/gpx');
+        $response = $this->http::get($this->baseWaymarkedUrl.intval($relationId).'/geometry/gpx');
+
         return $response->ok() ? $response->body() : false;
     }
 
@@ -192,7 +197,7 @@ class OsmService
 
     /**
      * Helper method to convert GPX to geometry
-     * 
+     *
      * @param string|int $relationId
      * @param string $conversionMethod
      * @return string|false
@@ -200,11 +205,12 @@ class OsmService
     protected function convertGpxToGeometry($relationId, $conversionMethod)
     {
         $gpx = $this->getHikingRouteGpx($relationId);
-        if (!$gpx) {
+        if (! $gpx) {
             return false;
         }
 
         $geojson = $this->geometryService->textToGeojson($gpx);
+
         return $this->geometryService->$conversionMethod(json_encode($geojson));
     }
 
@@ -218,8 +224,9 @@ class OsmService
     public function updateHikingRouteModelWithOsmData(HikingRoute $model, $osmTags = null)
     {
         // Validate model has required OSM data
-        if (!isset($model->osmfeatures_data['properties']['osm_id'])) {
+        if (! isset($model->osmfeatures_data['properties']['osm_id'])) {
             Log::error("OsmService: Missing osm_id for HikingRoute ID {$model->id}");
+
             return false;
         }
 
@@ -227,7 +234,7 @@ class OsmService
 
         // Fetch OSM data
         $osmData = $this->fetchOsmData($relationId, $osmTags);
-        if (!$osmData) {
+        if (! $osmData) {
             return false;
         }
 
@@ -235,7 +242,7 @@ class OsmService
 
         // Prepare osmfeatures_data
         $osmfeaturesData = $this->prepareOsmfeaturesData($model, $osmGeo, $osmTags);
-        if (!$osmfeaturesData) {
+        if (! $osmfeaturesData) {
             return false;
         }
 
@@ -243,7 +250,7 @@ class OsmService
         $calculated_status = $this->calculateOsm2caiStatus($osmTags);
 
         // Update model
-        if (!$this->updateModelWithOsmData($model, $osmGeo, $osmfeaturesData, $calculated_status)) {
+        if (! $this->updateModelWithOsmData($model, $osmGeo, $osmfeaturesData, $calculated_status)) {
             return false;
         }
 
@@ -255,7 +262,7 @@ class OsmService
 
     /**
      * Fetch OSM data (tags and geometry)
-     * 
+     *
      * @param string|int $relationId
      * @param array|null $osmTags
      * @return array|false
@@ -269,6 +276,7 @@ class OsmService
 
         if ($osmTags === false) {
             Log::error("OsmService: Failed to fetch OSM tags for relation ID {$relationId}");
+
             return false;
         }
 
@@ -276,6 +284,7 @@ class OsmService
         $osmGeo = $this->getHikingRouteGeometry($relationId);
         if ($osmGeo === false) {
             Log::error("OsmService: Failed to fetch OSM geometry for relation ID {$relationId}");
+
             return false;
         }
 
@@ -284,7 +293,7 @@ class OsmService
 
     /**
      * Prepare osmfeatures_data array
-     * 
+     *
      * @param HikingRoute $model
      * @param string $osmGeo
      * @param array $osmTags
@@ -296,19 +305,20 @@ class OsmService
             ? $model->osmfeatures_data
             : json_decode($model->osmfeatures_data ?? '{}', true);
 
-        if (!is_array($osmfeaturesData)) {
+        if (! is_array($osmfeaturesData)) {
             Log::error("OsmService: Invalid osmfeatures_data JSON for HikingRoute ID {$model->id}");
+
             return false;
         }
 
         // Ensure properties key exists
-        if (!isset($osmfeaturesData['properties'])) {
+        if (! isset($osmfeaturesData['properties'])) {
             $osmfeaturesData['properties'] = [];
         }
 
         // Update geometry in osmfeatures_data
         $osmfeaturesData['geometry'] = json_decode(
-            DB::select("SELECT ST_AsGeoJSON(?) as geojson", [$osmGeo])[0]->geojson,
+            DB::select('SELECT ST_AsGeoJSON(?) as geojson', [$osmGeo])[0]->geojson,
             true
         );
 
@@ -321,14 +331,14 @@ class OsmService
 
     /**
      * Calculate OSM2CAI status based on tags
-     * 
+     *
      * @param array $osmTags
      * @return int
      */
     protected function calculateOsm2caiStatus($osmTags)
     {
-        $cai_scale_present = !empty($osmTags['cai_scale']);
-        $survey_date_present = !empty($osmTags['survey_date']);
+        $cai_scale_present = ! empty($osmTags['cai_scale']);
+        $survey_date_present = ! empty($osmTags['survey_date']);
 
         if ($cai_scale_present && $survey_date_present) {
             return 3;
@@ -343,7 +353,7 @@ class OsmService
 
     /**
      * Update model with OSM data
-     * 
+     *
      * @param HikingRoute $model
      * @param string $osmGeo
      * @param array $osmfeaturesData
@@ -357,8 +367,9 @@ class OsmService
         $model->osm2cai_status = $calculated_status;
         $model->osmfeatures_data = $osmfeaturesData;
 
-        if (!$model->save()) {
+        if (! $model->save()) {
             Log::error("OsmService: Failed to save HikingRoute ID {$model->id} after OSM sync.");
+
             return false;
         }
 
@@ -367,7 +378,7 @@ class OsmService
 
     /**
      * Update intersections for the model
-     * 
+     *
      * @param HikingRoute $model
      * @return void
      */
@@ -377,7 +388,7 @@ class OsmService
             $sectorsIntersecting = $model->getIntersections(new Sector());
             $model->sectors()->sync($sectorsIntersecting->pluck('id'));
         } catch (\Throwable $e) {
-            Log::error("OsmService: Error syncing sectors for HikingRoute ID {$model->id}: " . $e->getMessage());
+            Log::error("OsmService: Error syncing sectors for HikingRoute ID {$model->id}: ".$e->getMessage());
             // Continue even if sector sync fails, but log the error
         }
     }
