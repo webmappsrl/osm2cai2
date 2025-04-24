@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
+
+
+### Bug Fixes
+
+* imported missing class ([d08de37](https://github.com/webmappsrl/osm2cai2/commit/d08de3776233b3684cf876f2df0d9146ef661961))
+* nova global search for hiking routes, provinces and cai huts ([b2ccf74](https://github.com/webmappsrl/osm2cai2/commit/b2ccf7484fc4f2130f67e3e78534777da0b92676))
+* nova global search for hiking routes, provinces and cai huts ([8a907ec](https://github.com/webmappsrl/osm2cai2/commit/8a907ecf66b18a6311f67f5d43a60cea02692a18))
+* osmfeatures_data in update hiking route command OC:5336 ([6012f84](https://github.com/webmappsrl/osm2cai2/commit/6012f843b3e4cf19a13b969f033d339116214e15))
+* osmfeatures_data in update hiking route command OC:5336 ([6783375](https://github.com/webmappsrl/osm2cai2/commit/678337542b6921e240873732163d4b28c9f4a26e))
+* source surveys monitorings and api documentation OC:5386,5387 ([96a59cc](https://github.com/webmappsrl/osm2cai2/commit/96a59cc36586d5c5b00677133b8ea11a1a2fe2f9))
+
+
+### Miscellaneous Chores
+
+* update wm-package subproject commit reference to 4887733 ([2939705](https://github.com/webmappsrl/osm2cai2/commit/2939705fad151109069d88dbe6de49e9f39fe002))
+* update wm-package subproject commit reference to b8c1830 ([9b50349](https://github.com/webmappsrl/osm2cai2/commit/9b50349f1e6363655511afccaef26a7c1c10bf60))
+* updated dockerfile to include correct pgdump version for wm-backup command ([dd728c6](https://github.com/webmappsrl/osm2cai2/commit/dd728c68e509941bd44d15d0a507c147bbb52bee))
+
 ## [1.1.0](https://github.com/webmappsrl/osm2cai2/compare/v1.0.0...v1.1.0) (2025-04-22)
 
 
