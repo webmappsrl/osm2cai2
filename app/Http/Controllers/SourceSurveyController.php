@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UgcPoi;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -315,26 +316,50 @@ HTML;
         return $zipPath;
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v2/source_survey/monitorings",
+     *     summary="Get source survey monitorings",
+     *     tags={"Api V2"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="source survey monitorings",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="validated",
+     *                 type="integer",
+     *                 format="integer"
+     *             ),
+     *             @OA\Property(
+     *                 property="pending",
+     *                 type="integer",
+     *                 format="integer"
+     *             ),
+     *             @OA\Property(
+     *                 property="people",
+     *                 type="integer",
+     *                 format="integer"
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function surveyData()
     {
-        $validatedCount = UgcPoi::where('form_id', 'water')
-            ->where('validated', 'valid')
-            ->count();
+        $sourceSurveyPois = UgcPoi::where('form_id', 'water')->get();
 
-        $pendingCount = UgcPoi::where('form_id', 'water')
-            ->where('validated', '!=', 'valid')
-            ->count();
+        $validatedCount = $sourceSurveyPois->where('validated', 'valid')->count();
+        $notValidatedCount = $sourceSurveyPois->where('validated', 'not_validated')->count();
 
-        $validatorsCount = DB::table('users')
-            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('roles.name', 'Validator')
-            ->count();
+        $peopleCount = User::whereHas('ugc_pois', function ($query) {
+            $query->where('form_id', 'water');
+        })->count();
 
         return response()->json([
             'validated' => $validatedCount,
-            'pending' => $pendingCount,
-            'validators' => $validatorsCount,
+            'pending' => $notValidatedCount,
+            'people' => $peopleCount,
         ]);
     }
 }
