@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\UgcPoi;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 
 class SourceSurveyController extends Controller
@@ -43,7 +44,7 @@ class SourceSurveyController extends Controller
                 </div>
                 HTML;
             }
-            $osm2caiUrl = url('resources/source-surveys/'.$sourceSurvey->id);
+            $osm2caiUrl = url('resources/source-surveys/' . $sourceSurvey->id);
 
             $rawData = $sourceSurvey->raw_data;
             $date = $rawData['date'] ?? 'N/A';
@@ -51,17 +52,17 @@ class SourceSurveyController extends Controller
                 $date = Carbon::parse($date)->format('d-m-Y');
             }
             if (isset($sourceSurvey->flow_rate) && $sourceSurvey->flow_rate !== 'N/A') {
-                $flowRate = str_replace(',', '.', $sourceSurvey->flow_rate).' L/s';
+                $flowRate = str_replace(',', '.', $sourceSurvey->flow_rate) . ' L/s';
             } else {
                 $flowRate = 'N/A';
             }
             if (isset($sourceSurvey->temperature) && $sourceSurvey->temperature !== 'N/A') {
-                $temperature = str_replace(',', '.', $sourceSurvey->temperature).'C';
+                $temperature = str_replace(',', '.', $sourceSurvey->temperature) . 'C';
             } else {
                 $temperature = 'N/A';
             }
             if (isset($sourceSurvey->conductivity) && $sourceSurvey->conductivity !== 'N/A') {
-                $conductivity = str_replace(',', '.', $sourceSurvey->conductivity).' microS/cm';
+                $conductivity = str_replace(',', '.', $sourceSurvey->conductivity) . ' microS/cm';
             } else {
                 $conductivity = 'N/A';
             }
@@ -202,17 +203,17 @@ HTML;
             $position = $rawData['position'] ?? null;
             $altitude = $position['altitude'] ?? 'N/A';
 
-            $gpx .= '<wpt lat="'.$geometry['coordinates'][1].'" lon="'.$geometry['coordinates'][0].'">';
-            $gpx .= '<name>'.htmlspecialchars($survey->name ?? 'N/A').'</name>';
-            $gpx .= '<desc>'.htmlspecialchars($survey->description ?? 'N/A').'</desc>';
-            $gpx .= '<ele>'.($altitude).'</ele>';
+            $gpx .= '<wpt lat="' . $geometry['coordinates'][1] . '" lon="' . $geometry['coordinates'][0] . '">';
+            $gpx .= '<name>' . htmlspecialchars($survey->name ?? 'N/A') . '</name>';
+            $gpx .= '<desc>' . htmlspecialchars($survey->description ?? 'N/A') . '</desc>';
+            $gpx .= '<ele>' . ($altitude) . '</ele>';
             $gpx .= '<extensions>';
-            $gpx .= '<id>'.$survey->id.'</id>';
-            $gpx .= '<active>'.($rawData['active'] ?? 'N/A').'</active>';
-            $gpx .= '<range_time>'.($survey->flow_rate ?? 'N/A').'</range_time>';
-            $gpx .= '<temperature>'.($survey->temperature ?? 'N/A').'</temperature>';
-            $gpx .= '<conductivity>'.($survey->conductivity ?? 'N/A').'</conductivity>';
-            $gpx .= '<range_volume>'.($rawData['range_volume'] ?? 'N/A').'</range_volume>';
+            $gpx .= '<id>' . $survey->id . '</id>';
+            $gpx .= '<active>' . ($rawData['active'] ?? 'N/A') . '</active>';
+            $gpx .= '<range_time>' . ($survey->flow_rate ?? 'N/A') . '</range_time>';
+            $gpx .= '<temperature>' . ($survey->temperature ?? 'N/A') . '</temperature>';
+            $gpx .= '<conductivity>' . ($survey->conductivity ?? 'N/A') . '</conductivity>';
+            $gpx .= '<range_volume>' . ($rawData['range_volume'] ?? 'N/A') . '</range_volume>';
             $gpx .= '</extensions>';
             $gpx .= '</wpt>';
         }
@@ -235,27 +236,27 @@ HTML;
             $altitude = $position['altitude'] ?? 'N/A';
 
             $kml .= '<Placemark>';
-            $kml .= '<name>'.htmlspecialchars($survey->name ?? 'N/A').'</name>';
+            $kml .= '<name>' . htmlspecialchars($survey->name ?? 'N/A') . '</name>';
             $kml .= '<description>';
-            $kml .= 'ID: '.$survey->id."\n";
-            $kml .= 'Info: '.htmlspecialchars($survey->description ?? 'N/A')."\n";
-            $kml .= 'Active: '.($rawData['active'] ?? 'N/A')."\n";
-            $kml .= 'Range Time: '.($survey->flow_rate ?? 'N/A')."\n";
-            $kml .= 'Temperature: '.($survey->temperature ?? 'N/A')."\n";
-            $kml .= 'Conductivity: '.($survey->conductivity ?? 'N/A')."\n";
-            $kml .= 'Range Volume: '.($rawData['range_volume'] ?? 'N/A')."\n";
-            $kml .= 'Elevation: '.($altitude);
+            $kml .= 'ID: ' . $survey->id . "\n";
+            $kml .= 'Info: ' . htmlspecialchars($survey->description ?? 'N/A') . "\n";
+            $kml .= 'Active: ' . ($rawData['active'] ?? 'N/A') . "\n";
+            $kml .= 'Range Time: ' . ($survey->flow_rate ?? 'N/A') . "\n";
+            $kml .= 'Temperature: ' . ($survey->temperature ?? 'N/A') . "\n";
+            $kml .= 'Conductivity: ' . ($survey->conductivity ?? 'N/A') . "\n";
+            $kml .= 'Range Volume: ' . ($rawData['range_volume'] ?? 'N/A') . "\n";
+            $kml .= 'Elevation: ' . ($altitude);
             $kml .= '</description>';
             $kml .= '<Point>';
-            $kml .= '<coordinates>'.$geometry['coordinates'][0].','.$geometry['coordinates'][1].','.($rawData['altitude'] ?? 'N/A').'</coordinates>';
+            $kml .= '<coordinates>' . $geometry['coordinates'][0] . ',' . $geometry['coordinates'][1] . ',' . ($rawData['altitude'] ?? 'N/A') . '</coordinates>';
             $kml .= '</Point>';
             $kml .= '<ExtendedData>';
-            $kml .= '<Data name="id"><value>'.$survey->id.'</value></Data>';
-            $kml .= '<Data name="active"><value>'.($rawData['active'] ?? 'N/A').'</value></Data>';
-            $kml .= '<Data name="range_time"><value>'.($survey->flow_rate ?? 'N/A').'</value></Data>';
-            $kml .= '<Data name="temperature"><value>'.($survey->temperature ?? 'N/A').'</value></Data>';
-            $kml .= '<Data name="conductivity"><value>'.($survey->conductivity ?? 'N/A').'</value></Data>';
-            $kml .= '<Data name="range_volume"><value>'.($rawData['range_volume'] ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="id"><value>' . $survey->id . '</value></Data>';
+            $kml .= '<Data name="active"><value>' . ($rawData['active'] ?? 'N/A') . '</value></Data>';
+            $kml .= '<Data name="range_time"><value>' . ($survey->flow_rate ?? 'N/A') . '</value></Data>';
+            $kml .= '<Data name="temperature"><value>' . ($survey->temperature ?? 'N/A') . '</value></Data>';
+            $kml .= '<Data name="conductivity"><value>' . ($survey->conductivity ?? 'N/A') . '</value></Data>';
+            $kml .= '<Data name="range_volume"><value>' . ($rawData['range_volume'] ?? 'N/A') . '</value></Data>';
             $kml .= '</ExtendedData>';
             $kml .= '</Placemark>';
         }
@@ -273,68 +274,93 @@ HTML;
 
         Storage::disk('public')->makeDirectory('shape_files/zip');
         chdir(Storage::disk('public')->path('shape_files'));
-        if (Storage::disk('public')->exists('shape_files/zip/'.$name.'.zip')) {
-            Storage::disk('public')->delete('shape_files/zip/'.$name.'.zip');
+        if (Storage::disk('public')->exists('shape_files/zip/' . $name . '.zip')) {
+            Storage::disk('public')->delete('shape_files/zip/' . $name . '.zip');
         }
 
         $ids = $surveys->pluck('id')->toArray();
 
-        $command = 'ogr2ogr -f "ESRI Shapefile" '.
-            $name.
-            '.shp PG:"dbname=\''.
-            Config::get('database.connections.pgsql.database').
-            '\' host=\''.
-            Config::get('database.connections.pgsql.host').
-            '\' port=\''.
-            Config::get('database.connections.pgsql.port').
-            '\' user=\''.
-            Config::get('database.connections.pgsql.username').
-            '\' password=\''.
-            Config::get('database.connections.pgsql.password').
-            '\'" -sql "SELECT id, name, description, flow_rate, temperature, conductivity, ST_Transform(geometry, 4326) as geometry FROM ugc_pois WHERE id IN ('.
-            implode(',', $ids).
+        $command = 'ogr2ogr -f "ESRI Shapefile" ' .
+            $name .
+            '.shp PG:"dbname=\'' .
+            Config::get('database.connections.pgsql.database') .
+            '\' host=\'' .
+            Config::get('database.connections.pgsql.host') .
+            '\' port=\'' .
+            Config::get('database.connections.pgsql.port') .
+            '\' user=\'' .
+            Config::get('database.connections.pgsql.username') .
+            '\' password=\'' .
+            Config::get('database.connections.pgsql.password') .
+            '\'" -sql "SELECT id, name, description, flow_rate, temperature, conductivity, ST_Transform(geometry, 4326) as geometry FROM ugc_pois WHERE id IN (' .
+            implode(',', $ids) .
             ') AND form_id = \'water\' AND validated = \'valid\';" -a_srs EPSG:4326';
 
         exec($command);
 
         // Crea manualmente il file .prj
         $prjContent = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]';
-        file_put_contents($name.'.prj', $prjContent);
+        file_put_contents($name . '.prj', $prjContent);
 
-        $command = 'zip '.$name.'.zip '.$name.'.*';
+        $command = 'zip ' . $name . '.zip ' . $name . '.*';
         exec($command);
 
-        $command = 'mv '.$name.'.zip zip/';
+        $command = 'mv ' . $name . '.zip zip/';
         exec($command);
 
-        $command = 'rm '.$name.'.*';
+        $command = 'rm ' . $name . '.*';
         exec($command);
 
-        $zipPath = 'shape_files/zip/'.$name.'.zip';
+        $zipPath = 'shape_files/zip/' . $name . '.zip';
 
         return $zipPath;
     }
 
+
+    /**
+     * @OA\Get(
+     *     path="/api/v2/source_survey/monitorings",
+     *     summary="Get source survey monitorings",
+     *     tags={"Api V2"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="source survey monitorings",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="validated",
+     *                 type="integer",
+     *                 format="integer"
+     *             ),
+     *             @OA\Property(
+     *                 property="pending",
+     *                 type="integer",
+     *                 format="integer"
+     *             ),
+     *             @OA\Property(
+     *                 property="people",
+     *                 type="integer",
+     *                 format="integer"
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function surveyData()
     {
-        $validatedCount = UgcPoi::where('form_id', 'water')
-            ->where('validated', 'valid')
-            ->count();
+        $sourceSurveyPois = UgcPoi::where('form_id', 'water')->get();
 
-        $pendingCount = UgcPoi::where('form_id', 'water')
-            ->where('validated', '!=', 'valid')
-            ->count();
+        $validatedCount = $sourceSurveyPois->where('validated', 'valid')->count();
+        $notValidatedCount = $sourceSurveyPois->where('validated', 'not_validated')->count();
 
-        $validatorsCount = DB::table('users')
-            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('roles.name', 'Validator')
-            ->count();
+        $peopleCount = User::whereHas('ugc_pois', function ($query) {
+            $query->where('form_id', 'water');
+        })->count();
 
         return response()->json([
             'validated' => $validatedCount,
-            'pending' => $pendingCount,
-            'validators' => $validatorsCount,
+            'pending' => $notValidatedCount,
+            'people' => $peopleCount,
         ]);
     }
 }

@@ -2242,6 +2242,41 @@
                 }
             }
         },
+        "/api/v2/source_survey/monitorings": {
+            "get": {
+                "tags": [
+                    "Api V2"
+                ],
+                "summary": "Get source survey monitorings",
+                "operationId": "392daf3935f04f4cf42de55303f93c00",
+                "responses": {
+                    "200": {
+                        "description": "source survey monitorings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "validated": {
+                                            "type": "integer",
+                                            "format": "integer"
+                                        },
+                                        "pending": {
+                                            "type": "integer",
+                                            "format": "integer"
+                                        },
+                                        "people": {
+                                            "type": "integer",
+                                            "format": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/hiking-routes/region/{region_code}/{sda}": {
             "get": {
                 "tags": [
