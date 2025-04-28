@@ -26,11 +26,26 @@ class UgcPoi extends Model
         'raw_data->date' => 'datetime:Y-m-d H:i:s',
     ];
 
+    /**
+     * Get the registered at date attribute.
+     *
+     * Checks for 'date' or 'createdAt' in raw_data, falling back to model's created_at.
+     * This handles changes in the raw_data structure from the app.
+     * See: https://osm2cai.cai.it/resources/source-surveys/4779 (new) and https://osm2cai.cai.it/resources/source-surveys/1235 (old)
+     *
+     * @return Carbon|null
+     */
     public function getRegisteredAtAttribute()
     {
-        return isset($this->raw_data['date'])
-            ? Carbon::parse($this->raw_data['date'])
-            : $this->created_at;
+        if (isset($this->raw_data['date'])) {
+            return Carbon::parse($this->raw_data['date']);
+        }
+
+        if (isset($this->raw_data['createdAt'])) {
+            return Carbon::parse($this->raw_data['createdAt']);
+        }
+
+        return $this->created_at;
     }
 
     protected static function boot()
