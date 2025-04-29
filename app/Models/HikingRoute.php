@@ -294,7 +294,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
 
     public function issueUser()
     {
-        return $this->belongsTo(User::class, 'id', 'issues_user_id');
+        return $this->belongsTo(User::class, 'issues_user_id', 'id');
     }
 
     public function itineraries()

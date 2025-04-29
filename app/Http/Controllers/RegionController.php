@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRegionRequest;
 use App\Http\Requests\UpdateRegionRequest;
 use App\Models\Region;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class RegionController extends Controller
 {
@@ -68,14 +71,14 @@ class RegionController extends Controller
      * Returns a complete GeoJSON representation of all hiking routes in the region.
      *
      * @param string $id The ID of the region
-     * @return \Illuminate\Http\Response GeoJSON response with hiking routes data
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If region not found
+     * @return Response|JsonResponse GeoJSON response with hiking routes data
+     * @throws ModelNotFoundException If region not found
      */
-    public function geojsonComplete(string $id): \Illuminate\Http\Response
+    public function geojsonComplete(string $id): Response|JsonResponse
     {
         try {
             $region = Region::findOrFail($id);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Region not found'], 404);
         }
 
