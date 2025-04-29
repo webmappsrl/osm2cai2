@@ -24,7 +24,7 @@ class DownloadGeojsonCompleteAction extends Action
 
     public $showOnTableRow = true;
 
-    public $withoutConfirmation = true;
+    public $withoutConfirmation = false;
 
     /**
      * Perform the action on the given models.

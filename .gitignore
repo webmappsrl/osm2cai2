@@ -15,3 +15,4 @@ yarn-error.log
 /docker/volumes/*
 docker-compose.yml
 /tests/stubs
+.php-cs-fixer.cache
