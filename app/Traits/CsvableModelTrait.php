@@ -60,7 +60,6 @@ trait CsvableModelTrait
                 $clubMap = Club::whereIn('cai_code', $sourceRefs)->pluck('name', 'cai_code');
             }
 
-
             foreach ($hikingRoutes as $hr) {
                 $user = $hr->issueUser; // Access the loaded relationship
                 $osmfeaturesDataProperties = $hr->osmfeatures_data['properties'] ?? [];
@@ -69,7 +68,6 @@ trait CsvableModelTrait
                 $sectionName = $sourceRef ? ($clubMap[$sourceRef] ?? '') : '';
 
                 $mainSectorCode = $hr->mainSector()->full_code ?? '';
-
 
                 $data = [
                     $hr->osm2cai_status,
@@ -81,7 +79,7 @@ trait CsvableModelTrait
                     $osmfeaturesDataProperties['cai_scale'] ?? '',
                     $osmfeaturesDataProperties['ref_REI'] ?? '',
                     Osm2caiHelper::getOpenstreetmapUrl($hr->osmfeatures_id ?? null),
-                    url('/resources/hiking-routes/' . $hr->id),
+                    url('/resources/hiking-routes/'.$hr->id),
                     $hr->issues_status,
                     $hr->issues_last_update,
                     $user->name ?? '',
@@ -91,7 +89,8 @@ trait CsvableModelTrait
 
                 $csvLines[] = implode(',', array_map(function ($value) {
                     $value = str_replace('"', '""', $value ?? '');
-                    return '"' . $value . '"';
+
+                    return '"'.$value.'"';
                 }, $data));
             }
         }

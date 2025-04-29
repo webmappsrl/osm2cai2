@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Region;
-use Illuminate\Http\Response;
-use Illuminate\Http\JsonResponse;
 use App\Http\Requests\StoreRegionRequest;
 use App\Http\Requests\UpdateRegionRequest;
+use App\Models\Region;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class RegionController extends Controller
 {
@@ -84,7 +84,7 @@ class RegionController extends Controller
 
         $headers = [
             'Content-type' => 'application/json',
-            'Content-Disposition' => 'attachment; filename="osm2cai_' . date('Ymd') . '_regione_complete_' . $region->name . '.geojson"',
+            'Content-Disposition' => 'attachment; filename="osm2cai_'.date('Ymd').'_regione_complete_'.$region->name.'.geojson"',
         ];
 
         return response($region->getGeojsonComplete(), 200, $headers);
