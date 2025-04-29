@@ -152,7 +152,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Region '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Region ' . $osmfeaturesId);
 
             return;
         }
@@ -164,7 +164,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
         $newName = $osmfeaturesData['properties']['name'] ?? null;
         if ($newName !== $model->name) {
             $updateData['name'] = $newName;
-            Log::channel('wm-osmfeatures')->info('Name updated for Region '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('Name updated for Region ' . $osmfeaturesId);
         }
 
         // Execute the update only if there are data to update
@@ -198,60 +198,45 @@ class Region extends Model implements OsmfeaturesSyncableInterface
             'type' => 'FeatureCollection',
             'features' => [],
         ];
+        $hikingRoutes = $this->hikingRoutes() // Use the relationship query builder
+            ->where('osm2cai_status', '!=', 0)
+            ->with('sectors:id,name') // Eager load only necessary sector columns
+            ->selectRaw('hiking_routes.*, ST_AsGeoJSON(geometry) as geom_geojson') // Select all HR fields + geometry
+            ->get(); // Execute the optimized query
 
-        // Get hiking routes with valid status
-        $hikingRoutes = $this->hikingRoutes->where('osm2cai_status', '!=', 0);
-
-        if (count($hikingRoutes)) {
+        if ($hikingRoutes->isNotEmpty()) {
             foreach ($hikingRoutes as $hikingRoute) {
-                $osmfeaturesDataProperties = $hikingRoute->osmfeatures_data['properties'];
-                // Get associated sectors for this route
+                $osmfeaturesDataProperties = $hikingRoute->osmfeatures_data['properties'] ?? [];
                 $sectors = $hikingRoute->sectors;
 
-                // Build properties object
                 $properties = [
-                    // Basic info
                     'id' => $hikingRoute->id,
                     'name' => $hikingRoute->name,
-                    'ref' => $hikingRoute->osmfeatures_data['properties']['ref'],
-                    'old_ref' => $osmfeaturesDataProperties['old_ref'],
-                    'source_ref' => $osmfeaturesDataProperties['source_ref'],
-
-                    // Status and metadata
+                    'ref' => $osmfeaturesDataProperties['ref'] ?? null,
+                    'old_ref' => $osmfeaturesDataProperties['old_ref'] ?? null,
+                    'source_ref' => $osmfeaturesDataProperties['source_ref'] ?? null,
                     'created_at' => $hikingRoute->created_at,
                     'updated_at' => $hikingRoute->updated_at,
                     'osm2cai_status' => $hikingRoute->osm2cai_status,
-                    'osm_id' => $osmfeaturesDataProperties['osm_id'],
-                    'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
-                    'survey_date' => $osmfeaturesDataProperties['survey_date'],
-                    'accessibility' => $hikingRoute->issues_status,
-
-                    // Route details
-                    'from' => $osmfeaturesDataProperties['from'],
-                    'to' => $osmfeaturesDataProperties['to'],
-                    'distance' => $osmfeaturesDataProperties['distance'],
-                    'cai_scale' => $osmfeaturesDataProperties['cai_scale'],
-                    'roundtrip' => $osmfeaturesDataProperties['roundtrip'],
-                    'duration_forward' => $osmfeaturesDataProperties['duration_forward'],
-                    'duration_backward' => $osmfeaturesDataProperties['duration_backward'],
-                    'ascent' => $osmfeaturesDataProperties['ascent'],
-                    'descent' => $osmfeaturesDataProperties['descent'],
-
-                    // REI references
-                    'ref_REI' => $hikingRoute->osmfeatures_data['properties']['ref_REI'],
-
-                    // Associated data
+                    'osm_id' => $osmfeaturesDataProperties['osm_id'] ?? null,
+                    'osm2cai' => url('/nova/resources/hiking-routes/' . $hikingRoute->id . '/edit'),
+                    'survey_date' => $osmfeaturesDataProperties['survey_date'] ?? null,
+                    'accessibility' => $hikingRoute->issues_status, // Assuming issues_status is a direct attribute or accessor
+                    'from' => $osmfeaturesDataProperties['from'] ?? null,
+                    'to' => $osmfeaturesDataProperties['to'] ?? null,
+                    'distance' => $osmfeaturesDataProperties['distance'] ?? null,
+                    'cai_scale' => $osmfeaturesDataProperties['cai_scale'] ?? null,
+                    'roundtrip' => $osmfeaturesDataProperties['roundtrip'] ?? null,
+                    'duration_forward' => $osmfeaturesDataProperties['duration_forward'] ?? null,
+                    'duration_backward' => $osmfeaturesDataProperties['duration_backward'] ?? null,
+                    'ascent' => $osmfeaturesDataProperties['ascent'] ?? null,
+                    'descent' => $osmfeaturesDataProperties['descent'] ?? null,
+                    'ref_REI' => $osmfeaturesDataProperties['ref_REI'] ?? null,
                     'sectors' => $sectors->pluck('name')->toArray(),
                 ];
 
-                // Get geometry as GeoJSON
-                $geometry = HikingRoute::where('id', '=', $hikingRoute->id)
-                    ->select(DB::raw('ST_AsGeoJSON(geometry) as geom'))
-                    ->first()
-                    ->geom;
-                $geometry = json_decode($geometry, true);
+                $geometry = json_decode($hikingRoute->geom_geojson, true);
 
-                // Build complete feature
                 $feature = [
                     'type' => 'Feature',
                     'properties' => $properties,

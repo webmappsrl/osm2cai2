@@ -195,16 +195,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.342.28",
+            "version": "3.342.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "16cec140483869b3d244a5995b55d5365465dc58"
+                "reference": "9a0ec6b6d503409ae15e090467d3bd6d723b6c6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/16cec140483869b3d244a5995b55d5365465dc58",
-                "reference": "16cec140483869b3d244a5995b55d5365465dc58",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/9a0ec6b6d503409ae15e090467d3bd6d723b6c6a",
+                "reference": "9a0ec6b6d503409ae15e090467d3bd6d723b6c6a",
                 "shasum": ""
             },
             "require": {
@@ -286,9 +286,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.28"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.36"
             },
-            "time": "2025-04-16T18:13:32+00:00"
+            "time": "2025-04-28T18:01:39+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -3016,16 +3016,16 @@
         },
         {
             "name": "kongulov/nova-tab-translatable",
-            "version": "2.1.5",
+            "version": "2.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kongulov/nova-tab-translatable.git",
-                "reference": "4014aabcd6f78b0b1aefb05d215fc994296af5d4"
+                "reference": "e5ab418116be623dab189fe51459e0710a6ceaf9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kongulov/nova-tab-translatable/zipball/4014aabcd6f78b0b1aefb05d215fc994296af5d4",
-                "reference": "4014aabcd6f78b0b1aefb05d215fc994296af5d4",
+                "url": "https://api.github.com/repos/kongulov/nova-tab-translatable/zipball/e5ab418116be623dab189fe51459e0710a6ceaf9",
+                "reference": "e5ab418116be623dab189fe51459e0710a6ceaf9",
                 "shasum": ""
             },
             "require": {
@@ -3065,7 +3065,7 @@
             ],
             "support": {
                 "issues": "https://github.com/kongulov/nova-tab-translatable/issues",
-                "source": "https://github.com/kongulov/nova-tab-translatable/tree/2.1.5"
+                "source": "https://github.com/kongulov/nova-tab-translatable/tree/2.1.6"
             },
             "funding": [
                 {
@@ -3073,7 +3073,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-08T05:25:28+00:00"
+            "time": "2025-04-21T13:40:42+00:00"
         },
         {
             "name": "laravel/fortify",
@@ -3356,16 +3356,16 @@
         },
         {
             "name": "laravel/horizon",
-            "version": "v5.31.1",
+            "version": "v5.31.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/horizon.git",
-                "reference": "bc98b63313b2e0a3d0c8e84e1b691388ef1bf653"
+                "reference": "e6068c65be6c02a01e34531abf3143fab91f0de0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/horizon/zipball/bc98b63313b2e0a3d0c8e84e1b691388ef1bf653",
-                "reference": "bc98b63313b2e0a3d0c8e84e1b691388ef1bf653",
+                "url": "https://api.github.com/repos/laravel/horizon/zipball/e6068c65be6c02a01e34531abf3143fab91f0de0",
+                "reference": "e6068c65be6c02a01e34531abf3143fab91f0de0",
                 "shasum": ""
             },
             "require": {
@@ -3430,9 +3430,9 @@
             ],
             "support": {
                 "issues": "https://github.com/laravel/horizon/issues",
-                "source": "https://github.com/laravel/horizon/tree/v5.31.1"
+                "source": "https://github.com/laravel/horizon/tree/v5.31.2"
             },
-            "time": "2025-03-16T23:48:25+00:00"
+            "time": "2025-04-18T12:57:39+00:00"
         },
         {
             "name": "laravel/nova",
@@ -3666,16 +3666,16 @@
         },
         {
             "name": "laravel/sanctum",
-            "version": "v4.0.8",
+            "version": "v4.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/sanctum.git",
-                "reference": "ec1dd9ddb2ab370f79dfe724a101856e0963f43c"
+                "reference": "4e4ced5023e9d8949214e0fb43d9f4bde79c7166"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/sanctum/zipball/ec1dd9ddb2ab370f79dfe724a101856e0963f43c",
-                "reference": "ec1dd9ddb2ab370f79dfe724a101856e0963f43c",
+                "url": "https://api.github.com/repos/laravel/sanctum/zipball/4e4ced5023e9d8949214e0fb43d9f4bde79c7166",
+                "reference": "4e4ced5023e9d8949214e0fb43d9f4bde79c7166",
                 "shasum": ""
             },
             "require": {
@@ -3726,7 +3726,7 @@
                 "issues": "https://github.com/laravel/sanctum/issues",
                 "source": "https://github.com/laravel/sanctum"
             },
-            "time": "2025-01-26T19:34:36+00:00"
+            "time": "2025-04-22T13:53:47+00:00"
         },
         {
             "name": "laravel/scout",
@@ -4076,16 +4076,16 @@
         },
         {
             "name": "league/commonmark",
-            "version": "2.6.1",
+            "version": "2.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/commonmark.git",
-                "reference": "d990688c91cedfb69753ffc2512727ec646df2ad"
+                "reference": "06c3b0bf2540338094575612f4a1778d0d2d5e94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/d990688c91cedfb69753ffc2512727ec646df2ad",
-                "reference": "d990688c91cedfb69753ffc2512727ec646df2ad",
+                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/06c3b0bf2540338094575612f4a1778d0d2d5e94",
+                "reference": "06c3b0bf2540338094575612f4a1778d0d2d5e94",
                 "shasum": ""
             },
             "require": {
@@ -4179,7 +4179,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-29T14:10:59+00:00"
+            "time": "2025-04-18T21:09:27+00:00"
         },
         {
             "name": "league/config",
@@ -4993,16 +4993,16 @@
         },
         {
             "name": "marshmallow/nova-tiptap",
-            "version": "5.1.0",
+            "version": "5.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/marshmallow-packages/nova-tiptap.git",
-                "reference": "4a5e4952669a958b6187f079b94b47cfc4556677"
+                "reference": "3db5870afe6a5cf75c3cfeba0b59ca016529935d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/marshmallow-packages/nova-tiptap/zipball/4a5e4952669a958b6187f079b94b47cfc4556677",
-                "reference": "4a5e4952669a958b6187f079b94b47cfc4556677",
+                "url": "https://api.github.com/repos/marshmallow-packages/nova-tiptap/zipball/3db5870afe6a5cf75c3cfeba0b59ca016529935d",
+                "reference": "3db5870afe6a5cf75c3cfeba0b59ca016529935d",
                 "shasum": ""
             },
             "require": {
@@ -5036,9 +5036,9 @@
             ],
             "support": {
                 "issues": "https://github.com/marshmallow-packages/nova-tiptap/issues",
-                "source": "https://github.com/marshmallow-packages/nova-tiptap/tree/5.1.0"
+                "source": "https://github.com/marshmallow-packages/nova-tiptap/tree/5.2.1"
             },
-            "time": "2025-02-18T19:52:35+00:00"
+            "time": "2025-04-29T07:51:14+00:00"
         },
         {
             "name": "matchish/laravel-scout-elasticsearch",
@@ -8008,16 +8008,16 @@
         },
         {
             "name": "spatie/image",
-            "version": "3.8.1",
+            "version": "3.8.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/image.git",
-                "reference": "80e907bc64fbb7ce87346e97c14534d7dad5d559"
+                "reference": "54a7331a4d1ba7712603dd058522613506d2dfe0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/image/zipball/80e907bc64fbb7ce87346e97c14534d7dad5d559",
-                "reference": "80e907bc64fbb7ce87346e97c14534d7dad5d559",
+                "url": "https://api.github.com/repos/spatie/image/zipball/54a7331a4d1ba7712603dd058522613506d2dfe0",
+                "reference": "54a7331a4d1ba7712603dd058522613506d2dfe0",
                 "shasum": ""
             },
             "require": {
@@ -8065,7 +8065,7 @@
                 "spatie"
             ],
             "support": {
-                "source": "https://github.com/spatie/image/tree/3.8.1"
+                "source": "https://github.com/spatie/image/tree/3.8.3"
             },
             "funding": [
                 {
@@ -8077,7 +8077,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-27T13:01:00+00:00"
+            "time": "2025-04-25T08:04:51+00:00"
         },
         {
             "name": "spatie/image-optimizer",
@@ -8136,16 +8136,16 @@
         },
         {
             "name": "spatie/laravel-backup",
-            "version": "9.2.9",
+            "version": "9.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-backup.git",
-                "reference": "997c781a38bc701ab7623954b2e0438680caa0bf"
+                "reference": "c5ced5777fa1c6e89a11afb6520e37e2b98d9a47"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-backup/zipball/997c781a38bc701ab7623954b2e0438680caa0bf",
-                "reference": "997c781a38bc701ab7623954b2e0438680caa0bf",
+                "url": "https://api.github.com/repos/spatie/laravel-backup/zipball/c5ced5777fa1c6e89a11afb6520e37e2b98d9a47",
+                "reference": "c5ced5777fa1c6e89a11afb6520e37e2b98d9a47",
                 "shasum": ""
             },
             "require": {
@@ -8158,7 +8158,7 @@
                 "illuminate/support": "^10.10.0|^11.0|^12.0",
                 "league/flysystem": "^3.0",
                 "php": "^8.2",
-                "spatie/db-dumper": "^3.7",
+                "spatie/db-dumper": "^3.8",
                 "spatie/laravel-package-tools": "^1.6.2",
                 "spatie/laravel-signal-aware-command": "^1.2|^2.0",
                 "spatie/temporary-directory": "^2.0",
@@ -8220,7 +8220,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-backup/issues",
-                "source": "https://github.com/spatie/laravel-backup/tree/9.2.9"
+                "source": "https://github.com/spatie/laravel-backup/tree/9.3.2"
             },
             "funding": [
                 {
@@ -8232,7 +8232,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2025-03-03T12:10:03+00:00"
+            "time": "2025-04-25T13:42:20+00:00"
         },
         {
             "name": "spatie/laravel-medialibrary",
@@ -12037,7 +12037,7 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-9d56002ce579da7bc0bbf789810751f841bc7e4d",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-osmfeatures",
@@ -12402,7 +12402,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-bug_fixes",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -12438,7 +12438,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-bug_fixes",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -13091,16 +13091,16 @@
         },
         {
             "name": "laravel/sail",
-            "version": "v1.41.0",
+            "version": "v1.41.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/sail.git",
-                "reference": "fe1a4ada0abb5e4bd99eb4e4b0d87906c00cdeec"
+                "reference": "e5692510f1ef8e0f5096cde2b885d558f8d86592"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/sail/zipball/fe1a4ada0abb5e4bd99eb4e4b0d87906c00cdeec",
-                "reference": "fe1a4ada0abb5e4bd99eb4e4b0d87906c00cdeec",
+                "url": "https://api.github.com/repos/laravel/sail/zipball/e5692510f1ef8e0f5096cde2b885d558f8d86592",
+                "reference": "e5692510f1ef8e0f5096cde2b885d558f8d86592",
                 "shasum": ""
             },
             "require": {
@@ -13150,7 +13150,7 @@
                 "issues": "https://github.com/laravel/sail/issues",
                 "source": "https://github.com/laravel/sail"
             },
-            "time": "2025-01-24T15:45:36+00:00"
+            "time": "2025-04-22T13:39:39+00:00"
         },
         {
             "name": "mockery/mockery",
@@ -14989,16 +14989,16 @@
         },
         {
             "name": "spatie/backtrace",
-            "version": "1.7.1",
+            "version": "1.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/backtrace.git",
-                "reference": "0f2477c520e3729de58e061b8192f161c99f770b"
+                "reference": "9807de6b8fecfaa5b3d10650985f0348b02862b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/backtrace/zipball/0f2477c520e3729de58e061b8192f161c99f770b",
-                "reference": "0f2477c520e3729de58e061b8192f161c99f770b",
+                "url": "https://api.github.com/repos/spatie/backtrace/zipball/9807de6b8fecfaa5b3d10650985f0348b02862b2",
+                "reference": "9807de6b8fecfaa5b3d10650985f0348b02862b2",
                 "shasum": ""
             },
             "require": {
@@ -15036,7 +15036,7 @@
                 "spatie"
             ],
             "support": {
-                "source": "https://github.com/spatie/backtrace/tree/1.7.1"
+                "source": "https://github.com/spatie/backtrace/tree/1.7.2"
             },
             "funding": [
                 {
@@ -15048,7 +15048,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2024-12-02T13:28:15+00:00"
+            "time": "2025-04-28T14:55:53+00:00"
         },
         {
             "name": "spatie/error-solutions",

@@ -4,8 +4,10 @@ namespace App\Traits;
 
 use App\Helpers\Osm2caiHelper;
 use App\Models\Club;
+use App\Models\HikingRoute;
 use App\Models\Section;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 trait CsvableModelTrait
 {
@@ -31,41 +33,69 @@ trait CsvableModelTrait
         ];
 
         // Start with headers
-        $line = implode(',', $headers).PHP_EOL;
+        $csvLines = [implode(',', $headers)];
 
-        if (count($this->hikingRoutes->whereIn('osm2cai_status', [1, 2, 3, 4]))) {
-            foreach ($this->hikingRoutes->whereIn('osm2cai_status', [1, 2, 3, 4]) as $hr) {
-                $user = User::find($hr->issues_user_id);
-                $osmfeaturesDataProperties = $hr->osmfeatures_data['properties'];
-                $sectionName = Club::wherecaiCode($osmfeaturesDataProperties['source_ref'])->first()->name ?? '';
+        // Optimized Query: Filter in DB, Eager Load relationships
+        $hikingRoutes = $this->hikingRoutes()
+            ->whereIn('osm2cai_status', [1, 2, 3, 4])
+            ->with(['issueUser:id,name', 'sectors']) // Load sectors for mainSector logic if needed
+            ->select([
+                'hiking_routes.id',
+                'osm2cai_status',
+                'issues_user_id',
+                'osmfeatures_id',
+                'osmfeatures_data',
+                'issues_status',
+                'issues_last_update',
+            ])
+            ->get();
 
-                // Prepare data in array to maintain order
+        if ($hikingRoutes->isNotEmpty()) {
+            $sourceRefs = $hikingRoutes->map(function ($hr) {
+                return $hr->osmfeatures_data['properties']['source_ref'] ?? null;
+            })->filter()->unique()->values();
+
+            $clubMap = collect(); // Default to empty collection
+            if ($sourceRefs->isNotEmpty()) {
+                $clubMap = Club::whereIn('cai_code', $sourceRefs)->pluck('name', 'cai_code');
+            }
+
+
+            foreach ($hikingRoutes as $hr) {
+                $user = $hr->issueUser; // Access the loaded relationship
+                $osmfeaturesDataProperties = $hr->osmfeatures_data['properties'] ?? [];
+
+                $sourceRef = $osmfeaturesDataProperties['source_ref'] ?? null;
+                $sectionName = $sourceRef ? ($clubMap[$sourceRef] ?? '') : '';
+
+                $mainSectorCode = $hr->mainSector()->full_code ?? '';
+
+
                 $data = [
                     $hr->osm2cai_status,
-                    $hr->mainSector()->full_code ?? '',
+                    $mainSectorCode,
                     $osmfeaturesDataProperties['ref'] ?? '',
-                    $osmfeaturesDataProperties['source_ref'] ?? '',
+                    $sourceRef ?? '',
                     $osmfeaturesDataProperties['from'] ?? '',
                     $osmfeaturesDataProperties['to'] ?? '',
                     $osmfeaturesDataProperties['cai_scale'] ?? '',
                     $osmfeaturesDataProperties['ref_REI'] ?? '',
-                    Osm2caiHelper::getOpenstreetmapUrl($hr->osmfeatures_id) ?? '',
-                    url('/resources/hiking-routes/'.$hr->id),
+                    Osm2caiHelper::getOpenstreetmapUrl($hr->osmfeatures_id ?? null),
+                    url('/resources/hiking-routes/' . $hr->id),
                     $hr->issues_status,
                     $hr->issues_last_update,
                     $user->name ?? '',
-                    $osmfeaturesDataProperties['source_ref'] ?? '',
-                    $sectionName ?? '',
+                    $sourceRef ?? '',
+                    $sectionName,
                 ];
 
-                // Add row with data
-                $line .= implode(',', array_map(function ($value) {
-                    // Handle commas in values
-                    return '"'.str_replace('"', '""', $value).'"';
-                }, $data)).PHP_EOL;
+                $csvLines[] = implode(',', array_map(function ($value) {
+                    $value = str_replace('"', '""', $value ?? '');
+                    return '"' . $value . '"';
+                }, $data));
             }
         }
 
-        return $line;
+        return implode(PHP_EOL, $csvLines); // Join lines at the end
     }
 }
