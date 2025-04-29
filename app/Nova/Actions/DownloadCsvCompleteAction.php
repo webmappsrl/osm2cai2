@@ -40,7 +40,7 @@ class DownloadCsvCompleteAction extends Action
         $id = $model->id;
         $name = $model->name;
 
-        return Action::redirect(url('api/csv/' . $type . '/' . $id));
+        return Action::redirect(url('api/csv/'.$type.'/'.$id));
     }
 
     /**
