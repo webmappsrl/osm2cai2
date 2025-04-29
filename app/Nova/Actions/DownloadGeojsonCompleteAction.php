@@ -24,7 +24,7 @@ class DownloadGeojsonCompleteAction extends Action
 
     public $showOnTableRow = true;
 
-    public $withoutConfirmation = true;
+    public $withoutConfirmation = false;
 
     /**
      * Perform the action on the given models.
@@ -41,7 +41,7 @@ class DownloadGeojsonCompleteAction extends Action
         $id = $model->id;
         $name = $model->name;
 
-        return Action::redirect(url('api/geojson-complete/'.$type.'/'.$id));
+        return Action::redirect(url('api/geojson-complete/' . $type . '/' . $id));
     }
 
     /**

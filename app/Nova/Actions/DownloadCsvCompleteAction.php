@@ -24,7 +24,7 @@ class DownloadCsvCompleteAction extends Action
 
     public $showOnTableRow = true;
 
-    public $withoutConfirmation = true;
+    public $withoutConfirmation = false;
 
     /**
      * Perform the action on the given models.
@@ -40,7 +40,7 @@ class DownloadCsvCompleteAction extends Action
         $id = $model->id;
         $name = $model->name;
 
-        return Action::redirect(url('api/csv/'.$type.'/'.$id));
+        return Action::redirect(url('api/csv/' . $type . '/' . $id));
     }
 
     /**
