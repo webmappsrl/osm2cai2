@@ -8,6 +8,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\Heading;
 
 class DownloadCsvCompleteAction extends Action
 {
@@ -50,6 +51,9 @@ class DownloadCsvCompleteAction extends Action
      */
     public function fields($request)
     {
-        return [];
+        return [
+            Heading::make('<p><strong>File generation may take a few moments. Click "Run Action" to proceed.</strong> </p>')
+                ->asHtml(),
+        ];
     }
 }

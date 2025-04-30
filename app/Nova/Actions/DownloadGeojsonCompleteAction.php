@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\Heading;
 
 class DownloadGeojsonCompleteAction extends Action
 {
@@ -51,6 +52,9 @@ class DownloadGeojsonCompleteAction extends Action
      */
     public function fields($request)
     {
-        return [];
+        return [
+            Heading::make('<p><strong>File generation may take a few moments. Click "Run Action" to proceed.</strong> </p>')
+                ->asHtml(),
+        ];
     }
 }
