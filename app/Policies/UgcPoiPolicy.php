@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ValidatedStatusEnum;
 use App\Models\UgcPoi;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -53,25 +54,27 @@ class UgcPoiPolicy
      */
     public function update(User $user, UgcPoi $ugcPoi)
     {
-        // User must have at least one permission
-        if (count($user->getAllPermissions()) < 1) {
-            return false;
-        }
-
-        // Allow update if no form_id is specified
-        if (empty($ugcPoi->form_id)) {
+        // Administrators can update any POI
+        if ($user->hasRole('Administrator')) {
             return true;
         }
 
-        // Check if user is admin or the owner of a non-validated POI
-        $isAdminOrOwner = $user->hasRole('Administrator') ||
-            ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated');
+        // Owners can update their own POI only if it's not validated
+        if ($ugcPoi->user_id === $user->id && $ugcPoi->validated === ValidatedStatusEnum::NOT_VALIDATED->value) {
+            return true;
+        }
 
-        // Determine the permission name based on form_id
-        $permissionName = $this->getPermissionNameFromFormId($ugcPoi->form_id);
+        // Users with specific permissions can update POIs with a form_id
+        // The permission is derived from the form_id
+        if (! empty($ugcPoi->form_id)) {
+            $permissionName = $this->getPermissionNameFromFormId($ugcPoi->form_id);
 
-        // User can update if they are admin/owner or have the specific permission
-        return $isAdminOrOwner || $user->hasPermissionTo($permissionName);
+            return $user->hasPermissionTo($permissionName);
+        }
+
+        // If none of the above conditions are met (not admin, not owner of unvalidated,
+        // and no form_id or owner of validated), deny access.
+        return false;
     }
 
     /**
