@@ -338,7 +338,7 @@ class OsmService
     protected function calculateOsm2caiStatus($osmTags)
     {
         $cai_scale_present = ! empty($osmTags['cai_scale']);
-        $survey_CAI_present = $osmTags['source'] === 'survey:CAI';
+        $survey_CAI_present = isset($osmTags['source']) && $osmTags['source'] === 'survey:CAI';
 
         if ($cai_scale_present && $survey_CAI_present) {
             return 3;
