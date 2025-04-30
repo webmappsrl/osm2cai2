@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ValidatedStatusEnum;
 use App\Models\UgcPoi;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -59,7 +60,7 @@ class UgcPoiPolicy
         }
 
         // Owners can update their own POI only if it's not validated
-        if ($ugcPoi->user_id === $user->id && $ugcPoi->validated === 'not_validated') {
+        if ($ugcPoi->user_id === $user->id && $ugcPoi->validated === ValidatedStatusEnum::NOT_VALIDATED->value) {
             return true;
         }
 
