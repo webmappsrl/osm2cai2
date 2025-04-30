@@ -51,8 +51,12 @@ class DownloadCsvCompleteAction extends Action
      */
     public function fields($request)
     {
+        $string = __('File generation may take a few moments. Click "Run Action" to proceed.');
+        $heading = <<<HTML
+<p><strong>{$string}</strong> </p>
+HTML;
         return [
-            Heading::make('<p><strong>File generation may take a few moments. Click "Run Action" to proceed.</strong> </p>')
+            Heading::make($heading)
                 ->asHtml(),
         ];
     }
