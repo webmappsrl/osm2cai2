@@ -623,7 +623,7 @@ class HikingRoute extends OsmfeaturesResource
     {
         return [
             Text::make(__('Automatic Name (computed for TDH)'), fn () => $this->getNameForTDH()['it'])->onlyOnDetail(),
-            Text::make(__('Automatic Abstract (computed for TDH)'), fn () => $this->tdh['abstract'] ?? '')->onlyOnDetail(),
+            Text::make(__('Automatic Abstract (computed for TDH)'), fn () => $this->tdh['abstract']['it'] ?? $this->tdh['abstract']['en'] ?? '')->onlyOnDetail(),
             Images::make(__('Feature Image'), 'feature_image')->onlyOnDetail(),
             Text::make(__('Description CAI IT'), 'description_cai_it')->hideFromIndex(),
         ];
