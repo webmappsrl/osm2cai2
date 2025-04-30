@@ -66,8 +66,9 @@ class UgcPoiPolicy
 
         // Users with specific permissions can update POIs with a form_id
         // The permission is derived from the form_id
-        if (!empty($ugcPoi->form_id)) {
+        if (! empty($ugcPoi->form_id)) {
             $permissionName = $this->getPermissionNameFromFormId($ugcPoi->form_id);
+
             return $user->hasPermissionTo($permissionName);
         }
 
@@ -95,7 +96,7 @@ class UgcPoiPolicy
             }
         }
 
-        return 'validate ' . $resourceName;
+        return 'validate '.$resourceName;
     }
 
     /**
