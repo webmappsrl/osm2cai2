@@ -55,6 +55,7 @@ class DownloadCsvCompleteAction extends Action
         $heading = <<<HTML
 <p><strong>{$string}</strong> </p>
 HTML;
+
         return [
             Heading::make($heading)
                 ->asHtml(),
