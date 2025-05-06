@@ -83,8 +83,11 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
 
     protected static function booted()
     {
-        static::saved(function ($hikingRoute) {
+        static::created(function ($hikingRoute) {
             SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
+        });
+
+        static::saved(function ($hikingRoute) {
             if ($hikingRoute->isDirty('geometry')) {
                 $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
             }

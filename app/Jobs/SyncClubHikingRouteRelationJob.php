@@ -115,26 +115,40 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
 
         $sourceRef = $hikingRoute->osmfeatures_data['properties']['source_ref'] ?? null;
 
-        if (! $sourceRef) {
-            Log::warning("Hiking route ID: {$hikingRoute->id} has no source_ref property. Detaching any existing clubs.");
+        if (! $sourceRef || ! is_string($sourceRef)) {
+            Log::warning("Hiking route ID: {$hikingRoute->id} has no valid source_ref property. Detaching any existing clubs.");
             $hikingRoute->clubs()->detach();
 
             return;
         }
 
-        $trimmedSourceRef = trim($sourceRef);
-
         try {
-            // Use exact match for finding clubs
-            $clubs = Club::where('cai_code', $trimmedSourceRef)->get();
+            // Split source_ref by semicolon and process each code
+            $sourceRefCodes = explode(';', $sourceRef);
+            $clubIds = [];
 
-            if ($clubs->isNotEmpty()) {
-                $clubIds = $clubs->pluck('id')->toArray();
+            foreach ($sourceRefCodes as $code) {
+                $trimmedCode = trim($code);
+                if (! empty($trimmedCode)) {
+                    // Find clubs with this exact code
+                    $clubs = Club::where('cai_code', $trimmedCode)->get();
+                    if ($clubs->isNotEmpty()) {
+                        $clubIds = array_merge($clubIds, $clubs->pluck('id')->toArray());
+                    } else {
+                        Log::warning("No club found for CAI code '{$trimmedCode}' referenced by Hiking Route ID: {$hikingRoute->id}");
+                    }
+                }
+            }
+
+            // Remove duplicates
+            $clubIds = array_unique($clubIds);
+
+            if (! empty($clubIds)) {
                 $hikingRoute->clubs()->sync($clubIds);
-                Log::info("Synced Hiking Route ID: {$hikingRoute->id} with ".count($clubIds)." clubs ({$trimmedSourceRef})");
+                Log::info("Synced Hiking Route ID: {$hikingRoute->id} with ".count($clubIds)." clubs (from codes: {$sourceRef})");
             } else {
                 $hikingRoute->clubs()->detach();
-                Log::info("No clubs found for Hiking Route ID: {$hikingRoute->id} ({$trimmedSourceRef}). Detached existing clubs.");
+                Log::info("No clubs found for Hiking Route ID: {$hikingRoute->id} (from codes: {$sourceRef}). Detached existing clubs.");
             }
         } catch (Throwable $e) {
             Log::error("Error during syncHikingRoute for Route ID {$hikingRoute->id}: ".$e->getMessage());

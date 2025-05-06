@@ -10,6 +10,7 @@ use App\Nova\Actions\AssignClubManager;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\DownloadCsvCompleteAction;
 use App\Nova\Actions\DownloadGeojson;
+use App\Nova\Actions\FindClubHrAssociationAction;
 use App\Nova\Actions\RemoveMembersFromClub;
 use App\Nova\Filters\ClubFilter;
 use App\Nova\Filters\RegionFilter;
@@ -208,7 +209,9 @@ class Club extends Resource
             $cards[] = (new HtmlCard())
                 ->width('1/4')
                 ->view('nova.cards.club-distance-card', [
-                    'totalDistance' => $hr->sum('osmfeatures_data->properties->distance'),
+                    'totalDistance' => $hr->sum(function ($item) {
+                        return (float) $item->osmfeatures_data['properties']['distance'] ?? 0;
+                    }),
                 ])
                 ->center()
                 ->withBasicStyles()
@@ -275,6 +278,13 @@ class Club extends Resource
     public function actions(Request $request): array
     {
         return [
+            (new FindClubHrAssociationAction())
+                ->canSee(function ($request) {
+                    return $request->user()->hasRole('Administrator');
+                })
+                ->canRun(function ($request) {
+                    return true;
+                }),
             (new AssignClubManager())
                 ->canSee(function ($request) {
                     return true;
