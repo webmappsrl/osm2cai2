@@ -68,7 +68,7 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
             }
             Log::info("[JOB END] SyncClubHikingRouteRelationJob finished successfully for: Type={$this->modelType}, ID={$this->modelId}");
         } catch (Throwable $e) {
-            Log::error("[JOB FAILED] SyncClubHikingRouteRelationJob failed for: Type={$this->modelType}, ID={$this->modelId}. Error: " . $e->getMessage(), [
+            Log::error("[JOB FAILED] SyncClubHikingRouteRelationJob failed for: Type={$this->modelType}, ID={$this->modelId}. Error: ".$e->getMessage(), [
                 'exception' => $e,
             ]);
             throw $e;
@@ -88,18 +88,18 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
         Log::info("Syncing Club ID: {$club->id} ({$clubName}) with code: {$clubCode}");
 
         try {
-            $hikingRoutes = HikingRoute::where('osmfeatures_data->properties->source_ref', 'like', '%' . $clubCode . '%')->get();
+            $hikingRoutes = HikingRoute::where('osmfeatures_data->properties->source_ref', 'like', '%'.$clubCode.'%')->get();
 
             if ($hikingRoutes->isNotEmpty()) {
                 $hikingRoutesId = $hikingRoutes->pluck('id')->toArray();
                 $club->hikingRoutes()->sync($hikingRoutesId);
-                Log::info("Synced Club ID: {$club->id} ({$clubName}) with " . count($hikingRoutesId) . ' routes.');
+                Log::info("Synced Club ID: {$club->id} ({$clubName}) with ".count($hikingRoutesId).' routes.');
             } else {
                 $club->hikingRoutes()->detach();
                 Log::info("No routes found for Club ID: {$club->id} ({$clubName}). Detached existing routes.");
             }
         } catch (Throwable $e) {
-            Log::error("Error during syncClub for Club ID {$club->id}: " . $e->getMessage());
+            Log::error("Error during syncClub for Club ID {$club->id}: ".$e->getMessage());
         }
     }
 
@@ -115,9 +115,10 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
 
         $sourceRef = $hikingRoute->osmfeatures_data['properties']['source_ref'] ?? null;
 
-        if (! $sourceRef || !is_string($sourceRef)) {
+        if (! $sourceRef || ! is_string($sourceRef)) {
             Log::warning("Hiking route ID: {$hikingRoute->id} has no valid source_ref property. Detaching any existing clubs.");
             $hikingRoute->clubs()->detach();
+
             return;
         }
 
@@ -128,7 +129,7 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
 
             foreach ($sourceRefCodes as $code) {
                 $trimmedCode = trim($code);
-                if (!empty($trimmedCode)) {
+                if (! empty($trimmedCode)) {
                     // Find clubs with this exact code
                     $clubs = Club::where('cai_code', $trimmedCode)->get();
                     if ($clubs->isNotEmpty()) {
@@ -142,15 +143,15 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
             // Remove duplicates
             $clubIds = array_unique($clubIds);
 
-            if (!empty($clubIds)) {
+            if (! empty($clubIds)) {
                 $hikingRoute->clubs()->sync($clubIds);
-                Log::info("Synced Hiking Route ID: {$hikingRoute->id} with " . count($clubIds) . " clubs (from codes: {$sourceRef})");
+                Log::info("Synced Hiking Route ID: {$hikingRoute->id} with ".count($clubIds)." clubs (from codes: {$sourceRef})");
             } else {
                 $hikingRoute->clubs()->detach();
                 Log::info("No clubs found for Hiking Route ID: {$hikingRoute->id} (from codes: {$sourceRef}). Detached existing clubs.");
             }
         } catch (Throwable $e) {
-            Log::error("Error during syncHikingRoute for Route ID {$hikingRoute->id}: " . $e->getMessage());
+            Log::error("Error during syncHikingRoute for Route ID {$hikingRoute->id}: ".$e->getMessage());
             // Log error but allow job to continue (handled by main catch)
         }
     }

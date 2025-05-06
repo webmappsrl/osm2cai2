@@ -50,7 +50,7 @@ class FindClubHrAssociationAction extends Action
         // Dispatch the job to associate clubs to hiking routes
         SyncClubHikingRouteRelationJob::dispatch($modelType, $model->id);
 
-        return Action::message('Association process has been started for this ' . $modelType);
+        return Action::message('Association process has been started for this '.$modelType);
     }
 
     /**
