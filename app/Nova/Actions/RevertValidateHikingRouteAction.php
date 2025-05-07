@@ -64,10 +64,10 @@ class RevertValidateHikingRouteAction extends Action
 
     private function revertValidation(HikingRoute $model)
     {
-        $model->updateQuietly([
-            'osm2cai_status' => 3,
-            'validation_date' => null,
-            'validator_id' => null,
-        ]);
+        $model->osm2cai_status = 3;
+        $model->validation_date = null;
+        $model->validator_id = null;
+        $model->osmfeatures_data['properties']['osm2cai_status'] = 3;
+        $model->save();
     }
 }

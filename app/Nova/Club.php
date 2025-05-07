@@ -210,7 +210,9 @@ class Club extends Resource
                 ->width('1/4')
                 ->view('nova.cards.club-distance-card', [
                     'totalDistance' => $hr->sum(function ($item) {
-                        return (float) $item->osmfeatures_data['properties']['distance'] ?? 0;
+                        $distance = $item->osmfeatures_data['properties']['dem_enrichment']['distance'] ?? $item->osmfeatures_data['properties']['distance'] ?? 0;
+
+                        return (float) $distance;
                     }),
                 ])
                 ->center()
