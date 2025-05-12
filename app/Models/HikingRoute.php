@@ -88,6 +88,9 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         });
 
         static::saved(function ($hikingRoute) {
+            if (isset($hikingRoute->osmfeatures_data['properties']['osm2cai_status']) && $hikingRoute->osm2cai_status != $hikingRoute->osmfeatures_data['properties']['osm2cai_status']) {
+                $hikingRoute->osmfeatures_data['properties']['osm2cai_status'] = $hikingRoute->osm2cai_status;
+            }
             if ($hikingRoute->isDirty('geometry')) {
                 $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
             }
