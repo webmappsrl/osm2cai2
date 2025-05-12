@@ -54,7 +54,7 @@ class fixOsmfeaturesSDA extends Command
                     $oldStatus = $osmFeaturesData['properties']['osm2cai_status'];
                     $osmFeaturesData['properties']['osm2cai_status'] = 4;
                     $needsUpdateThisRoute = true;
-                    $logMessages[] = "Route ID {$route->id}: osmfeatures_data.properties.osm2cai_status was '{$oldStatus}', " . ($isDryRun ? "would be changed" : "changed") . " to 4.";
+                    $logMessages[] = "Route ID {$route->id}: osmfeatures_data.properties.osm2cai_status was '{$oldStatus}', ".($isDryRun ? 'would be changed' : 'changed').' to 4.';
                 }
             } elseif (is_string($route->getRawOriginal('osmfeatures_data'))) { // Check raw original if cast resulted in non-array initially
                 // This case might indicate a malformed JSON string in the DB not caught by casting or an edge case.
@@ -70,7 +70,7 @@ class fixOsmfeaturesSDA extends Command
                         $osmFeaturesData = $decodedData; // Simulate for modification check
                         $osmFeaturesData['properties']['osm2cai_status'] = 4;
                         $needsUpdateThisRoute = true;
-                        $logMessages[] = "Route ID {$route->id}: osmfeatures_data (from JSON string) .properties.osm2cai_status was '{$oldStatus}', " . ($isDryRun ? "would be changed" : "changed") . " to 4.";
+                        $logMessages[] = "Route ID {$route->id}: osmfeatures_data (from JSON string) .properties.osm2cai_status was '{$oldStatus}', ".($isDryRun ? 'would be changed' : 'changed').' to 4.';
                     } else {
                         // Status is already 4 in the decoded JSON string
                         $logMessages[] = "Route ID {$route->id}: osmfeatures_data (from JSON string) .properties.osm2cai_status is already 4. No change needed based on string content.";
@@ -79,22 +79,26 @@ class fixOsmfeaturesSDA extends Command
                     // String is not valid JSON or lacks expected structure, fall through to 'else' for initialization logic
                     $logMessages[] = "Route ID {$route->id}: osmfeatures_data was a string but could not be decoded or structure is not as expected ('{$route->getRawOriginal('osmfeatures_data')}'). Will attempt to initialize/fix.";
                     // Let the 'else' block handle initialization
-                    if (!is_array($osmFeaturesData)) $osmFeaturesData = []; // Ensure $osmFeaturesData is an array for the next step
-                    if (!isset($osmFeaturesData['properties'])) $osmFeaturesData['properties'] = [];
+                    if (! is_array($osmFeaturesData)) {
+                        $osmFeaturesData = [];
+                    } // Ensure $osmFeaturesData is an array for the next step
+                    if (! isset($osmFeaturesData['properties'])) {
+                        $osmFeaturesData['properties'] = [];
+                    }
                     $oldStatus = $osmFeaturesData['properties']['osm2cai_status'] ?? 'missing/malformed';
                     if (($osmFeaturesData['properties']['osm2cai_status'] ?? null) != 4) {
                         $osmFeaturesData['properties']['osm2cai_status'] = 4;
                         $needsUpdateThisRoute = true;
-                        $logMessages[] = "Route ID {$route->id}: Based on previous string state, osmfeatures_data.properties.osm2cai_status was '{$oldStatus}', " . ($isDryRun ? "would be set" : "set") . " to 4.";
+                        $logMessages[] = "Route ID {$route->id}: Based on previous string state, osmfeatures_data.properties.osm2cai_status was '{$oldStatus}', ".($isDryRun ? 'would be set' : 'set').' to 4.';
                     }
                 }
             } else { // Handles null, or already-array $osmFeaturesData missing keys
                 $isInitialization = false;
-                if (!is_array($osmFeaturesData)) { // If it was null or something else
+                if (! is_array($osmFeaturesData)) { // If it was null or something else
                     $osmFeaturesData = [];
                     $isInitialization = true;
                 }
-                if (!isset($osmFeaturesData['properties'])) {
+                if (! isset($osmFeaturesData['properties'])) {
                     $osmFeaturesData['properties'] = [];
                     $isInitialization = true;
                 }
@@ -103,8 +107,8 @@ class fixOsmfeaturesSDA extends Command
                 if (($osmFeaturesData['properties']['osm2cai_status'] ?? null) != 4) {
                     $osmFeaturesData['properties']['osm2cai_status'] = 4;
                     $needsUpdateThisRoute = true;
-                    $action = $isInitialization ? "initialized" : "set";
-                    $logMessages[] = "Route ID {$route->id}: osmfeatures_data.properties.osm2cai_status was '{$oldStatus}', " . ($isDryRun ? "would be {$action}" : "{$action}") . " to 4. Original raw: {$originalOsmFeaturesDataForLog}";
+                    $action = $isInitialization ? 'initialized' : 'set';
+                    $logMessages[] = "Route ID {$route->id}: osmfeatures_data.properties.osm2cai_status was '{$oldStatus}', ".($isDryRun ? "would be {$action}" : "{$action}")." to 4. Original raw: {$originalOsmFeaturesDataForLog}";
                 }
             }
 
@@ -112,10 +116,13 @@ class fixOsmfeaturesSDA extends Command
                 $wouldUpdateCount++;
                 $routesToUpdateIds[] = $route->id;
                 foreach ($logMessages as $msg) {
-                    if ($isDryRun) $this->line("[DRY RUN] " . $msg);
-                    else $this->info($msg);
+                    if ($isDryRun) {
+                        $this->line('[DRY RUN] '.$msg);
+                    } else {
+                        $this->info($msg);
+                    }
                 }
-                if (!$isDryRun) {
+                if (! $isDryRun) {
                     $route->osmfeatures_data = $osmFeaturesData; // Assign the modified array
                     $route->updateQuietly(['osmfeatures_data']);
                     $actuallyUpdatedCount++;
@@ -130,12 +137,13 @@ class fixOsmfeaturesSDA extends Command
             $this->info("[DRY RUN] Simulation complete. Processed {$processedCount} routes.");
             $this->info("[DRY RUN] {$wouldUpdateCount} routes would be updated.");
             if ($wouldUpdateCount > 0) {
-                $this->info("[DRY RUN] IDs that would be updated: " . implode(', ', $routesToUpdateIds));
+                $this->info('[DRY RUN] IDs that would be updated: '.implode(', ', $routesToUpdateIds));
             }
         } else {
             $this->info("fixOsmfeaturesSDA command finished. Processed {$processedCount} routes. {$actuallyUpdatedCount} routes were updated.");
             Log::info("fixOsmfeaturesSDA command finished. {$actuallyUpdatedCount} routes were updated out of {$processedCount} processed with osm2cai_status = 4.");
         }
+
         return Command::SUCCESS;
     }
 }
