@@ -115,7 +115,8 @@ class UgcPoi extends AbstractUgc
                 'maxZoom' => 14,
                 'defaultZoom' => 10,
                 'defaultCenter' => [43.7125, 10.4013],
-            ])->hideFromIndex(),
+            ])->hideFromIndex()
+                ->required(),
             Number::make('Elevation', 'raw_data->position->altitude')->step(.0000000000001)->hideFromIndex(),
             $this->getCodeField('Form data', ['id', 'form_id', 'waypointtype', 'key', 'date', 'title']),
             $this->getCodeField('Device data', ['device']),
