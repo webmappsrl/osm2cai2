@@ -2,12 +2,9 @@
 
 namespace App\Nova;
 
-use App\Enums\ValidatedStatusEnum;
 use App\Nova\AbstractValidationResource;
 use App\Nova\Filters\ValidatedFilter;
 use App\Nova\Filters\WaterFlowValidatedFilter;
-use Eminiarts\Tabs\Tab;
-use Eminiarts\Tabs\Tabs;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Select;
@@ -71,7 +68,7 @@ class SourceSurvey extends AbstractValidationResource
         // Water flow rate field (calculated)
         $flowRateField = Text::make(__('Flow Rate L/s'), 'raw_data->flow_rate')
             ->resolveUsing(function ($value) {
-                return $this->calculateFlowRate();
+                return $this->model()->calculateFlowRate();
             })
             ->readonly()
             ->help(__('Questo dato è calcolato automaticamente in base ai dati inseriti'));
@@ -129,58 +126,7 @@ class SourceSurvey extends AbstractValidationResource
         ];
     }
 
-    /**
-     * Calculates the water flow rate based on raw data.
-     *
-     * @return string
-     */
-    protected function calculateFlowRate()
-    {
-        if ($this->water_flow_rate_validated == ValidatedStatusEnum::VALID->value) {
-            $rawData = $this->raw_data;
 
-            $volume = $this->formatNumericValue($rawData['range_volume'] ?? '');
-            $time = $this->formatNumericValue($rawData['range_time'] ?? '');
-
-            if (is_numeric($volume) && is_numeric($time) && $time != 0) {
-                $flowRate = round($volume / $time, 3);
-            } else {
-                $flowRate = 'N/A';
-            }
-
-            $rawData['flow_rate'] = $flowRate;
-
-            $this->raw_data = $rawData;
-            $this->save();
-
-            return $flowRate;
-        }
-
-        // If not validated, returns N/A
-        $rawData = $this->raw_data;
-        $rawData['flow_rate'] = 'N/A';
-        $this->raw_data = $rawData;
-        $this->save();
-
-        return 'N/A';
-    }
-
-    /**
-     * Formats a numeric value for calculation.
-     *
-     * @param string $value
-     * @return string
-     */
-    private function formatNumericValue($value)
-    {
-        if (strpos($value, '.') !== false) {
-            return $value;
-        }
-
-        $value = preg_replace('/[^0-9,]/', '', $value);
-
-        return str_replace(',', '.', $value);
-    }
 
     /**
      * Gets the fields available for CSV export.
