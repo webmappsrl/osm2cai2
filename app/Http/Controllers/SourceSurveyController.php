@@ -22,7 +22,7 @@ class SourceSurveyController extends Controller
 
         foreach ($sourceSurveys as $sourceSurvey) {
             $mediasHtml = $this->getMediasHtml($sourceSurvey);
-            $osm2caiUrl = url('resources/source-surveys/' . $sourceSurvey->id);
+            $osm2caiUrl = url('resources/source-surveys/'.$sourceSurvey->id);
             [$surveyName, $date, $flowRate, $temperature, $conductivity, $isActive] = $this->formatSurveyData($sourceSurvey);
             $htmlString = $this->getHtmlString($sourceSurvey, $mediasHtml, $surveyName, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl);
 
@@ -133,17 +133,17 @@ class SourceSurveyController extends Controller
             $position = $rawData['position'] ?? null;
             $altitude = $position['altitude'] ?? 'N/A';
 
-            $gpx .= '<wpt lat="' . $geometry['coordinates'][1] . '" lon="' . $geometry['coordinates'][0] . '">';
-            $gpx .= '<name>' . htmlspecialchars($survey->name ?? 'N/A') . '</name>';
-            $gpx .= '<desc>' . htmlspecialchars($survey->description ?? 'N/A') . '</desc>';
-            $gpx .= '<ele>' . ($altitude) . '</ele>';
+            $gpx .= '<wpt lat="'.$geometry['coordinates'][1].'" lon="'.$geometry['coordinates'][0].'">';
+            $gpx .= '<name>'.htmlspecialchars($survey->name ?? 'N/A').'</name>';
+            $gpx .= '<desc>'.htmlspecialchars($survey->description ?? 'N/A').'</desc>';
+            $gpx .= '<ele>'.($altitude).'</ele>';
             $gpx .= '<extensions>';
-            $gpx .= '<id>' . $survey->id . '</id>';
-            $gpx .= '<active>' . ($rawData['active'] ?? 'N/A') . '</active>';
-            $gpx .= '<range_time>' . ($rawData['flow_rate'] ?? 'N/A') . '</range_time>';
-            $gpx .= '<temperature>' . ($rawData['temperature'] ?? 'N/A') . '</temperature>';
-            $gpx .= '<conductivity>' . ($rawData['conductivity'] ?? 'N/A') . '</conductivity>';
-            $gpx .= '<range_volume>' . ($rawData['range_volume'] ?? 'N/A') . '</range_volume>';
+            $gpx .= '<id>'.$survey->id.'</id>';
+            $gpx .= '<active>'.($rawData['active'] ?? 'N/A').'</active>';
+            $gpx .= '<range_time>'.($rawData['flow_rate'] ?? 'N/A').'</range_time>';
+            $gpx .= '<temperature>'.($rawData['temperature'] ?? 'N/A').'</temperature>';
+            $gpx .= '<conductivity>'.($rawData['conductivity'] ?? 'N/A').'</conductivity>';
+            $gpx .= '<range_volume>'.($rawData['range_volume'] ?? 'N/A').'</range_volume>';
             $gpx .= '</extensions>';
             $gpx .= '</wpt>';
         }
@@ -166,27 +166,27 @@ class SourceSurveyController extends Controller
             $altitude = $position['altitude'] ?? 'N/A';
 
             $kml .= '<Placemark>';
-            $kml .= '<name>' . htmlspecialchars($survey->name ?? 'N/A') . '</name>';
+            $kml .= '<name>'.htmlspecialchars($survey->name ?? 'N/A').'</name>';
             $kml .= '<description>';
-            $kml .= 'ID: ' . $survey->id . "\n";
-            $kml .= 'Info: ' . htmlspecialchars($survey->description ?? 'N/A') . "\n";
-            $kml .= 'Active: ' . ($rawData['active'] ?? 'N/A') . "\n";
-            $kml .= 'Range Time: ' . ($rawData['flow_rate'] ?? 'N/A') . "\n";
-            $kml .= 'Temperature: ' . ($rawData['temperature'] ?? 'N/A') . "\n";
-            $kml .= 'Conductivity: ' . ($rawData['conductivity'] ?? 'N/A') . "\n";
-            $kml .= 'Range Volume: ' . ($rawData['range_volume'] ?? 'N/A') . "\n";
-            $kml .= 'Elevation: ' . ($altitude);
+            $kml .= 'ID: '.$survey->id."\n";
+            $kml .= 'Info: '.htmlspecialchars($survey->description ?? 'N/A')."\n";
+            $kml .= 'Active: '.($rawData['active'] ?? 'N/A')."\n";
+            $kml .= 'Range Time: '.($rawData['flow_rate'] ?? 'N/A')."\n";
+            $kml .= 'Temperature: '.($rawData['temperature'] ?? 'N/A')."\n";
+            $kml .= 'Conductivity: '.($rawData['conductivity'] ?? 'N/A')."\n";
+            $kml .= 'Range Volume: '.($rawData['range_volume'] ?? 'N/A')."\n";
+            $kml .= 'Elevation: '.($altitude);
             $kml .= '</description>';
             $kml .= '<Point>';
-            $kml .= '<coordinates>' . $geometry['coordinates'][0] . ',' . $geometry['coordinates'][1] . ',' . ($rawData['altitude'] ?? 'N/A') . '</coordinates>';
+            $kml .= '<coordinates>'.$geometry['coordinates'][0].','.$geometry['coordinates'][1].','.($rawData['altitude'] ?? 'N/A').'</coordinates>';
             $kml .= '</Point>';
             $kml .= '<ExtendedData>';
-            $kml .= '<Data name="id"><value>' . $survey->id . '</value></Data>';
-            $kml .= '<Data name="active"><value>' . ($rawData['active'] ?? 'N/A') . '</value></Data>';
-            $kml .= '<Data name="range_time"><value>' . ($rawData['flow_rate'] ?? 'N/A') . '</value></Data>';
-            $kml .= '<Data name="temperature"><value>' . ($rawData['temperature'] ?? 'N/A') . '</value></Data>';
-            $kml .= '<Data name="conductivity"><value>' . ($rawData['conductivity'] ?? 'N/A') . '</value></Data>';
-            $kml .= '<Data name="range_volume"><value>' . ($rawData['range_volume'] ?? 'N/A') . '</value></Data>';
+            $kml .= '<Data name="id"><value>'.$survey->id.'</value></Data>';
+            $kml .= '<Data name="active"><value>'.($rawData['active'] ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="range_time"><value>'.($rawData['flow_rate'] ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="temperature"><value>'.($rawData['temperature'] ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="conductivity"><value>'.($rawData['conductivity'] ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="range_volume"><value>'.($rawData['range_volume'] ?? 'N/A').'</value></Data>';
             $kml .= '</ExtendedData>';
             $kml .= '</Placemark>';
         }
@@ -204,44 +204,44 @@ class SourceSurveyController extends Controller
 
         Storage::disk('public')->makeDirectory('shape_files/zip');
         chdir(Storage::disk('public')->path('shape_files'));
-        if (Storage::disk('public')->exists('shape_files/zip/' . $name . '.zip')) {
-            Storage::disk('public')->delete('shape_files/zip/' . $name . '.zip');
+        if (Storage::disk('public')->exists('shape_files/zip/'.$name.'.zip')) {
+            Storage::disk('public')->delete('shape_files/zip/'.$name.'.zip');
         }
 
         $ids = $surveys->pluck('id')->toArray();
 
-        $command = 'ogr2ogr -f "ESRI Shapefile" ' .
-            $name .
-            '.shp PG:"dbname=\'' .
-            Config::get('database.connections.pgsql.database') .
-            '\' host=\'' .
-            Config::get('database.connections.pgsql.host') .
-            '\' port=\'' .
-            Config::get('database.connections.pgsql.port') .
-            '\' user=\'' .
-            Config::get('database.connections.pgsql.username') .
-            '\' password=\'' .
-            Config::get('database.connections.pgsql.password') .
-            '\'" -sql "SELECT id, name, description, raw_data->\'flow_rate\' as flow_rate, raw_data->\'temperature\' as temperature, raw_data->\'conductivity\' as conductivity, ST_Transform(geometry, 4326) as geometry FROM ugc_pois WHERE id IN (' .
-            implode(',', $ids) .
+        $command = 'ogr2ogr -f "ESRI Shapefile" '.
+            $name.
+            '.shp PG:"dbname=\''.
+            Config::get('database.connections.pgsql.database').
+            '\' host=\''.
+            Config::get('database.connections.pgsql.host').
+            '\' port=\''.
+            Config::get('database.connections.pgsql.port').
+            '\' user=\''.
+            Config::get('database.connections.pgsql.username').
+            '\' password=\''.
+            Config::get('database.connections.pgsql.password').
+            '\'" -sql "SELECT id, name, description, raw_data->\'flow_rate\' as flow_rate, raw_data->\'temperature\' as temperature, raw_data->\'conductivity\' as conductivity, ST_Transform(geometry, 4326) as geometry FROM ugc_pois WHERE id IN ('.
+            implode(',', $ids).
             ') AND form_id = \'water\' AND validated = \'valid\';" -a_srs EPSG:4326';
 
         exec($command);
 
         // Crea manualmente il file .prj
         $prjContent = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]';
-        file_put_contents($name . '.prj', $prjContent);
+        file_put_contents($name.'.prj', $prjContent);
 
-        $command = 'zip ' . $name . '.zip ' . $name . '.*';
+        $command = 'zip '.$name.'.zip '.$name.'.*';
         exec($command);
 
-        $command = 'mv ' . $name . '.zip zip/';
+        $command = 'mv '.$name.'.zip zip/';
         exec($command);
 
-        $command = 'rm ' . $name . '.*';
+        $command = 'rm '.$name.'.*';
         exec($command);
 
-        $zipPath = 'shape_files/zip/' . $name . '.zip';
+        $zipPath = 'shape_files/zip/'.$name.'.zip';
 
         return $zipPath;
     }
@@ -310,7 +310,7 @@ class SourceSurveyController extends Controller
             foreach ($medias as $media) {
                 $mediaUrl = $media->relative_url;
                 // Check if the URL is already absolute
-                if (!preg_match("~^(?:f|ht)tps?://~i", $mediaUrl)) {
+                if (! preg_match('~^(?:f|ht)tps?://~i', $mediaUrl)) {
                     $mediaUrl = Storage::url($mediaUrl);
                 }
                 $mediasHtml .= <<<HTML
@@ -338,15 +338,15 @@ class SourceSurveyController extends Controller
         }
         $flowRate = $rawData['flow_rate'] ?? $sourceSurvey->calculateFlowRate() ?? 'N/A';
         if ($flowRate !== 'N/A') {
-            $flowRate = str_replace(',', '.', $flowRate) . ' L/s';
+            $flowRate = str_replace(',', '.', $flowRate).' L/s';
         }
         $temperature = $rawData['temperature'] ?? 'N/A';
         if ($temperature !== 'N/A') {
-            $temperature = str_replace(',', '.', $temperature) . 'C';
+            $temperature = str_replace(',', '.', $temperature).'C';
         }
         $conductivity = $rawData['conductivity'] ?? 'N/A';
         if ($conductivity !== 'N/A') {
-            $conductivity = str_replace(',', '.', $conductivity) . ' microS/cm';
+            $conductivity = str_replace(',', '.', $conductivity).' microS/cm';
         }
 
         if (isset($rawData['active'])) {
