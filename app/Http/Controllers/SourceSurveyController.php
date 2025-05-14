@@ -23,6 +23,7 @@ class SourceSurveyController extends Controller
         foreach ($sourceSurveys as $sourceSurvey) {
             $mediasHtml = $this->getMediasHtml($sourceSurvey);
             $osm2caiUrl = url('resources/source-surveys/'.$sourceSurvey->id);
+          
             [$surveyName, $date, $flowRate, $temperature, $conductivity, $isActive] = $this->formatSurveyData($sourceSurvey);
             $htmlString = $this->getHtmlString($sourceSurvey, $mediasHtml, $surveyName, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl);
 
@@ -330,8 +331,8 @@ class SourceSurveyController extends Controller
     private function formatSurveyData($sourceSurvey): array
     {
         $rawData = $sourceSurvey->raw_data;
-
         $surveyName = $sourceSurvey->name ?? $rawData['title'] ?? 'N/A';
+
         $date = $rawData['date'] ?? $sourceSurvey->created_at ?? 'N/A';
         if ($date !== 'N/A') {
             $date = Carbon::parse($date)->format('d-m-Y');
