@@ -335,19 +335,17 @@ trait SpatialDataTrait
         return (int) round($area);
     }
 
-    public function getLatitude(): ?float
+    public function getLatitudeAttribute(): ?float
     {
         //calculate the latitude from the geometry of type point using postgis
-        $geometry = $this->fetchGeometry('geometry');
         $latitude = DB::select("SELECT ST_Y(geometry) as latitude FROM {$this->getTable()} WHERE id = {$this->id}")[0]->latitude;
 
         return $latitude;
     }
 
-    public function getLongitude(): ?float
+    public function getLongitudeAttribute(): ?float
     {
         //calculate the longitude from the geometry of type point using postgis
-        $geometry = $this->fetchGeometry('geometry');
         $longitude = DB::select("SELECT ST_X(geometry) as longitude FROM {$this->getTable()} WHERE id = {$this->id}")[0]->longitude;
 
         return $longitude;
