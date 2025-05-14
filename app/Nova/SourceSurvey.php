@@ -126,8 +126,6 @@ class SourceSurvey extends AbstractValidationResource
         ];
     }
 
-
-
     /**
      * Gets the fields available for CSV export.
      *

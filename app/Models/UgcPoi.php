@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use App\Models\UgcMedia;
-use Illuminate\Support\Carbon;
-use App\Traits\SpatialDataTrait;
 use App\Enums\ValidatedStatusEnum;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\UgcMedia;
+use App\Models\User;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UgcPoi extends Model
 {
