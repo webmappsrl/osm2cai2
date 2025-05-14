@@ -23,8 +23,9 @@ class SourceSurveyController extends Controller
         foreach ($sourceSurveys as $sourceSurvey) {
             $mediasHtml = $this->getMediasHtml($sourceSurvey);
             $osm2caiUrl = url('resources/source-surveys/'.$sourceSurvey->id);
-            [$date, $flowRate, $temperature, $conductivity, $isActive] = $this->formatSurveyData($sourceSurvey);
-            $htmlString = $this->getHtmlString($sourceSurvey, $mediasHtml, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl);
+
+            [$surveyName, $date, $flowRate, $temperature, $conductivity, $isActive] = $this->formatSurveyData($sourceSurvey);
+            $htmlString = $this->getHtmlString($sourceSurvey, $mediasHtml, $surveyName, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl);
 
             $output['features'][] = [
                 'type' => 'Feature',
@@ -308,9 +309,14 @@ class SourceSurveyController extends Controller
                         <div style="display: flex; justify-content: start;">
                         HTML;
             foreach ($medias as $media) {
+                $mediaUrl = $media->relative_url;
+                // Check if the URL is already absolute
+                if (! preg_match('~^(?:f|ht)tps?://~i', $mediaUrl)) {
+                    $mediaUrl = Storage::url($mediaUrl);
+                }
                 $mediasHtml .= <<<HTML
-                <a href="{$media->relative_url}" target="_blank">
-                    <img src="{$media->relative_url}" style="width: 60px; margin-right: 5px; height: 60px; border: 1px solid #ccc; border-radius: 40%; padding: 2px;" alt="Thumbnail">
+                <a href="{$mediaUrl}" target="_blank">
+                    <img src="{$mediaUrl}" style="width: 60px; margin-right: 5px; height: 60px; border: 1px solid #ccc; border-radius: 40%; padding: 2px;" alt="Thumbnail">
                 </a>
                 HTML;
             }
@@ -325,6 +331,8 @@ class SourceSurveyController extends Controller
     private function formatSurveyData($sourceSurvey): array
     {
         $rawData = $sourceSurvey->raw_data;
+        $surveyName = $sourceSurvey->name ?? $rawData['title'] ?? 'N/A';
+
         $date = $rawData['date'] ?? $sourceSurvey->created_at ?? 'N/A';
         if ($date !== 'N/A') {
             $date = Carbon::parse($date)->format('d-m-Y');
@@ -358,14 +366,15 @@ class SourceSurveyController extends Controller
             $isActive = 'N/A';
         }
 
-        return [$date, $flowRate, $temperature, $conductivity, $isActive];
+        return [$surveyName, $date, $flowRate, $temperature, $conductivity, $isActive];
     }
 
-    private function getHtmlString($sourceSurvey, $mediasHtml, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl): string
+    private function getHtmlString($sourceSurvey, $mediasHtml, $surveyName, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl): string
     {
         return <<<HTML
 <div style='font-size: 1.1em; line-height: 1.4em;'>
     <strong>ID:</strong> <span style='white-space: pre-wrap;'>$sourceSurvey->id</span><br>
+    <strong>Nome Sorgente:</strong> <span style='white-space: pre-wrap;'>$surveyName</span><br>
     <strong>Data del monitoraggio:</strong> <span style='white-space: pre-wrap;'>$date</span><br>
     <strong>Sorgente Attiva:</strong> <span style='white-space: pre-wrap;'>$isActive</span><br> 
     <strong>Portata:</strong> <span style='white-space: pre-wrap;'>$flowRate</span><br>
