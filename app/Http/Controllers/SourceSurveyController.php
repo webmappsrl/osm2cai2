@@ -312,7 +312,7 @@ class SourceSurveyController extends Controller
                 $mediaUrl = $media->relative_url;
                 // Check if the URL is already absolute
                 if (! preg_match('~^(?:f|ht)tps?://~i', $mediaUrl)) {
-                    $mediaUrl = Storage::url($mediaUrl);
+                    $mediaUrl = url(Storage::url($mediaUrl));
                 }
                 $mediasHtml .= <<<HTML
                 <a href="{$mediaUrl}" target="_blank">
