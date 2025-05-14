@@ -21,80 +21,10 @@ class SourceSurveyController extends Controller
         ];
 
         foreach ($sourceSurveys as $sourceSurvey) {
-            $medias = $sourceSurvey->ugc_media()->get();
-            if (count($medias) === 0) {
-                $mediasHtml = <<<'HTML'
-                        <div style="display: flex; justify-content: start;"> 'N/A'
-                        HTML;
-                $mediasHtml .= <<<'HTML'
-                </div>
-                HTML;
-            } else {
-                $mediasHtml = <<<'HTML'
-                        <div style="display: flex; justify-content: start;">
-                        HTML;
-                foreach ($medias as $media) {
-                    $mediasHtml .= <<<HTML
-                <a href="{$media->relative_url}" target="_blank">
-                    <img src="{$media->relative_url}" style="width: 60px; margin-right: 5px; height: 60px; border: 1px solid #ccc; border-radius: 40%; padding: 2px;" alt="Thumbnail">
-                </a>
-                HTML;
-                }
-                $mediasHtml .= <<<'HTML'
-                </div>
-                HTML;
-            }
+            $mediasHtml = $this->getMediasHtml($sourceSurvey);
             $osm2caiUrl = url('resources/source-surveys/'.$sourceSurvey->id);
-
-            $rawData = $sourceSurvey->raw_data;
-            $date = $rawData['date'] ?? 'N/A';
-            if ($date !== 'N/A') {
-                $date = Carbon::parse($date)->format('d-m-Y');
-            }
-            if (isset($sourceSurvey->flow_rate) && $sourceSurvey->flow_rate !== 'N/A') {
-                $flowRate = str_replace(',', '.', $sourceSurvey->flow_rate).' L/s';
-            } else {
-                $flowRate = 'N/A';
-            }
-            if (isset($sourceSurvey->temperature) && $sourceSurvey->temperature !== 'N/A') {
-                $temperature = str_replace(',', '.', $sourceSurvey->temperature).'C';
-            } else {
-                $temperature = 'N/A';
-            }
-            if (isset($sourceSurvey->conductivity) && $sourceSurvey->conductivity !== 'N/A') {
-                $conductivity = str_replace(',', '.', $sourceSurvey->conductivity).' microS/cm';
-            } else {
-                $conductivity = 'N/A';
-            }
-
-            if (isset($rawData['active'])) {
-                switch ($rawData['active']) {
-                    case 'yes':
-                        $isActive = 'SI';
-                        break;
-                    case 'no':
-                        $isActive = 'NO';
-                        break;
-                    default:
-                        $isActive = 'N/A';
-                        break;
-                }
-            } else {
-                $isActive = 'N/A';
-            }
-
-            $htmlString = <<<HTML
-<div style='font-size: 1.1em; line-height: 1.4em;'>
-    <strong>ID:</strong> <span style='white-space: pre-wrap;'>$sourceSurvey->id</span><br>
-    <strong>Data del monitoraggio:</strong> <span style='white-space: pre-wrap;'>$date</span><br>
-    <strong>Sorgente Attiva:</strong> <span style='white-space: pre-wrap;'>$isActive</span><br>
-    <strong>Portata:</strong> <span style='white-space: pre-wrap;'>$flowRate</span><br>
-    <strong>Temperatura:</strong> <span style='white-space: pre-wrap;'>$temperature</span><br>
-    <strong>Conducibilitá elettrica:</strong> <span style='white-space: pre-wrap;'>$conductivity</span><br>
-    $mediasHtml <br>
-    <a href="$osm2caiUrl" target="_blank" style="text-decoration: underline;">Vedi su OSM2CAI</a>
-</div>
-HTML;
+            [$date, $flowRate, $temperature, $conductivity, $isActive] = $this->formatSurveyData($sourceSurvey);
+            $htmlString = $this->getHtmlString($sourceSurvey, $mediasHtml, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl);
 
             $output['features'][] = [
                 'type' => 'Feature',
@@ -178,9 +108,9 @@ HTML;
                     'title' => $survey->name ?? 'N/A',
                     'active' => $rawData['active'] ?? 'N/A',
                     'info' => $survey->description ?? 'N/A',
-                    'range_time' => $survey->flow_rate ?? 'N/A',
-                    'temperature' => $survey->temperature ?? 'N/A',
-                    'conductivity' => $survey->conductivity ?? 'N/A',
+                    'range_time' => $rawData['flow_rate'] ?? 'N/A',
+                    'temperature' => $rawData['temperature'] ?? 'N/A',
+                    'conductivity' => $rawData['conductivity'] ?? 'N/A',
                     'range_volume' => $rawData['range_volume'] ?? 'N/A',
                     'elevation' => $altitude,
                 ],
@@ -210,9 +140,9 @@ HTML;
             $gpx .= '<extensions>';
             $gpx .= '<id>'.$survey->id.'</id>';
             $gpx .= '<active>'.($rawData['active'] ?? 'N/A').'</active>';
-            $gpx .= '<range_time>'.($survey->flow_rate ?? 'N/A').'</range_time>';
-            $gpx .= '<temperature>'.($survey->temperature ?? 'N/A').'</temperature>';
-            $gpx .= '<conductivity>'.($survey->conductivity ?? 'N/A').'</conductivity>';
+            $gpx .= '<range_time>'.($rawData['flow_rate'] ?? 'N/A').'</range_time>';
+            $gpx .= '<temperature>'.($rawData['temperature'] ?? 'N/A').'</temperature>';
+            $gpx .= '<conductivity>'.($rawData['conductivity'] ?? 'N/A').'</conductivity>';
             $gpx .= '<range_volume>'.($rawData['range_volume'] ?? 'N/A').'</range_volume>';
             $gpx .= '</extensions>';
             $gpx .= '</wpt>';
@@ -241,9 +171,9 @@ HTML;
             $kml .= 'ID: '.$survey->id."\n";
             $kml .= 'Info: '.htmlspecialchars($survey->description ?? 'N/A')."\n";
             $kml .= 'Active: '.($rawData['active'] ?? 'N/A')."\n";
-            $kml .= 'Range Time: '.($survey->flow_rate ?? 'N/A')."\n";
-            $kml .= 'Temperature: '.($survey->temperature ?? 'N/A')."\n";
-            $kml .= 'Conductivity: '.($survey->conductivity ?? 'N/A')."\n";
+            $kml .= 'Range Time: '.($rawData['flow_rate'] ?? 'N/A')."\n";
+            $kml .= 'Temperature: '.($rawData['temperature'] ?? 'N/A')."\n";
+            $kml .= 'Conductivity: '.($rawData['conductivity'] ?? 'N/A')."\n";
             $kml .= 'Range Volume: '.($rawData['range_volume'] ?? 'N/A')."\n";
             $kml .= 'Elevation: '.($altitude);
             $kml .= '</description>';
@@ -253,9 +183,9 @@ HTML;
             $kml .= '<ExtendedData>';
             $kml .= '<Data name="id"><value>'.$survey->id.'</value></Data>';
             $kml .= '<Data name="active"><value>'.($rawData['active'] ?? 'N/A').'</value></Data>';
-            $kml .= '<Data name="range_time"><value>'.($survey->flow_rate ?? 'N/A').'</value></Data>';
-            $kml .= '<Data name="temperature"><value>'.($survey->temperature ?? 'N/A').'</value></Data>';
-            $kml .= '<Data name="conductivity"><value>'.($survey->conductivity ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="range_time"><value>'.($rawData['flow_rate'] ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="temperature"><value>'.($rawData['temperature'] ?? 'N/A').'</value></Data>';
+            $kml .= '<Data name="conductivity"><value>'.($rawData['conductivity'] ?? 'N/A').'</value></Data>';
             $kml .= '<Data name="range_volume"><value>'.($rawData['range_volume'] ?? 'N/A').'</value></Data>';
             $kml .= '</ExtendedData>';
             $kml .= '</Placemark>';
@@ -292,7 +222,7 @@ HTML;
             Config::get('database.connections.pgsql.username').
             '\' password=\''.
             Config::get('database.connections.pgsql.password').
-            '\'" -sql "SELECT id, name, description, flow_rate, temperature, conductivity, ST_Transform(geometry, 4326) as geometry FROM ugc_pois WHERE id IN ('.
+            '\'" -sql "SELECT id, name, description, raw_data->\'flow_rate\' as flow_rate, raw_data->\'temperature\' as temperature, raw_data->\'conductivity\' as conductivity, ST_Transform(geometry, 4326) as geometry FROM ugc_pois WHERE id IN ('.
             implode(',', $ids).
             ') AND form_id = \'water\' AND validated = \'valid\';" -a_srs EPSG:4326';
 
@@ -361,5 +291,89 @@ HTML;
             'pending' => $notValidatedCount,
             'people' => $peopleCount,
         ]);
+    }
+
+    private function getMediasHtml($sourceSurvey): string
+    {
+        $medias = $sourceSurvey->ugc_media()->get();
+        if (count($medias) === 0) {
+            $mediasHtml = <<<'HTML'
+                        <div style="display: flex; justify-content: start;"> 'N/A'
+                        HTML;
+            $mediasHtml .= <<<'HTML'
+                </div>
+                HTML;
+        } else {
+            $mediasHtml = <<<'HTML'
+                        <div style="display: flex; justify-content: start;">
+                        HTML;
+            foreach ($medias as $media) {
+                $mediasHtml .= <<<HTML
+                <a href="{$media->relative_url}" target="_blank">
+                    <img src="{$media->relative_url}" style="width: 60px; margin-right: 5px; height: 60px; border: 1px solid #ccc; border-radius: 40%; padding: 2px;" alt="Thumbnail">
+                </a>
+                HTML;
+            }
+            $mediasHtml .= <<<'HTML'
+                </div>
+                HTML;
+        }
+
+        return $mediasHtml;
+    }
+
+    private function formatSurveyData($sourceSurvey): array
+    {
+        $rawData = $sourceSurvey->raw_data;
+        $date = $rawData['date'] ?? $sourceSurvey->created_at ?? 'N/A';
+        if ($date !== 'N/A') {
+            $date = Carbon::parse($date)->format('d-m-Y');
+        }
+        $flowRate = $rawData['flow_rate'] ?? $sourceSurvey->calculateFlowRate() ?? 'N/A';
+        if ($flowRate !== 'N/A') {
+            $flowRate = str_replace(',', '.', $flowRate).' L/s';
+        }
+        $temperature = $rawData['temperature'] ?? 'N/A';
+        if ($temperature !== 'N/A') {
+            $temperature = str_replace(',', '.', $temperature).'C';
+        }
+        $conductivity = $rawData['conductivity'] ?? 'N/A';
+        if ($conductivity !== 'N/A') {
+            $conductivity = str_replace(',', '.', $conductivity).' microS/cm';
+        }
+
+        if (isset($rawData['active'])) {
+            switch ($rawData['active']) {
+                case 'yes':
+                    $isActive = 'SI';
+                    break;
+                case 'no':
+                    $isActive = 'NO';
+                    break;
+                default:
+                    $isActive = 'N/A';
+                    break;
+            }
+        } else {
+            $isActive = 'N/A';
+        }
+
+        return [$date, $flowRate, $temperature, $conductivity, $isActive];
+    }
+
+    private function getHtmlString($sourceSurvey, $mediasHtml, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl): string
+    {
+        return <<<HTML
+<div style='font-size: 1.1em; line-height: 1.4em;'>
+    <strong>ID:</strong> <span style='white-space: pre-wrap;'>$sourceSurvey->id</span><br>
+    <strong>Data del monitoraggio:</strong> <span style='white-space: pre-wrap;'>$date</span><br>
+    <strong>Sorgente Attiva:</strong> <span style='white-space: pre-wrap;'>$isActive</span><br> 
+    <strong>Portata:</strong> <span style='white-space: pre-wrap;'>$flowRate</span><br>
+    <strong>Temperatura:</strong> <span style='white-space: pre-wrap;'>$temperature</span><br>
+    <strong>Conducibilitá elettrica:</strong> <span style='white-space: pre-wrap;'>$conductivity</span><br>
+    $mediasHtml <br>
+    <a href="$osm2caiUrl" target="_blank" style="text-decoration: underline;">Vedi su OSM2CAI</a>
+</div>
+HTML;
     }
 }

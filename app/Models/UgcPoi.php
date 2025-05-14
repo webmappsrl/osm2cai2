@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ValidatedStatusEnum;
 use App\Models\UgcMedia;
 use App\Models\User;
 use App\Traits\SpatialDataTrait;
@@ -173,5 +174,49 @@ class UgcPoi extends Model
         $this->raw_data = $rawData;
 
         $this->save();
+    }
+
+    /**
+     * Calculates the water flow rate based on raw data for UGC POIS ACQUASORGENTE
+     *
+     * @return string
+     */
+    public function calculateFlowRate()
+    {
+        $rawData = $this->raw_data;
+        $flowRate = 'N/A';
+
+        if ($this->water_flow_rate_validated == ValidatedStatusEnum::VALID->value) {
+            $volume = $this->formatNumericValue($rawData['range_volume'] ?? '');
+            $time = $this->formatNumericValue($rawData['range_time'] ?? '');
+
+            if (is_numeric($volume) && is_numeric($time) && $time != 0) {
+                $flowRate = round($volume / $time, 3);
+            }
+        }
+
+        // Update raw_data with the calculated flow rate
+        $rawData['flow_rate'] = $flowRate;
+        $this->raw_data = $rawData;
+        $this->saveQuietly();
+
+        return $flowRate;
+    }
+
+    /**
+     * Formats a numeric value for calculation.
+     *
+     * @param string $value
+     * @return string
+     */
+    private function formatNumericValue($value)
+    {
+        if (strpos($value, '.') !== false) {
+            return $value;
+        }
+
+        $value = preg_replace('/[^0-9,]/', '', $value);
+
+        return str_replace(',', '.', $value);
     }
 }
