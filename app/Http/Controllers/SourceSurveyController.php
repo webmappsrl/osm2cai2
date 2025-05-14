@@ -23,7 +23,7 @@ class SourceSurveyController extends Controller
         foreach ($sourceSurveys as $sourceSurvey) {
             $mediasHtml = $this->getMediasHtml($sourceSurvey);
             $osm2caiUrl = url('resources/source-surveys/'.$sourceSurvey->id);
-          
+
             [$surveyName, $date, $flowRate, $temperature, $conductivity, $isActive] = $this->formatSurveyData($sourceSurvey);
             $htmlString = $this->getHtmlString($sourceSurvey, $mediasHtml, $surveyName, $date, $flowRate, $temperature, $conductivity, $isActive, $osm2caiUrl);
 
