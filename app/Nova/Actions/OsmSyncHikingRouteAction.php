@@ -31,7 +31,7 @@ class OsmSyncHikingRouteAction extends Action
 
         foreach ($models as $model) {
 
-            if (!$user->canManageHikingRoute($model)) {
+            if (! $user->canManageHikingRoute($model)) {
                 return Action::danger('You are not authorized to perform this action');
             }
 
@@ -41,14 +41,14 @@ class OsmSyncHikingRouteAction extends Action
 
             // Ensure osmfeatures_data and osm_id exist
             if (! isset($model->osmfeatures_data['properties']['osm_id'])) {
-                return Action::danger('Hiking Route model ' . $model->id . ' does not have a valid osm_id in osmfeatures_data.');
+                return Action::danger('Hiking Route model '.$model->id.' does not have a valid osm_id in osmfeatures_data.');
             }
 
             $service->updateHikingRouteModelWithOsmData($model);
         }
 
         // It always operates on a single model because showOnDetail is true
-        return Action::redirect('/resources/hiking-routes/' . $models->first()->id);
+        return Action::redirect('/resources/hiking-routes/'.$models->first()->id);
     }
 
     /**

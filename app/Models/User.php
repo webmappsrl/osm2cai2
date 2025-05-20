@@ -226,7 +226,7 @@ class User extends WmUser
 
         // Format the form ID for permission name
         $formattedFormId = $this->formatFormIdForPermission($formId);
-        $permissionName = 'validate ' . $formattedFormId;
+        $permissionName = 'validate '.$formattedFormId;
 
         // If permission doesn't exist in the system, allow validation
         if (! Permission::where('name', $permissionName)->exists()) {

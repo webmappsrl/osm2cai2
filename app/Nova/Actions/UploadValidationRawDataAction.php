@@ -43,7 +43,7 @@ class UploadValidationRawDataAction extends Action
             return Action::danger('To upload the detected track of the route, the route must have a registration status less than or equal to 3; if necessary proceed first with REVERT VALIDATION');
         }
 
-        if (!auth()->user()->canManageHikingRoute($model)) {
+        if (! auth()->user()->canManageHikingRoute($model)) {
             return Action::danger('You are not authorized to perform this action');
         }
 
@@ -84,7 +84,7 @@ class UploadValidationRawDataAction extends Action
 
             return Action::message('File uploaded and geometry updated successfully!');
         } catch (\Exception $e) {
-            Log::error("Error processing geometry upload for HikingRoute ID {$model->id}: " . $e->getMessage());
+            Log::error("Error processing geometry upload for HikingRoute ID {$model->id}: ".$e->getMessage());
             Storage::disk('local')->delete($path);
 
             return Action::danger('An error occurred while processing the file. Please check the logs.');

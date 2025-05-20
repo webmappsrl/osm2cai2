@@ -64,15 +64,15 @@ class RevertValidateHikingRouteAction extends Action
     {
         $osmfeatures_data = $model->osmfeatures_data;
 
-        //revert the status
+        // revert the status
         $osmfeatures_data['properties']['osm2cai_status'] = 3;
         $model->osm2cai_status = 3;
 
-        //revert the validation date
+        // revert the validation date
         $model->validation_date = null;
         $model->validator_id = null;
 
-        //save the model
+        // save the model
         $model->osmfeatures_data = $osmfeatures_data;
         $model->save();
     }
