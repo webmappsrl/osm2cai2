@@ -90,6 +90,7 @@ class HikingRouteController extends Controller
      *         in="path",
      *         description="Regione code according to CAI convention: <br/>
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
@@ -243,6 +244,7 @@ class HikingRouteController extends Controller
      *         in="path",
      *         description="Regione code according to CAI convention: <br/>
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
