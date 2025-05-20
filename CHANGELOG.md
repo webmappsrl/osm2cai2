@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.2.0](https://github.com/webmappsrl/osm2cai2/compare/v1.1.1...v1.2.0) (2025-05-20)
+
+
+### Features
+
+* add fixOsmfeaturesSDA command to update osmfeatures_data properties ([9866deb](https://github.com/webmappsrl/osm2cai2/commit/9866debfcbae6d97938f20d26bf058b4b80ddce0))
+* added hiking route club association action in club nova resource ([#188](https://github.com/webmappsrl/osm2cai2/issues/188)) ([d0a7207](https://github.com/webmappsrl/osm2cai2/commit/d0a72075f8cd4bd0ed146092ee03679fcb403576))
+
+
+### Bug Fixes
+
+* enhance condition for updating osm2cai_status in HikingRoute model ([0945f60](https://github.com/webmappsrl/osm2cai2/commit/0945f609313f9307c78d36697b02035a5af019b4))
+* geometry in ugc_poi nova resource required ([5b7a2a2](https://github.com/webmappsrl/osm2cai2/commit/5b7a2a2bfb9050ce6b5d20d7092590c043fde5ea))
+* getRegisteredAtAttribute method to support multiple date formats after raw_data changes OC:5405 ([a9493ca](https://github.com/webmappsrl/osm2cai2/commit/a9493ca337761845b5c958ff07475b4d3ebd008c))
+* heavy csv/geojson region download OC:5411 ([82b8ff6](https://github.com/webmappsrl/osm2cai2/commit/82b8ff60591c1568ec85cb041cd6384de51ebf2e))
+* improve saved hook in hiking routes model ([679f184](https://github.com/webmappsrl/osm2cai2/commit/679f1848a87a13bee66cfe0b346474dc6ee5d652))
+* refactor validation methods in HikingRoute model ([6a8e11a](https://github.com/webmappsrl/osm2cai2/commit/6a8e11a05af18ff3903bf8d790e2c3c2549ebec4))
+* ugc poi policies OC:5420 ([#185](https://github.com/webmappsrl/osm2cai2/issues/185)) ([0bf4956](https://github.com/webmappsrl/osm2cai2/commit/0bf4956427c20b3895c6054e0c55ada66bd08364))
+* update confirmation behavior in download actions ([ed3cef6](https://github.com/webmappsrl/osm2cai2/commit/ed3cef63a10ad339970b26c9b88ab1c4e5056381))
+
+
+### Miscellaneous Chores
+
+* update wm-package subproject commit reference to f38a39f ([0dd180e](https://github.com/webmappsrl/osm2cai2/commit/0dd180e1f33962eef8c895d49a052221d94e2e9b))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
