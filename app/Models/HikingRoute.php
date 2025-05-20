@@ -803,7 +803,20 @@ SQL;
      */
     public function getRefReiCompAttribute(): string
     {
-        $mainSector = $this->mainSector();
+        // Ensure the 'sectors' relation is loaded to prevent N+1 queries.
+        // Eager loading should be handled by the caller (e.g., Nova indexQuery).
+        if (! $this->relationLoaded('sectors')) {
+            // This is a fallback and ideally should not be reached
+            // in performance-critical contexts like Nova's index view.
+            // If reached, it means 'sectors' was not eager loaded.
+            $this->load('sectors');
+        }
+
+        // Sort the loaded sectors collection by 'percentage' in the pivot table.
+        $mainSector = $this->sectors->sortByDesc(function ($sector) {
+            return $sector->pivot->percentage ?? 0; // Handles case where pivot or percentage might be null
+        })->first();
+
         $ref = $this->osmfeatures_data['properties']['ref'] ?? '';
 
         if (! $mainSector || empty($ref)) {

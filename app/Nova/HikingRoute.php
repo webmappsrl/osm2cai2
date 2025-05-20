@@ -37,7 +37,7 @@ use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
-use Illuminate\Support\Arr;
+use Illuminate\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
@@ -100,8 +100,15 @@ class HikingRoute extends OsmfeaturesResource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
+        $query->with([
+            'regions',
+            'provinces',
+            'areas',
+            'sectors', // Eager load sectors
+        ]);
+
         if (auth()->user()->getTerritorialRole() == 'regional') {
-            return $query->whereHas('regions', function ($q) {
+            return $query->whereHas('regions', function (Builder $q) {
                 $q->where('regions.id', auth()->user()->region->id);
             });
         }
@@ -171,9 +178,9 @@ class HikingRoute extends OsmfeaturesResource
                 Tab::make(__('Other'), $this->getOtherTabFields()),
                 Tab::make(__('Content'), $this->getContentTabFields()),
                 Tab::make(__('Issues'), $this->getIssuesTabFields()),
-                Tab::make(__('POI'), $this->getPOITabFields()),
-                Tab::make(__('Huts'), $this->getHutsTabFields()),
-                Tab::make(__('Natural Springs'), $this->getNaturalSpringsTabFields()),
+                Tab::make(__('POI'), $this->getPOITabFields($request)),
+                Tab::make(__('Huts'), $this->getHutsTabFields($request)),
+                Tab::make(__('Natural Springs'), $this->getNaturalSpringsTabFields($request)),
             ]),
         ]);
     }
@@ -423,56 +430,44 @@ class HikingRoute extends OsmfeaturesResource
             Text::make(__('Osm2cai Status'), 'osm2cai_status')
                 ->hideFromDetail(),
             Text::make(__('Regions'), function () {
-                $val = 'ND';
-                if (Arr::accessible($this->regions)) {
-                    if (count($this->regions) > 0) {
-                        $val = implode(', ', $this->regions->pluck('name')->toArray());
-                    }
-                    if (count($this->regions) >= 2) {
-                        $val = implode(', ', $this->regions->pluck('name')->take(1)->toArray()).' [...]';
-                    }
+                if ($this->regions->isEmpty()) {
+                    return 'ND';
+                }
+                if ($this->regions->count() >= 2) {
+                    return $this->regions->first()->name.' [...]';
                 }
 
-                return $val;
+                return $this->regions->first()->name;
             })->onlyOnIndex(),
             Text::make(__('Provinces'), function () {
-                $val = 'ND';
-                if (Arr::accessible($this->provinces)) {
-                    if (count($this->provinces) > 0) {
-                        $val = implode(', ', $this->provinces->pluck('name')->toArray());
-                    }
-                    if (count($this->provinces) >= 2) {
-                        $val = implode(', ', $this->provinces->pluck('name')->take(1)->toArray()).' [...]';
-                    }
+                if ($this->provinces->isEmpty()) {
+                    return 'ND';
+                }
+                if ($this->provinces->count() >= 2) {
+                    return $this->provinces->first()->name.' [...]';
                 }
 
-                return $val;
+                return $this->provinces->first()->name;
             })->onlyOnIndex(),
             Text::make(__('Areas'), function () {
-                $val = 'ND';
-                if (Arr::accessible($this->areas)) {
-                    if (count($this->areas) > 0) {
-                        $val = implode(', ', $this->areas->pluck('name')->toArray());
-                    }
-                    if (count($this->areas) >= 2) {
-                        $val = implode(', ', $this->areas->pluck('name')->take(1)->toArray()).' [...]';
-                    }
+                if ($this->areas->isEmpty()) {
+                    return 'ND';
+                }
+                if ($this->areas->count() >= 2) {
+                    return $this->areas->first()->name.' [...]';
                 }
 
-                return $val;
+                return $this->areas->first()->name;
             })->onlyOnIndex(),
             Text::make(__('Sectors'), function () {
-                $val = 'ND';
-                if (Arr::accessible($this->sectors)) {
-                    if (count($this->sectors) > 0) {
-                        $val = implode(', ', $this->sectors->pluck('name')->toArray());
-                    }
-                    if (count($this->sectors) >= 2) {
-                        $val = implode(', ', $this->areas->pluck('name')->take(1)->toArray()).' [...]';
-                    }
+                if ($this->sectors->isEmpty()) {
+                    return 'ND';
+                }
+                if ($this->sectors->count() >= 2) {
+                    return $this->sectors->first()->name.' [...]';
                 }
 
-                return $val;
+                return $this->sectors->first()->name;
             })->onlyOnIndex(),
             Text::make(__('REF'), 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
             Text::make(__('REI Code'), 'ref_rei')->hideFromDetail(),
@@ -643,8 +638,12 @@ class HikingRoute extends OsmfeaturesResource
         ];
     }
 
-    private function getPOITabFields()
+    private function getPOITabFields(NovaRequest $request)
     {
+        if (! $request->isResourceDetailRequest()) {
+            return [];
+        }
+
         $pois = $this->model()->getElementsInBuffer(new EcPoi, 10000);
         $fields[] = Text::make('', function () use ($pois) {
             if (count($pois) < 1) {
@@ -695,8 +694,12 @@ class HikingRoute extends OsmfeaturesResource
         return $fields;
     }
 
-    private function getHutsTabFields()
+    private function getHutsTabFields(NovaRequest $request)
     {
+        if (! $request->isResourceDetailRequest()) {
+            return [];
+        }
+
         $huts = $this->model()->nearbyCaiHuts;
 
         if (empty($huts)) {
@@ -736,8 +739,12 @@ class HikingRoute extends OsmfeaturesResource
         return $fields;
     }
 
-    private function getNaturalSpringsTabFields()
+    private function getNaturalSpringsTabFields(NovaRequest $request)
     {
+        if (! $request->isResourceDetailRequest()) {
+            return [];
+        }
+
         $naturalSprings = $this->model()->nearbyNaturalSprings;
 
         if (empty($naturalSprings)) {
