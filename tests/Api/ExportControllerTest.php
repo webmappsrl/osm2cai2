@@ -31,7 +31,7 @@ class ExportControllerTest extends TestCase
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
     }
 
-    private function test_list_endpoint(string $endpoint, string $modelClass): void
+    private function testListEndpoint(string $endpoint, string $modelClass): void
     {
         if ($modelClass === User::class) {
             $modelClass::factory()->count(3)->sequence(
@@ -93,7 +93,7 @@ class ExportControllerTest extends TestCase
         }
     }
 
-    private function test_single_feature_endpoint(string $endpoint, string $modelClass): void
+    private function testSingleFeatureEndpoint(string $endpoint, string $modelClass): void
     {
         if ($modelClass === User::class) {
             $model = $modelClass::factory()->create(['email' => 'user@example.com']);
@@ -127,7 +127,7 @@ class ExportControllerTest extends TestCase
             $model = $modelClass::factory()->create();
         }
 
-        $response = $this->getJson($endpoint.'/'.$model->id);
+        $response = $this->getJson($endpoint . '/' . $model->id);
         $response->assertStatus(200);
 
         $data = $response->json();
