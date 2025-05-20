@@ -41,6 +41,7 @@ class HikingRoutesRegionControllerV1 extends Controller
      *         in="path",
      *         description="
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
@@ -119,6 +120,7 @@ class HikingRoutesRegionControllerV1 extends Controller
      *         in="path",
      *         description="
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
