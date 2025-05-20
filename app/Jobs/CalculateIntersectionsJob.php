@@ -31,8 +31,8 @@ class CalculateIntersectionsJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param Model $baseModel The model to calculate intersections from
-     * @param string $intersectingModelClass The class name of the model to find intersections with
+     * @param  Model  $baseModel  The model to calculate intersections from
+     * @param  string  $intersectingModelClass  The class name of the model to find intersections with
      */
     public function __construct($baseModel, $intersectingModelClass)
     {
@@ -49,7 +49,7 @@ class CalculateIntersectionsJob implements ShouldQueue
         $intersectingModelClass = str_starts_with($this->intersectingModelClass, 'App\\Models\\')
             ? $this->intersectingModelClass
             : 'App\\Models\\'.$this->intersectingModelClass;
-        $intersectingModelInstance = new $intersectingModelClass(); //create a new instance of the intersecting model
+        $intersectingModelInstance = new $intersectingModelClass; // create a new instance of the intersecting model
 
         // Check if models are different
         if (get_class($baseModel) === $this->intersectingModelClass) {
@@ -217,7 +217,7 @@ class CalculateIntersectionsJob implements ShouldQueue
     private function getModelForeignKey($model): string
     {
         if (is_string($model)) {
-            $model = new $model();
+            $model = new $model;
         }
 
         return Str::singular($model->getTable()).'_id';

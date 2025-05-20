@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\CheckNearbyHutsJob;
 use App\Jobs\CheckNearbyNaturalSpringsJob;
 use Illuminate\Console\Command;
 

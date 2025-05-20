@@ -31,7 +31,7 @@ class UpdateHrRegionFavoriteFromLegacyCommand extends Command
         $this->info('[START] Updating region favorite hiking routes from legacy database...');
         $legacyConnection = DB::connection('legacyosm2cai');
 
-        //get all the hiking route with region_favorite = true
+        // get all the hiking route with region_favorite = true
         $legacyHr = $legacyConnection->table('hiking_routes')->where('region_favorite', true)->get();
 
         $this->info('Found '.count($legacyHr).' hiking routes to update');

@@ -2,17 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\Area;
-use App\Models\Club;
-use App\Models\HikingRoute;
 use App\Models\Pivots\AreaUser;
 use App\Models\Pivots\ProvinceUser;
 use App\Models\Pivots\SectorUser;
-use App\Models\Province;
-use App\Models\Region;
-use App\Models\Sector;
-use App\Models\UgcPoi;
-use App\Models\UgcTrack;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Nova\Auth\Impersonatable;
@@ -175,8 +167,7 @@ class User extends WmUser
      * - Regional referents can manage routes in their assigned region
      * - Local managers can manage routes that intersect with their assigned areas, sectors or provinces
      *
-     * @param HikingRoute $hr The hiking route to check permissions for
-     *
+     * @param  HikingRoute  $hr  The hiking route to check permissions for
      * @return bool True if the user can manage the hiking route, false otherwise
      */
     public function canManageHikingRoute(HikingRoute $hr): bool
@@ -242,7 +233,7 @@ class User extends WmUser
     /**
      * Check if user is a validator for the specified form ID
      *
-     * @param string|null $formId The form ID to check validation permissions for
+     * @param  string|null  $formId  The form ID to check validation permissions for
      * @return bool
      */
     public function isValidatorForFormId($formId)
@@ -272,8 +263,7 @@ class User extends WmUser
     /**
      * Format form ID for permission name
      *
-     * @param string $formId The form ID to format
-     * @return string
+     * @param  string  $formId  The form ID to format
      */
     protected function formatFormIdForPermission(string $formId): string
     {
@@ -300,8 +290,6 @@ class User extends WmUser
 
     /**
      * Checks/Assigns the Local Referent role. Called by Pivot Models when a link is created or deleted.
-     *
-     * @return void
      */
     public function checkAndAssignLocalReferentRole(): void
     {

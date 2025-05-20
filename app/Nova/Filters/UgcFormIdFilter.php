@@ -19,7 +19,6 @@ class UgcFormIdFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param  Request  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -36,12 +35,11 @@ class UgcFormIdFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param  Request  $request
      * @return array
      */
     public function options(Request $request)
     {
-        //select all the form_id from the ugc_pois table distinct
+        // select all the form_id from the ugc_pois table distinct
         $formIds = [
             'Sentieristica' => 'paths',
             'Segnalazione Problemi' => 'report',

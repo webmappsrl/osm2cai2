@@ -2,19 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ArchaeologicalAreasResource;
-use App\Http\Resources\ArchaeologicalAreaUmapResource;
-use App\Http\Resources\ArchaeologicalSitesResource;
-use App\Http\Resources\ArchaeologicalSiteUmapResource;
-use App\Http\Resources\GeologicalSitesResource;
-use App\Http\Resources\GeologicalSiteUmapResource;
-use App\Http\Resources\PoiResource;
-use App\Http\Resources\PoiUmapResource;
-use App\Http\Resources\SignsResource;
-use App\Http\Resources\SignUmapResource;
 use App\Http\Resources\UgcpoiUmapResource;
 use App\Models\UgcPoi;
-use Illuminate\Http\Request;
 
 class UmapController extends Controller
 {

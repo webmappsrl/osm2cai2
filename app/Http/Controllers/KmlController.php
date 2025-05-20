@@ -9,8 +9,6 @@ class KmlController extends Controller
 {
     /**
      * Allowed models for KML generation.
-     *
-     * @var array
      */
     private array $allowedModels = [
         'region' => \App\Models\Region::class,
@@ -22,9 +20,8 @@ class KmlController extends Controller
     /**
      * Generate and download a KML file for a specific model.
      *
-     * @param Request $request
-     * @param string $modelType The type of the model
-     * @param int $id The ID of the model
+     * @param  string  $modelType  The type of the model
+     * @param  int  $id  The ID of the model
      * @return \Illuminate\Http\Response
      */
     public function download(Request $request, string $modelType, int $id)

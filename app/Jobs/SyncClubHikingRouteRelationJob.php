@@ -23,8 +23,8 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param string|null $modelType Type of model to process ('Club', 'HikingRoute', or null for all clubs)
-     * @param int|null $modelId ID of the specific model (if type is specified)
+     * @param  string|null  $modelType  Type of model to process ('Club', 'HikingRoute', or null for all clubs)
+     * @param  int|null  $modelId  ID of the specific model (if type is specified)
      * @return void
      */
     public function __construct(?string $modelType = null, ?int $modelId = null)
@@ -77,9 +77,6 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
 
     /**
      * Sync a specific club with its corresponding hiking routes based on CAI code.
-     *
-     * @param Club $club
-     * @return void
      */
     private function syncClub(Club $club): void
     {
@@ -105,9 +102,6 @@ class SyncClubHikingRouteRelationJob implements ShouldQueue
 
     /**
      * Sync a specific hiking route with its corresponding clubs based on source_ref.
-     *
-     * @param HikingRoute $hikingRoute
-     * @return void
      */
     private function syncHikingRoute(HikingRoute $hikingRoute): void
     {

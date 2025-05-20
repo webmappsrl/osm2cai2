@@ -81,7 +81,7 @@ class CsvControllerTest extends TestCase
 
     protected function createTestHikingRoute($status, $osmId)
     {
-        //if osmfeatures_data column is not present, create the column
+        // if osmfeatures_data column is not present, create the column
         if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
             Schema::table('hiking_routes', function (Blueprint $table) {
                 $table->json('osmfeatures_data')->nullable();

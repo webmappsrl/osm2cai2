@@ -48,7 +48,7 @@ class MiturAbruzzoApiTest extends TestCase
      *
      * @return void
      */
-    public function testGeojsonStructureIsTheSameAsTheLegacyApi()
+    public function test_geojson_structure_is_the_same_as_the_legacy_api()
     {
         foreach ($this->legacyEndpoints as $model => $url) {
             $geoJsonPath = $this->stubDirectory.'/'.$model.'.geojson';
@@ -97,7 +97,7 @@ class MiturAbruzzoApiTest extends TestCase
             // Verify that the GeoJSON structure matches the new API
             $this->assertGeoJsonStructureMatchesApi($geoJsonData, $newApiResponse);
 
-            //after the test, delete the file in the stub directory
+            // after the test, delete the file in the stub directory
             Storage::delete($this->stubDirectory.'/aws/'.class_basename($modelInstance).'_'.$modelInstance->id.'.json');
         }
     }
@@ -105,8 +105,6 @@ class MiturAbruzzoApiTest extends TestCase
     /**
      * Compare the GeoJSON structure with the API response.
      *
-     * @param array $legacyData
-     * @param array $apiData
      * @return void
      */
     protected function assertGeoJsonStructureMatchesApi(array $legacyData, array $apiData)

@@ -34,10 +34,8 @@ use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
 use App\Nova\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
-use Laravel\Nova\Menu\Menu;
 use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
@@ -224,25 +222,25 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         }
 
         if ($loggedInUser->hasRole('Administrator')) {
-            $dashboards[] = new Utenti();
-            $dashboards[] = new Percorribilità();
-            $dashboards[] = new SALMiturAbruzzo();
-            $dashboards[] = new AcquaSorgente();
+            $dashboards[] = new Utenti;
+            $dashboards[] = new Percorribilità;
+            $dashboards[] = new SALMiturAbruzzo;
+            $dashboards[] = new AcquaSorgente;
         }
 
         if ($loggedInUser->hasRole('National Referent')) {
-            $dashboards[] = new Percorribilità();
-            $dashboards[] = new SALMiturAbruzzo();
-            $dashboards[] = new AcquaSorgente();
+            $dashboards[] = new Percorribilità;
+            $dashboards[] = new SALMiturAbruzzo;
+            $dashboards[] = new AcquaSorgente;
         }
 
         if ($loggedInUser->hasRole('Regional Referent')) {
             $dashboards[] = new SectorsDashboard;
-            $dashboards[] = new Percorribilità();
+            $dashboards[] = new Percorribilità;
         }
 
         if ($loggedInUser->hasRole('Local Referent')) {
-            $dashboards[] = new Percorribilità();
+            $dashboards[] = new Percorribilità;
         }
 
         return $dashboards;
@@ -270,7 +268,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         parent::register();
     }
 
-    //create a footer
+    // create a footer
     private function getFooter()
     {
         Nova::footer(function () {

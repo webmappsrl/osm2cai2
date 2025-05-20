@@ -93,6 +93,7 @@ class UpdateHikingRoutesCommand extends Command
                 $errormsg = "Failed to fetch details for hiking route ID: $osmfeaturesId";
                 $this->error($errormsg);
                 $logger->error($errormsg);
+
                 continue;
             }
 

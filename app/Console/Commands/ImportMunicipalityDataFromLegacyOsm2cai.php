@@ -28,10 +28,10 @@ class ImportMunicipalityDataFromLegacyOsm2cai extends Command
     public function handle()
     {
         $columnsToUpdate = ['gid', 'cod_rip', 'cod_reg', 'cod_prov', 'cod_cm', 'cod_uts', 'pro_com', 'pro_com_t', 'comune_a', 'cc_uts', 'shape_leng'];
-        //connect to the legacy osm2cai database
+        // connect to the legacy osm2cai database
         $connection = DB::connection('legacyosm2cai');
 
-        //get the municipality data
+        // get the municipality data
         $legacyMunicipalities = $connection->table('municipality_boundaries')->get();
 
         $updatedCount = 0;
@@ -40,9 +40,9 @@ class ImportMunicipalityDataFromLegacyOsm2cai extends Command
         $progressBar = $this->output->createProgressBar($legacyMunicipalities->count());
         $progressBar->start();
 
-        //insert the data into the municipalities table
+        // insert the data into the municipalities table
         foreach ($legacyMunicipalities as $legacyMunicipality) {
-            //search the corresponding municipality in the new database
+            // search the corresponding municipality in the new database
             $municipality = Municipality::where(function ($query) use ($legacyMunicipality) {
                 $query->whereRaw('LOWER(name) = ?', [strtolower($legacyMunicipality->comune)])
                     ->orWhereRaw('LOWER(name) = ?', [strtolower(str_replace(' ', '-', $legacyMunicipality->comune))]);

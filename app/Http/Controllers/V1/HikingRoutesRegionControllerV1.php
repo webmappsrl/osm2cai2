@@ -7,9 +7,6 @@ use App\Models\HikingRoute;
 use App\Models\Region;
 use Exception;
 use GeoJson\Geometry\LineString;
-use GeoJson\Geometry\Polygon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class HikingRoutesRegionControllerV1 extends Controller
@@ -18,13 +15,17 @@ class HikingRoutesRegionControllerV1 extends Controller
      * @OA\Get(
      *      path="/api/v1/hiking-routes/region/{region_code}/{sda}",
      *      tags={"Api V1"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM2CAI IDs based on the given region code and SDA number.
      *                       These ids can be used in the geojson API hiking-route",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     description="Internal osm2cai Identifier",
@@ -34,42 +35,24 @@ class HikingRoutesRegionControllerV1 extends Controller
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="region_code",
      *         in="path",
      *         description="
-Regione code according to CAI convention: <br/>
-<br />A -> Friuli Venezia Giulia
-<br />B -> Veneto
-<br />C -> Trentino Alto Adige
-<br />D -> Lombardia
-<br />E -> Piemonte
-<br />F -> Val d'Aosta
-<br />G -> Liguria
-<br />H -> Emilia Romagna
-<br />L -> Toscana
-<br />M -> Marche
-<br />N -> Umbria
-<br />O -> Lazio
-<br />P -> Abruzzo
-<br />Q -> Molise
-<br />S -> Campania
-<br />R -> Puglia
-<br />T -> Basilicata
-<br />U -> Calabria
-<br />V -> Sicilia
-<br />Z -> Sardegna",
      *         required=true,
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 3 or 3,1 or 0,1,2). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -108,15 +91,19 @@ Regione code according to CAI convention: <br/>
      * @OA\Get(
      *      path="/api/v1/hiking-routes-osm/region/{region_code}/{sda}",
      *      tags={"Api V1"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM IDs based on the given region code and SDA number.
      *                       OSMID can be used in hiking-route-osm API or directly in OpenStreetMap relation by the following URL:
      *                       https://openstreetmap.org/relation/{OSMID}. Remember that the data on OSM can be differente from data in
      *                       OSM2CAI after validation.",
+     *
      *      @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="OSM",
      *                     description="Open Streen Map identification",
@@ -126,42 +113,24 @@ Regione code according to CAI convention: <br/>
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="region_code",
      *         in="path",
      *         description="
-Regione code according to CAI convention: <br/>
-<br />A -> Friuli Venezia Giulia
-<br />B -> Veneto
-<br />C -> Trentino Alto Adige
-<br />D -> Lombardia
-<br />E -> Piemonte
-<br />F -> Val d'Aosta
-<br />G -> Liguria
-<br />H -> Emilia Romagna
-<br />L -> Toscana
-<br />M -> Marche
-<br />N -> Umbria
-<br />O -> Lazio
-<br />P -> Abruzzo
-<br />Q -> Molise
-<br />S -> Campania
-<br />R -> Puglia
-<br />T -> Basilicata
-<br />U -> Calabria
-<br />V -> Sicilia
-<br />Z -> Sardegna",
      *         required=true,
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 3 or 3,1 or 0,1,2). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -189,12 +158,16 @@ Regione code according to CAI convention: <br/>
      * @OA\Get(
      *      path="/api/v1/hiking-route/{id}",
      *      tags={"Api V1"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns the geojson of a Hiking Route based on the given OSM2CAI ID.",
+     *
      *      @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="type",
      *                     description="Geojson type",
@@ -224,11 +197,13 @@ Regione code according to CAI convention: <br/>
      *             )
      *         )
      *      ),
+     *
      *      @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="The OSM2CAI ID of a specific Hiking Route (e.g. 2421)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
@@ -256,12 +231,16 @@ Regione code according to CAI convention: <br/>
      * @OA\Get(
      *      path="/api/v1/hiking-route-osm/{id}",
      *      tags={"Api V1"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns the geojson of a Hiking Route based on the given OSM2CAI ID.",
+     *
      *      @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="type",
      *                     description="Geojson type",
@@ -292,11 +271,13 @@ Regione code according to CAI convention: <br/>
      *             )
      *         )
      *      ),
+     *
      *      @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="The OSM relation ID of a specific Hiking Route (e.g. 13442719)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
@@ -329,13 +310,17 @@ Regione code according to CAI convention: <br/>
      * @OA\Get(
      *      path="/api/v1/hiking-routes/bb/{bounding_box}/{sda}",
      *      tags={"Api V1"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM2CAI IDs based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.
      *                       These ids can be used in the geojson API hiking-route",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     description="Internal osm2cai Identifier",
@@ -345,21 +330,25 @@ Regione code according to CAI convention: <br/>
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="bounding_box",
      *         in="path",
      *         description="List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 3 or 3,1 or 0,1,2). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -394,13 +383,17 @@ Regione code according to CAI convention: <br/>
      * @OA\Get(
      *      path="/api/v1/hiking-routes-osm/bb/{bounding_box}/{sda}",
      *      tags={"Api V1"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM IDs based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.
      *                       These ids can be used in the geojson API hiking-route",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     description="OSM Identifier",
@@ -410,21 +403,25 @@ Regione code according to CAI convention: <br/>
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="bounding_box",
      *         in="path",
      *         description="List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 3 or 3,1 or 0,1,2). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -459,12 +456,16 @@ Regione code according to CAI convention: <br/>
      * @OA\Get(
      *      path="/api/v1/hiking-routes-collection/bb/{bounding_box}/{sda}",
      *      tags={"Api V1"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the feautures collection based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="collection",
      *                     description="Feature Collection",
@@ -476,21 +477,25 @@ Regione code according to CAI convention: <br/>
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="bounding_box",
      *         in="path",
      *         description="List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 0,1,2,3,4). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"

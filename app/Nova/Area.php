@@ -66,7 +66,6 @@ class Area extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -90,7 +89,6 @@ class Area extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -107,13 +105,13 @@ class Area extends Resource
 
             $sal = $area->getSal();
             $managers = $area->sectors->pluck('manager')->unique()->toArray();
-            //remove null values
+            // remove null values
             $managers = array_filter($managers, function ($value) {
                 return $value !== null;
             });
 
             return [
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => implode(', ', $managers),
@@ -123,7 +121,7 @@ class Area extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.area-sal-card', [
                         'value' => number_format($sal * 100, 2),
@@ -134,7 +132,7 @@ class Area extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => $tot[3] + $tot[4],
@@ -144,7 +142,7 @@ class Area extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => $area->num_expected,
@@ -174,7 +172,7 @@ class Area extends Resource
             $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->width('1/4')
             ->view('nova.cards.area-sda-card', [
                 'sda' => $sda,
@@ -190,7 +188,6 @@ class Area extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -201,7 +198,6 @@ class Area extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -212,19 +208,18 @@ class Area extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)
     {
         return [
-            (new downloadGeojson())->canRun(function () {
+            (new downloadGeojson)->canRun(function () {
                 return true;
             })->onlyInline(),
-            (new DownloadShape())->canRun(function () {
+            (new DownloadShape)->canRun(function () {
                 return true;
             })->onlyInline(),
-            (new DownloadKml())->canRun(function () {
+            (new DownloadKml)->canRun(function () {
                 return true;
             })->onlyInline(),
         ];

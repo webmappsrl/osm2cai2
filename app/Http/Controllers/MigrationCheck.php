@@ -184,13 +184,13 @@ class MigrationCheck extends Controller
             'current' => 'SELECT COUNT(*) as num from areas;',
         ],
 
-        //SECTORS
+        // SECTORS
         'count sectors' => [
             'legacy' => 'SELECT COUNT(*) as num from sectors;',
             'current' => 'SELECT COUNT(*) as num from sectors;',
         ],
 
-        //SECTIONS
+        // SECTIONS
         'count clubs' => [
             'legacy' => 'SELECT COUNT(*) as num from sections;',
             'current' => 'SELECT COUNT(*) as num from clubs;',
@@ -334,7 +334,7 @@ class MigrationCheck extends Controller
             ]
         );
 
-        //dd($request->all());
+        // dd($request->all());
         $queryLegacy = $validated['queryLegacy'] ?? false;
         $queryCurrent = $validated['queryCurrent'] ?? $queryLegacy;
         $dataLegacy = 'No query was run';
@@ -382,7 +382,7 @@ class MigrationCheck extends Controller
         ]);
     }
 
-    //##########################
+    // ##########################
 
     protected function runOverLegacy(string $sql)
     {

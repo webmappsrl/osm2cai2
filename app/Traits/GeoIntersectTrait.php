@@ -15,9 +15,7 @@ trait GeoIntersectTrait
     /**
      * Get intersections with the given model
      *
-     * @param Model $model the element to find intersections with
-     *
-     * @return Collection
+     * @param  Model  $model  the element to find intersections with
      */
     public function getIntersections(Model $model): Collection
     {

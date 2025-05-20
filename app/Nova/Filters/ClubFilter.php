@@ -20,7 +20,6 @@ class ClubFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param  NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -35,7 +34,6 @@ class ClubFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function options(NovaRequest $request)
@@ -46,7 +44,7 @@ class ClubFilter extends Filter
             $options[$club->name] = $club->id;
         }
 
-        //order options by name
+        // order options by name
         ksort($options);
 
         return $options;

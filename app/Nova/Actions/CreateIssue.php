@@ -3,18 +3,15 @@
 namespace App\Nova\Actions;
 
 use App\Enums\IssuesStatusEnum;
-use App\Enums\IssueStatus;
 use App\Models\HikingRoute;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 
 class CreateIssue extends Action
@@ -37,18 +34,16 @@ class CreateIssue extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  ActionFields  $fields
-     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        //set the user to the current logged in user
+        // set the user to the current logged in user
         $user = User::find(auth()->user()->id);
         foreach ($models as $hikingRoute) {
             $hikingRoute->issues_status = $fields->issues_status ?? $hikingRoute->issues_status;
             $hikingRoute->issues_description = $fields->issues_description;
-            //set the date field to the current date time when the action is performed
+            // set the date field to the current date time when the action is performed
             $hikingRoute->issues_last_update = now();
             $hikingRoute->issues_user_id = $user->id ?? $hikingRoute->issues_user_id;
             $hikingRoute->save();

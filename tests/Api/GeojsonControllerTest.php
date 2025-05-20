@@ -74,7 +74,7 @@ class GeojsonControllerTest extends TestCase
             'region_id' => $this->region->id,
         ]);
 
-        //if hiking routes table has not osmfeatures_data column, add it
+        // if hiking routes table has not osmfeatures_data column, add it
         if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
             Schema::table('hiking_routes', function (Blueprint $table) {
                 $table->json('osmfeatures_data')->nullable();

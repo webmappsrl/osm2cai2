@@ -26,8 +26,6 @@ class RemoveMembersFromClub extends Action
     /**
      * Esegue l'azione sui modelli selezionati.
      *
-     * @param  ActionFields  $fields
-     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -56,7 +54,6 @@ class RemoveMembersFromClub extends Action
     /**
      * Define i campi disponibili per l'azione.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)

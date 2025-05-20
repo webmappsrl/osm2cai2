@@ -70,8 +70,9 @@ class RegionController extends Controller
     /**
      * Returns a complete GeoJSON representation of all hiking routes in the region.
      *
-     * @param string $id The ID of the region
+     * @param  string  $id  The ID of the region
      * @return Response|JsonResponse GeoJSON response with hiking routes data
+     *
      * @throws ModelNotFoundException If region not found
      */
     public function geojsonComplete(string $id): Response|JsonResponse

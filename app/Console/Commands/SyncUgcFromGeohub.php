@@ -10,7 +10,6 @@ use App\Services\GeometryService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
 
 class SyncUgcFromGeohub extends Command
 {
@@ -77,8 +76,6 @@ class SyncUgcFromGeohub extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return array
      */
     public function handle(): array
     {

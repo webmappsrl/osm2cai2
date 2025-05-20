@@ -13,12 +13,16 @@ class ItineraryController extends Controller
      * @OA\Get(
      *      path="/api/v2/itinerary/list",
      *      tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the itinerary IDs and updated_at date. These ids can be used in the json API to retrieve the itinerary data.",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     description="Internal osm2cai Identifier",

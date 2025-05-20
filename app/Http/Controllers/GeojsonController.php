@@ -3,19 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\HikingRoute;
-use App\Models\Region;
 use App\Models\Sector;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Response;
 
 class GeojsonController extends Controller
 {
     /**
      * Returns GeoJSON for a given model and ID.
      *
-     * @param string $modelType
-     * @param string $id
      * @return \Illuminate\Http\Response
      */
     public function download(string $modelType, string $id)
@@ -66,8 +61,7 @@ class GeojsonController extends Controller
     /**
      * Returns the properties of the main model.
      *
-     * @param string $modelType
-     * @param object $model
+     * @param  object  $model
      * @return array
      */
     private function getModelProperties(string $modelType, $model)
@@ -129,8 +123,7 @@ class GeojsonController extends Controller
     /**
      * Returns related resources for the specified model.
      *
-     * @param string $modelType
-     * @param object $model
+     * @param  object  $model
      * @return array
      */
     private function getRelatedResources(string $modelType, $model)
@@ -165,7 +158,7 @@ class GeojsonController extends Controller
     /**
      * Returns properties for each related resource.
      *
-     * @param object $resource
+     * @param  object  $resource
      * @return array
      */
     private function getResourceProperties($resource, $modelType)

@@ -34,7 +34,7 @@ class GeometryService
     /**
      * Convert geojson in MULTILINESTRING postgis geometry with correct SRID
      *
-     * @param string $geojson
+     * @param  string  $geojson
      * @return string - the postgis geometry in string format
      */
     public function geojsonToMultilinestringGeometry($geojson)
@@ -49,7 +49,7 @@ class GeometryService
     /**
      * Convert geojson in MULTILINESTRING postgis geometry with 3857 SRID
      *
-     * @param string $geojson
+     * @param  string  $geojson
      * @return string - the postgis geometry in string format
      */
     public function geojsonToMultilinestringGeometry3857($geojson)
@@ -74,7 +74,7 @@ class GeometryService
         if ($text) {
             if (strpos($text, '<?xml') !== false && strpos($text, '<?xml') < 10) {
                 $geojson = '';
-                if ('' === $geojson) {
+                if ($geojson === '') {
                     try {
                         $geojson = Gisconverter::gpxToGeojson($text);
                         $content = json_decode($geojson, true);
@@ -83,7 +83,7 @@ class GeometryService
                     }
                 }
 
-                if ('' === $geojson) {
+                if ($geojson === '') {
                     try {
                         $geojson = Gisconverter::kmlToGeojson($text);
                         $content = json_decode($geojson, true);
@@ -127,8 +127,8 @@ class GeometryService
     /**
      * Get the geometry type of the given model.
      *
-     * @param string $table The name of the table.
-     * @param string $geometryColumn The name of the geometry column.
+     * @param  string  $table  The name of the table.
+     * @param  string  $geometryColumn  The name of the geometry column.
      * @return string
      */
     public static function getGeometryType(string $table, string $geometryColumn)

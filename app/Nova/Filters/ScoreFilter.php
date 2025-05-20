@@ -18,7 +18,6 @@ class ScoreFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param  NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -31,19 +30,18 @@ class ScoreFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function options(NovaRequest $request)
     {
-        //get all the score values distinct from the current table
+        // get all the score values distinct from the current table
         $table = $request->model()->getTable();
         $query = 'SELECT DISTINCT score FROM '.$table;
 
-        //return an array with the score values ordered by score
+        // return an array with the score values ordered by score
         $scores = array_column(DB::select($query), 'score', 'score');
 
-        //order the scores
+        // order the scores
         asort($scores);
         ksort($scores);
 

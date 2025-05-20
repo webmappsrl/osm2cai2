@@ -25,9 +25,8 @@ class AreaFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param Request $request
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param mixed $value
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function apply(Request $request, $query, $value)
@@ -50,7 +49,6 @@ class AreaFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param Request $request
      * @return array
      */
     public function options(Request $request)

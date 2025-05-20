@@ -2,13 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\AssociateClubsToHikingRoutesCommand;
-use App\Console\Commands\CalculateRegionHikingRoutesIntersection;
-use App\Console\Commands\CheckHikingRoutesNearbyNaturalSpringsCommand;
-use App\Console\Commands\CheckNearbyCaiHuts;
-use App\Console\Commands\ComputeHikingRoutesTdh;
-use App\Console\Commands\ImportMunicipalityDataFromLegacyOsm2cai;
-use App\Console\Commands\Osm2caiSetExpectedValuesCommand;
 use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Models\Club;
@@ -17,7 +10,6 @@ use App\Models\HikingRoute;
 use App\Models\MountainGroups;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
 
 class OneTimeImport extends Command
 {

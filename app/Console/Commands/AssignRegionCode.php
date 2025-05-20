@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Region;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Schema;
 
 class AssignRegionCode extends Command
 {

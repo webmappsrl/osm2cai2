@@ -2,13 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UgcMedia;
-use App\Models\UgcPoi;
-use App\Models\UgcTrack;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ImportUGCController extends Controller

@@ -2,7 +2,6 @@
 
 namespace App\Nova;
 
-use App\Nova\AbstractValidationResource;
 use App\Nova\Filters\ValidatedFilter;
 use App\Nova\Filters\WaterFlowValidatedFilter;
 use Illuminate\Http\Request;
@@ -15,8 +14,6 @@ class SourceSurvey extends AbstractValidationResource
 {
     /**
      * Returns the form identifier.
-     *
-     * @return string
      */
     public static function getFormId(): string
     {
@@ -25,8 +22,6 @@ class SourceSurvey extends AbstractValidationResource
 
     /**
      * Returns the form label.
-     *
-     * @return string
      */
     public static function getLabel(): string
     {
@@ -36,7 +31,6 @@ class SourceSurvey extends AbstractValidationResource
     /**
      * Gets the fields for the resource.
      *
-     * @param Request $request
      * @return array
      */
     public function fields(Request $request)
@@ -60,8 +54,6 @@ class SourceSurvey extends AbstractValidationResource
 
     /**
      * Prepares the specific fields for the water source.
-     *
-     * @return array
      */
     private function prepareSurveyFields(): array
     {
@@ -86,9 +78,8 @@ class SourceSurvey extends AbstractValidationResource
     /**
      * Integrates specific fields into existing tabs or creates new tabs.
      *
-     * @param array $fields Array of existing fields
-     * @param array $surveyFields Specific fields to add
-     * @return array
+     * @param  array  $fields  Array of existing fields
+     * @param  array  $surveyFields  Specific fields to add
      */
     private function integrateFieldsIntoPanel(array $fields, array $surveyFields): array
     {
@@ -115,7 +106,6 @@ class SourceSurvey extends AbstractValidationResource
     /**
      * Defines the filters available for the resource.
      *
-     * @param Request $request
      * @return array
      */
     public function filters(Request $request)
@@ -128,8 +118,6 @@ class SourceSurvey extends AbstractValidationResource
 
     /**
      * Gets the fields available for CSV export.
-     *
-     * @return array
      */
     public static function getExportFields(): array
     {

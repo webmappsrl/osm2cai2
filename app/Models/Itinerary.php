@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\HikingRoute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +24,6 @@ class Itinerary extends Model
 
     /**
      * Determines next and previous stage of each track inside the layer
-     *
-     * @return array
      */
     public function generateItineraryEdges(): ?array
     {
@@ -89,8 +86,6 @@ class Itinerary extends Model
 
     /**
      * create the json for the itinerary
-     *
-     * @return array
      */
     public function generateItineraryJson(): ?array
     {

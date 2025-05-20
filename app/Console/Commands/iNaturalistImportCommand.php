@@ -51,8 +51,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Retrieves observation IDs from command or file.
-     *
-     * @return array
      */
     private function getObservationIds(): array
     {
@@ -88,8 +86,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Imports an observation from iNaturalist and handles UgcPoi and UgcMedia data.
-     *
-     * @param int $id
      */
     private function importObservation(int $id): void
     {
@@ -115,9 +111,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Retrieves observation data from iNaturalist.
-     *
-     * @param int $id
-     * @return array|null
      */
     private function fetchObservationData(int $id): ?array
     {
@@ -134,9 +127,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Logs an observation-related error.
-     *
-     * @param int $id
-     * @param string $message
      */
     private function logObservationError(int $id, string $message): void
     {
@@ -146,10 +136,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Determines the observation type (Flora, Fauna, etc.).
-     *
-     * @param array $data
-     * @param int $id
-     * @return string|null
      */
     private function getObservationType(array $data, int $id): ?string
     {
@@ -165,8 +151,6 @@ class iNaturalistImportCommand extends Command
     /**
      * Retrieves and validates observation geometry.
      *
-     * @param array $data
-     * @param int $id
      * @return mixed
      */
     private function getObservationGeometry(array $data, int $id)
@@ -187,10 +171,7 @@ class iNaturalistImportCommand extends Command
     /**
      * Saves the observation and associated media.
      *
-     * @param array $data
-     * @param string $ancestor
-     * @param mixed $geometry
-     * @param int $id
+     * @param  mixed  $geometry
      */
     private function saveObservation(array $data, string $ancestor, $geometry, int $id): void
     {
@@ -218,10 +199,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Builds the observation description.
-     *
-     * @param array $data
-     * @param string $observationUri
-     * @return string
      */
     private function buildDescription(array $data, string $observationUri): string
     {
@@ -232,11 +209,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Builds raw data for database insertion.
-     *
-     * @param array $data
-     * @param string $ancestor
-     * @param string $observationUri
-     * @return array
      */
     private function buildRawData(array $data, string $ancestor, string $observationUri): array
     {
@@ -258,8 +230,6 @@ class iNaturalistImportCommand extends Command
 
     /**
      * Retrieves the iNaturalist user ID.
-     *
-     * @return int
      */
     private function getInaturalistUserId(): int
     {
@@ -272,11 +242,7 @@ class iNaturalistImportCommand extends Command
     /**
      * Handles media associated with the observation.
      *
-     * @param array $photos
-     * @param string $description
-     * @param mixed $geometry
-     * @param UgcPoi $ugcPoi
-     * @param int $iNaturalistUserId
+     * @param  mixed  $geometry
      */
     private function handleAssociatedMedia(array $photos, string $description, $geometry, UgcPoi $ugcPoi, int $iNaturalistUserId): void
     {

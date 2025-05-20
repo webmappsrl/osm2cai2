@@ -14,7 +14,8 @@ class TagsMappingTraitTest extends TestCase
         parent::setUp();
 
         // Create a class that uses the trait for testing
-        $this->testClass = new class {
+        $this->testClass = new class
+        {
             use TagsMappingTrait;
 
             public $tags;
@@ -38,7 +39,7 @@ class TagsMappingTraitTest extends TestCase
         };
     }
 
-    public function testGetTagsMappingFromTags()
+    public function test_get_tags_mapping_from_tags()
     {
         $this->testClass->tags = json_encode([
             'highway' => 'path',
@@ -50,7 +51,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('Sentiero;Ghiaia', $result);
     }
 
-    public function testGetTagsMappingFromOsmfeaturesData()
+    public function test_get_tags_mapping_from_osmfeatures_data()
     {
         $this->testClass->tags = null;
         $this->testClass->osmfeatures_data = [
@@ -67,7 +68,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('Mulattiera;Pavimentato', $result);
     }
 
-    public function testGetTagsMappingWithStringOsmfeaturesData()
+    public function test_get_tags_mapping_with_string_osmfeatures_data()
     {
         $this->testClass->tags = null;
         $this->testClass->osmfeatures_data = json_encode([
@@ -84,7 +85,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('Mulattiera;Pavimentato', $result);
     }
 
-    public function testGetTagsMappingWithUnmappedTags()
+    public function test_get_tags_mapping_with_unmapped_tags()
     {
         $this->testClass->tags = json_encode([
             'highway' => 'nonexistent',
@@ -96,7 +97,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('', $result);
     }
 
-    public function testGetTagsMappingWithMixedTags()
+    public function test_get_tags_mapping_with_mixed_tags()
     {
         $this->testClass->tags = json_encode([
             'highway' => 'path',
@@ -109,7 +110,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('Sentiero', $result);
     }
 
-    public function testGetTagsMappingWithNullTags()
+    public function test_get_tags_mapping_with_null_tags()
     {
         $this->testClass->tags = null;
         $this->testClass->osmfeatures_data = null;
@@ -119,7 +120,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('', $result);
     }
 
-    public function testGetTagsMappingWithEmptyTags()
+    public function test_get_tags_mapping_with_empty_tags()
     {
         $this->testClass->tags = json_encode([]);
         $this->testClass->osmfeatures_data = null;
@@ -129,7 +130,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('', $result);
     }
 
-    public function testGetTagsMappingWithNullOsmfeaturesData()
+    public function test_get_tags_mapping_with_null_osmfeatures_data()
     {
         $this->testClass->tags = json_encode([
             'highway' => 'path',
@@ -142,7 +143,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('Sentiero;Ghiaia', $result);
     }
 
-    public function testGetTagsMappingWithEmptyOsmfeaturesData()
+    public function test_get_tags_mapping_with_empty_osmfeatures_data()
     {
         $this->testClass->tags = null;
         $this->testClass->osmfeatures_data = [
@@ -156,7 +157,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('', $result);
     }
 
-    public function testGetTagsMappingWithInvalidJsonTags()
+    public function test_get_tags_mapping_with_invalid_json_tags()
     {
         $this->testClass->tags = 'invalid-json';
         $this->testClass->osmfeatures_data = null;
@@ -166,7 +167,7 @@ class TagsMappingTraitTest extends TestCase
         $this->assertEquals('', $result);
     }
 
-    public function testGetTagsMappingWithInvalidOsmfeaturesDataStructure()
+    public function test_get_tags_mapping_with_invalid_osmfeatures_data_structure()
     {
         $this->testClass->tags = null;
         $this->testClass->osmfeatures_data = [

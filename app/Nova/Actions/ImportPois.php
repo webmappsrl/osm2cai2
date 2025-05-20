@@ -5,7 +5,6 @@ namespace App\Nova\Actions;
 use App\Models\EcPoi;
 use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\Textarea;
-use Symm\Gisconverter\Geometry\Point;
 
 class ImportPois extends Action
 {
@@ -35,8 +33,6 @@ class ImportPois extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  ActionFields  $fields
-     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -82,7 +78,7 @@ class ImportPois extends Action
             $elements = $data['elements'];
             if ($type !== 'node') {
                 $coordinates = [];
-                //loop over all the elements, take lat and long and calculate the centroid
+                // loop over all the elements, take lat and long and calculate the centroid
                 foreach ($elements as $element) {
                     if ($element['id'] != intval($id)) {
                         if ($element['type'] === 'node') {
@@ -97,7 +93,7 @@ class ImportPois extends Action
                         ]);
                     }
                 }
-                //get the centroid using the coordinates array
+                // get the centroid using the coordinates array
                 $centroidCoords = $this->calculateCentroid($coordinates);
                 $poi->geometry = DB::raw("ST_SetSRID(ST_MakePoint({$centroidCoords[0]}, {$centroidCoords[1]}), 4326)");
                 $poi->save();
@@ -137,7 +133,7 @@ class ImportPois extends Action
             'user_id' => auth()->user()->id,
         ]);
 
-        //associate the poi to the hiking route
+        // associate the poi to the hiking route
         $poi->nearbyHikingRoutes()->attach($hikingRoute->id);
     }
 

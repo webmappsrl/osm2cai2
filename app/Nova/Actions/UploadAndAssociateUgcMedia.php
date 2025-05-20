@@ -2,9 +2,7 @@
 
 namespace App\Nova\Actions;
 
-use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

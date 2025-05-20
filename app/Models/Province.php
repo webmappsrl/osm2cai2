@@ -3,10 +3,6 @@
 namespace App\Models;
 
 use App\Jobs\CalculateIntersectionsJob;
-use App\Models\Area;
-use App\Models\HikingRoute;
-use App\Models\Region;
-use App\Models\User;
 use App\Traits\CsvableModelTrait;
 use App\Traits\IntersectingRouteStats;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
@@ -21,7 +17,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Province extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, SpatialDataTrait, CsvableModelTrait, SallableTrait, IntersectingRouteStats;
+    use CsvableModelTrait, HasFactory, IntersectingRouteStats, OsmfeaturesGeometryUpdateTrait, OsmfeaturesSyncableTrait, SallableTrait, SpatialDataTrait;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'name', 'geometry'];
 

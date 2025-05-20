@@ -24,8 +24,7 @@ class HikingRoutesStatusLens extends Lens
     /**
      * Get the query builder / paginator for the lens.
      *
-     * @param LensRequest $request
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return mixed
      */
     public static function query(LensRequest $request, $query)
@@ -49,7 +48,6 @@ class HikingRoutesStatusLens extends Lens
     /**
      * Get the fields available to the lens.
      *
-     * @param Request $request
      * @return array
      */
     public function fields(Request $request)
@@ -108,7 +106,6 @@ class HikingRoutesStatusLens extends Lens
     /**
      * Get the cards available on the lens.
      *
-     * @param Request $request
      * @return array
      */
     public function cards(Request $request)
@@ -119,25 +116,24 @@ class HikingRoutesStatusLens extends Lens
     /**
      * Get the filters available for the lens.
      *
-     * @param Request $request
      * @return array
      */
     public function filters(Request $request)
     {
         if (auth()->user()->hasRole('Regional Referent')) {
             return [
-                (new ProvinceFilter()),
-                (new AreaFilter()),
-                (new SectorFilter()),
-                (new ClubFilter()),
+                (new ProvinceFilter),
+                (new AreaFilter),
+                (new SectorFilter),
+                (new ClubFilter),
             ];
         } else {
             return [
-                (new RegionFilter()),
-                (new ProvinceFilter()),
-                (new AreaFilter()),
-                (new SectorFilter()),
-                (new ClubFilter()),
+                (new RegionFilter),
+                (new ProvinceFilter),
+                (new AreaFilter),
+                (new SectorFilter),
+                (new ClubFilter),
             ];
         }
     }
@@ -145,7 +141,6 @@ class HikingRoutesStatusLens extends Lens
     /**
      * Get the actions available on the lens.
      *
-     * @param Request $request
      * @return array
      */
     public function actions(Request $request)

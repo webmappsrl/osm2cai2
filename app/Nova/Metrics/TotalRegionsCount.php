@@ -16,7 +16,6 @@ class TotalRegionsCount extends Value
     /**
      * Calculate the value of the metric.
      *
-     * @param NovaRequest $request
      *
      * @return mixed
      */
@@ -27,8 +26,6 @@ class TotalRegionsCount extends Value
 
     /**
      * Get the ranges available for the metric.
-     *
-     * @return array
      */
     public function ranges(): array
     {
@@ -38,7 +35,7 @@ class TotalRegionsCount extends Value
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return \DateTimeInterface|\DateInterval|float|int
      */
     public function cacheFor()
     {

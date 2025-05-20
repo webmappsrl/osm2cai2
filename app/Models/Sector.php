@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Jobs\CalculateIntersectionsJob;
-use App\Models\HikingRoute;
-use App\Models\User;
 use App\Traits\CsvableModelTrait;
 use App\Traits\IntersectingRouteStats;
 use App\Traits\SallableTrait;
@@ -14,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sector extends Model
 {
-    use HasFactory, SpatialDataTrait, CsvableModelTrait, SallableTrait, IntersectingRouteStats;
+    use CsvableModelTrait, HasFactory, IntersectingRouteStats, SallableTrait, SpatialDataTrait;
 
     protected $guarded = [];
 

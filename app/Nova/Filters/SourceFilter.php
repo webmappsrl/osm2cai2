@@ -12,7 +12,6 @@ class SourceFilter extends BooleanFilter
     /**
      * Apply the filter to the given query.
      *
-     * @param  NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -47,7 +46,6 @@ class SourceFilter extends BooleanFilter
     /**
      * Get the filter's available options.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function options(NovaRequest $request)

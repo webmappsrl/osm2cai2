@@ -24,7 +24,6 @@ class EcPoisTrend extends Trend
     /**
      * Calculate the value of the metric.
      *
-     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -46,13 +45,8 @@ class EcPoisTrend extends Trend
     /**
      * Return a value result showing a aggregate over time.
      *
-     * @param  NovaRequest  $request
      * @param  Builder|class-string<Model>  $model
-     * @param  string  $unit
-     * @param  string  $function
      * @param  \Illuminate\Database\Query\Expression|string  $column
-     * @param  string|null  $dateColumn
-     * @return TrendResult
      */
     protected function aggregate(
         NovaRequest $request,
@@ -129,7 +123,7 @@ class EcPoisTrend extends Trend
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return \DateTimeInterface|\DateInterval|float|int
      */
     public function cacheFor()
     {
@@ -149,7 +143,6 @@ class EcPoisTrend extends Trend
     /**
      * Get the appropriate cache key for the metric.
      *
-     * @param  NovaRequest  $request
      * @return string
      */
     public function getCacheKey(NovaRequest $request)

@@ -45,7 +45,7 @@ class UploadSectorGeometryAction extends Action
 
         try {
             DB::transaction(function () use ($model) {
-                $model->save(); //triggering intersection computation with hiking routes (because geometry is changed)
+                $model->save(); // triggering intersection computation with hiking routes (because geometry is changed)
 
                 $area = $model->parent;
                 $service = app()->make(AreaModelService::class);

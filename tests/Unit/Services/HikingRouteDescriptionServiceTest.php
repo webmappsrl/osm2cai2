@@ -13,7 +13,7 @@ class HikingRouteDescriptionServiceTest extends TestCase
     {
         parent::setUp();
         app()->setLocale('en');
-        $this->service = new HikingRouteDescriptionService();
+        $this->service = new HikingRouteDescriptionService;
     }
 
     /** @test */

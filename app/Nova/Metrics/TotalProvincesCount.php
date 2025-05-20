@@ -10,6 +10,7 @@ class TotalProvincesCount extends Value
 {
     /**
      * Set card's label
+     *
      * @return string
      */
     public function name()
@@ -20,7 +21,6 @@ class TotalProvincesCount extends Value
     /**
      * Calculate the value of the metric.
      *
-     * @param NovaRequest $request
      *
      * @return mixed
      */
@@ -31,8 +31,6 @@ class TotalProvincesCount extends Value
 
     /**
      * Get the ranges available for the metric.
-     *
-     * @return array
      */
     public function ranges(): array
     {
@@ -42,7 +40,7 @@ class TotalProvincesCount extends Value
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return \DateTimeInterface|\DateInterval|float|int
      */
     public function cacheFor()
     {
