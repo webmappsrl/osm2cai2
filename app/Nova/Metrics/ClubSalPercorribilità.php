@@ -10,7 +10,7 @@ class ClubSalPercorribilità extends Partition
 {
     public function name()
     {
-        return  __('Accessibility Status SAL');
+        return __('Accessibility Status SAL');
     }
 
     protected $hikingRoutes;
@@ -23,7 +23,6 @@ class ClubSalPercorribilità extends Partition
     /**
      * Calculate the value of the metric.
      *
-     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -65,7 +64,7 @@ class ClubSalPercorribilità extends Partition
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return \DateTimeInterface|\DateInterval|float|int
      */
     public function cacheFor()
     {

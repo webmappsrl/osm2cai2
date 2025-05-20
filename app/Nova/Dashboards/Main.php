@@ -3,20 +3,8 @@
 namespace App\Nova\Dashboards;
 
 use App\Helpers\Nova\DashboardCardsHelper;
-use App\Helpers\Osm2caiHelper;
-use App\Models\Area;
-use App\Models\HikingRoute;
-use App\Models\Province;
-use App\Models\Region;
-use App\Models\Sector;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Dashboards\Main as Dashboard;
-use Mako\CustomTableCard\CustomTableCard;
-use Mako\CustomTableCard\Table\Cell;
-use Mako\CustomTableCard\Table\Row;
 
 class Main extends Dashboard
 {
@@ -24,7 +12,7 @@ class Main extends Dashboard
 
     public function __construct()
     {
-        $this->cardsHelper = new DashboardCardsHelper();
+        $this->cardsHelper = new DashboardCardsHelper;
     }
 
     public function name()

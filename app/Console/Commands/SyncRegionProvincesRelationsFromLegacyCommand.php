@@ -2,13 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Area;
 use App\Models\Province;
 use App\Models\Region;
-use App\Models\Sector;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class SyncRegionProvincesRelationsFromLegacyCommand extends Command
 {
@@ -49,13 +46,14 @@ class SyncRegionProvincesRelationsFromLegacyCommand extends Command
 
             $this->line('Processing province: '.$provinceCode);
 
-            //search for the corresponding province in the province table
+            // search for the corresponding province in the province table
             $currentProvince = Province::where('osmfeatures_data->properties->osm_tags->short_name', $provinceCode)
                 ->orWhere('osmfeatures_data->properties->osm_tags->ref', $provinceCode)
                 ->first();
 
             if (! $currentProvince) {
                 $this->warn('Province not found with code: '.$provinceCode);
+
                 continue;
             }
 

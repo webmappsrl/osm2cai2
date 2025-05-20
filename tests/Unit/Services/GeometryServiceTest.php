@@ -27,19 +27,19 @@ class GeometryServiceTest extends TestCase
 
     protected $encodedGeoJsonLineString;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
-        $this->geometryService = new GeometryService();
+        $this->geometryService = new GeometryService;
         $this->encodedGeoJsonSimpleArray = json_encode($this->geoJsonSimpleArray);
     }
 
-    public function testGeojsonToGeometryReturnsNullOnEmpty()
+    public function test_geojson_to_geometry_returns_null_on_empty()
     {
         $this->assertNull($this->geometryService->geojsonToGeometry(''));
     }
 
-    public function testGeojsonToGeometryWithArrayInput()
+    public function test_geojson_to_geometry_with_array_input()
     {
         DB::shouldReceive('select')
             ->once()
@@ -50,7 +50,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals('geometry_value', $result);
     }
 
-    public function testGeojsonToMultilinestringGeometry()
+    public function test_geojson_to_multilinestring_geometry()
     {
         $geojson = $this->geoJsonLineString;
         $expectedQuery = "select (
@@ -68,7 +68,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals('multilinestring_geometry', $result);
     }
 
-    public function testGeojsonToMultilinestringGeometry3857()
+    public function test_geojson_to_multilinestring_geometry3857()
     {
         $expectedQuery = "select (
         ST_Multi(
@@ -85,7 +85,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals('multilinestring_geometry_3857', $result);
     }
 
-    public function testGeometryTo4326Srid()
+    public function test_geometry_to4326_srid()
     {
         $expectedQuery = "select (
       ST_Transform('".$this->geoJsonPoint."', 4326)
@@ -100,7 +100,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals('geometry_4326', $result);
     }
 
-    public function testTextToGeojsonWithValidLineStringJson()
+    public function test_text_to_geojson_with_valid_line_string_json()
     {
         $lineStringText = '{
             "type": "LineString", 
@@ -112,7 +112,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals(['type' => 'LineString', 'coordinates' => [[0, 0], [1, 1]]], $result);
     }
 
-    public function testTextToGeojsonWithValidFeatureCollectionJson()
+    public function test_text_to_geojson_with_valid_feature_collection_json()
     {
         $featureCollectionText = '{
             "type": "FeatureCollection", 
@@ -126,7 +126,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals(['type' => 'Point', 'coordinates' => [125.6, 10.1]], $result);
     }
 
-    public function testTextToGeojsonWithValidGeometryCollectionJson()
+    public function test_text_to_geojson_with_valid_geometry_collection_json()
     {
         $geometryCollectionText = '{
             "type": "GeometryCollection",
@@ -141,7 +141,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals(['type' => 'LineString', 'coordinates' => [[0, 0], [1, 1]]], $result);
     }
 
-    public function testTextToGeoJsonWithValidFeatureJson()
+    public function test_text_to_geo_json_with_valid_feature_json()
     {
         $featureText = '{
             "type": "Feature",
@@ -153,7 +153,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals(['type' => 'LineString', 'coordinates' => [[0, 0], [1, 1]]], $result);
     }
 
-    public function testTextToGeoJsonWithValidXmlGpxFile()
+    public function test_text_to_geo_json_with_valid_xml_gpx_file()
     {
         $xmlText = '<?xml version="1.0" encoding="UTF-8"?>
             <gpx version="1.1" creator="Example Creator">
@@ -178,7 +178,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals(['type' => 'LineString', 'coordinates' => [[5, 4], [2, 3]]], $result);
     }
 
-    public function testTextToGeoJsonWithValidKmlFile()
+    public function test_text_to_geo_json_with_valid_kml_file()
     {
         $kmlText = '<?xml version="1.0" encoding="UTF-8"?>
             <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -200,7 +200,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals(['type' => 'LineString', 'coordinates' => [[-12, 4], [-13, 8]]], $result);
     }
 
-    public function testTextToGeojsonWithInvalidOrNullText()
+    public function test_text_to_geojson_with_invalid_or_null_text()
     {
         $invalidText = 'invalid text';
         $emptyText = null;
@@ -208,14 +208,14 @@ class GeometryServiceTest extends TestCase
         $this->assertNull($this->geometryService->textToGeojson($emptyText));
     }
 
-    public function testGetGeometryTypeForHikingRoutes()
+    public function test_get_geometry_type_for_hiking_routes()
     {
         $table = 'hiking_routes';
         $geometryColumn = 'geom';
 
         DB::shouldReceive('selectOne')
             ->once()
-            ->with(Mockery::on(function ($query) use ($table, $geometryColumn) {
+            ->with(Mockery::on(function ($query) use ($table) {
                 return strpos($query, "FROM {$table}") !== false
                     && strpos($query, 'CASE') !== false;
             }))
@@ -225,7 +225,7 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals('Point', $result);
     }
 
-    public function testGetGeometryTypeForOtherTable()
+    public function test_get_geometry_type_for_other_table()
     {
         $table = 'other_table';
         $geometryColumn = 'geom';
@@ -242,12 +242,12 @@ class GeometryServiceTest extends TestCase
         $this->assertEquals('LineString', $result);
     }
 
-    public function testGetCentroidReturnsNullForEmpty()
+    public function test_get_centroid_returns_null_for_empty()
     {
         $this->assertNull($this->geometryService->getCentroid(''));
     }
 
-    public function testGetCentroidReturnsCentroid()
+    public function test_get_centroid_returns_centroid()
     {
         $expectedCentre = DB::select("select ST_AsGeoJSON(ST_Centroid('".$this->geoJsonLineString."')) as g")[0]->g;
         $result = $this->geometryService->getCentroid($this->geoJsonLineString);

@@ -17,7 +17,7 @@ class HikingRouteControllerV2Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        //check if osmfeatures_data column exists
+        // check if osmfeatures_data column exists
         if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
             Schema::table('hiking_routes', function (Blueprint $table) {
                 $table->json('osmfeatures_data')->nullable();

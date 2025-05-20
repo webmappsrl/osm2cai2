@@ -2,8 +2,6 @@
 
 namespace App\Nova;
 
-use App\Nova\AbstractUgc;
-use App\Nova\Actions\DownloadUgcCsv;
 use App\Nova\Filters\UgcFormIdFilter;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -51,8 +49,8 @@ class UgcPoi extends AbstractUgc
      * - Associated user's name
      * - Associated user's email
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query The query builder instance
-     * @param string $search The search term to filter by
+     * @param  \Illuminate\Database\Eloquent\Builder  $query  The query builder instance
+     * @param  string  $search  The search term to filter by
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function applySearch(Builder $query, string $search): Builder
@@ -70,7 +68,6 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the fields displayed by the resource.
      *
-     * @param Request $request
      * @return array
      */
     public function fields(Request $request)
@@ -128,7 +125,6 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the cards available for the request.
      *
-     * @param Request $request
      * @return array
      */
     public function cards(Request $request)
@@ -139,7 +135,6 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the filters available for the resource.
      *
-     * @param Request $request
      * @return array
      */
     public function filters(Request $request)
@@ -147,14 +142,13 @@ class UgcPoi extends AbstractUgc
         $parentFilters = parent::filters($request);
 
         return array_merge($parentFilters, [
-            (new UgcFormIdFilter()),
+            (new UgcFormIdFilter),
         ]);
     }
 
     /**
      * Get the lenses available for the resource.
      *
-     * @param Request $request
      * @return array
      */
     public function lenses(Request $request)
@@ -165,7 +159,6 @@ class UgcPoi extends AbstractUgc
     /**
      * Get the actions available for the resource.
      *
-     * @param Request $request
      * @return array
      */
     public function actions(Request $request)
@@ -190,7 +183,7 @@ class UgcPoi extends AbstractUgc
     /**
      * Determines if the user is authorized to create a new resource.
      *
-     * @param Request $request The current HTTP request
+     * @param  Request  $request  The current HTTP request
      * @return bool Always returns true, allowing all users to create new resources
      */
     public static function authorizedToCreate(Request $request)
@@ -201,8 +194,8 @@ class UgcPoi extends AbstractUgc
     /**
      * Redirects the user after creating a new resource.
      *
-     * @param Request $request The current HTTP request
-     * @param \Laravel\Nova\Resource $resource The newly created resource
+     * @param  Request  $request  The current HTTP request
+     * @param  \Laravel\Nova\Resource  $resource  The newly created resource
      * @return string The URL to redirect the user to after resource creation
      */
     public static function redirectAfterCreate(Request $request, $resource)
@@ -222,7 +215,7 @@ class UgcPoi extends AbstractUgc
      */
     protected function getFormIdOptions()
     {
-        //cache for 24 hours
+        // cache for 24 hours
         return Cache::remember('form_id_options', 86400, function () {
             $configs = config('geohub.configs');
             $formIdOptions = [];

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Http;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Tabs\Tab;
-use Laravel\Nova\Tabs\Tabs;
 
 trait WmNovaFieldsTrait
 {
@@ -36,7 +35,7 @@ trait WmNovaFieldsTrait
 
                 return $config;
             });
-            //get the model type searching in the request path
+            // get the model type searching in the request path
             $modelType = str_contains(request()->path(), 'ugc-tracks') ? 'track' : 'poi';
 
             if ($modelType === 'track') {

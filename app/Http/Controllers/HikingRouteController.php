@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\HikingRouteResource;
 use App\Http\Resources\HikingRouteTDHResource;
 use App\Models\HikingRoute;
 use App\Models\Region;
@@ -18,11 +17,14 @@ class HikingRouteController extends Controller
      *     path="/api/v2/hiking-routes/list",
      *     summary="Get list of hiking routes",
      *     tags={"Api V2"},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of hiking routes",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="1",
      *                 type="string",
@@ -57,13 +59,17 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-routes/region/{region_code}/{sda}",
      *      tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM2CAI IDs based on the given region code and SDA number.
      *                       These ids can be used in the geojson API hiking-route",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     description="Internal osm2cai Identifier",
@@ -78,41 +84,25 @@ class HikingRouteController extends Controller
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="region_code",
      *         in="path",
      *         description="Regione code according to CAI convention: <br/>
-    <br />A -> Friuli Venezia Giulia
-    <br />B -> Veneto
-    <br />C -> Trentino Alto Adige
-    <br />D -> Lombardia
-    <br />E -> Piemonte
-    <br />F -> Val d'Aosta
-    <br />G -> Liguria
-    <br />H -> Emilia Romagna
-    <br />L -> Toscana
-    <br />M -> Marche
-    <br />N -> Umbria
-    <br />O -> Lazio
-    <br />P -> Abruzzo
-    <br />Q -> Molise
-    <br />S -> Campania
-    <br />R -> Puglia
-    <br />T -> Basilicata
-    <br />U -> Calabria
-    <br />V -> Sicilia
-    <br />Z -> Sardegna",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 0,1,2,3,4). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -151,13 +141,17 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-routes/bb/{bounding_box}/{sda}",
      *      tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM2CAI IDs based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.
      *                       These ids can be used in the geojson API hiking-route",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     description="Internal osm2cai Identifier",
@@ -172,21 +166,25 @@ class HikingRouteController extends Controller
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="bounding_box",
      *         in="path",
      *         description="List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 0,1,2,3,4). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -213,16 +211,19 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-routes-osm/region/{region_code}/{sda}",
      *     tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM IDs based on the given region code and SDA number.
      *                       OSMID can be used in hiking-route-osm API or directly in OpenStreetMap relation by the following URL:
      *                       https://openstreetmap.org/relation/{OSMID}. Remember that the data on OSM can be differente from data in
      *                       OSM2CAI after validation.",
+     *
      *      @OA\MediaType(
      *             mediaType="application/json",
      *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="OSM",
      *                     description="Open Streen Map identification",
@@ -237,41 +238,25 @@ class HikingRouteController extends Controller
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="region_code",
      *         in="path",
      *         description="Regione code according to CAI convention: <br/>
-    <br />A -> Friuli Venezia Giulia
-    <br />B -> Veneto
-    <br />C -> Trentino Alto Adige
-    <br />D -> Lombardia
-    <br />E -> Piemonte
-    <br />F -> Val d'Aosta
-    <br />G -> Liguria
-    <br />H -> Emilia Romagna
-    <br />L -> Toscana
-    <br />M -> Marche
-    <br />N -> Umbria
-    <br />O -> Lazio
-    <br />P -> Abruzzo
-    <br />Q -> Molise
-    <br />S -> Campania
-    <br />R -> Puglia
-    <br />T -> Basilicata
-    <br />U -> Calabria
-    <br />V -> Sicilia
-    <br />Z -> Sardegna",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 3 or 3,1 or 0,1,2). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -301,13 +286,17 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-routes-osm/bb/{bounding_box}/{sda}",
      *      tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the hiking routes OSM IDs based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.
      *                       These ids can be used in the geojson API hiking-route",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     description="OSM Identifier",
@@ -322,22 +311,26 @@ class HikingRouteController extends Controller
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="bounding_box",
      *         in="path",
      *         description="List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 3 or 3,1 or 0,1,2). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -369,12 +362,16 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-routes-collection/bb/{bounding_box}/{sda}",
      *      tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns all the feautures collection based on the given bounding box coordinates( xmin,ymin,xmax,ymax)  and SDA number.",
+     *
      *       @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="collection",
      *                     description="Feature Collection",
@@ -386,21 +383,25 @@ class HikingRouteController extends Controller
      *             )
      *         )
      *      ),
+     *
      *     @OA\Parameter(
      *         name="bounding_box",
      *         in="path",
      *         description="List of WGS84 lat,lon cordinates in this order(xmin,ymin,xmax,ymax)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar",
      *         )
      *     ),
+     *
      *      @OA\Parameter(
      *         name="sda",
      *         in="path",
      *         description="SDA (stato di accatastamento) (e.g. 0,1,2,3,4). SDA=3 means ready to be validated, SDA=4 means validated by CAI expert",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="string",
      *             format="varchar"
@@ -439,22 +440,28 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-route/{id}",
      *      tags={"Api V2"},
+     *
      *      @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="The OSM2CAI ID of a specific Hiking Route (e.g. 2421)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns the geojson of a Hiking Route based on the given OSM2CAI ID.",
+     *
      *      @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="type",
      *                     description="Geojson type",
@@ -480,18 +487,23 @@ class HikingRouteController extends Controller
      * @OA\Property(
      *property="itinerary",
      *type="array",
+     *
      *@OA\Items(
      *type="object",
+     *
      * @OA\Property(property="id", type="integer", description="the itinerary id"),
      *@OA\Property(property="name", type="string", description="the itinerary name"),
      *@OA\Property(
      *property="previous",
      *type="array",
+     *
      *@OA\Items(type="integer", description="the previous hiking route id")
      * ),
+     *
      *@OA\Property(
      *property="next",
      *type="array",
+     *
      *@OA\Items(type="integer", description="the next hiking route id")
      *      )
      *  )
@@ -499,6 +511,7 @@ class HikingRouteController extends Controller
      *)
 
      *                 ),
+     *
      *                 @OA\Property(property="geometry", type="object",
      *                      @OA\Property( property="type", type="string",  description="Postgis geometry types: LineString, MultiLineString"),
      *                      @OA\Property( property="coordinates", type="object",  description="hiking routes coordinates (WGS84)")
@@ -538,12 +551,16 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-route-tdh/{id}",
      *      tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns the TDH format geojson of a Hiking Route based on the given ID.",
+     *
      *          @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="type",
      *                     description="Geojson type",
@@ -600,11 +617,13 @@ class HikingRouteController extends Controller
      *             )
      *         )
      *      ),
+     *
      *      @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="The OSM2CAI ID of a specific Hiking Route",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
@@ -621,12 +640,16 @@ class HikingRouteController extends Controller
      * @OA\Get(
      *      path="/api/v2/hiking-route-osm/{id}",
      *      tags={"Api V2"},
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Returns the geojson of a Hiking Route based on the given OSM ID.",
+     *
      *      @OA\MediaType(
      *             mediaType="application/json",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(
      *                     property="type",
      *                     description="Geojson type",
@@ -658,11 +681,13 @@ class HikingRouteController extends Controller
      *             )
      *         )
      *      ),
+     *
      *      @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="The OSM relation ID of a specific Hiking Route (e.g. 13442719)",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
@@ -722,8 +747,7 @@ class HikingRouteController extends Controller
     /**
      * Generate a 404 Not Found response with JSON content type
      *
-     * @param string $message The error message to return
-     * @return Response
+     * @param  string  $message  The error message to return
      */
     private function notFoundResponse(string $message): Response
     {
@@ -733,8 +757,7 @@ class HikingRouteController extends Controller
     /**
      * Generate a 500 Internal Server Error response with JSON content type
      *
-     * @param string $message The error message to return
-     * @return Response
+     * @param  string  $message  The error message to return
      */
     private function errorResponse(string $message): Response
     {
@@ -744,8 +767,8 @@ class HikingRouteController extends Controller
     /**
      * Build the GeoJSON response for a hiking route
      *
-     * @param HikingRoute $hikingRoute The hiking route model
-     * @param string $geom The geometry data as GeoJSON string
+     * @param  HikingRoute  $hikingRoute  The hiking route model
+     * @param  string  $geom  The geometry data as GeoJSON string
      * @return array The formatted response array
      */
     private function buildHikingRouteResponse(HikingRoute $hikingRoute, string $geom): array
@@ -782,7 +805,7 @@ class HikingRouteController extends Controller
     /**
      * Generate array of itinerary data for a hiking route
      *
-     * @param HikingRoute $hikingRoute The hiking route model
+     * @param  HikingRoute  $hikingRoute  The hiking route model
      * @return array Array of itinerary data with previous and next route info
      */
     private function getItineraryArray(HikingRoute $hikingRoute): array
@@ -809,11 +832,11 @@ class HikingRouteController extends Controller
     /**
      * Generate a GeoJSON collection of hiking routes by bounding box
      *
-     * @param string $osm2cai_status The status of the hiking routes to include
-     * @param string $lo0 The lower longitude of the bounding box
-     * @param string $la0 The lower latitude of the bounding box
-     * @param string $lo1 The upper longitude of the bounding box
-     * @param string $la1 The upper latitude of the bounding box
+     * @param  string  $osm2cai_status  The status of the hiking routes to include
+     * @param  string  $lo0  The lower longitude of the bounding box
+     * @param  string  $la0  The lower latitude of the bounding box
+     * @param  string  $lo1  The upper longitude of the bounding box
+     * @param  string  $la1  The upper latitude of the bounding box
      * @return string The GeoJSON collection as a string
      */
     public function geojsonByBoundingBox(string $osm2cai_status, string $lo0, string $la0, string $lo1, string $la1): string

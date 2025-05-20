@@ -2,15 +2,7 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Jobs\CalculateIntersectionsJob;
-use App\Models\CaiHut;
-use App\Models\Club;
-use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
-use App\Models\Province;
-use App\Models\User;
 use App\Traits\AwsCacheable;
 use App\Traits\CsvableModelTrait;
 use App\Traits\IntersectingRouteStats;
@@ -19,7 +11,6 @@ use App\Traits\SallableTrait;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
@@ -27,7 +18,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Region extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait, CsvableModelTrait, SpatialDataTrait, AwsCacheable, SallableTrait, IntersectingRouteStats;
+    use AwsCacheable, CsvableModelTrait, HasFactory, IntersectingRouteStats, OsmfeaturesGeometryUpdateTrait, OsmfeaturesSyncableTrait, SallableTrait, SpatialDataTrait;
 
     protected $fillable = ['osmfeatures_id', 'osmfeatures_data', 'osmfeatures_updated_at', 'geometry', 'name', 'num_expected', 'hiking_routes_intersecting', 'code'];
 
@@ -172,7 +163,7 @@ class Region extends Model implements OsmfeaturesSyncableInterface
             $model->update($updateData);
         }
 
-        //if the code column in the model is empty, run the assignCode command
+        // if the code column in the model is empty, run the assignCode command
         if (empty($model->code)) {
             $model->assignCode();
         }

@@ -29,7 +29,7 @@ class associateUsersToecPoisCommand extends Command
      */
     public function handle()
     {
-        //get all ec_pois
+        // get all ec_pois
         $ecPois = EcPoi::all();
 
         $progressBar = $this->output->createProgressBar($ecPois->count());
@@ -45,11 +45,12 @@ class associateUsersToecPoisCommand extends Command
 
             $ecPoiApiData = $ecPoiApiData->json();
 
-            //check if the user with $ecPoiApiData['user_id'] exists (ids are the same in both legacy and new database as previously imported with app/Console/Commands/SyncUsersFromLegacyOsm2cai.php)
+            // check if the user with $ecPoiApiData['user_id'] exists (ids are the same in both legacy and new database as previously imported with app/Console/Commands/SyncUsersFromLegacyOsm2cai.php)
             $user = User::where('id', $ecPoiApiData['user_id'])->first();
 
             if (! $user) {
                 $this->info('User with id '.$ecPoiApiData['user_id'].' does not exist');
+
                 continue;
             }
 

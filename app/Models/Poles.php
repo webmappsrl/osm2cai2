@@ -73,7 +73,7 @@ class Poles extends Model implements OsmfeaturesSyncableInterface
         }
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
-        //format the geometry
+        // format the geometry
         if ($osmfeaturesData['geometry']) {
             $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
         } else {

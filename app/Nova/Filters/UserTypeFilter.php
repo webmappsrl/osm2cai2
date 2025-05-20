@@ -4,7 +4,6 @@ namespace App\Nova\Filters;
 
 use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Spatie\Permission\Models\Role;
 
 const ADMINISTRATOR = 'Administrator';
 const NATIONAL_REFERENT = 'National Referent';
@@ -18,7 +17,6 @@ class UserTypeFilter extends BooleanFilter
     /**
      * Apply the filter to the given query.
      *
-     * @param  NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -63,7 +61,6 @@ class UserTypeFilter extends BooleanFilter
     /**
      * Get the filter's available options.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function options(NovaRequest $request)

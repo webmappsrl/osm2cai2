@@ -8,7 +8,6 @@ use App\Nova\Actions\DownloadCsvCompleteAction;
 use App\Nova\Actions\DownloadGeojson;
 use App\Nova\Actions\DownloadKml;
 use App\Nova\Actions\DownloadShape;
-use App\Nova\Actions\SectorAssignModerator;
 use App\Nova\Actions\UploadSectorGeometryAction;
 use App\Nova\Filters\AreaFilter;
 use App\Nova\Filters\ProvinceFilter;
@@ -23,7 +22,6 @@ use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\File;
-use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -77,7 +75,6 @@ class Sector extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -152,7 +149,7 @@ class Sector extends Resource
             });
 
             return [
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.sector-manager-card', [
                         'manager' => $sector->moderators->pluck('name')->implode(', '),
@@ -161,7 +158,7 @@ class Sector extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.sector-sal-card', [
                         'sal' => number_format($sal * 100, 2),
@@ -171,7 +168,7 @@ class Sector extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.sector-stats-card', [
                         'value' => $numbers[3] + $numbers[4],
@@ -181,7 +178,7 @@ class Sector extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.sector-stats-card', [
                         'value' => $sector->num_expected,
@@ -230,7 +227,7 @@ class Sector extends Resource
             $exploreUrl = $link;
         }
 
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->width('1/4')
             ->view('nova.cards.sector-sda-card', [
                 'sda' => $sda,
@@ -246,15 +243,14 @@ class Sector extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
     {
         $filters = [
-            (new RegionFilter()),
-            (new ProvinceFilter()),
-            (new AreaFilter()),
+            (new RegionFilter),
+            (new ProvinceFilter),
+            (new AreaFilter),
         ];
 
         if (auth()->user()->hasRole('Regional Referent')) {
@@ -267,7 +263,6 @@ class Sector extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -282,23 +277,22 @@ class Sector extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)
     {
         return [
-            (new DownloadGeojson())->canSee(function ($request) {
+            (new DownloadGeojson)->canSee(function ($request) {
                 return true;
             })->canRun(function ($request) {
                 return true;
             })->showInline(),
-            (new DownloadShape())->canSee(function ($request) {
+            (new DownloadShape)->canSee(function ($request) {
                 return true;
             })->canRun(function ($request) {
                 return true;
             })->showInline(),
-            (new DownloadKml())->canSee(function ($request) {
+            (new DownloadKml)->canSee(function ($request) {
                 return true;
             })->canRun(function ($request) {
                 return true;

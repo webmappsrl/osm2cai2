@@ -252,11 +252,14 @@ class SourceSurveyController extends Controller
      *     path="/api/v2/source_survey/monitorings",
      *     summary="Get source survey monitorings",
      *     tags={"Api V2"},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="source survey monitorings",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="validated",
      *                 type="integer",

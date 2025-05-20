@@ -33,7 +33,7 @@ class AreaModelServiceTest extends TestCase
             ],
         ]);
 
-        $this->areaService = new AreaModelService();
+        $this->areaService = new AreaModelService;
     }
 
     protected function convertPolygonToWKB(string $wktPolygon): string
@@ -47,7 +47,7 @@ class AreaModelServiceTest extends TestCase
         return strtoupper(bin2hex($wkb));
     }
 
-    public function testComputeGeometryBySectors()
+    public function test_compute_geometry_by_sectors()
     {
         $this->assertEquals(
             $this->convertPolygonToWKB(self::WKT_POLYGON),

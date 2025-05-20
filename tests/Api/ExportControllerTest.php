@@ -31,7 +31,7 @@ class ExportControllerTest extends TestCase
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
     }
 
-    private function testListEndpoint(string $endpoint, string $modelClass): void
+    private function test_list_endpoint(string $endpoint, string $modelClass): void
     {
         if ($modelClass === User::class) {
             $modelClass::factory()->count(3)->sequence(
@@ -93,7 +93,7 @@ class ExportControllerTest extends TestCase
         }
     }
 
-    private function testSingleFeatureEndpoint(string $endpoint, string $modelClass): void
+    private function test_single_feature_endpoint(string $endpoint, string $modelClass): void
     {
         if ($modelClass === User::class) {
             $model = $modelClass::factory()->create(['email' => 'user@example.com']);
@@ -145,132 +145,132 @@ class ExportControllerTest extends TestCase
         }
     }
 
-    public function testHikingRoutesList(): void
+    public function test_hiking_routes_list(): void
     {
         $this->testListEndpoint('/api/v2/export/hiking-routes/list', HikingRoute::class);
     }
 
-    public function testHikingRoutesSingleFeature(): void
+    public function test_hiking_routes_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/hiking-routes', HikingRoute::class);
     }
 
-    public function testUsersList(): void
+    public function test_users_list(): void
     {
         $this->testListEndpoint('/api/v2/export/users/list', User::class);
     }
 
-    public function testUsersSingleFeature(): void
+    public function test_users_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/users', User::class);
     }
 
-    public function testUgcPoisList(): void
+    public function test_ugc_pois_list(): void
     {
         $this->testListEndpoint('/api/v2/export/ugc_pois/list', UgcPoi::class);
     }
 
-    public function testUgcPoisSingleFeature(): void
+    public function test_ugc_pois_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/ugc_pois', UgcPoi::class);
     }
 
-    public function testUgcTracksList(): void
+    public function test_ugc_tracks_list(): void
     {
         $this->testListEndpoint('/api/v2/export/ugc_tracks/list', UgcTrack::class);
     }
 
-    public function testUgcTracksSingleFeature(): void
+    public function test_ugc_tracks_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/ugc_tracks', UgcTrack::class);
     }
 
-    public function testUgcMediasList(): void
+    public function test_ugc_medias_list(): void
     {
         $this->testListEndpoint('/api/v2/export/ugc_media/list', UgcMedia::class);
     }
 
-    public function testUgcMediasSingleFeature(): void
+    public function test_ugc_medias_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/ugc_media', UgcMedia::class);
     }
 
-    public function testAreasList(): void
+    public function test_areas_list(): void
     {
         $this->testListEndpoint('/api/v2/export/areas/list', Area::class);
     }
 
-    public function testAreasSingleFeature(): void
+    public function test_areas_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/areas', Area::class);
     }
 
-    public function testSectorsList(): void
+    public function test_sectors_list(): void
     {
         $this->testListEndpoint('/api/v2/export/sectors/list', Sector::class);
     }
 
-    public function testSectorsSingleFeature(): void
+    public function test_sectors_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/sectors', Sector::class);
     }
 
-    public function testClubsList(): void
+    public function test_clubs_list(): void
     {
         $this->testListEndpoint('/api/v2/export/sections/list', Club::class);
     }
 
-    public function testClubsSingleFeature(): void
+    public function test_clubs_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/sections', Club::class);
     }
 
-    public function testMountainGroupsList(): void
+    public function test_mountain_groups_list(): void
     {
         $this->testListEndpoint('/api/v2/export/mountain_groups/list', MountainGroups::class);
     }
 
-    public function testMountainGroupsSingleFeature(): void
+    public function test_mountain_groups_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/mountain_groups', MountainGroups::class);
     }
 
-    public function testNaturalSpringsList(): void
+    public function test_natural_springs_list(): void
     {
         $this->testListEndpoint('/api/v2/export/natural_springs/list', NaturalSpring::class);
     }
 
-    public function testNaturalSpringsSingleFeature(): void
+    public function test_natural_springs_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/natural_springs', NaturalSpring::class);
     }
 
-    public function testItinerariesList(): void
+    public function test_itineraries_list(): void
     {
         $this->testListEndpoint('/api/v2/export/itineraries/list', Itinerary::class);
     }
 
-    public function testItinerariesSingleFeature(): void
+    public function test_itineraries_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/itineraries', Itinerary::class);
     }
 
-    public function testHutsList(): void
+    public function test_huts_list(): void
     {
         $this->testListEndpoint('/api/v2/export/huts/list', CaiHut::class);
     }
 
-    public function testHutsSingleFeature(): void
+    public function test_huts_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/huts', CaiHut::class);
     }
 
-    public function testEcPoisList(): void
+    public function test_ec_pois_list(): void
     {
         $this->testListEndpoint('/api/v2/export/ec_pois/list', EcPoi::class);
     }
 
-    public function testEcPoisSingleFeature(): void
+    public function test_ec_pois_single_feature(): void
     {
         $this->testSingleFeatureEndpoint('/api/v2/export/ec_pois', EcPoi::class);
     }

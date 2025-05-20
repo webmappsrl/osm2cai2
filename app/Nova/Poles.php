@@ -33,7 +33,6 @@ class Poles extends OsmfeaturesResource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)

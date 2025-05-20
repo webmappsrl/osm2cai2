@@ -38,7 +38,7 @@ class DashboardCardsHelper
             ) / Region::sum('num_expected');
         });
 
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->width('1/4')
             ->view('nova.cards.sal-nazionale', [
                 'sal' => $sal,
@@ -60,7 +60,7 @@ class DashboardCardsHelper
 
     public function getNoPermissionsCard()
     {
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->view('nova.cards.no-permissions-card')
             ->width('full')
             ->center()
@@ -87,11 +87,11 @@ class DashboardCardsHelper
         $tot = array_sum($numbers);
 
         return [
-            'italy-total' => (new HtmlCard())->width('1/4')
+            'italy-total' => (new HtmlCard)->width('1/4')
                 ->view('nova.cards.italy-total', ['tot' => $tot])
                 ->center()
                 ->withBasicStyles(),
-            'sda1' => (new HtmlCard())->width('1/4')
+            'sda1' => (new HtmlCard)->width('1/4')
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[1],
                     'sda' => 1,
@@ -100,7 +100,7 @@ class DashboardCardsHelper
                 ->center()
                 ->withBasicStyles(),
 
-            'sda2' => (new HtmlCard())->width('1/4')
+            'sda2' => (new HtmlCard)->width('1/4')
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[2],
                     'sda' => 2,
@@ -109,7 +109,7 @@ class DashboardCardsHelper
                 ->center()
                 ->withBasicStyles(),
 
-            'sda3' => (new HtmlCard())->width('1/4')
+            'sda3' => (new HtmlCard)->width('1/4')
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[3],
                     'sda' => 3,
@@ -118,7 +118,7 @@ class DashboardCardsHelper
                 ->center()
                 ->withBasicStyles(),
 
-            'sda4' => (new HtmlCard())->width('1/4')
+            'sda4' => (new HtmlCard)->width('1/4')
                 ->view('nova.cards.italy-sda', [
                     'number' => $numbers[4],
                     'sda' => 4,
@@ -142,7 +142,7 @@ class DashboardCardsHelper
                 ->get();
         });
 
-        return (new HtmlCard())->width('full')
+        return (new HtmlCard)->width('full')
             ->view('nova.cards.percorsi-favoriti-table', ['regions' => $regions])
             ->withBasicStyles();
     }
@@ -153,7 +153,7 @@ class DashboardCardsHelper
             return \App\Models\EcPoi::count();
         });
 
-        return (new HtmlCard())->view('nova.cards.ec-pois', ['ecPoiCount' => $ecPoisCount])->center()->withBasicStyles();
+        return (new HtmlCard)->view('nova.cards.ec-pois', ['ecPoiCount' => $ecPoisCount])->center()->withBasicStyles();
     }
 
     public function getMainDashboardCards()
@@ -195,13 +195,13 @@ class DashboardCardsHelper
         $usersByRole = Cache::remember('usersByRole', 60 * 60 * 24 * 2, function () {
             return
                 DB::table('users')
-                ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-                ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                ->select('roles.name', DB::raw('count(*) as count'))
-                ->groupBy('roles.name')
-                ->get()
-                ->pluck('count', 'name')
-                ->toArray();
+                    ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                    ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                    ->select('roles.name', DB::raw('count(*) as count'))
+                    ->groupBy('roles.name')
+                    ->get()
+                    ->pluck('count', 'name')
+                    ->toArray();
         });
 
         $usersByRegion = Cache::remember('usersByRegion', 60 * 60 * 24 * 2, function () {
@@ -230,16 +230,16 @@ class DashboardCardsHelper
             new TotalUsers,
             new UserDistributionByRole($usersByRole),
             new UserDistributionByRegion($usersByRegion),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/2')
                 ->view('nova.cards.most-active-users', ['users' => $mostActiveUsers])
                 ->withBasicStyles(),
-            (new ValidatedHrPerMonth()),
-            (new IssueLastUpdatePerMonth()),
+            (new ValidatedHrPerMonth),
+            (new IssueLastUpdatePerMonth),
         ];
     }
 
-    public function getPercorribilitàDashboardCards(User $user = null)
+    public function getPercorribilitàDashboardCards(?User $user = null)
     {
         $hikingRoutesSda4 = $this->getHikingRoutes(4, $user);
         $hikingRoutesSda34 = $this->getHikingRoutes([3, 4], $user);
@@ -275,7 +275,7 @@ class DashboardCardsHelper
         });
 
         return [
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('full')
                 ->view('nova.cards.sal-mitur-abruzzo-regions-table', [
                     'regions' => $regions,
@@ -292,7 +292,7 @@ class DashboardCardsHelper
         });
 
         return [
-            (new HtmlCard())->view('nova.cards.acqua-sorgente', ['ugcPoiWaterCount' => $ugcPoiWaterCount])->center()->withBasicStyles(),
+            (new HtmlCard)->view('nova.cards.acqua-sorgente', ['ugcPoiWaterCount' => $ugcPoiWaterCount])->center()->withBasicStyles(),
             (new AcquaSorgenteTrend)->width('1/2'),
         ];
     }
@@ -357,7 +357,7 @@ class DashboardCardsHelper
         });
 
         return [
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('full')
                 ->view('nova.cards.sectors-table', ['sectors' => $sectors])
                 ->withBasicStyles(),
@@ -390,7 +390,7 @@ class DashboardCardsHelper
 
         $formatted = number_format($total, 2, ',', '.');
 
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->width('1/4')
             ->view('nova.cards.total-km', [
                 'total' => $formatted,
@@ -435,14 +435,14 @@ class DashboardCardsHelper
         });
 
         $cards = [
-            (new HtmlCard())->width('1/4')->view('nova.cards.username-card', ['userName' => $user->name])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.last-login-card', ['lastLogin' => $user->last_login_at])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => $data['sal'], 'backgroundColor' => Osm2caiHelper::getSalColor($data['sal'])])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 1, 'backgroundColor' => Osm2caiHelper::getSdaColor(1)])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 2, 'backgroundColor' => Osm2caiHelper::getSdaColor(2)])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 3, 'backgroundColor' => Osm2caiHelper::getSdaColor(3)])->center(true)->withBasicStyles(),
-            (new HtmlCard())->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 4, 'backgroundColor' => Osm2caiHelper::getSdaColor(4)])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.username-card', ['userName' => $user->name])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.permessi-card', ['roles' => $roles])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.last-login-card', ['lastLogin' => $user->last_login_at])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.sal-nazionale', ['sal' => $data['sal'], 'backgroundColor' => Osm2caiHelper::getSalColor($data['sal'])])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 1, 'backgroundColor' => Osm2caiHelper::getSdaColor(1)])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 2, 'backgroundColor' => Osm2caiHelper::getSdaColor(2)])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 3, 'backgroundColor' => Osm2caiHelper::getSdaColor(3)])->center(true)->withBasicStyles(),
+            (new HtmlCard)->width('1/4')->view('nova.cards.sda', ['num' => $data['numbers'], 'sda' => 4, 'backgroundColor' => Osm2caiHelper::getSdaColor(4)])->center(true)->withBasicStyles(),
         ];
 
         $cards[] = $this->regionsTableCard();
@@ -493,25 +493,25 @@ class DashboardCardsHelper
         });
 
         $cards = [
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.username-regional-card', ['userName' => $user->name])
                 ->center()
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.permissions-regional-card', ['permissions' => $roles])
                 ->center()
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.sal-issues-status-card', ['status' => $SALIssueStatus])
                 ->center()
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.sal-regional-card', [
                     'sal' => number_format($data['sal'] * 100, 2),
@@ -521,7 +521,7 @@ class DashboardCardsHelper
                 ->center()
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('full')
                 ->view('nova.cards.region-info-card', [
                     'regionName' => $region->name,
@@ -534,7 +534,7 @@ class DashboardCardsHelper
                 ->withBasicStyles(),
 
             // Stats cards
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $region->provinces->count(),
@@ -543,7 +543,7 @@ class DashboardCardsHelper
                 ->center()
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $data['numAreas'],
@@ -552,7 +552,7 @@ class DashboardCardsHelper
                 ->center()
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $data['numSectors'],
@@ -561,7 +561,7 @@ class DashboardCardsHelper
                 ->center()
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => array_sum($data['numbers']),
@@ -579,24 +579,21 @@ class DashboardCardsHelper
 
         $provinceCards = [];
         foreach ($region->provinces as $province) {
-            $provinceCards[] = $this->getChildrenTableCardByModel($province); //areas
+            $provinceCards[] = $this->getChildrenTableCardByModel($province); // areas
         }
 
         $cards = array_merge(
             $cards,
-            [$this->getChildrenTableCardByModel($region)], //provinces
+            [$this->getChildrenTableCardByModel($region)], // provinces
             $provinceCards,
         );
 
         return $cards;
     }
 
-    /**
-     * @return CustomTableCard
-     */
     private function regionsTableCard(): CustomTableCard
     {
-        $regionsCard = new CustomTableCard();
+        $regionsCard = new CustomTableCard;
         $regionsCard->title(__('SDA e SAL Regioni'));
 
         // Headings
@@ -711,7 +708,7 @@ class DashboardCardsHelper
 
     private function getSdaRegionalCard(int $sda, int $num): HtmlCard
     {
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->width('1/4')
             ->view('nova.cards.sda-regional-card', [
                 'sda' => $sda,
@@ -725,7 +722,7 @@ class DashboardCardsHelper
 
     private function getChildrenTableCardByModel($model): CustomTableCard
     {
-        $sectorsCard = new CustomTableCard();
+        $sectorsCard = new CustomTableCard;
         $modelName = $model->name;
         $childrenAbstractModel = $model->children()->getRelated();
         $childrenIds = $model->childrenIds();
@@ -787,7 +784,7 @@ class DashboardCardsHelper
         $table = (new $modelClassName)->getTable();
         $models = $user->{$table}; // Get models from user relation
 
-        $data = Cache::remember('local_cards_data_'.$user->id.'_'.$modelClassName, now()->addDays(2), function () use ($user, $modelClassName, $models, $table) {
+        $data = Cache::remember('local_cards_data_'.$user->id.'_'.$modelClassName, now()->addDays(2), function () use ($user, $models, $table) {
             $numbers = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
             foreach ($models as $model) {
                 foreach ($model->hikingRoutes as $hr) {
@@ -867,33 +864,33 @@ class DashboardCardsHelper
         $syncDate = Cache::get('last_osm_sync') ?? 'N/A';
 
         $cards = [
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.username-card', [
                     'userName' => $user->name,
                 ])
                 ->center()
                 ->withBasicStyles(),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.permessi-card', [
                     'roles' => $user->getRoleNames()->toArray(),
                 ])
                 ->center()
                 ->withBasicStyles(),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.last-login-card', [
                     'lastLogin' => $user->last_login_at,
                 ])
                 ->center()
                 ->withBasicStyles(),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->html($data['salHtml'])
                 ->center()
                 ->withBasicStyles(),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->html('<div class="font-light">
                 <p>&nbsp;</p>'.
                     $downloadLinks.
@@ -904,7 +901,7 @@ class DashboardCardsHelper
                 ->width('full')
                 ->withBasicStyles(),
 
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.tot-model-card', [
                     'model' => 'province',
@@ -912,7 +909,7 @@ class DashboardCardsHelper
                 ])
                 ->center()
                 ->withBasicStyles(),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.tot-model-card', [
                     'model' => 'aree',
@@ -920,7 +917,7 @@ class DashboardCardsHelper
                 ])
                 ->center()
                 ->withBasicStyles(),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.tot-model-card', [
                     'model' => 'settori',
@@ -928,7 +925,7 @@ class DashboardCardsHelper
                 ])
                 ->center()
                 ->withBasicStyles(),
-            (new HtmlCard())
+            (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.tot-model-card', [
                     'model' => 'percorsi',
@@ -952,7 +949,7 @@ class DashboardCardsHelper
     {
         $path = '/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens';
 
-        return (new HtmlCard())->width('1/4')
+        return (new HtmlCard)->width('1/4')
             ->html('<div style="background-color: '.Osm2caiHelper::getSdaColor($sda).'; color: white; font-size: xx-large; padding: 10px">'.$num.'</div><div style="padding: 5px">#sda '.$sda.' <a href="'.url($path).'">[Esplora]</a></div>')
             ->center()
             ->withBasicStyles();
@@ -960,7 +957,7 @@ class DashboardCardsHelper
 
     private function _getSectorsTableCardByModelClassName($user, $modelClassName): CustomTableCard
     {
-        $sectorsCard = new CustomTableCard();
+        $sectorsCard = new CustomTableCard;
 
         $table = (new $modelClassName)->getTable();
         $modelNamesString = $user->$table->pluck('name')->implode(', ');
@@ -1050,14 +1047,14 @@ class DashboardCardsHelper
     /**
      * Get hiking routes filtered by status and user's territory
      *
-     * @param int|array $status
+     * @param  int|array  $status
      * @return \Illuminate\Database\Eloquent\Collection
      */
     protected function getHikingRoutes($status, $user = null)
     {
         $cacheKey = is_array($status) ? 'hikingRoutesSda'.implode('', $status) : 'hikingRoutesSda'.$status;
 
-        //add user id to cache key to avoid conflicts between users
+        // add user id to cache key to avoid conflicts between users
         if ($user) {
             $cacheKey .= '_user_'.$user->id;
         }

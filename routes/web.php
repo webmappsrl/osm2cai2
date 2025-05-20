@@ -2,10 +2,8 @@
 
 use App\Http\Controllers\CasLoginController;
 use App\Http\Controllers\HikingRouteLoScarponeExportController;
-use App\Http\Controllers\ImportUGCController;
 use App\Http\Controllers\MigrationCheck;
 use App\Http\Controllers\MiturAbruzzoController;
-use App\Jobs\TestJob;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
 
@@ -26,7 +24,7 @@ Route::middleware(['auth', 'nova'])->group(function () {
 
 Route::get('/logs', [Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
 
-//Mitur Abruzzo Maps
+// Mitur Abruzzo Maps
 Route::get('/poi/map/{id}', [MiturAbruzzoController::class, 'poiMap'])->name('poi-map');
 Route::get('/mountain-groups/map/{id}', [MiturAbruzzoController::class, 'mountainGroupsMap'])->name('mountain-groups-map');
 Route::get('/cai-huts/map/{id}', [MiturAbruzzoController::class, 'caiHutsMap'])->name('cai-huts-map');

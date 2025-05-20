@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\UgcPoi;
-use App\Models\User;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,8 +35,6 @@ class UgcMedia extends Model
 
     /**
      * Return the json version of the ugc media, avoiding the geometry
-     *
-     * @return array
      */
     public function getJsonProperties(): array
     {
@@ -67,8 +63,6 @@ class UgcMedia extends Model
 
     /**
      * Create a geojson from the ugc media
-     *
-     * @return array
      */
     public function getGeojson(): ?array
     {

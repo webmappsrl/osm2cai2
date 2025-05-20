@@ -6,7 +6,6 @@ use App\Helpers\Nova\DashboardCardsHelper;
 use App\Nova\Metrics\EcPoisScorePartition;
 use App\Nova\Metrics\EcPoisTrend;
 use App\Nova\Metrics\EcPoisTypePartition;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Dashboard;
 
 class EcPoisDashboard extends Dashboard
@@ -15,7 +14,7 @@ class EcPoisDashboard extends Dashboard
 
     public function __construct()
     {
-        $this->cardsHelper = new DashboardCardsHelper();
+        $this->cardsHelper = new DashboardCardsHelper;
     }
 
     public function label()

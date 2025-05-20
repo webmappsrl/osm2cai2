@@ -32,11 +32,11 @@ use Wm\WmPackage\Http\Controllers\Api\UgcTrackController;
 Route::prefix('csv')->name('csv.')->group(function () {
     Route::get('/{modelType}/{id}', [CsvController::class, 'download']);
 });
-//TODO check compatibility with geography type geometry
+// TODO check compatibility with geography type geometry
 Route::prefix('shapefile')->name('shapefile.')->group(function () {
     Route::get('/{modelType}/{id}', [ShapeFileController::class, 'download']);
 });
-//TODO check compatibility with geography type geometry
+// TODO check compatibility with geography type geometry
 Route::prefix('kml')->name('kml.')->group(function () {
     Route::get('/{modelType}/{id}', [KmlController::class, 'download']);
 });
@@ -79,7 +79,7 @@ Route::prefix('v2')->group(function () {
     Route::get('/ecpois/{hr_osm2cai_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteId'])->name('v2-ecpois-by-osm2caiId');
     Route::get('/ecpois/osm/{hr_osm_id}/{type}', [EcPoiController::class, 'indexByBufferFromHikingRouteOsmId'])->name('v2-ecpois-by-OsmId');
 
-    //Export
+    // Export
     Route::prefix('export')->name('export')->group(function () {
         Route::get('/hiking-routes/list', [ExportController::class, 'hikingRoutesList'])->name('hiking-routes-export');
         Route::get('/hiking-routes/{id}', [ExportController::class, 'hikingRoutesSingleFeature'])->name('hiking-routes-single-feature-export');
@@ -111,7 +111,7 @@ Route::prefix('v2')->group(function () {
     });
     Route::get('hiking-routes/{id}.gpx', [HikingRouteController::class, 'hikingRouteGpx'])->name('hiking-routes-gpx');
 
-    //ACQUA SORGENTE
+    // ACQUA SORGENTE
     Route::prefix('source_survey')->name('source-survey.')->group(function () {
         Route::get('/survey.geojson', [SourceSurveyController::class, 'surveyGeoJson'])->name('survey-geojson');
         Route::get('/survey.gpx', [SourceSurveyController::class, 'surveyGpx'])->name('survey-gpx');
@@ -121,7 +121,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/monitorings', [SourceSurveyController::class, 'surveyData'])->name('monitorings');
     });
 
-    //mitur_abruzzo
+    // mitur_abruzzo
     Route::prefix('mitur_abruzzo')->name('v2-mitur-abruzzo')->group(function () {
         Route::get('/region_list', [MiturAbruzzoController::class, 'miturAbruzzoRegionList'])->name('region-list');
         Route::get('/region/{id}', [MiturAbruzzoController::class, 'miturAbruzzoRegionById'])->name('region-by-id');

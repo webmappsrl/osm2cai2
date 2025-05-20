@@ -6,8 +6,6 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use App\Services\GeometryService;
-use App\Traits\GeoBufferTrait;
-use App\Traits\GeoIntersectTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -18,16 +16,14 @@ use Illuminate\Support\Facades\Storage;
  */
 trait SpatialDataTrait
 {
-    use GeoIntersectTrait;
     use GeoBufferTrait;
+    use GeoIntersectTrait;
     // ------------------------------
     // GeoJSON Utilities
     // ------------------------------
 
     /**
      * Retrieve the GeoJSON representation of the model's geometry with no additional properties.
-     *
-     * @return array|null
      */
     public function getEmptyGeojson(): ?array
     {
@@ -38,8 +34,6 @@ trait SpatialDataTrait
 
     /**
      * Get the geometry of the given model as GeoJSON
-     *
-     * @return array
      */
     public function getGeometryGeojson(): ?array
     {
@@ -50,8 +44,6 @@ trait SpatialDataTrait
 
     /**
      * Get a feature collection with the model's geometry.
-     *
-     * @return array|null
      */
     public function getFeatureCollection(): ?array
     {
@@ -66,8 +58,6 @@ trait SpatialDataTrait
 
     /**
      * Get a GeoJSON view for the map, optionally including raw geometry.
-     *
-     * @return array|null
      */
     public function getGeojsonForMapView(): ?array
     {
@@ -86,8 +76,6 @@ trait SpatialDataTrait
 
     /**
      * Get the centroid of the model's geometry as GeoJSON.
-     *
-     * @return array|null
      */
     public function getCentroidGeojson(): ?array
     {
@@ -98,8 +86,6 @@ trait SpatialDataTrait
 
     /**
      * Get the centroid coordinates of the model's geometry.
-     *
-     * @return array|null
      */
     public function getCentroid(): ?array
     {
@@ -110,8 +96,6 @@ trait SpatialDataTrait
 
     /**
      * Get the geometry type of the model
-     *
-     * @return string
      */
     public function getGeometryType(): ?string
     {
@@ -122,8 +106,6 @@ trait SpatialDataTrait
 
     /**
      * Get the bounding box of the geometry.
-     *
-     * @return string
      */
     public function getBoundingBox(): string
     {
@@ -132,7 +114,7 @@ trait SpatialDataTrait
             throw new \Exception('Model must have a geometry column to calculate bounding box.');
         }
 
-        //ensure the geometry is a polygon or multipolygon
+        // ensure the geometry is a polygon or multipolygon
         if ($this->getGeometryType() !== 'ST_Polygon' && $this->getGeometryType() !== 'ST_MultiPolygon') {
             throw new \Exception('Model must have a polygon or multipolygon geometry to calculate bounding box.');
         }
@@ -157,8 +139,6 @@ trait SpatialDataTrait
 
     /**
      * Retrieve GeoJSON for related UGC features within proximity and time constraints.
-     *
-     * @return array
      */
     public function getRelatedUgcGeojson(): array
     {
@@ -238,7 +218,7 @@ trait SpatialDataTrait
         }
 
         // Create the zip file
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         if ($zip->open($zipFile, \ZipArchive::CREATE) !== true) {
             throw new \RuntimeException('Cannot create zip file');
         }
@@ -320,8 +300,6 @@ trait SpatialDataTrait
 
     /**
      * Get the area of the given model (only for polygons and multipolygons)
-     *
-     * @return int
      */
     public function getArea(): ?int
     {
@@ -337,7 +315,7 @@ trait SpatialDataTrait
 
     public function getLatitudeAttribute(): ?float
     {
-        //calculate the latitude from the geometry of type point using postgis
+        // calculate the latitude from the geometry of type point using postgis
         $latitude = DB::select("SELECT ST_Y(geometry) as latitude FROM {$this->getTable()} WHERE id = {$this->id}")[0]->latitude;
 
         return $latitude;
@@ -345,7 +323,7 @@ trait SpatialDataTrait
 
     public function getLongitudeAttribute(): ?float
     {
-        //calculate the longitude from the geometry of type point using postgis
+        // calculate the longitude from the geometry of type point using postgis
         $longitude = DB::select("SELECT ST_X(geometry) as longitude FROM {$this->getTable()} WHERE id = {$this->id}")[0]->longitude;
 
         return $longitude;
@@ -353,7 +331,7 @@ trait SpatialDataTrait
 
     private function fetchGeometry(string $column): ?string
     {
-        //check if the column exists
+        // check if the column exists
         if (! Schema::hasColumn($this->getTable(), $column)) {
             return null;
         }
@@ -411,17 +389,17 @@ trait SpatialDataTrait
 
         if ($this instanceof Region) {
             return $this->provinces
-                ->flatMap(fn ($province) => $province->getSectorIds()) //flatten the array of arrays
-                ->unique() //remove duplicates
-                ->values() //reset the keys
+                ->flatMap(fn ($province) => $province->getSectorIds()) // flatten the array of arrays
+                ->unique() // remove duplicates
+                ->values() // reset the keys
                 ->toArray();
         }
 
         if ($this instanceof Province) {
             return $this->areas
-                ->flatMap(fn ($area) => $area->getSectorIds()) //flatten the array of arrays
-                ->unique() //remove duplicates
-                ->values() //reset the keys
+                ->flatMap(fn ($area) => $area->getSectorIds()) // flatten the array of arrays
+                ->unique() // remove duplicates
+                ->values() // reset the keys
                 ->toArray();
         }
 

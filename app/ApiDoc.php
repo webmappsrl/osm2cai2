@@ -7,6 +7,7 @@ namespace App;
  *     version="1.0.0",
  *     title="OSM2CAI",
  *     description="API documentation",
+ *
  *     @OA\Contact(
  *         name="Contact the developers",
  *         email="catastorei@cai.it"
@@ -23,6 +24,4 @@ namespace App;
  *     description="API V2"
  * )
  */
-class ApiDoc
-{
-}
+class ApiDoc {}

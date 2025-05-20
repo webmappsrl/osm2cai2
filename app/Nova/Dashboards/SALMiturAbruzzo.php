@@ -3,11 +3,6 @@
 namespace App\Nova\Dashboards;
 
 use App\Helpers\Nova\DashboardCardsHelper;
-use App\Models\Region;
-use Ericlagarda\NovaTextCard\TextCard;
-use Illuminate\Support\Facades\DB;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
-use Laravel\Nova\Card;
 use Laravel\Nova\Dashboard;
 
 class SALMiturAbruzzo extends Dashboard
@@ -16,7 +11,7 @@ class SALMiturAbruzzo extends Dashboard
 
     public function __construct()
     {
-        $this->cardsService = new DashboardCardsHelper();
+        $this->cardsService = new DashboardCardsHelper;
     }
 
     public function label()

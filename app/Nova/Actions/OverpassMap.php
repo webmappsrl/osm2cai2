@@ -4,7 +4,6 @@ namespace App\Nova\Actions;
 
 use App\Models\HikingRoute;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
@@ -31,8 +30,6 @@ class OverpassMap extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  ActionFields  $fields
-     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -52,7 +49,7 @@ class OverpassMap extends Action
         $relationId = $this->model->relation_id;
         if (! empty(auth()->user()->default_overpass_query)) {
             $query = auth()->user()->default_overpass_query;
-            //search for all the occurrencies of '@osm_id' and replace them with the relation id
+            // search for all the occurrencies of '@osm_id' and replace them with the relation id
             $query = str_replace('@osm_id', $relationId, $query);
         } else {
             $query = '[out:xml]

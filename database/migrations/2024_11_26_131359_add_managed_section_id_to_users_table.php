@@ -4,14 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            ///drop column region_name and club_cai_code and add region_id and club_id
+            // /drop column region_name and club_cai_code and add region_id and club_id
             $table->dropColumn('region_name');
             $table->dropColumn('club_cai_code');
             $table->unsignedBigInteger('region_id')->nullable();
@@ -19,7 +20,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('club_id')->nullable();
             $table->foreign('club_id')->references('id')->on('clubs')->onDelete('set null');
 
-            //create columns for managed section
+            // create columns for managed section
             $table->unsignedBigInteger('managed_club_id')->nullable();
             $table->foreign('managed_club_id')->references('id')->on('clubs')->onDelete('set null');
             $table->dateTime('section_manager_expire_date')->nullable();

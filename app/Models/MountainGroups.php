@@ -2,12 +2,7 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Jobs\CalculateIntersectionsJob;
-use App\Models\CaiHut;
-use App\Models\Club;
-use App\Models\HikingRoute;
-use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MountainGroups extends Model
 {
-    use HasFactory, SpatialDataTrait, AwsCacheable;
+    use AwsCacheable, HasFactory, SpatialDataTrait;
 
     protected $fillable = [
         'id',
@@ -62,9 +57,6 @@ class MountainGroups extends Model
 
     /**
      * Dispatch jobs for geometric computations
-     *
-     * @param string $queue
-     * @return void
      */
     public function dispatchGeometricComputationsJobs(string $queue = 'geometric-computations'): void
     {

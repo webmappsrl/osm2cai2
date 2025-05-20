@@ -9,8 +9,6 @@ class CsvController extends Controller
 {
     /**
      * Allowed model types for CSV generation.
-     *
-     * @var array
      */
     private array $allowedModels = [
         'region' => \App\Models\Region::class,
@@ -24,9 +22,9 @@ class CsvController extends Controller
     /**
      * Generate and download a CSV file for a specific model.
      *
-     * @param Request $request
-     * @param string $modelType The type of the model
-     * @param int $id The ID of the model
+     * @param  Request  $request
+     * @param  string  $modelType  The type of the model
+     * @param  int  $id  The ID of the model
      * @return \Illuminate\Http\Response
      */
     public function download(string $modelType, int $id)

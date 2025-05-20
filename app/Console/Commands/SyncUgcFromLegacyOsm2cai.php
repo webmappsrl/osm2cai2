@@ -69,8 +69,6 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return void
      */
     public function handle(): void
     {
@@ -141,8 +139,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Find or create user by ID
      *
-     * @param int|null $userId Legacy user ID
-     * @return User|null
+     * @param  int|null  $userId  Legacy user ID
      */
     private function ensureUserExists(?int $userId): ?User
     {
@@ -180,12 +177,11 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Create new user from legacy data
      *
-     * @param object $legacyUser User data from legacy database
-     * @return User
+     * @param  object  $legacyUser  User data from legacy database
      */
     private function createUser(object $legacyUser): User
     {
-        $user = new User();
+        $user = new User;
         $user->id = $legacyUser->id;
         $user->name = $legacyUser->name;
         $user->email = $legacyUser->email;
@@ -220,13 +216,14 @@ class SyncUgcFromLegacyOsm2cai extends Command
             if ($media->relative_url === null) {
                 $this->logs['skippedNullUrlMedia'][] = "UGC Media ID: {$media->id}";
                 $skippedCount++;
+
                 continue;
             }
 
             try {
                 // Get related media references and user
                 $mediaUser = $this->ensureUserExists($media->user_id);
-                list($ugcPoiId, $ugcTrackId, $relatedUgcPoi, $relatedUgcTrack) = $this->getMediaRelationships($media->id);
+                [$ugcPoiId, $ugcTrackId, $relatedUgcPoi, $relatedUgcTrack] = $this->getMediaRelationships($media->id);
 
                 $this->info('Importing UGC media: '.$media->id);
                 $imageUrl = $this->getMediaImageUrl($media->relative_url);
@@ -282,7 +279,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Get UGC media relationships (POI and Track)
      *
-     * @param int $mediaId The media ID to find relationships for
+     * @param  int  $mediaId  The media ID to find relationships for
      * @return array [$ugcPoiId, $ugcTrackId, $relatedUgcPoi, $relatedUgcTrack]
      */
     private function getMediaRelationships(int $mediaId): array
@@ -328,7 +325,6 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Get the full image URL from relative URL
      *
-     * @param string $relativeUrl
      * @return string Full image URL
      */
     private function getMediaImageUrl(string $relativeUrl): string
@@ -341,9 +337,9 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Store media image to local storage if needed
      *
-     * @param string $imageUrl Full image URL
-     * @param string $relativeUrl Original relative URL
-     * @param int $mediaId Media ID for logging
+     * @param  string  $imageUrl  Full image URL
+     * @param  string  $relativeUrl  Original relative URL
+     * @param  int  $mediaId  Media ID for logging
      */
     private function storeMediaImage(string $imageUrl, string $relativeUrl, int $mediaId): void
     {
@@ -367,12 +363,12 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Process media geometry using multiple fallback strategies
      *
-     * @param mixed $geometry Original geometry
-     * @param string $imageUrl Image URL for EXIF extraction
-     * @param mixed $rawData Raw data that might contain coordinates
-     * @param UgcPoi|null $relatedUgcPoi Related POI that might have coordinates
-     * @param UgcTrack|null $relatedUgcTrack Related track that might have coordinates
-     * @param int $mediaId Media ID for logging
+     * @param  mixed  $geometry  Original geometry
+     * @param  string  $imageUrl  Image URL for EXIF extraction
+     * @param  mixed  $rawData  Raw data that might contain coordinates
+     * @param  UgcPoi|null  $relatedUgcPoi  Related POI that might have coordinates
+     * @param  UgcTrack|null  $relatedUgcTrack  Related track that might have coordinates
+     * @param  int  $mediaId  Media ID for logging
      * @return mixed Processed geometry
      */
     private function processMediaGeometry($geometry, string $imageUrl, $rawData, ?UgcPoi $relatedUgcPoi, ?UgcTrack $relatedUgcTrack, int $mediaId)
@@ -401,7 +397,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
 
             // Strategy 3: Get coordinates from related UGC POI
             if ($relatedUgcPoi && $relatedUgcPoi->geometry) {
-                //get lon and lat from relatedUgcPoi->geometry
+                // get lon and lat from relatedUgcPoi->geometry
                 $lon = $this->legacyDb->selectOne('SELECT ST_X(?) as lon', [$relatedUgcPoi->geometry])->lon;
                 $lat = $this->legacyDb->selectOne('SELECT ST_Y(?) as lat', [$relatedUgcPoi->geometry])->lat;
 
@@ -440,8 +436,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Check if geometry is at point zero (0,0)
      *
-     * @param mixed $geometry
-     * @return bool
+     * @param  mixed  $geometry
      */
     private function isPointZero($geometry): bool
     {
@@ -451,8 +446,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Convert non-point geometries to points (using centroid)
      *
-     * @param mixed $geometry Original geometry
-     * @param int $mediaId Media ID for error logging
+     * @param  mixed  $geometry  Original geometry
+     * @param  int  $mediaId  Media ID for error logging
      * @return mixed Normalized geometry or null if invalid
      */
     private function normalizeNonPointGeometry($geometry, int $mediaId)
@@ -489,7 +484,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Extract coordinates from raw data
      *
-     * @param mixed $rawData
+     * @param  mixed  $rawData
      * @return array|null ['lat' => float, 'lon' => float] or null if not found
      */
     private function getCoordinatesFromRawData($rawData): ?array
@@ -513,7 +508,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Check if media with the same geohub_id already exists
      *
-     * @param object $media Media object from legacy database
+     * @param  object  $media  Media object from legacy database
      * @return bool True if duplicate found
      */
     private function isDuplicateMedia(object $media): bool
@@ -546,6 +541,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 if (! $validGeometry) {
                     $this->logs['invalidGeometries'][] = "UGC_TRACK ID: {$track->id} - Invalid or unsupported geometry";
                     $this->warn("Invalid or unsupported geometry for track ID: {$track->id}. Skipping...");
+
                     continue;
                 }
 
@@ -581,7 +577,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Validate and extract track geometry
      *
-     * @param int $trackId Track ID
+     * @param  int  $trackId  Track ID
      * @return mixed Valid geometry or null if invalid
      */
     private function validateTrackGeometry(int $trackId)
@@ -623,6 +619,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
                 if (! $validGeometry) {
                     $this->logs['invalidGeometries'][] = "UGC_POI ID: {$poi->id} - Invalid or unsupported geometry";
                     $this->warn("Invalid or unsupported geometry for POI ID: {$poi->id}. Skipping...");
+
                     continue;
                 }
 
@@ -660,7 +657,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Validate and extract POI geometry
      *
-     * @param int $poiId POI ID
+     * @param  int  $poiId  POI ID
      * @return mixed Valid geometry or null if invalid
      */
     private function validatePoiGeometry(int $poiId)
@@ -685,7 +682,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Normalize raw data to ensure consistent format
      *
-     * @param mixed $rawData
+     * @param  mixed  $rawData
      * @return array|null
      */
     private function normalizeRawData($rawData)
@@ -700,7 +697,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Extract coordinates from EXIF data of an image
      *
-     * @param string $imageUrl Image URL
+     * @param  string  $imageUrl  Image URL
      * @return array|null ['lat' => float, 'lon' => float] or null if not found
      */
     private function getExifCoordinates($imageUrl): ?array
@@ -739,7 +736,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Parse GPS data in standard format
      *
-     * @param array $gpsData GPS data section from EXIF
+     * @param  array  $gpsData  GPS data section from EXIF
      * @return array|null ['lat' => float, 'lon' => float] or null if invalid
      */
     private function parseStandardGpsExif($gpsData): ?array
@@ -759,7 +756,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Parse direct GPS coordinates (not in GPS section)
      *
-     * @param array $exif Full EXIF data
+     * @param  array  $exif  Full EXIF data
      * @return array|null ['lat' => float, 'lon' => float] or null if invalid
      */
     private function parseDirectGpsExif($exif): ?array
@@ -782,7 +779,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Recursively explore EXIF data for GPS coordinates
      *
-     * @param array $exif EXIF data to explore
+     * @param  array  $exif  EXIF data to explore
      * @return array|null ['lat' => float, 'lon' => float] or null if not found
      */
     private function exploreExifForGps($exif): ?array
@@ -816,9 +813,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Check if coordinates are valid (not 0,0 and within bounds)
      *
-     * @param float $lat Latitude
-     * @param float $lon Longitude
-     * @return bool
+     * @param  float  $lat  Latitude
+     * @param  float  $lon  Longitude
      */
     private function areValidCoordinates(float $lat, float $lon): bool
     {
@@ -830,8 +826,8 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Convert DMS (Degrees, Minutes, Seconds) to decimal
      *
-     * @param array|string $dmsArray DMS coordinates
-     * @param string $ref Direction reference (N/S/E/W)
+     * @param  array|string  $dmsArray  DMS coordinates
+     * @param  string  $ref  Direction reference (N/S/E/W)
      * @return float Decimal coordinate
      */
     private function convertDMSToDecimal($dmsArray, string $ref): float
@@ -857,8 +853,7 @@ class SyncUgcFromLegacyOsm2cai extends Command
     /**
      * Convert fraction to float
      *
-     * @param mixed $fraction Fraction as string "10/3" or array [10, 3]
-     * @return float
+     * @param  mixed  $fraction  Fraction as string "10/3" or array [10, 3]
      */
     private function fractionToFloat($fraction): float
     {

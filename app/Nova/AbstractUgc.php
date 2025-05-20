@@ -18,7 +18,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
@@ -50,17 +49,16 @@ abstract class AbstractUgc extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param Request $request
      * @return array
      */
     public function fields(Request $request)
     {
         $novaFields = [
             ID::make(__('ID'), 'id')->sortable()->readonly(),
-            Text::make('User', function () use ($request) {
+            Text::make('User', function () {
                 if ($this->user_id) {
                     if (auth()->user()->isValidatorForFormId($this->form_id)) {
-                        //add the email of the user next to the name for validator
+                        // add the email of the user next to the name for validator
                         return '<a style="text-decoration:none; font-weight:bold; color:teal;" href="/resources/users/'.$this->user_id.'">'.$this->user->name.' ('.$this->user->email.')'.'</a>';
                     }
 
@@ -182,7 +180,7 @@ abstract class AbstractUgc extends Resource
     public function actions(Request $request)
     {
         return [
-            (new UploadAndAssociateUgcMedia())->canSee(function ($request) {
+            (new UploadAndAssociateUgcMedia)->canSee(function ($request) {
                 if ($this->user_id) {
                     return auth()->user()->id == $this->user_id && $this->validated === ValidatedStatusEnum::NOT_VALIDATED->value;
                 }
@@ -207,7 +205,7 @@ abstract class AbstractUgc extends Resource
                 ->confirmButtonText(__('Delete'))
                 ->cancelButtonText(__('Cancel'))
                 ->onlyOnDetail(),
-            (new DownloadFeatureCollection())->canSee(function ($request) {
+            (new DownloadFeatureCollection)->canSee(function ($request) {
                 return true;
             })
                 ->canRun(function ($request) {
@@ -220,8 +218,6 @@ abstract class AbstractUgc extends Resource
 
     /**
      * Get the fields available for CSV export.
-     *
-     * @return array
      */
     abstract public static function getExportFields(): array;
 }

@@ -120,7 +120,7 @@ class ShapeFileControllerTest extends TestCase
         $zipPath = Storage::disk('public')->path('shape_files/zip/Test_Region.zip');
         $this->assertFileExists($zipPath);
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $zip->open($zipPath);
 
         $requiredExtensions = ['.shp', '.shx', '.dbf', '.prj'];

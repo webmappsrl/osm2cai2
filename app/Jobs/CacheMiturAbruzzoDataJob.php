@@ -15,11 +15,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Log\Logger;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -110,7 +107,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
 
     protected function buildHikingRouteGeojson($hikingRoute): array
     {
-        $intersectingPois = $hikingRoute->getElementsInBuffer(new EcPoi(), 1000);
+        $intersectingPois = $hikingRoute->getElementsInBuffer(new EcPoi, 1000);
 
         $pois = $intersectingPois->pluck('updated_at', 'id')->toArray();
 
@@ -122,23 +119,23 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $fromPoint = $points['from'];
         $toPoint = $points['to'];
 
-        //get the cai huts intersecting with the hiking route
-        $huts = $hikingRoute->getElementsInBuffer(new CaiHut(), config('osm2cai.hiking_route_buffer'));
+        // get the cai huts intersecting with the hiking route
+        $huts = $hikingRoute->getElementsInBuffer(new CaiHut, config('osm2cai.hiking_route_buffer'));
         $caiHuts = [];
-        //transform the huts array into an associative array where the key is hut id and value is the hut updated_at
+        // transform the huts array into an associative array where the key is hut id and value is the hut updated_at
         if (! empty($huts)) {
             foreach ($huts as $hut) {
                 $caiHuts[$hut->id] = $hut->updated_at;
             }
         }
 
-        //get the sections associated with the hiking route
-        $clubsIds = $hikingRoute->getIntersections(new Club())->pluck('updated_at', 'id')->toArray();
+        // get the sections associated with the hiking route
+        $clubsIds = $hikingRoute->getIntersections(new Club)->pluck('updated_at', 'id')->toArray();
 
         // get the abstract from the hiking route and get only it description
         $abstract = $hikingRoute->tdh['abstract']['it'] ?? '';
 
-        //get the difficulty based on cai_scale value
+        // get the difficulty based on cai_scale value
 
         switch ($hikingRoute->osmfeatures_data['properties']['cai_scale'] ?? '') {
             case 'T':
@@ -169,7 +166,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
                 $difficulty = 'Non definito';
         }
 
-        //build the geojson
+        // build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
 
@@ -215,10 +212,10 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     protected function buildMountainGroupGeojson($mountainGroup): array
     {
         $regions = $mountainGroup->regions->pluck('name')->implode(', ');
-        $provinces = $mountainGroup->getIntersections(new Province())->pluck('name')->implode(', ');
-        $municipalities = $mountainGroup->getIntersections(new Municipality())->pluck('name')->implode(', ');
+        $provinces = $mountainGroup->getIntersections(new Province)->pluck('name')->implode(', ');
+        $municipalities = $mountainGroup->getIntersections(new Municipality)->pluck('name')->implode(', ');
 
-        //build the geojson
+        // build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
 
@@ -245,7 +242,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $properties['slope_avg'] = $mountainGroup->slope_avg ?? '';
         $properties['slope_stddev'] = $mountainGroup->slope_stddev ?? '';
 
-        //TODO: check IDs are correct or recalculate the intersections
+        // TODO: check IDs are correct or recalculate the intersections
         $properties['section_ids'] = $mountainGroup->clubs->pluck('updated_at', 'id')->toArray();
         $properties['hiking_routes'] = $mountainGroup->hikingRoutes->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray();
         $properties['ec_pois'] = $mountainGroup->ecPois->pluck('updated_at', 'id')->toArray();
@@ -261,9 +258,9 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     {
         $this->logger()->info("Start caching club $club->name");
 
-        $provinceNames = $club->getIntersections(new Province())->pluck('name')->implode(', ');
+        $provinceNames = $club->getIntersections(new Province)->pluck('name')->implode(', ');
 
-        //build the geojson
+        // build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
 
@@ -309,14 +306,14 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
 
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
 
-        //get only hiking routes in a 1000m buffer with osm2cai status 4
-        $hikingRoutesInBuffer = $poi->getElementsInBuffer(new HikingRoute(), 1000)->where('osm2cai_status', 4);
+        // get only hiking routes in a 1000m buffer with osm2cai status 4
+        $hikingRoutesInBuffer = $poi->getElementsInBuffer(new HikingRoute, 1000)->where('osm2cai_status', 4);
 
-        //build the geojson
+        // build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
 
-        $intersectingMunicipalities = $poi->getIntersections(new Municipality());
+        $intersectingMunicipalities = $poi->getIntersections(new Municipality);
         $municipalities = $intersectingMunicipalities->pluck('name')->implode(', ');
 
         $properties = [];
@@ -344,10 +341,10 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     {
         $this->logger()->info("Start caching region $region->name");
 
-        //get the mountain groups for the region
-        $mountainGroups = $region->getIntersections(new MountainGroups());
+        // get the mountain groups for the region
+        $mountainGroups = $region->getIntersections(new MountainGroups);
 
-        //format the date
+        // format the date
         $mountainGroups = $mountainGroups->mapWithKeys(function ($mountainGroup) {
             $formattedDate = $mountainGroup->updated_at ? $mountainGroup->updated_at->toIso8601String() : null;
 
@@ -356,7 +353,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
 
         $geom = $region->getGeometryGeojson();
 
-        //build the geojson
+        // build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
         $geojson['properties'] = [];
@@ -376,23 +373,23 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     {
         $this->logger()->info("Start caching hut $hut->id");
 
-        //get the mountain groups for the hut based on the geometry intersection
-        $mountainGroups = $hut->getIntersections(new MountainGroups())->first();
+        // get the mountain groups for the hut based on the geometry intersection
+        $mountainGroups = $hut->getIntersections(new MountainGroups)->first();
 
-        //get the pois in a 1km buffer from the hut
-        $pois = $hut->getElementsInBuffer(new EcPoi(), 1000);
+        // get the pois in a 1km buffer from the hut
+        $pois = $hut->getElementsInBuffer(new EcPoi, 1000);
 
-        //get the hiking routes in a 1km buffer from the hut
-        $hikingRoutes = $hut->getElementsInBuffer(new HikingRoute(), 1000);
+        // get the hiking routes in a 1km buffer from the hut
+        $hikingRoutes = $hut->getElementsInBuffer(new HikingRoute, 1000);
 
-        //get osmfeatures data
+        // get osmfeatures data
         $osmfeaturesData = $this->extractOsmfeaturesData($hut);
         $enrichmentsData = $this->extractEnrichmentsData($osmfeaturesData);
 
-        //get images from Osmfeatures
+        // get images from Osmfeatures
         $images = $this->getImagesFromOsmfeaturesData($enrichmentsData);
 
-        //build the geojson
+        // build the geojson
         $geojson = [];
         $geojson['type'] = 'Feature';
 
@@ -446,7 +443,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
             $regionName = $hut->region ? $hut->region->name : '';
             $elevation = $hut->elevation ?? '';
 
-            //build abstract
+            // build abstract
             $properties['abstract'] = "{$hut->second_name} è una struttura gestita dal Club Alpino Italiano";
 
             if ($elevation) {
@@ -520,7 +517,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         }
 
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
-        //extend the allowed extension to double the values but uppercase
+        // extend the allowed extension to double the values but uppercase
         $allowedExtensions = array_merge($allowedExtensions, array_map('strtoupper', $allowedExtensions));
 
         foreach (WikiImageType::cases() as $imageType) {
@@ -528,7 +525,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
                 $imageData = $enrichmentsData['images'][$imageType->value];
 
                 if ($imageType == WikiImageType::WIKIMEDIA_IMAGES) {
-                    //can be more than one image
+                    // can be more than one image
                     foreach ($imageData as $image) {
                         if (isset($image['source_url']) && in_array(pathinfo($image['source_url'], PATHINFO_EXTENSION), $allowedExtensions)) {
                             $images[] = $image['source_url'];

@@ -2,8 +2,6 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\UgcPoi;
-use App\Models\UgcTrack;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;

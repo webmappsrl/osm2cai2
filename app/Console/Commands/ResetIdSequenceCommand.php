@@ -72,7 +72,7 @@ class ResetIdSequenceCommand extends Command
     /**
      * Reset the ID sequence for a specific table.
      *
-     * @param string $tableName
+     * @param  string  $tableName
      * @return void
      */
     private function resetSequence($tableName)

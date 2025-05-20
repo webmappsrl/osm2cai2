@@ -2,13 +2,7 @@
 
 namespace App\Models;
 
-use App\Console\Commands\CheckNearbyHikingRoutes;
-use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Jobs\CheckNearbyHikingRoutesJob;
-use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
-use App\Models\Region;
 use App\Traits\AwsCacheable;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
@@ -19,7 +13,7 @@ use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 
 class CaiHut extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, SpatialDataTrait, OsmfeaturesGeometryUpdateTrait, AwsCacheable;
+    use AwsCacheable, HasFactory, OsmfeaturesGeometryUpdateTrait, SpatialDataTrait;
 
     protected $fillable = [
         'osmfeatures_id',

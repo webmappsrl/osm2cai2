@@ -4,8 +4,6 @@ namespace App\Services;
 
 use App\Models\HikingRoute;
 use App\Models\Sector;
-use App\Nova\Actions\CalculateIntersections;
-use App\Services\GeometryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -110,7 +108,7 @@ class OsmService
     /**
      * Check if a hiking route exists in OSM
      *
-     * @param string|int $relationId
+     * @param  string|int  $relationId
      * @return bool
      */
     public function hikingRouteExists($relationId)
@@ -121,7 +119,7 @@ class OsmService
     /**
      * Return OSM API data by relation id provided
      *
-     * @param string|int $relationId
+     * @param  string|int  $relationId
      * @return array|false
      */
     public function getHikingRoute($relationId)
@@ -150,7 +148,7 @@ class OsmService
     /**
      * Get hiking route GeoJSON from Waymarked Trails
      *
-     * @param string|int $relationId
+     * @param  string|int  $relationId
      * @return string|false
      */
     public function getHikingRouteGeojson($relationId)
@@ -163,7 +161,7 @@ class OsmService
     /**
      * Get hiking route GPX from Waymarked Trails
      *
-     * @param string|int $relationId
+     * @param  string|int  $relationId
      * @return string|false
      */
     public function getHikingRouteGpx($relationId)
@@ -176,7 +174,7 @@ class OsmService
     /**
      * Convert GPX to PostGIS geometry with default SRID
      *
-     * @param string|int $relationId
+     * @param  string|int  $relationId
      * @return string|false
      */
     public function getHikingRouteGeometry($relationId)
@@ -187,7 +185,7 @@ class OsmService
     /**
      * Convert GPX to PostGIS geometry with OSM SRID (3857)
      *
-     * @param string|int $relationId
+     * @param  string|int  $relationId
      * @return string|false
      */
     public function getHikingRouteGeometry3857($relationId)
@@ -198,8 +196,8 @@ class OsmService
     /**
      * Helper method to convert GPX to geometry
      *
-     * @param string|int $relationId
-     * @param string $conversionMethod
+     * @param  string|int  $relationId
+     * @param  string  $conversionMethod
      * @return string|false
      */
     protected function convertGpxToGeometry($relationId, $conversionMethod)
@@ -217,8 +215,7 @@ class OsmService
     /**
      * Update a HikingRoute model with fresh OSM data
      *
-     * @param HikingRoute $model
-     * @param array|null $osmTags
+     * @param  array|null  $osmTags
      * @return HikingRoute|false
      */
     public function updateHikingRouteModelWithOsmData(HikingRoute $model, $osmTags = null)
@@ -238,7 +235,7 @@ class OsmService
             return false;
         }
 
-        list($osmTags, $osmGeo) = $osmData;
+        [$osmTags, $osmGeo] = $osmData;
 
         // Prepare osmfeatures_data
         $osmfeaturesData = $this->prepareOsmfeaturesData($model, $osmGeo, $osmTags);
@@ -263,8 +260,8 @@ class OsmService
     /**
      * Fetch OSM data (tags and geometry)
      *
-     * @param string|int $relationId
-     * @param array|null $osmTags
+     * @param  string|int  $relationId
+     * @param  array|null  $osmTags
      * @return array|false
      */
     protected function fetchOsmData($relationId, $osmTags = null)
@@ -294,9 +291,8 @@ class OsmService
     /**
      * Prepare osmfeatures_data array
      *
-     * @param HikingRoute $model
-     * @param string $osmGeo
-     * @param array $osmTags
+     * @param  string  $osmGeo
+     * @param  array  $osmTags
      * @return array|false
      */
     protected function prepareOsmfeaturesData(HikingRoute $model, $osmGeo, $osmTags)
@@ -332,7 +328,7 @@ class OsmService
     /**
      * Calculate OSM2CAI status based on tags
      *
-     * @param array $osmTags
+     * @param  array  $osmTags
      * @return int
      */
     protected function calculateOsm2caiStatus($osmTags)
@@ -354,10 +350,9 @@ class OsmService
     /**
      * Update model with OSM data
      *
-     * @param HikingRoute $model
-     * @param string $osmGeo
-     * @param array $osmfeaturesData
-     * @param int $calculated_status
+     * @param  string  $osmGeo
+     * @param  array  $osmfeaturesData
+     * @param  int  $calculated_status
      * @return bool
      */
     protected function updateModelWithOsmData(HikingRoute $model, $osmGeo, $osmfeaturesData, $calculated_status)
@@ -379,13 +374,12 @@ class OsmService
     /**
      * Update intersections for the model
      *
-     * @param HikingRoute $model
      * @return void
      */
     protected function updateIntersections(HikingRoute $model)
     {
         try {
-            $sectorsIntersecting = $model->getIntersections(new Sector());
+            $sectorsIntersecting = $model->getIntersections(new Sector);
             $model->sectors()->sync($sectorsIntersecting->pluck('id'));
         } catch (\Throwable $e) {
             Log::error("OsmService: Error syncing sectors for HikingRoute ID {$model->id}: ".$e->getMessage());

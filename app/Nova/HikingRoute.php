@@ -112,7 +112,6 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -182,7 +181,6 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -207,17 +205,16 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
     {
         $regionalReferentFilters = [
-            (new ProvinceFilter()),
-            (new AreaFilter()),
-            (new SectorFilter()),
-            (new DeletedOnOsmFilter()),
-            (new RegionFavoriteHikingRouteFilter()),
+            (new ProvinceFilter),
+            (new AreaFilter),
+            (new SectorFilter),
+            (new DeletedOnOsmFilter),
+            (new RegionFavoriteHikingRouteFilter),
         ];
 
         if (auth()->user()->hasRole('Regional Referent')) {
@@ -225,7 +222,7 @@ class HikingRoute extends OsmfeaturesResource
         }
 
         $parentFilters = parent::filters($request);
-        //remove App\Nova\Filters\ScoreFilter from $parentFilters array
+        // remove App\Nova\Filters\ScoreFilter from $parentFilters array
         foreach ($parentFilters as $key => $filter) {
             if ($filter instanceof ScoreFilter) {
                 unset($parentFilters[$key]);
@@ -251,24 +248,22 @@ class HikingRoute extends OsmfeaturesResource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
     {
         return [
-            (new HikingRoutesStatus0Lens()),
-            (new HikingRoutesStatus1Lens()),
-            (new HikingRoutesStatus2Lens()),
-            (new HikingRoutesStatus3Lens()),
-            (new HikingRoutesStatus4Lens()),
+            (new HikingRoutesStatus0Lens),
+            (new HikingRoutesStatus1Lens),
+            (new HikingRoutesStatus2Lens),
+            (new HikingRoutesStatus3Lens),
+            (new HikingRoutesStatus4Lens),
         ];
     }
 
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)
@@ -321,7 +316,7 @@ class HikingRoute extends OsmfeaturesResource
                         return true;
                     }
                 ),
-            (new DeleteHikingRouteAction())
+            (new DeleteHikingRouteAction)
                 ->confirmText(__('Are you sure you want to delete this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
@@ -333,7 +328,7 @@ class HikingRoute extends OsmfeaturesResource
                         return true;
                     }
                 ),
-            (new SectorRefactoring())
+            (new SectorRefactoring)
                 ->onlyOnDetail('true')
                 ->confirmText(__('Are you sure you want to refactor sectors for this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
                 ->confirmButtonText(__('Confirm'))
@@ -352,7 +347,7 @@ class HikingRoute extends OsmfeaturesResource
                 })->canRun(function ($request) {
                     return $request->user()->hasRole('Administrator');
                 }),
-            (new PercorsoFavoritoAction())
+            (new PercorsoFavoritoAction)
                 ->onlyOnDetail('true')
                 ->confirmText(__('Are you sure you want to update this route?'))
                 ->confirmButtonText(__('Confirm'))
@@ -365,7 +360,7 @@ class HikingRoute extends OsmfeaturesResource
                         return true;
                     }
                 ),
-            (new AddRegionFavoritePublicationDateToHikingRouteAction())
+            (new AddRegionFavoritePublicationDateToHikingRouteAction)
                 ->onlyOnDetail('true')
                 ->confirmText(__('Set expected publication date on Scarpone Online'))
                 ->confirmButtonText(__('Confirm'))
@@ -399,7 +394,7 @@ class HikingRoute extends OsmfeaturesResource
                 ->canSee(function ($request) {
                     $userRoles = auth()->user()->getRoleNames()->toArray();
 
-                    //can only see if admin, itinerary manager or national referent
+                    // can only see if admin, itinerary manager or national referent
                     return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
                 })
                 ->canRun(function ($request, $user) {
@@ -413,7 +408,7 @@ class HikingRoute extends OsmfeaturesResource
                 ->canSee(function ($request) {
                     $userRoles = auth()->user()->getRoleNames()->toArray();
 
-                    //can only see if admin, itinerary manager or national referent
+                    // can only see if admin, itinerary manager or national referent
                     return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
                 })
                 ->canRun(function ($request, $user) {
@@ -586,7 +581,7 @@ class HikingRoute extends OsmfeaturesResource
         ];
 
         return array_map(function ($label, $config) {
-            //if diff cai
+            // if diff cai
             if ($label == 'CAI Difficulty') {
                 return $this->createField($label, $config[0], $config[1], null, false, false);
             }
@@ -650,7 +645,7 @@ class HikingRoute extends OsmfeaturesResource
 
     private function getPOITabFields()
     {
-        $pois = $this->model()->getElementsInBuffer(new EcPoi(), 10000);
+        $pois = $this->model()->getElementsInBuffer(new EcPoi, 10000);
         $fields[] = Text::make('', function () use ($pois) {
             if (count($pois) < 1) {
                 return '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">'.__('No POIs found within 1km radius').'</h2>';

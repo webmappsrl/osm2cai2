@@ -6,8 +6,6 @@ class Osm2caiHelper
 {
     /**
      * Get the openstreetmap url by parsing the osmfeatures id
-     * @param string $id
-     * @return string
      */
     public static function getOpenstreetmapUrl(string $id): string
     {
@@ -25,8 +23,6 @@ class Osm2caiHelper
 
     /**
      * Get the openstreetmap url as html string
-     * @param string $id
-     * @return string
      */
     public static function getOpenstreetmapUrlAsHtml(string $id): string
     {
@@ -39,8 +35,6 @@ class Osm2caiHelper
 
     /**
      * Display the score as stars
-     * @param int $score
-     * @return string
      */
     public static function getScoreAsStars(?int $score): string
     {
@@ -58,7 +52,7 @@ class Osm2caiHelper
 
     /**
      * Get the osmfeatures data correctly formatted as array without the geometry
-     * @param string $data
+     *
      * @return array
      */
     public static function getOsmfeaturesDataForNovaDetail(string $data): string
@@ -91,9 +85,6 @@ class Osm2caiHelper
      * 0.4 < SAL <= 0.6 -> #74a9cf
      * 0.6 < SAL <= 0.8 -> #2b8cbe
      * 0.8 < SAL  -> #045a8d
-     *
-     * @param float $sal
-     * @return string
      */
     public static function getSalColor(float $sal): string
     {
@@ -119,9 +110,6 @@ class Osm2caiHelper
      * 2 B43E8F
      * 3 1E3888
      * 4 47AC34
-     *
-     * @param $sda
-     * @return string
      */
     public static function getSdaColor($sda): string
     {

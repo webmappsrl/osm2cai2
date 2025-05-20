@@ -4,37 +4,38 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        //relation areas to provinces
+        // relation areas to provinces
         Schema::table('areas', function (Blueprint $table) {
             $table->unsignedBigInteger('province_id')->nullable();
             $table->foreign('province_id')->references('id')->on('provinces');
         });
 
-        //relation cai_huts to regions
+        // relation cai_huts to regions
         Schema::table('cai_huts', function (Blueprint $table) {
             $table->unsignedBigInteger('region_id')->nullable();
             $table->foreign('region_id')->references('id')->on('regions');
         });
 
-        //relation ec_pois to regions
+        // relation ec_pois to regions
         Schema::table('ec_pois', function (Blueprint $table) {
             $table->unsignedBigInteger('region_id')->nullable();
             $table->foreign('region_id')->references('id')->on('regions');
         });
 
-        //relation clubs to regions
+        // relation clubs to regions
         Schema::table('clubs', function (Blueprint $table) {
             $table->unsignedBigInteger('region_id')->nullable();
             $table->foreign('region_id')->references('id')->on('regions');
         });
 
-        //create table itineraries
+        // create table itineraries
         Schema::create('itineraries', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
@@ -45,7 +46,7 @@ return new class extends Migration {
             $table->geography('geometry', 'MultiLineString', 4326)->nullable();
         });
 
-        //add tech fields to mountain_groups
+        // add tech fields to mountain_groups
         Schema::table('mountain_groups', function (Blueprint $table) {
             $table->integer('elevation_min')->nullable();
             $table->integer('elevation_max')->nullable();
@@ -57,41 +58,41 @@ return new class extends Migration {
             $table->integer('slope_stddev')->nullable();
         });
 
-        //add user_id for validator
+        // add user_id for validator
         Schema::table('hiking_routes', function (Blueprint $table) {
             $table->unsignedBigInteger('validator_id')->nullable();
             $table->foreign('validator_id')->references('id')->on('users');
         });
 
-        //relation hiking routes to itineraries
+        // relation hiking routes to itineraries
         Schema::create('hiking_route_itinerary', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hiking_route_id')->constrained('hiking_routes');
             $table->foreignId('itinerary_id')->constrained('itineraries');
         });
 
-        //relation hiking routes to provinces
+        // relation hiking routes to provinces
         Schema::create('hiking_route_province', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hiking_route_id')->constrained('hiking_routes');
             $table->foreignId('province_id')->constrained('provinces');
         });
 
-        //relation hiking routes to clubs
+        // relation hiking routes to clubs
         Schema::create('hiking_route_club', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hiking_route_id')->constrained('hiking_routes');
             $table->foreignId('club_id')->constrained('clubs');
         });
 
-        //relation hiking routes to regions
+        // relation hiking routes to regions
         Schema::create('hiking_route_region', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hiking_route_id')->constrained('hiking_routes');
             $table->foreignId('region_id')->constrained('regions');
         });
 
-        //relation hiking routes to sectors
+        // relation hiking routes to sectors
         Schema::create('hiking_route_sector', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hiking_route_id')->constrained('hiking_routes');
@@ -99,20 +100,20 @@ return new class extends Migration {
             $table->float('percentage')->nullable();
         });
 
-        //relation mountain groups to regions
+        // relation mountain groups to regions
         Schema::create('mountain_group_region', function (Blueprint $table) {
             $table->id();
             $table->foreignId('mountain_group_id')->constrained('mountain_groups');
             $table->foreignId('region_id')->constrained('regions');
         });
 
-        //relation province to regions
+        // relation province to regions
         Schema::table('provinces', function (Blueprint $table) {
             $table->unsignedBigInteger('region_id')->nullable();
             $table->foreign('region_id')->references('id')->on('regions');
         });
 
-        //relation area to sectors
+        // relation area to sectors
         Schema::table('sectors', function (Blueprint $table) {
             $table->unsignedBigInteger('area_id')->nullable();
             $table->foreign('area_id')->references('id')->on('areas');

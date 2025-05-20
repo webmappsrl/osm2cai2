@@ -3,19 +3,16 @@
 namespace App\Nova\Dashboards;
 
 use App\Helpers\Nova\DashboardCardsHelper;
-use App\Models\HikingRoute;
 use App\Models\User;
-use App\Nova\Metrics\IssueStatusPartition;
-use Illuminate\Support\Facades\Cache;
 use Laravel\Nova\Dashboard;
 
 class Percorribilità extends Dashboard
 {
     private $cardsService;
 
-    public function __construct(User $user = null)
+    public function __construct(?User $user = null)
     {
-        $this->cardsService = new DashboardCardsHelper();
+        $this->cardsService = new DashboardCardsHelper;
     }
 
     public function label()

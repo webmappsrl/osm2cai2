@@ -4,13 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        //remove nearby_cai_hut and nearby_natural_spring columns from hiking_routes table
+        // remove nearby_cai_hut and nearby_natural_spring columns from hiking_routes table
         Schema::table('hiking_routes', function (Blueprint $table) {
             $table->dropColumn('nearby_cai_huts');
             $table->dropColumn('nearby_natural_springs');
@@ -32,7 +33,7 @@ return new class extends Migration {
             $table->integer('buffer')->default(250);
         });
 
-        //add timestamps to hiking_route relationships tables
+        // add timestamps to hiking_route relationships tables
         if (! Schema::hasColumn('area_hiking_route', 'created_at')) {
             Schema::table('area_hiking_route', function (Blueprint $table) {
                 $table->timestamps();
@@ -76,7 +77,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        //add nearby_cai_hut and nearby_natural_spring columns to hiking_routes table
+        // add nearby_cai_hut and nearby_natural_spring columns to hiking_routes table
         Schema::table('hiking_routes', function (Blueprint $table) {
             $table->string('nearby_cai_huts')->nullable();
             $table->string('nearby_natural_springs')->nullable();

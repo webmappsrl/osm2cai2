@@ -27,9 +27,8 @@ trait AwsCacheable
     /**
      * Cache the provided data
      *
-     * @param mixed $data The data to cache
-     * @param string $disk The disk name
-     * @return void
+     * @param  mixed  $data  The data to cache
+     * @param  string  $disk  The disk name
      */
     public function cacheDataToAws($data, string $disk): void
     {
@@ -44,7 +43,7 @@ trait AwsCacheable
     /**
      * Retrieve cached data
      *
-     * @param string $disk The disk name
+     * @param  string  $disk  The disk name
      * @return array|null The cached data as array or null if not found
      */
     public function getCachedData(string $disk): ?array
@@ -60,7 +59,7 @@ trait AwsCacheable
     /**
      * Get the public URL for the cached data
      *
-     * @param string $disk The disk name
+     * @param  string  $disk  The disk name
      * @return string The public URL
      */
     public function getPublicAwsUrl(string $disk): string
@@ -74,8 +73,7 @@ trait AwsCacheable
     /**
      * Delete cached data
      *
-     * @param string $disk The disk name
-     * @return void
+     * @param  string  $disk  The disk name
      */
     public function deleteCache(string $disk): void
     {

@@ -2,16 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Database\Seeders\DatabaseSeeder;
-use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
 
 /**
  * This seeder is used to seed the database for the e2e tests.
@@ -25,12 +18,12 @@ class E2ETestDbSeeder extends Seeder
      */
     public function run(): void
     {
-        //if application is in production, do not run the seeder
+        // if application is in production, do not run the seeder
         if (App::environment('production')) {
             return;
         }
 
-        //wipe the database
+        // wipe the database
         Artisan::call('migrate:fresh');
 
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();

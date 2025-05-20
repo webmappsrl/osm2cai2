@@ -2,20 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\AreaResource;
-use App\Http\Resources\CaiHutResource;
-use App\Http\Resources\EcPoiResource;
 use App\Http\Resources\ExportResource;
-use App\Http\Resources\HikingRouteResource;
-use App\Http\Resources\ItineraryResource;
-use App\Http\Resources\MountainGroupResource;
-use App\Http\Resources\NaturalSpringResource;
-use App\Http\Resources\SectionResource;
-use App\Http\Resources\SectorResource;
-use App\Http\Resources\UgcMediaResource;
-use App\Http\Resources\UgcPoiResource;
-use App\Http\Resources\UgcTrackResource;
-use App\Http\Resources\UserResource;
 use App\Models\Area;
 use App\Models\CaiHut;
 use App\Models\CaiHuts;
@@ -32,7 +19,6 @@ use App\Models\UgcPoi;
 use App\Models\UgcTrack;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
 /**
@@ -55,9 +41,7 @@ class ExportController extends Controller
     /**
      * Return a single hiking route with its features.
      *
-     * @param int $id the id of the hiking route
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the hiking route
      */
     public function hikingRoutesSingleFeature(int $id): ExportResource
     {
@@ -87,9 +71,7 @@ class ExportController extends Controller
     /**
      * Return a single user with its features.
      *
-     * @param int $id the id of the user
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the user
      */
     public function UsersSingleFeature(int $id): ExportResource
     {
@@ -119,9 +101,7 @@ class ExportController extends Controller
     /**
      * Return a single UGC point of interest with its features.
      *
-     * @param int $id the id of the UGC poi
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the UGC poi
      */
     public function UgcPoisSingleFeature(int $id): ExportResource
     {
@@ -151,9 +131,7 @@ class ExportController extends Controller
     /**
      * Return a single UGC track with its features.
      *
-     * @param int $id the id of the UGC track
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the UGC track
      */
     public function UgcTracksSingleFeature(int $id): ExportResource
     {
@@ -183,9 +161,7 @@ class ExportController extends Controller
     /**
      * Return a single UGC media with its features.
      *
-     * @param int $id the id of the UGC media
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the UGC media
      */
     public function UgcMediasSingleFeature(int $id): ExportResource
     {
@@ -215,9 +191,7 @@ class ExportController extends Controller
     /**
      * Return a single area with its features.
      *
-     * @param int $id the id of the area
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the area
      */
     public function AreasSingleFeature(int $id): ExportResource
     {
@@ -247,9 +221,7 @@ class ExportController extends Controller
     /**
      * Return a single sector with its features.
      *
-     * @param int $id the id of the sector
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the sector
      */
     public function SectorsSingleFeature(int $id): ExportResource
     {
@@ -279,9 +251,7 @@ class ExportController extends Controller
     /**
      * Return a single section with its features.
      *
-     * @param int $id the id of the club
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the club
      */
     public function ClubsSingleFeature(int $id): ExportResource
     {
@@ -311,9 +281,7 @@ class ExportController extends Controller
     /**
      * Return a single mountain group with its features.
      *
-     * @param int $id the id of the mountain group
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the mountain group
      */
     public function MountainGroupsSingleFeature(int $id): ExportResource
     {
@@ -343,9 +311,7 @@ class ExportController extends Controller
     /**
      * Return a single natural spring with its features.
      *
-     * @param int $id the id of the natural spring
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the natural spring
      */
     public function NaturalSpringsSingleFeature(int $id): ExportResource
     {
@@ -375,9 +341,7 @@ class ExportController extends Controller
     /**
      * Return a single itinerary with its features.
      *
-     * @param int $id the id of the itinerary
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the itinerary
      */
     public function ItinerariesSingleFeature(int $id): ExportResource
     {
@@ -407,9 +371,7 @@ class ExportController extends Controller
     /**
      * Return a single Cai Hut with its features.
      *
-     * @param int $id the id of the Cai Hut
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the Cai Hut
      */
     public function HutsSingleFeature(int $id): ExportResource
     {
@@ -439,9 +401,7 @@ class ExportController extends Controller
     /**
      * Return a single EC POI with its features.
      *
-     * @param int $id the id of the EC POI
-     *
-     * @return ExportResource
+     * @param  int  $id  the id of the EC POI
      */
     public function EcPoisSingleFeature(int $id): ExportResource
     {
@@ -457,10 +417,6 @@ class ExportController extends Controller
 
     /**
      * Return a single EC POI with its features passing osmfeatures id
-     *
-     * @param string $osmfeaturesId
-     *
-     * @return ExportResource
      */
     public function ecPoisSingleFeatureByOsmfeaturesId(string $osmfeaturesId): ExportResource
     {

@@ -4,9 +4,6 @@ namespace App\Traits;
 
 use App\Helpers\Osm2caiHelper;
 use App\Models\Club;
-use App\Models\HikingRoute;
-use App\Models\Section;
-use App\Models\User;
 use Illuminate\Support\Collection;
 
 trait CsvableModelTrait

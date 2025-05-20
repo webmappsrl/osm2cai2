@@ -2,21 +2,15 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyHikingRoutesJob;
 use App\Jobs\CheckNearbyHutsJob;
-use App\Models\Club;
-use App\Models\MountainGroups;
-use App\Models\Region;
-use App\Models\User;
 use App\Traits\AwsCacheable;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
@@ -24,7 +18,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 
 class EcPoi extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, TagsMappingTrait, OsmfeaturesImportableTrait, SpatialDataTrait, AwsCacheable, OsmfeaturesGeometryUpdateTrait;
+    use AwsCacheable, HasFactory, OsmfeaturesGeometryUpdateTrait, OsmfeaturesImportableTrait, SpatialDataTrait, TagsMappingTrait;
 
     protected $fillable = [
         'name',
@@ -94,15 +88,15 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
             return;
         }
 
-        //check if geometry has changed
+        // check if geometry has changed
         $updateData = self::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
 
-        //check if name has changed
+        // check if name has changed
         if ($osmfeaturesData['properties']['name'] !== $model->name) {
             $updateData['name'] = $osmfeaturesData['properties']['name'];
         }
 
-        //check if score has changed
+        // check if score has changed
         if ($osmfeaturesData['properties']['score'] !== $model->score) {
             $updateData['score'] = $osmfeaturesData['properties']['score'];
         }

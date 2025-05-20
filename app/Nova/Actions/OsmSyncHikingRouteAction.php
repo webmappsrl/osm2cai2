@@ -2,7 +2,6 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\HikingRoute;
 use App\Services\OsmService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,8 +22,6 @@ class OsmSyncHikingRouteAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  ActionFields  $fields
-     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -47,11 +44,13 @@ class OsmSyncHikingRouteAction extends Action
 
             if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
                 $service->updateHikingRouteModelWithOsmData($model);
+
                 continue;
             }
             if ($user->hasRole('Regional Referent')) {
                 if ($model->regions->pluck('id')->contains($user->region->id)) {
                     $service->updateHikingRouteModelWithOsmData($model);
+
                     continue;
                 } else {
                     return Action::danger('You are not authorized to perform this action');
@@ -60,12 +59,15 @@ class OsmSyncHikingRouteAction extends Action
             if ($user->hasRole('Local Referent')) {
                 if (! $sectors->intersect($user->sectors)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
+
                     continue;
                 } elseif (! $areas->intersect($user->areas)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
+
                     continue;
                 } elseif (! $provinces->intersect($user->provinces)->isEmpty()) {
                     $service->updateHikingRouteModelWithOsmData($model);
+
                     continue;
                 } else {
                     return Action::danger('You are not authorized to perform this action');

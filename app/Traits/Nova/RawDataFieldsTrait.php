@@ -16,8 +16,8 @@ trait RawDataFieldsTrait
      *
      * This method returns a code field in JSON format including only the specified keys.
      *
-     * @param string $fieldName The name of the field.
-     * @param array $includeKeys The keys to include in the field.
+     * @param  string  $fieldName  The name of the field.
+     * @param  array  $includeKeys  The keys to include in the field.
      * @return Code
      */
     protected function getCodeField(string $fieldName, array $includeKeys = [])
@@ -46,9 +46,8 @@ trait RawDataFieldsTrait
      *
      * This method encodes the filtered JSON data based on the provided include keys.
      *
-     * @param $model
-     * @param array $includeKeys
-     * @param string $fieldName
+     * @param  array  $includeKeys
+     * @param  string  $fieldName
      * @return string
      */
     protected function encodeFilteredJsonData($model, $includeKeys, $fieldName)
@@ -68,7 +67,6 @@ trait RawDataFieldsTrait
      *
      * This method returns the raw data in JSON format, decoding the JSON string if necessary.
      *
-     * @param $model
      * @return array|null
      */
     protected function getJsonRawData($model, $fieldName)

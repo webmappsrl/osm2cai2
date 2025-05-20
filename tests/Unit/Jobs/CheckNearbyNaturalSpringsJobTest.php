@@ -14,7 +14,7 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function testHandlesHikingRouteWithGeometry(): void
+    public function test_handles_hiking_route_with_geometry(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -33,7 +33,7 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
         $this->assertTrue(DB::table('hiking_route_natural_spring')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testHandlesHikingRouteWithGeometryAndFindsNearbyNaturalSpring(): void
+    public function test_handles_hiking_route_with_geometry_and_finds_nearby_natural_spring(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -52,7 +52,7 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
         $this->assertTrue(DB::table('hiking_route_natural_spring')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testLogsWarningIfGeometryIsMissing(): void
+    public function test_logs_warning_if_geometry_is_missing(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -73,7 +73,7 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
         (new CheckNearbyNaturalSpringsJob($hikingRoute, $buffer))->handle();
     }
 
-    public function testNoNearbyNaturalSpringsFound(): void
+    public function test_no_nearby_natural_springs_found(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -87,7 +87,7 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
         $this->assertFalse(DB::table('hiking_route_natural_spring')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testZeroBufferFindsNoSprings(): void
+    public function test_zero_buffer_finds_no_springs(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -104,7 +104,7 @@ class CheckNearbyNaturalSpringsJobTest extends TestCase
         $this->assertFalse(DB::table('hiking_route_natural_spring')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testLogsWarningIfBufferIsNegative(): void
+    public function test_logs_warning_if_buffer_is_negative(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
