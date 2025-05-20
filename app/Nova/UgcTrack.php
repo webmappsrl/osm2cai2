@@ -2,25 +2,8 @@
 
 namespace App\Nova;
 
-use App\Nova\AbstractUgc;
-use App\Nova\Actions\DownloadFeatureCollection;
-use App\Nova\Actions\DownloadGeojsonZip;
-use App\Nova\Actions\DownloadGeojsonZipUgcTracks;
-use App\Nova\Filters\RelatedUGCFilter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\File;
-use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Textarea;
-use Webmapp\WmEmbedmapsField\WmEmbedmapsField;
-use Wm\MapMultiLinestring\MapMultiLinestring;
-use Wm\MapMultiLinestringNova\MapMultiLinestringNova;
-use Wm\MapMultiLinestringNova3\MapMultiLinestringNova3;
 use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
 use Wm\WmPackage\Nova\Actions\EditFields;
 
@@ -67,7 +50,6 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  Request  $request
      * @return array
      */
     public function fields(Request $request)
@@ -110,7 +92,6 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the cards available for the request.
      *
-     * @param  Request  $request
      * @return array
      */
     public function cards(Request $request)
@@ -121,7 +102,6 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the lenses available for the resource.
      *
-     * @param  Request  $request
      * @return array
      */
     public function lenses(Request $request)
@@ -132,7 +112,6 @@ class UgcTrack extends AbstractUgc
     /**
      * Get the actions available for the resource.
      *
-     * @param  Request  $request
      * @return array
      */
     public function actions(Request $request)

@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -62,20 +61,19 @@ class Club extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
     {
         $hikingRoutes = $this->hikingRoutes;
 
-        //define the hiking routes for each osm2cai status
+        // define the hiking routes for each osm2cai status
         $hikingRoutesSDA1 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 1);
         $hikingRoutesSDA2 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 2);
         $hikingRoutesSDA3 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 3);
         $hikingRoutesSDA4 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 4);
 
-        //define the hikingroutes for each issue status
+        // define the hikingroutes for each issue status
         $hikingRoutesSPS = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Unknown);
         $hikingRoutesSPP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Open);
         $hikingRouteSPPP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::PartiallyClosed);
@@ -84,7 +82,7 @@ class Club extends Resource
         return [
             ID::make()->sortable()
                 ->hideFromIndex(),
-            Text::make('Nome', 'name', )
+            Text::make('Nome', 'name')
                 ->sortable()
                 ->rules('required', 'max:255')
                 ->displayUsing(function ($name, $a, $b) {
@@ -152,7 +150,6 @@ class Club extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -197,7 +194,7 @@ class Club extends Resource
             $this->getSdaClubCard(4, $numbers[4], $request),
             (new ClubSalPercorribilità($hr))->onlyOnDetail()->width('1/4'),
             (new ClubSalPercorsi($hr))->onlyOnDetail()->width('1/4'),
-            (new HtmlCard())->width('1/4')
+            (new HtmlCard)->width('1/4')
                 ->view('nova.cards.club-total-hr-card', [
                     'total' => count($hr),
                 ])->center()
@@ -206,7 +203,7 @@ class Club extends Resource
         ];
 
         if (count($hr) > 0) {
-            $cards[] = (new HtmlCard())
+            $cards[] = (new HtmlCard)
                 ->width('1/4')
                 ->view('nova.cards.club-distance-card', [
                     'totalDistance' => $hr->sum(function ($item) {
@@ -234,7 +231,7 @@ class Club extends Resource
             $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->width('1/4')
             ->view('nova.cards.club-sda-card', [
                 'sda' => $sda,
@@ -250,12 +247,11 @@ class Club extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
     {
-        return [(new RegionFilter())->canSee(function ($request) {
+        return [(new RegionFilter)->canSee(function ($request) {
             return true;
         })];
     }
@@ -263,7 +259,6 @@ class Club extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -275,40 +270,39 @@ class Club extends Resource
      * Get the actions available for the resource.
      *
      * @param  NovaRequest  $request
-     * @return array
      */
     public function actions(Request $request): array
     {
         return [
-            (new FindClubHrAssociationAction())
+            (new FindClubHrAssociationAction)
                 ->canSee(function ($request) {
                     return $request->user()->hasRole('Administrator');
                 })
                 ->canRun(function ($request) {
                     return true;
                 }),
-            (new AssignClubManager())
+            (new AssignClubManager)
                 ->canSee(function ($request) {
                     return true;
                 })
                 ->canRun(function ($request) {
                     return true;
                 }),
-            (new AddMembersToClub())
+            (new AddMembersToClub)
                 ->canSee(function ($request) {
                     return true;
                 })
                 ->canRun(function ($request) {
                     return true;
                 }),
-            (new RemoveMembersFromClub())
+            (new RemoveMembersFromClub)
                 ->canSee(function ($request) {
                     return true;
                 })
                 ->canRun(function ($request) {
                     return true;
                 }),
-            (new DownloadGeojson())->canSee(function ($request) {
+            (new DownloadGeojson)->canSee(function ($request) {
                 return true;
             })->canRun(function ($request) {
                 return true;
@@ -339,9 +333,9 @@ class Club extends Resource
     /**
      * Format a list of users into an HTML string
      *
-     * @param \Illuminate\Database\Eloquent\Collection $users
-     * @param int|null $maxLength Maximum length of each name
-     * @param bool $showCount Whether to show the total count
+     * @param  \Illuminate\Database\Eloquent\Collection  $users
+     * @param  int|null  $maxLength  Maximum length of each name
+     * @param  bool  $showCount  Whether to show the total count
      * @return string
      */
     private function formatUserList($users, $maxLength = null, $showCount = false)

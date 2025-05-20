@@ -14,10 +14,10 @@ class CheckNearbyHutsJobTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function testHandlesHikingRouteWithGeometry(): void
+    public function test_handles_hiking_route_with_geometry(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
-            'id' => 999999999, //setting id for passing tests in local with populated database
+            'id' => 999999999, // setting id for passing tests in local with populated database
             'geometry' => 'SRID=4326;LINESTRING(0 0, 1 1)',
         ]);
 
@@ -31,11 +31,11 @@ class CheckNearbyHutsJobTest extends TestCase
 
         (new CheckNearbyHutsJob($hikingRoute, $buffer))->handle();
 
-        //ensure that the relation exists
+        // ensure that the relation exists
         $this->assertTrue(DB::table('hiking_route_cai_hut')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testHandlesHikingRouteWithGeometryAndFindsNearbyCaiHut(): void
+    public function test_handles_hiking_route_with_geometry_and_finds_nearby_cai_hut(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -55,7 +55,7 @@ class CheckNearbyHutsJobTest extends TestCase
         $this->assertTrue(DB::table('hiking_route_cai_hut')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testLogsWarningIfGeometryIsMissing(): void
+    public function test_logs_warning_if_geometry_is_missing(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -76,7 +76,7 @@ class CheckNearbyHutsJobTest extends TestCase
         (new CheckNearbyHutsJob($hikingRoute, $buffer))->handle();
     }
 
-    public function testNoNearbyCaiHutsFound(): void
+    public function test_no_nearby_cai_huts_found(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -90,7 +90,7 @@ class CheckNearbyHutsJobTest extends TestCase
         $this->assertFalse(DB::table('hiking_route_cai_hut')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testZeroBufferFindsNoHuts(): void
+    public function test_zero_buffer_finds_no_huts(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,
@@ -108,7 +108,7 @@ class CheckNearbyHutsJobTest extends TestCase
         $this->assertFalse(DB::table('hiking_route_cai_hut')->where('hiking_route_id', $hikingRoute->id)->exists());
     }
 
-    public function testLogsWarningIfBufferIsNegative(): void
+    public function test_logs_warning_if_buffer_is_negative(): void
     {
         $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 999999999,

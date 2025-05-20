@@ -3,7 +3,6 @@
 namespace App\Nova\Dashboards;
 
 use App\Helpers\Nova\DashboardCardsHelper;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Dashboard;
 
 class AcquaSorgente extends Dashboard
@@ -12,7 +11,7 @@ class AcquaSorgente extends Dashboard
 
     public function __construct()
     {
-        $this->cardsService = new DashboardCardsHelper();
+        $this->cardsService = new DashboardCardsHelper;
     }
 
     public function label()

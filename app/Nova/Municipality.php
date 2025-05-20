@@ -2,17 +2,9 @@
 
 namespace App\Nova;
 
-use App\Helpers\Osm2caiHelper;
 use App\Nova\Filters\ScoreFilter;
-use App\Nova\OsmfeaturesResource;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Panel;
-use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class Municipality extends OsmfeaturesResource
 {
@@ -43,7 +35,6 @@ class Municipality extends OsmfeaturesResource
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -54,7 +45,6 @@ class Municipality extends OsmfeaturesResource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -72,7 +62,6 @@ class Municipality extends OsmfeaturesResource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -83,7 +72,6 @@ class Municipality extends OsmfeaturesResource
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)

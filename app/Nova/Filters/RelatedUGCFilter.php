@@ -13,7 +13,6 @@ class RelatedUGCFilter extends BooleanFilter
     /**
      * Apply the filter to the given query.
      *
-     * @param  Request  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -30,16 +29,15 @@ class RelatedUGCFilter extends BooleanFilter
     /**
      * Get the filter's available options.
      *
-     * @param  Request  $request
      * @return array
      */
     public function options(Request $request)
     {
-        //get the url from the request
+        // get the url from the request
         $url = $request->url();
-        //trim the url to get only the path
+        // trim the url to get only the path
         $url = explode('?', $url)[0];
-        //get the last part of the url
+        // get the last part of the url
         $model = explode('/', $url)[count(explode('/', $url)) - 2];
 
         return [

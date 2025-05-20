@@ -4,7 +4,6 @@ namespace App\Nova;
 
 use App\Models\Region;
 use App\Models\User as UserModel;
-use App\Nova\Club;
 use App\Nova\Filters\AreaFilter;
 use App\Nova\Filters\ProvinceFilter;
 use App\Nova\Filters\RegionFilter;
@@ -43,12 +42,12 @@ class User extends AbstractUserResource
          */
         $user = auth()->user();
 
-        //if user is administrator or national referent
+        // if user is administrator or national referent
         if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
             return $query;
         }
 
-        //if user is regional referent
+        // if user is regional referent
         if ($user->getTerritorialRole() == 'regional') {
             $regionId = $user->region_id;
 
@@ -97,7 +96,7 @@ class User extends AbstractUserResource
 
             $query->whereIn('id', $allUsers);
         }
-        //if user is section manager
+        // if user is section manager
         elseif ($user->managedClub) {
             $clubId = $user->managedClub->id;
 
@@ -118,7 +117,6 @@ class User extends AbstractUserResource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -176,7 +174,6 @@ class User extends AbstractUserResource
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -187,7 +184,6 @@ class User extends AbstractUserResource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -204,7 +200,6 @@ class User extends AbstractUserResource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -215,7 +210,6 @@ class User extends AbstractUserResource
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)

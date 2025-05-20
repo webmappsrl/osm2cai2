@@ -17,7 +17,6 @@ class EcPoisTypePartition extends Partition
     /**
      * Calculate the value of the metric.
      *
-     * @param  NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request): PartitionResult
@@ -39,7 +38,7 @@ class EcPoisTypePartition extends Partition
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return \DateTimeInterface|\DateInterval|float|int
      */
     public function cacheFor()
     {
@@ -59,7 +58,6 @@ class EcPoisTypePartition extends Partition
     /**
      * Get the appropriate cache key for the metric.
      *
-     * @param  NovaRequest  $request
      * @return string
      */
     public function getCacheKey(NovaRequest $request)

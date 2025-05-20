@@ -57,7 +57,7 @@ class CasLoginController extends Controller
         $casUser = CasUser::where($casUserFill);
         if ($casUser->exists()) { // yes, get it
             $casUser = $casUser->first();
-            //get the User
+            // get the User
             $user = $casUser->user;
         } // yes, get it
         else { // no, create a new CasUser and maybe an User
@@ -66,19 +66,19 @@ class CasLoginController extends Controller
              */
             $userQuery = User::where('email', $userEmail);
             $userExists = $userQuery->exists();
-            if ($userExists) { //yes, get it
+            if ($userExists) { // yes, get it
                 $user = $userQuery->first();
-            } else { //no, create a new User
+            } else { // no, create a new User
                 $newUserFill = [
                     'email' => $userEmail,
                     'name' => $userAttributes['firstname'].' '.$userAttributes['lastname'],
                     'email_verified_at' => now(),
-                    'password' => Hash::make(Str::random(100)), //generate a random password with 100 characters
+                    'password' => Hash::make(Str::random(100)), // generate a random password with 100 characters
                 ];
                 $user = User::firstOrCreate($newUserFill);
             }
 
-            //create a new CasUser
+            // create a new CasUser
             $casUserFill = array_merge($casUserFill, [
                 'user_uuid' => $userAttributes['userUuid'],
                 'cas_id' => $userAttributes['id'],
@@ -86,18 +86,18 @@ class CasLoginController extends Controller
                 'lastname' => $userAttributes['lastname'],
             ]);
             $casUser = new CasUser($casUserFill);
-            //associate User to CasUser (belongsTo)
+            // associate User to CasUser (belongsTo)
             $casUser->user()->associate($user);
         } // no, create a new one
 
-        //update CasUser roles on each login
+        // update CasUser roles on each login
         $casUser->roles = $userAttributes['roles'];
         $casUser->save();
 
-        //inject User on current session, login it
+        // inject User on current session, login it
         $this->guard()->login($user);
 
-        //go to nova dashboard
+        // go to nova dashboard
         return redirect()->intended(Nova::path());
     }
 

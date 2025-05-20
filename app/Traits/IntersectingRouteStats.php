@@ -2,9 +2,6 @@
 
 namespace App\Traits;
 
-use App\Models\HikingRoute;
-use Illuminate\Support\Facades\DB;
-
 trait IntersectingRouteStats
 {
     public function getRouteStats()

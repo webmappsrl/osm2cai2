@@ -18,7 +18,6 @@ class ValidatedFilter extends Filter
     /**
      * Apply the filter to the given query.
      *
-     * @param  Request  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  mixed  $value
      * @return \Illuminate\Database\Eloquent\Builder
@@ -31,7 +30,6 @@ class ValidatedFilter extends Filter
     /**
      * Get the filter's available options.
      *
-     * @param  Request  $request
      * @return array
      */
     public function options(Request $request)

@@ -9,7 +9,6 @@ use App\Models\Region;
 use App\Models\Sector;
 use App\Models\User;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -235,6 +234,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     } catch (\Exception $e) {
                         $this->error('Error importing user: '.$legacyUser->email);
                         $this->error($e->getMessage());
+
                         continue;
                     }
                 }

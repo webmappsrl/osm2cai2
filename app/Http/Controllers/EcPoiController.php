@@ -15,25 +15,32 @@ class EcPoiController extends Controller
      *     tags={"Api V2"},
      *     summary="Get Ec POIs by Bounding Box and Type",
      *     description="Returns a list of Eco POIs within the specified bounding box and of the specified type",
+     *
      *     @OA\Parameter(
      *         name="bounding_box",
      *         in="path",
      *         required=true,
      *         description="Bounding box in 'minLng,minLat,maxLng,maxLat' format",
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="type",
      *         in="path",
      *         required=true,
      *         description="Type of the POIs to retrieve: R for relation, W for way, N for node",
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\AdditionalProperties(
      *                 type="string",
      *                 format="date-time"
@@ -67,25 +74,32 @@ class EcPoiController extends Controller
      *     tags={"Api V2"},
      *     summary="Get EcPOIs in a 1km buffer from the HikingRoutes defined by ID",
      *     description="Returns a list of Ec POIs around 1km from a specific OSM2CAI hiking route ID and of a specified type",
+     *
      *     @OA\Parameter(
      *         name="hr_osm2cai_id",
      *         in="path",
      *         required=true,
      *         description="OSM2CAI ID of the hiking route",
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="type",
      *         in="path",
      *         required=true,
      *         description="Type of the POIs to retrieve",
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\AdditionalProperties(
      *                 type="string",
      *                 format="date-time"
@@ -110,25 +124,32 @@ class EcPoiController extends Controller
      *     tags={"Api V2"},
      *     summary="Get EcPOIs in a 1km buffer from the HikingRoutes defined by OSM ID",
      *     description="Returns a list of Ec POIs around 1km from a specific OSM hiking route ID and of a specified type",
+     *
      *     @OA\Parameter(
      *         name="hr_osm_id",
      *         in="path",
      *         required=true,
      *         description="OSM ID of the hiking route",
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="type",
      *         in="path",
      *         required=true,
      *         description="Type of the POIs to retrieve",
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\AdditionalProperties(
      *                 type="string",
      *                 format="date-time"

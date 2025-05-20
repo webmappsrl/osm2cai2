@@ -2,8 +2,6 @@
 
 namespace App\Traits;
 
-use Illuminate\Support\Facades\DB;
-
 trait SallableTrait
 {
     public function getSal()

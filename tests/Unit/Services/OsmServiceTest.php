@@ -81,7 +81,7 @@ class OsmServiceTest extends TestCase
             });
         }
 
-        $this->osmService = new OsmService();
+        $this->osmService = new OsmService;
         Http::fake([
             'https://www.openstreetmap.org/api/0.6/relation/1' => Http::response(self::OSM_RELATION_RESPONSE, 200),
 
@@ -114,14 +114,14 @@ class OsmServiceTest extends TestCase
     }
 
     /** @test */
-    public function hikingRouteExistsReturnsTrueIfRelationIdIsValid()
+    public function hiking_route_exists_returns_true_if_relation_id_is_valid()
     {
         $this->assertTrue($this->osmService->hikingRouteExists(1));
         $this->assertFalse($this->osmService->hikingRouteExists(999));
     }
 
     /** @test */
-    public function getHikingRouteWorksAsExpected()
+    public function get_hiking_route_works_as_expected()
     {
         $hikingRoute = $this->osmService->getHikingRoute(1);
         $this->assertEquals(self::HIKING_ROUTE_EXPECTED_DATA['name'], $hikingRoute['name']);
@@ -132,42 +132,42 @@ class OsmServiceTest extends TestCase
     }
 
     /** @test */
-    public function getHikingRouteReturnsFalseIfRelationIdIsNotValid()
+    public function get_hiking_route_returns_false_if_relation_id_is_not_valid()
     {
         $hikingRoute = $this->osmService->getHikingRoute(999);
         $this->assertFalse($hikingRoute);
     }
 
     /** @test */
-    public function getHikingRouteGeojsonWorksAsExpected()
+    public function get_hiking_route_geojson_works_as_expected()
     {
         $geojson = $this->osmService->getHikingRouteGeojson(1);
         $this->assertEquals(self::HIKING_ROUTE_EXPECTED_GEOJSON, $geojson);
     }
 
     /** @test */
-    public function getHikingRouteGeojsonReturnsFalseIfRelationIdIsNotValid()
+    public function get_hiking_route_geojson_returns_false_if_relation_id_is_not_valid()
     {
         $geojson = $this->osmService->getHikingRouteGeojson(999);
         $this->assertFalse($geojson);
     }
 
     /** @test */
-    public function getHikingRouteGpxWorksAsExpected()
+    public function get_hiking_route_gpx_works_as_expected()
     {
         $gpx = $this->osmService->getHikingRouteGpx(1);
         $this->assertEquals(self::HIKING_ROUTE_EXPECTED_GPX, $gpx);
     }
 
     /** @test */
-    public function getHikingRouteGeometryWorksAsExpected()
+    public function get_hiking_route_geometry_works_as_expected()
     {
         $geometry = $this->osmService->getHikingRouteGeometry(1);
         $this->assertEquals(self::HIKING_ROUTE_EXPECTED_GEOMETRY, $geometry);
     }
 
     /** @test */
-    public function getHikingRouteGeometryReturnsFalseIfRelationIdIsNotValid()
+    public function get_hiking_route_geometry_returns_false_if_relation_id_is_not_valid()
     {
         $geometryFalse = $this->osmService->getHikingRouteGeometry(999);
         $geometryEmpty = $this->osmService->getHikingRouteGeometry('');
@@ -176,14 +176,14 @@ class OsmServiceTest extends TestCase
     }
 
     /** @test */
-    public function getHikingRouteGeometry3857WorksAsExpected()
+    public function get_hiking_route_geometry3857_works_as_expected()
     {
         $geometry = $this->osmService->getHikingRouteGeometry3857(1);
         $this->assertEquals(self::HIKING_ROUTE_EXPECTED_GEOMETRY_3857, $geometry);
     }
 
     /** @test */
-    public function getHikingRouteGeometry3857ReturnsFalseIfRelationIdIsNotValidOrEmpty()
+    public function get_hiking_route_geometry3857_returns_false_if_relation_id_is_not_valid_or_empty()
     {
         $geometryFalse = $this->osmService->getHikingRouteGeometry3857(999);
         $geometryEmpty = $this->osmService->getHikingRouteGeometry3857('');
@@ -192,14 +192,14 @@ class OsmServiceTest extends TestCase
     }
 
     /** @test */
-    public function getHikingRouteGpxReturnsFalseIfRelationIdIsNotValid()
+    public function get_hiking_route_gpx_returns_false_if_relation_id_is_not_valid()
     {
         $gpx = $this->osmService->getHikingRouteGpx(999);
         $this->assertFalse($gpx);
     }
 
     /** @test */
-    public function updateHikingRouteModelWithOsmDataWorksAsExpected()
+    public function update_hiking_route_model_with_osm_data_works_as_expected()
     {
         HikingRoute::withoutEvents(function () {
             $firstHikingRoute = HikingRoute::factory()->create(
@@ -235,8 +235,8 @@ class OsmServiceTest extends TestCase
             'id' => $hikingRoute->id,
             'osmfeatures_data->geometry->type' => 'MultiLineString',
             'osmfeatures_data->properties->osm_tags->osm_id' => 1,
-            'osmfeatures_data->properties->osm_tags->name'   => self::HIKING_ROUTE_EXPECTED_DATA['name'],
-            'osmfeatures_data->properties->osm_tags->ref'    => self::HIKING_ROUTE_EXPECTED_DATA['ref'],
+            'osmfeatures_data->properties->osm_tags->name' => self::HIKING_ROUTE_EXPECTED_DATA['name'],
+            'osmfeatures_data->properties->osm_tags->ref' => self::HIKING_ROUTE_EXPECTED_DATA['ref'],
             'osmfeatures_data->properties->osm_tags->network' => self::HIKING_ROUTE_EXPECTED_DATA['network'],
             'osmfeatures_data->properties->osm_tags->distance' => self::HIKING_ROUTE_EXPECTED_DATA['distance'],
         ]);

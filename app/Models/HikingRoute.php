@@ -2,22 +2,12 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
 use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyEcPoisJob;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Jobs\CheckNearbyNaturalSpringsJob;
 use App\Jobs\ComputeTdhJob;
 use App\Jobs\SyncClubHikingRouteRelationJob;
-use App\Models\Area;
-use App\Models\CaiHut;
-use App\Models\EcPoi;
-use App\Models\Itinerary;
-use App\Models\NaturalSpring;
-use App\Models\Province;
-use App\Models\Region;
-use App\Models\Sector;
-use App\Models\User;
 use App\Services\HikingRouteDescriptionService;
 use App\Traits\AwsCacheable;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
@@ -25,7 +15,6 @@ use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -35,15 +24,15 @@ use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
-class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedia
+class HikingRoute extends Model implements HasMedia, OsmfeaturesSyncableInterface
 {
-    use HasFactory;
-    use OsmfeaturesSyncableTrait;
-    use TagsMappingTrait;
-    use OsmfeaturesGeometryUpdateTrait;
-    use SpatialDataTrait;
     use AwsCacheable;
+    use HasFactory;
     use InteractsWithMedia;
+    use OsmfeaturesGeometryUpdateTrait;
+    use OsmfeaturesSyncableTrait;
+    use SpatialDataTrait;
+    use TagsMappingTrait;
 
     protected $fillable = [
         'geometry',
@@ -104,12 +93,16 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
                 ComputeTdhJob::dispatch($hikingRoute->id);
             }
         });
+
+        static::deleting(function ($hikingRoute) {
+
+            $hikingRoute->cleanRelations();
+            $hikingRoute->clearMediaCollection('feature_image');
+        });
     }
 
     /**
      * Register media collections
-     *
-     * @return void
      */
     public function registerMediaCollections(): void
     {
@@ -120,8 +113,6 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
 
     /**
      * Getter for the ref field
-     *
-     * @return string
      */
     public function getRefReiAttribute(): string
     {
@@ -129,14 +120,12 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
             return $this->osmfeatures_data['properties']['ref_REI'];
         }
 
-        //else compute it
+        // else compute it
         return $this->getRefReiCompAttribute();
     }
 
     /**
      * Getter for the distance_comp field in km
-     *
-     * @return float|null
      */
     public function getDistanceCompAttribute(): ?float
     {
@@ -186,7 +175,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
      */
     public static function getOsmfeaturesListQueryParameters(): array
     {
-        return ['status' => 1]; //get only hiking routes with osm2cai status greater than 0 (current values in osmfeatures: 1,2,3)
+        return ['status' => 1]; // get only hiking routes with osm2cai status greater than 0 (current values in osmfeatures: 1,2,3)
     }
 
     /**
@@ -205,6 +194,17 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
             Log::channel('wm-osmfeatures')->info('No data found for HikingRoute '.$osmfeaturesId);
 
             return;
+        }
+
+        // Check if the osm2cai_status from osmfeatures is 0
+        if (isset($osmfeaturesData['properties']['osm2cai_status'])) {
+            $incomingStatus = $osmfeaturesData['properties']['osm2cai_status'];
+            if ($incomingStatus == 0) {
+                Log::channel('wm-osmfeatures')->info('HikingRoute '.$osmfeaturesId.' has incoming osm2cai_status 0. Deleting model.');
+                $model->delete(); // This will trigger the 'deleting' event
+
+                return; // Stop further processing for this model
+            }
         }
 
         // Update the geometry if necessary
@@ -326,6 +326,25 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
         return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi')->withPivot(['buffer']);
     }
 
+    public function mountainGroups()
+    {
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_hiking_route', 'hiking_route_id', 'mountain_group_id');
+    }
+
+    public function cleanRelations()
+    {
+        $this->regions()->detach();
+        $this->provinces()->detach();
+        $this->clubs()->detach();
+        $this->areas()->detach();
+        $this->sectors()->detach();
+        $this->itineraries()->detach();
+        $this->nearbyCaiHuts()->detach();
+        $this->nearbyNaturalSprings()->detach();
+        $this->nearbyEcPois()->detach();
+        $this->mountainGroups()->detach();
+    }
+
     /**
      * Check if the hiking route has been validated
      *
@@ -368,7 +387,7 @@ class HikingRoute extends Model implements OsmfeaturesSyncableInterface, HasMedi
      * Looks up a hiking route using the OSM ID stored in the osmfeatures_data properties.
      * Returns the first matching route or null if not found.
      *
-     * @param string $osmId The OpenStreetMap ID to search for
+     * @param  string  $osmId  The OpenStreetMap ID to search for
      * @return HikingRoute|null The matching hiking route if found, null otherwise
      */
     public static function getHikingRouteByOsmId(string $osmId): ?self
@@ -590,11 +609,11 @@ SQL;
         ];
 
         $data = $this->getEmptyGeojson();
-        $data['properties']['id'] = $this->id; //dem api is expecting id in properties
+        $data['properties']['id'] = $this->id; // dem api is expecting id in properties
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
         ])->post(
-            'https://dem.maphub.it/api/v1/track', //TODO: Move to configuration
+            'https://dem.maphub.it/api/v1/track', // TODO: Move to configuration
             $data
         );
 
@@ -623,7 +642,7 @@ SQL;
      */
     public function getCaiScaleString(): array
     {
-        //if cai_scale is not set or is null, return an empty array
+        // if cai_scale is not set or is null, return an empty array
         if (! isset($this->osmfeatures_data['properties']['cai_scale']) || is_null($this->osmfeatures_data['properties']['cai_scale'])) {
             return [];
         }
@@ -683,7 +702,7 @@ SQL;
      */
     public function getCaiScaleDescription(): array
     {
-        //if cai_scale is not set or is null, return an empty array
+        // if cai_scale is not set or is null, return an empty array
         if (! isset($this->osmfeatures_data['properties']['cai_scale']) || is_null($this->osmfeatures_data['properties']['cai_scale'])) {
             return [];
         }
@@ -702,9 +721,9 @@ SQL;
      * - Whether it's a loop trail or point-to-point
      * - General recommendations
      *
-     * @param array $from Starting point info from getFromInfo()
-     * @param array $to Ending point info from getToInfo()
-     * @param array $tech Technical data from getTechInfoFromDem()
+     * @param  array  $from  Starting point info from getFromInfo()
+     * @param  array  $to  Ending point info from getToInfo()
+     * @param  array  $tech  Technical data from getTechInfoFromDem()
      * @return array Associative array of localized abstracts keyed by language code
      */
     public function getAbstract(array $from, array $to, array $tech): array
@@ -722,8 +741,6 @@ SQL;
     /**
      * It returns a valid name for TDH export, even if the field name ha no value
      * The name is not translated (it,en,es,de,fr,pt)
-     *
-     * @return array
      */
     public function getNameForTDH(): array
     {
@@ -763,9 +780,6 @@ SQL;
 
     /**
      * Dispatch jobs for geometric computations
-     *
-     * @param string $queue
-     * @return void
      */
     public function dispatchGeometricComputationsJobs(string $queue = 'geometric-computations'): void
     {
@@ -786,12 +800,23 @@ SQL;
 
     /**
      * Compute the ref_REI attribute based on main sector for the route
-     *
-     * @return string
      */
     public function getRefReiCompAttribute(): string
     {
-        $mainSector = $this->mainSector();
+        // Ensure the 'sectors' relation is loaded to prevent N+1 queries.
+        // Eager loading should be handled by the caller (e.g., Nova indexQuery).
+        if (! $this->relationLoaded('sectors')) {
+            // This is a fallback and ideally should not be reached
+            // in performance-critical contexts like Nova's index view.
+            // If reached, it means 'sectors' was not eager loaded.
+            $this->load('sectors');
+        }
+
+        // Sort the loaded sectors collection by 'percentage' in the pivot table.
+        $mainSector = $this->sectors->sortByDesc(function ($sector) {
+            return $sector->pivot->percentage ?? 0; // Handles case where pivot or percentage might be null
+        })->first();
+
         $ref = $this->osmfeatures_data['properties']['ref'] ?? '';
 
         if (! $mainSector || empty($ref)) {

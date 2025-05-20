@@ -32,6 +32,7 @@ class SyncClubsRegionIdCommand extends Command
 
                 if (! $currentClub) {
                     $errors[] = "Club not found with name: {$legacySection->name}";
+
                     continue;
                 }
 
@@ -42,6 +43,7 @@ class SyncClubsRegionIdCommand extends Command
 
                 if (! $legacyRegion) {
                     $errors[] = "Legacy region not found with ID: {$legacySection->region_id}";
+
                     continue;
                 }
 
@@ -50,6 +52,7 @@ class SyncClubsRegionIdCommand extends Command
 
                 if (! $currentRegion) {
                     $errors[] = "Current region not found with code: {$legacyRegion->code}";
+
                     continue;
                 }
 

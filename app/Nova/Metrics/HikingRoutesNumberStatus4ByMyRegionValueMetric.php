@@ -13,7 +13,6 @@ class HikingRoutesNumberStatus4ByMyRegionValueMetric extends Value
     /**
      * Calculate the value of the metric.
      *
-     * @param NovaRequest $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
@@ -35,7 +34,7 @@ class HikingRoutesNumberStatus4ByMyRegionValueMetric extends Value
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return \DateTimeInterface|\DateInterval|float|int
      */
     public function cacheFor()
     {

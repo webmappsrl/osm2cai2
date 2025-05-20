@@ -9,24 +9,22 @@ class CsvController extends Controller
 {
     /**
      * Allowed model types for CSV generation.
-     *
-     * @var array
      */
     private array $allowedModels = [
         'region' => \App\Models\Region::class,
         'sector' => \App\Models\Sector::class,
         'area' => \App\Models\Area::class,
         'province' => \App\Models\Province::class,
-        'section' => \App\Models\Section::class,
+        'club' => \App\Models\Club::class,
         'users' => \App\Models\User::class,
     ];
 
     /**
      * Generate and download a CSV file for a specific model.
      *
-     * @param Request $request
-     * @param string $modelType The type of the model
-     * @param int $id The ID of the model
+     * @param  Request  $request
+     * @param  string  $modelType  The type of the model
+     * @param  int  $id  The ID of the model
      * @return \Illuminate\Http\Response
      */
     public function download(string $modelType, int $id)

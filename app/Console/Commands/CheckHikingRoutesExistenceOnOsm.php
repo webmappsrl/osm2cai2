@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Jobs\CheckHikingRouteExistenceOnOSM;
 use App\Models\HikingRoute;
-use App\Services\OsmService;
 use Illuminate\Console\Command;
 
 class CheckHikingRoutesExistenceOnOsm extends Command

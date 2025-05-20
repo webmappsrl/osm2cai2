@@ -26,18 +26,17 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
     {
         $geometryField = null;
         $model = $this->model();
-        //get the table name for the model
+        // get the table name for the model
         $tableName = $model->getTable();
-        //get the geometry type of the model class
+        // get the geometry type of the model class
         $geometryType = GeometryService::getGeometryType($tableName, 'geometry');
-        //if geometry type is point return MapPoint::make, if is multipolygon return MapMultiPolygon if is multilinestring return MapMultiLineString
+        // if geometry type is point return MapPoint::make, if is multipolygon return MapMultiPolygon if is multilinestring return MapMultiLineString
         switch ($geometryType) {
             case 'Point':
                 $geometryField = MapPoint::make('geometry')->withMeta([
@@ -86,7 +85,7 @@ abstract class OsmfeaturesResource extends Resource
                 ->json()
                 ->language('php')
                 ->resolveUsing(function ($value) {
-                    return  Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
+                    return Osm2caiHelper::getOsmfeaturesDataForNovaDetail($value);
                 }),
         ];
 
@@ -100,7 +99,6 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -119,7 +117,6 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -130,7 +127,6 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -141,7 +137,6 @@ abstract class OsmfeaturesResource extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)

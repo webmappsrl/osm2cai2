@@ -2,11 +2,6 @@
 
 namespace App\Models;
 
-use App\Jobs\CacheMiturAbruzzoDataJob;
-use App\Models\HikingRoute;
-use App\Models\MountainGroups;
-use App\Models\Region;
-use App\Models\User;
 use App\Traits\AwsCacheable;
 use App\Traits\CsvableModelTrait;
 use App\Traits\SpatialDataTrait;
@@ -15,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Club extends Model
 {
-    use HasFactory, CsvableModelTrait, SpatialDataTrait, AwsCacheable;
+    use AwsCacheable, CsvableModelTrait, HasFactory, SpatialDataTrait;
 
     protected $table = 'clubs';
 

@@ -13,13 +13,11 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ImportElementFromOsm2caiJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $data;
 
@@ -148,7 +146,7 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
         $intersect = array_intersect_key($data, array_flip($columnsToImport));
 
         foreach ($intersect as $key => $value) {
-            //associate region matching the code column in legacy database
+            // associate region matching the code column in legacy database
             if ($key === 'region_id') {
                 $legacyRegion = $legacyDbConnection->table('regions')->find($value);
                 $region = Region::where('code', $legacyRegion->code)->first();
@@ -239,9 +237,9 @@ class ImportElementFromOsm2caiJob implements ShouldQueue
 
         foreach ($intersect as $key => $value) {
             if ($key === 'province_id') {
-                //get the code from province table in legacy osm2cai
+                // get the code from province table in legacy osm2cai
                 $provinceCode = $legacyProvince->code;
-                //search for the corresponding province in the province table
+                // search for the corresponding province in the province table
                 $province = Province::where('osmfeatures_data->properties->osm_tags->short_name', $provinceCode)
                     ->orWhere('osmfeatures_data->properties->osm_tags->ref', $provinceCode)
                     ->first();

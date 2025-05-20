@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         // Ensure roles exist before assigning them
         Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
 
-        //create admin user
+        // create admin user
         $admin = User::where('email', 'team@webmapp.it')->first();
         $nationalReferent = User::where('email', 'referenteNazionale@webmapp.it')->first();
 

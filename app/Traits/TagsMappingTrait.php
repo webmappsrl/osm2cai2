@@ -6,14 +6,13 @@ trait TagsMappingTrait
 {
     /**
      * Returns a string with the tags mapping of the specified model
-     * @return string
      */
     public function getTagsMapping(): string
     {
         $mapping = config('osm2cai.osmTagsMapping');
         $result = '';
 
-        //if the table has not the tags column search in the osmfeatures_data column for the tags
+        // if the table has not the tags column search in the osmfeatures_data column for the tags
         $tags = match (true) {
             ! $this->tags && ! $this->osmfeatures_data => [],
             ! $this->tags && $this->osmfeatures_data => is_string($this->osmfeatures_data)

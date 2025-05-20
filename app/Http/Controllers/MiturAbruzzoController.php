@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\CaiHut;
 use App\Models\Club;
 use App\Models\EcPoi;
@@ -21,13 +20,17 @@ class MiturAbruzzoController extends Controller
      *     tags={"Api V2 - MITUR Abruzzo"},
      *     summary="List all regions",
      *     description="Returns a list of all regions with their ID and last updated timestamp. The update timestamp of an item in the database is formatted as 'YYYY-MM-DD-Thh:mm:ss+HH:M', adhering to the ISO8601 standard. This notation represents the date and time with an offset of hours (HH) and minutes (MM) from Coordinated Universal Time (UTC), ensuring a consistent formatting and interpretation across the globe.",
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="array",
+     *
      *             @OA\Items(
      *                 type="object",
+     *
      *                 @OA\Property(
      *                     property="id",
      *                     type="integer",
@@ -44,6 +47,7 @@ class MiturAbruzzoController extends Controller
      *             ),
      *         ),
      *     ),
+     *
      *     @OA\Response(
      *         response=400,
      *         description="Bad Request"
@@ -74,21 +78,26 @@ class MiturAbruzzoController extends Controller
      *     tags={"Api V2 - MITUR Abruzzo"},
      *     summary="Get Region by ID",
      *     description="Returns a single region, including mountain groups and region geometry, by ID. The update timestamp of an item in the database is formatted as 'YYYY-MM-DD-Thh:mm:ss+HH:M', adhering to the ISO8601 standard. This notation represents the date and time with an offset of hours (HH) and minutes (MM) from Coordinated Universal Time (UTC), ensuring a consistent formatting and interpretation across the globe.",
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="ID of the region to return",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="type",
      *                 type="string",
@@ -125,6 +134,7 @@ class MiturAbruzzoController extends Controller
      *   @OA\Property(
      *                     property="images",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="string",
      *                         example= "http://example.com/image.jpg",
@@ -133,6 +143,7 @@ class MiturAbruzzoController extends Controller
      *                 ),
      *
      *             ),
+     *
      *               @OA\Property(property="geometry", type="object",
      *                      @OA\Property( property="type", type="string",  description="Postgis geometry type: MultiPolygon, etc."),
      *                      @OA\Property( property="coordinates", type="object",  description="region coordinates (WGS84)")
@@ -140,6 +151,7 @@ class MiturAbruzzoController extends Controller
      *               example={"type":"Feature","properties":{"id":1,"name":"Abruzzo", "description":"Abruzzo description","abstract":"Abruzzo abstract","mountain_groups":{"1":"2022-12-03 12:34:25","2":"2023-01-15 09:30:00","3":"2023-02-20 14:45:10"}, "images":{"http://example.com/image.jpg"}},"geometry":{"type":"MultiPolygon","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}}
      *        )
      *   ),
+     *
      *  @OA\Response(
      *    response=404,
      *  description="Region not found"
@@ -163,21 +175,26 @@ class MiturAbruzzoController extends Controller
      *     tags={"Api V2 - MITUR Abruzzo"},
      *     summary="Get Mountain Group by ID",
      *     description="Returns a single mountain group, including hiking routes, huts, pois, and sections that intersect with the mountain group geometry. The update timestamp of an item in the database is formatted as 'YYYY-MM-DD-Thh:mm:ss+HH:M', adhering to the ISO8601 standard. This notation represents the date and time with an offset of hours (HH) and minutes (MM) from Coordinated Universal Time (UTC), ensuring a consistent formatting and interpretation across the globe.",
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="ID of the mountain group to return",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="type",
      *                 type="string",
@@ -200,12 +217,14 @@ class MiturAbruzzoController extends Controller
      *                 @OA\Property(
      *                     property="sections",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="integer",
      *                         example=1,
      *                        description="The section IDs associated with the mountain group"
      *                     )
      *                 ),
+     *
      *                 @OA\Property(
      *                     property="area",
      *                     type="string",
@@ -317,21 +336,25 @@ class MiturAbruzzoController extends Controller
      * @OA\Property(
      * property="ec_pois",
      * type="array",
+     *
      * @OA\Items(
      * type="integer",
      * example=1,
      * description="The EC POIs intersecting with the mountain group"
      * )
      * ),
+     *
      * @OA\Property(
      * property="cai_huts",
      * type="array",
+     *
      * @OA\Items(
      * type="integer",
      * example=1,
      * description="The CAI huts intersecting with the mountain group"
      * )
      * ),
+     *
      * @OA\Property(
      * property="hiking_routes_map",
      * type="string",
@@ -359,6 +382,7 @@ class MiturAbruzzoController extends Controller
      *   @OA\Property(
      *                     property="images",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="string",
      *                         example= "http://example.com/image.jpg",
@@ -367,6 +391,7 @@ class MiturAbruzzoController extends Controller
      *                 ),
      *
      * ),
+     *
      * @OA\Property(property="geometry", type="object",
      * @OA\Property( property="type", type="string",  description="Postgis geometry type: MultiPolygon, etc."),
      * @OA\Property( property="coordinates", type="object",  description="mountain group coordinates (WGS84)")
@@ -374,6 +399,7 @@ class MiturAbruzzoController extends Controller
      * example={"type":"Feature","properties":{"id":1,"name":"Mountain Group Name","sections":{1},"area":"123","region":"Lazio","provinces":"Roma","municipalities":"Roma","map":"url_mappa","description":"Description of the mountain group","aggregated_data":"aggregated data","protected_area":"Parchi Aree protette Natura 2000","activity":"Escursionismo, Alpinismo", "hiking_routes": { "2806": "2024-02-24T03:48:14.000000Z" },"ec_pois":{1},"cai_huts":{1},"map":"mappa gruppo montuoso","hiking_routes_map":"mappa percorsi","disclaimer":"testo disclaimer","ec_pois_count":1,"cai_huts_count":1, "images":{"http://example.com/image.jpg"}},"geometry":{"type":"MultiPolygon","coordinates":{{{10.4495294,43.7615252},{10.4495998,43.7615566}}}}}
      * )
      * ),
+     *
      * @OA\Response(
      * response=404,
      * description="Mountain group not found"
@@ -397,21 +423,26 @@ class MiturAbruzzoController extends Controller
      *     tags={"Api V2 - MITUR Abruzzo"},
      *     summary="Get Hiking Route by ID",
      *     description="Returns a single hiking route, including cai_huts and pois that intersect with the hiking route geometry. The update timestamp of an item in the database is formatted as 'YYYY-MM-DD-Thh:mm:ss+HH:M', adhering to the ISO8601 standard. This notation represents the date and time with an offset of hours (HH) and minutes (MM) from Coordinated Universal Time (UTC), ensuring a consistent formatting and interpretation across the globe.",
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="ID of the hiking route to return",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="type",
      *                 type="string",
@@ -453,12 +484,14 @@ class MiturAbruzzoController extends Controller
      *               @OA\Property(
      *                    property="section_id",
      *                   type="array",
+     *
      *                 @OA\Items(
      *                    type="integer",
      *                 example=1,
      *                description="The section IDs associated with the hiking route"
      *             )
      *            ),
+     *
      *          @OA\Property(
      *            property="from",
      *        type="string",
@@ -546,21 +579,25 @@ class MiturAbruzzoController extends Controller
      * @OA\Property(
      * property="cai_huts",
      * type="array",
+     *
      * @OA\Items(
      * type="integer",
      * example=1,
      * description="The CAI huts intersecting with the hiking route"
      * )
      * ),
+     *
      * @OA\Property(
      * property="pois",
      * type="array",
+     *
      * @OA\Items(
      * type="integer",
      * example=1,
      * description="The POIs intersecting with the hiking route"
      * )
      * ),
+     *
      * @OA\Property(
      * property="activity",
      * type="string",
@@ -576,6 +613,7 @@ class MiturAbruzzoController extends Controller
      *   @OA\Property(
      *                     property="images",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="string",
      *                         example= "http://example.com/image.jpg",
@@ -583,6 +621,7 @@ class MiturAbruzzoController extends Controller
      *                     ),
      *                 ),
      * ),
+     *
      * @OA\Property(property="geometry", type="object",
      * @OA\Property( property="type", type="string",  description="Postgis geometry type: MultiLineString, etc."),
      * @OA\Property( property="coordinates", type="object",  description="hiking route coordinates (WGS84)")
@@ -633,6 +672,7 @@ class MiturAbruzzoController extends Controller
      * }
      * )
      * ),
+     *
      * @OA\Response(
      * response=404,
      * description="Hiking route not found"
@@ -656,21 +696,26 @@ class MiturAbruzzoController extends Controller
      *     tags={"Api V2 - MITUR Abruzzo"},
      *     summary="Get Hut by ID",
      *     description="Returns a single hut by ID.",
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="ID of the hut to return",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="type",
      *                 type="string",
@@ -820,12 +865,14 @@ class MiturAbruzzoController extends Controller
      * @OA\Property(
      * property="pois",
      * type="array",
+     *
      * @OA\Items(
      * type="integer",
      * example=1,
      * description="The POIs intersecting with the hut"
      * )
      * ),
+     *
      * @OA\Property(
      * property="opening",
      * type="string",
@@ -895,12 +942,14 @@ class MiturAbruzzoController extends Controller
      * @OA\Property(
      * property="hiking_routes",
      * type="array",
+     *
      * @OA\Items(
      * type="integer",
      * example=1,
      * description="The hiking routes intersecting with the hut"
      * )
      * ),
+     *
      * @OA\Property(
      * property="accessibilitá_ai_disabili_service",
      * type="string",
@@ -916,6 +965,7 @@ class MiturAbruzzoController extends Controller
      *   @OA\Property(
      *                     property="images",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="string",
      *                         example= "http://example.com/image.jpg",
@@ -923,12 +973,14 @@ class MiturAbruzzoController extends Controller
      *                     ),
      *                 ),
      *            ),
+     *
      *                @OA\Property(property="geometry", type="object",
      *                     @OA\Property( property="type", type="string",  description="Postgis geometry type: Point, etc."),
      *                    @OA\Property( property="coordinates", type="object",  description="hut coordinates (WGS84)")
      *               ),
      *       ),
      * ),
+     *
      * @OA\Response(
      * response=404,
      * description="Hut not found"
@@ -952,21 +1004,26 @@ class MiturAbruzzoController extends Controller
      *     tags={"Api V2 - MITUR Abruzzo"},
      *     summary="Get POI by ID",
      *     description="Returns a single POI by ID.",
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="ID of the POI to return",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="type",
      *                 type="string",
@@ -1023,15 +1080,16 @@ class MiturAbruzzoController extends Controller
      *        example="Activity",
      *     description="The activity of the POI"
      *   ),
-     *
      * @OA\Property(
      * property="has_hiking_routes",
      * type="array",
+     *
      * @OA\Items(
      * type="integer",
      * example=1
      * )
      * ),
+     *
      * @OA\Property(
      * property="map",
      * type="string",
@@ -1040,6 +1098,7 @@ class MiturAbruzzoController extends Controller
      *   @OA\Property(
      *                     property="images",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="string",
      *                         example= "http://example.com/image.jpg",
@@ -1047,12 +1106,14 @@ class MiturAbruzzoController extends Controller
      *                     ),
      *                 ),
      *           ),
+     *
      *               @OA\Property(property="geometry", type="object",
      *                    @OA\Property( property="type", type="string",  description="Postgis geometry type: Point, etc."),
      *                  @OA\Property( property="coordinates", type="object",  description="poi coordinates (WGS84)")
      *             ),
      *        ),
      *   ),
+     *
      * @OA\Response(
      * response=404,
      * description="POI not found"
@@ -1076,21 +1137,26 @@ class MiturAbruzzoController extends Controller
      *     tags={"Api V2 - MITUR Abruzzo"},
      *     summary="Get Section by ID",
      *     description="Returns a single section by ID. Coordinates are hardcoded for now. Will be implemented soon.",
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         description="ID of the section to return",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="type",
      *                 type="string",
@@ -1186,6 +1252,7 @@ class MiturAbruzzoController extends Controller
      *  @OA\Property(
      *                     property="images",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="string",
      *                         example= "http://example.com/image.jpg",
@@ -1193,6 +1260,7 @@ class MiturAbruzzoController extends Controller
      *                     ),
      *                 ),
      *             ),
+     *
      *             @OA\Property(
      *                 property="geometry",
      *                 type="object",
@@ -1205,6 +1273,7 @@ class MiturAbruzzoController extends Controller
      *                 @OA\Property(
      *                     property="coordinates",
      *                     type="array",
+     *
      *                     @OA\Items(
      *                         type="number",
      *                         format="float",
@@ -1214,6 +1283,7 @@ class MiturAbruzzoController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=404,
      *         description="Section not found"
@@ -1249,7 +1319,7 @@ class MiturAbruzzoController extends Controller
             return redirect('https://26.app.geohub.webmapp.it/#/map');
         }
         $geometry = str_replace(['POINT(', ')'], '', $geometry[0]->geometry);
-        list($longitude, $latitude) = explode(' ', $geometry);
+        [$longitude, $latitude] = explode(' ', $geometry);
 
         return view('maps.poi', ['poi' => $poi, 'latitude' => $latitude, 'longitude' => $longitude]);
     }
@@ -1280,7 +1350,7 @@ class MiturAbruzzoController extends Controller
             return redirect('https://26.app.geohub.webmapp.it/#/map');
         }
         $geometry = str_replace(['POINT(', ')'], '', $geometry[0]->geometry);
-        list($longitude, $latitude) = explode(' ', $geometry);
+        [$longitude, $latitude] = explode(' ', $geometry);
 
         return view('maps.cai-hut', [
             'caiHut' => $caiHut,
@@ -1300,7 +1370,7 @@ class MiturAbruzzoController extends Controller
         $geometry = json_decode($geometry[0]->geom, true);
 
         $hikingRoutesIntersectingIds = Cache::remember('hiking_routes_intersecting_'.$id, 60 * 24, function () use ($mountainGroup) {
-            return array_keys($mountainGroup->getIntersections(new HikingRoute())->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray());
+            return array_keys($mountainGroup->getIntersections(new HikingRoute)->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray());
         });
 
         $hikingRoutesGeojson = array_map(function ($hikingRoute) {

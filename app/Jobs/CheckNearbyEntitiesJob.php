@@ -63,7 +63,7 @@ abstract class CheckNearbyEntitiesJob implements ShouldQueue
             ", [
                 'sourceId' => $this->sourceModel->id,
                 'buffer' => $this->buffer,
-            ]); //we cast to geography to use ST_DWithin because is more accurate
+            ]); // we cast to geography to use ST_DWithin because is more accurate
 
             if (empty($nearbyEntities)) {
                 Log::info("No nearby {$this->getTargetTableName()} found for {$this->getSourceTableName()} {$this->sourceModel->id}");

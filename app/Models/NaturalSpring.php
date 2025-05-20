@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Jobs\CheckNearbyHikingRoutesJob;
-use App\Models\HikingRoute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

@@ -2,10 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\UgcPoi;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -51,7 +48,7 @@ class UgcPoisExport implements FromCollection, WithHeadings, WithStyles
 
     protected function getFieldValue($model, $field)
     {
-        //handle null values for latitude and longitude
+        // handle null values for latitude and longitude
         if ($field === 'raw_data->position->latitude') {
             $value = $this->getNestedValue($model, ['raw_data', 'position', 'latitude']);
 

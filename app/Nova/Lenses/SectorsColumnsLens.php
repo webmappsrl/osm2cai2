@@ -2,9 +2,7 @@
 
 namespace App\Nova\Lenses;
 
-use App\Nova\Sector;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\LensRequest;
@@ -15,7 +13,6 @@ class SectorsColumnsLens extends Lens
     /**
      * Get the query builder / paginator for the lens.
      *
-     * @param  LensRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return mixed
      */
@@ -29,7 +26,6 @@ class SectorsColumnsLens extends Lens
     /**
      * Get the fields available to the lens.
      *
-     * @param  Request  $request
      * @return array
      */
     public function fields(Request $request)
@@ -57,7 +53,6 @@ class SectorsColumnsLens extends Lens
     /**
      * Get the cards available on the lens.
      *
-     * @param  Request  $request
      * @return array
      */
     public function cards(Request $request)
@@ -68,7 +63,6 @@ class SectorsColumnsLens extends Lens
     /**
      * Get the filters available for the lens.
      *
-     * @param  Request  $request
      * @return array
      */
     public function filters(Request $request)
@@ -79,7 +73,6 @@ class SectorsColumnsLens extends Lens
     /**
      * Get the actions available on the lens.
      *
-     * @param  Request  $request
      * @return array
      */
     public function actions(Request $request)

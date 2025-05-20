@@ -41,11 +41,11 @@ class Osm2caiSync extends Command
 
         $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
 
-        //perform the request to the API
+        // perform the request to the API
         $listResponse = Http::get($listApi);
 
         if ($listResponse->failed() || $listResponse->json() === null) {
-            //renaming the model to match the API endpoint
+            // renaming the model to match the API endpoint
             $model = $this->mapModelToendPoint($model);
 
             $listApi = "https://osm2cai.cai.it/api/v2/export/$model/list";
@@ -74,6 +74,7 @@ class Osm2caiSync extends Command
             if ($existingRecord && $existingRecord->updated_at >= $updated_at) {
                 $this->info('Skipping '.$id.' because it is up to date');
                 $progressBar->advance();
+
                 continue;
             }
 
@@ -91,6 +92,7 @@ class Osm2caiSync extends Command
             if (empty($singleFeatureData)) {
                 $this->info('Skipping '.$id.' because it is empty');
                 $progressBar->advance();
+
                 continue;
             }
 
@@ -123,11 +125,11 @@ class Osm2caiSync extends Command
         $modelClass = 'App\\Models\\'.$model;
 
         if (! class_exists($modelClass)) {
-            //remove final 's' from model name
+            // remove final 's' from model name
             $modelName = substr($model, 0, -1);
             $modelClass = 'App\\Models\\'.$modelName;
             if (! class_exists($modelClass)) {
-                //rename section model to club
+                // rename section model to club
                 if ($model === 'Sections') {
                     $modelClass = 'App\\Models\\Club';
                 } elseif ($model === 'Itineraries') {

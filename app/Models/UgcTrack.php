@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\UgcMedia;
-use App\Models\User;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -58,8 +56,6 @@ class UgcTrack extends Model
 
     /**
      * Create a geojson from the ugc track
-     *
-     * @return array
      */
     public function getGeojson(): ?array
     {
@@ -75,8 +71,6 @@ class UgcTrack extends Model
 
     /**
      * Return the json version of the ugctrack, avoiding the geometry
-     *
-     * @return array
      */
     public function getJsonProperties(): array
     {

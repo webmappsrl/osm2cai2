@@ -2,11 +2,7 @@
 
 namespace Tests\Unit\Commands;
 
-use App\Jobs\CalculateIntersectionsJob;
-use App\Models\HikingRoute;
-use App\Models\Region;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Mockery;
 use Tests\TestCase;
 
 class CalculateRegionHikingRoutesIntersectionTest extends TestCase

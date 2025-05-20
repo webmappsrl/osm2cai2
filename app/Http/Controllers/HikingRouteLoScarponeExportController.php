@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Exports\HikingRouteLoScarponeExport;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class HikingRouteLoScarponeExportController extends Controller

@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\EcPoi;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
@@ -14,7 +12,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Municipality extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, OsmfeaturesGeometryUpdateTrait;
+    use HasFactory, OsmfeaturesGeometryUpdateTrait, OsmfeaturesSyncableTrait;
 
     protected $fillable = [
         'name',

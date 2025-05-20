@@ -2,6 +2,4 @@
 
 namespace Wm\WmInternal;
 
-class WmInternal
-{
-}
+class WmInternal {}

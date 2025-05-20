@@ -32,6 +32,7 @@ class SyncEcPoisRegionIdCommand extends Command
 
                 if (! $currentPoi) {
                     $errors[] = "POI not found with osmfeatures_id: {$legacyPoi->osmfeatures_id}";
+
                     continue;
                 }
 
@@ -42,6 +43,7 @@ class SyncEcPoisRegionIdCommand extends Command
 
                 if (! $legacyRegion) {
                     $errors[] = "Legacy region not found with ID: {$legacyPoi->region_id}";
+
                     continue;
                 }
 
@@ -50,6 +52,7 @@ class SyncEcPoisRegionIdCommand extends Command
 
                 if (! $currentRegion) {
                     $errors[] = "Current region not found with code: {$legacyRegion->code}";
+
                     continue;
                 }
 

@@ -6,7 +6,6 @@ use App\Helpers\Osm2caiHelper;
 use App\Nova\Actions\DownloadGeojson;
 use App\Nova\Actions\DownloadKml;
 use App\Nova\Actions\DownloadShape;
-use App\Nova\Filters\HikingRoutesProvinceFilter;
 use App\Nova\Filters\ProvinceFilter;
 use App\Nova\Filters\RegionFilter;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +18,6 @@ use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
-use Wm\MapMultiPolygon\MapMultiPolygon;
 
 class Province extends Resource
 {
@@ -76,7 +74,6 @@ class Province extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -102,7 +99,7 @@ class Province extends Resource
                 return $code;
             })->sortable(),
             Text::make('Full Code', function () use ($code) {
-                //if code is not null, add the region code
+                // if code is not null, add the region code
                 if ($code) {
                     $code = $this->region ? $this->region->code.'.'.$code : $code;
                 }
@@ -128,7 +125,6 @@ class Province extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -154,7 +150,7 @@ class Province extends Resource
             $sal = $province->getSal();
 
             return [
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.province-stats-card', [
                         'value' => $province->manager,
@@ -164,7 +160,7 @@ class Province extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.province-sal-card', [
                         'value' => number_format($sal * 100, 2),
@@ -175,7 +171,7 @@ class Province extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.province-stats-card', [
                         'value' => $numbers[3] + $numbers[4],
@@ -185,7 +181,7 @@ class Province extends Resource
                     ->withBasicStyles()
                     ->onlyOnDetail(),
 
-                (new HtmlCard())
+                (new HtmlCard)
                     ->width('1/4')
                     ->view('nova.cards.province-stats-card', [
                         'value' => $province->num_expected,
@@ -234,7 +230,7 @@ class Province extends Resource
             $exploreUrl = $link;
         }
 
-        return (new HtmlCard())
+        return (new HtmlCard)
             ->width('1/4')
             ->view('nova.cards.province-sda-card', [
                 'sda' => $sda,
@@ -250,18 +246,16 @@ class Province extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
     {
-        return [(new RegionFilter())];
+        return [(new RegionFilter)];
     }
 
     /**
      * Get the lenses available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -272,23 +266,22 @@ class Province extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)
     {
         return [
-            (new DownloadGeojson())->canRun(function ($request, $zone) {
+            (new DownloadGeojson)->canRun(function ($request, $zone) {
                 return true;
             })->canSee(function ($request) {
                 return true;
             })->showInline(),
-            (new DownloadShape())->canRun(function ($request, $zone) {
+            (new DownloadShape)->canRun(function ($request, $zone) {
                 return true;
             })->canSee(function ($request) {
                 return true;
             })->showInline(),
-            (new DownloadKml())->canRun(function ($request, $zone) {
+            (new DownloadKml)->canRun(function ($request, $zone) {
                 return true;
             })->canSee(function ($request) {
                 return true;

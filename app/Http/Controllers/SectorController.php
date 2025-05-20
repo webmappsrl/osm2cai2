@@ -67,8 +67,9 @@ class SectorController extends Controller
     /**
      * Returns a complete GeoJSON representation of all hiking routes in the sector.
      *
-     * @param string $id The ID of the sector
+     * @param  string  $id  The ID of the sector
      * @return \Illuminate\Http\Response GeoJSON response with hiking routes data
+     *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If sector not found
      */
     public function geojsonComplete(string $id): \Illuminate\Http\Response

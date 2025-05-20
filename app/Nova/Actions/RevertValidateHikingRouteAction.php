@@ -25,8 +25,6 @@ class RevertValidateHikingRouteAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  ActionFields  $fields
-     * @param  Collection  $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
@@ -64,10 +62,18 @@ class RevertValidateHikingRouteAction extends Action
 
     private function revertValidation(HikingRoute $model)
     {
+        $osmfeatures_data = $model->osmfeatures_data;
+
+        // revert the status
+        $osmfeatures_data['properties']['osm2cai_status'] = 3;
         $model->osm2cai_status = 3;
+
+        // revert the validation date
         $model->validation_date = null;
         $model->validator_id = null;
-        $model->osmfeatures_data['properties']['osm2cai_status'] = 3;
+
+        // save the model
+        $model->osmfeatures_data = $osmfeatures_data;
         $model->save();
     }
 }

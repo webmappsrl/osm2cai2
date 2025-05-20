@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Enums\ValidatedStatusEnum;
-use App\Models\UgcMedia;
-use App\Models\User;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -64,7 +62,7 @@ class UgcPoi extends Model
         });
     }
 
-    //getter for the name attribute
+    // getter for the name attribute
     public function getNameAttribute()
     {
         return $this->raw_data['title'] ?? $this->name ?? null;
@@ -87,8 +85,6 @@ class UgcPoi extends Model
 
     /**
      * Return the json version of the ugc poi, avoiding the geometry
-     *
-     * @return array
      */
     public function getJsonProperties(): array
     {
@@ -110,8 +106,6 @@ class UgcPoi extends Model
 
     /**
      * Create a geojson from the ugc poi
-     *
-     * @return array
      */
     public function getGeojson(): ?array
     {
@@ -127,8 +121,6 @@ class UgcPoi extends Model
 
     /**
      * Calculate the geometry based on the raw_data
-     *
-     * @return string
      */
     public function calculateGeometryFromRawData(): string
     {
@@ -146,12 +138,12 @@ class UgcPoi extends Model
      */
     public function fillRawDataLatitudeAndLongitude(): void
     {
-        //check if the latitude and longitude are already set
+        // check if the latitude and longitude are already set
         if (isset($this->raw_data['position']['latitude']) && isset($this->raw_data['position']['longitude'])) {
             return;
         }
 
-        //get latitude and longitude from geometry using postgis
+        // get latitude and longitude from geometry using postgis
         $geometry = $this->geometry;
 
         $coordinates = DB::select(
@@ -160,7 +152,7 @@ class UgcPoi extends Model
             [$geometry]
         )[0];
 
-        //save rawdata in a variable because with the array cast it is not possible to set the raw_data attribute
+        // save rawdata in a variable because with the array cast it is not possible to set the raw_data attribute
         $rawData = $this->raw_data ?? [];
 
         if (! isset($rawData['position'])) {
@@ -206,7 +198,7 @@ class UgcPoi extends Model
     /**
      * Formats a numeric value for calculation.
      *
-     * @param string $value
+     * @param  string  $value
      * @return string
      */
     private function formatNumericValue($value)

@@ -31,7 +31,7 @@ class SetHrOsm2caiStatus4Command extends Command
     {
         $legacyConnection = DB::connection('legacyosm2cai');
 
-        //get all the legacy hiking routes with osm2cai_status = 4 (only relation_id and osm2cai_status)
+        // get all the legacy hiking routes with osm2cai_status = 4 (only relation_id and osm2cai_status)
         $legacyHikingRoutes = $legacyConnection->table('hiking_routes')->select('relation_id')->where('osm2cai_status', 4)->get();
         $this->info('Found '.count($legacyHikingRoutes).' hiking routes with osm2cai_status 4');
 
@@ -39,7 +39,7 @@ class SetHrOsm2caiStatus4Command extends Command
         $jobsDispatched = 0;
         $notFoundHikingRoutes = [];
 
-        //for each hiking route, check if the relation_id exists in the osmfeatures table
+        // for each hiking route, check if the relation_id exists in the osmfeatures table
         foreach ($legacyHikingRoutes as $legacyHikingRoute) {
             $osmfeaturesId = 'R'.$legacyHikingRoute->relation_id;
             $hikingRoute = HikingRoute::where('osmfeatures_id', $osmfeaturesId)->first();

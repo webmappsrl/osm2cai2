@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Itinerary extends Resource
 {
@@ -46,7 +45,6 @@ class Itinerary extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  Request  $request
      * @return array
      */
     public function fields(Request $request)
@@ -75,7 +73,6 @@ class Itinerary extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  Request  $request
      * @return array
      */
     public function cards(Request $request)
@@ -86,7 +83,6 @@ class Itinerary extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  Request  $request
      * @return array
      */
     public function filters(Request $request)
@@ -97,7 +93,6 @@ class Itinerary extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  Request  $request
      * @return array
      */
     public function lenses(Request $request)
@@ -108,7 +103,6 @@ class Itinerary extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  Request  $request
      * @return array
      */
     public function actions(Request $request)
