@@ -93,6 +93,12 @@ class HikingRoute extends Model implements HasMedia, OsmfeaturesSyncableInterfac
                 ComputeTdhJob::dispatch($hikingRoute->id);
             }
         });
+
+        static::deleting(function ($hikingRoute) {
+
+            $hikingRoute->cleanRelations();
+            $hikingRoute->clearMediaCollection('feature_image');
+        });
     }
 
     /**
@@ -188,6 +194,17 @@ class HikingRoute extends Model implements HasMedia, OsmfeaturesSyncableInterfac
             Log::channel('wm-osmfeatures')->info('No data found for HikingRoute '.$osmfeaturesId);
 
             return;
+        }
+
+        // Check if the osm2cai_status from osmfeatures is 0
+        if (isset($osmfeaturesData['properties']['osm2cai_status'])) {
+            $incomingStatus = $osmfeaturesData['properties']['osm2cai_status'];
+            if ($incomingStatus == 0) {
+                Log::channel('wm-osmfeatures')->info('HikingRoute '.$osmfeaturesId.' has incoming osm2cai_status 0. Deleting model.');
+                $model->delete(); // This will trigger the 'deleting' event
+
+                return; // Stop further processing for this model
+            }
         }
 
         // Update the geometry if necessary
@@ -307,6 +324,25 @@ class HikingRoute extends Model implements HasMedia, OsmfeaturesSyncableInterfac
     public function nearbyEcPois()
     {
         return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi')->withPivot(['buffer']);
+    }
+
+    public function mountainGroups()
+    {
+        return $this->belongsToMany(MountainGroups::class, 'mountain_group_hiking_route', 'hiking_route_id', 'mountain_group_id');
+    }
+
+    public function cleanRelations()
+    {
+        $this->regions()->detach();
+        $this->provinces()->detach();
+        $this->clubs()->detach();
+        $this->areas()->detach();
+        $this->sectors()->detach();
+        $this->itineraries()->detach();
+        $this->nearbyCaiHuts()->detach();
+        $this->nearbyNaturalSprings()->detach();
+        $this->nearbyEcPois()->detach();
+        $this->mountainGroups()->detach();
     }
 
     /**
