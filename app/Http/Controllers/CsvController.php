@@ -15,7 +15,7 @@ class CsvController extends Controller
         'sector' => \App\Models\Sector::class,
         'area' => \App\Models\Area::class,
         'province' => \App\Models\Province::class,
-        'section' => \App\Models\Section::class,
+        'club' => \App\Models\Club::class,
         'users' => \App\Models\User::class,
     ];
 
@@ -45,7 +45,7 @@ class CsvController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="osm2cai_'.date('Ymd').'_'.$model->getTable().'_'.($model->name ?? $model->id).'.csv"',
+            'Content-Disposition' => 'attachment; filename="osm2cai_' . date('Ymd') . '_' . $model->getTable() . '_' . ($model->name ?? $model->id) . '.csv"',
         ];
 
         return response($model->getCsv(), 200, $headers);
