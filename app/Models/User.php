@@ -172,44 +172,20 @@ class User extends WmUser
      */
     public function canManageHikingRoute(HikingRoute $hr): bool
     {
-        $role = $this->getTerritorialRole();
+        $roles = $this->getRoleNames()->toArray();
 
-        if (in_array($role, ['unknown'])) {
-            return false;
-        }
-
-        if (in_array($role, ['admin', 'national'])) {
+        if (in_array('Administrator', $roles) || in_array('National Referent', $roles)) {
             return true;
         }
 
-        if ($role === 'regional') {
-            return $hr->regions()->where('regions.id', $this->region_id)->exists();
+        if (in_array('Regional Referent', $roles)) {
+            return $hr->regions->pluck('id')->contains($this->region->id);
         }
 
-        if ($role === 'local') {
-            if ($this->areas->isNotEmpty()) {
-                $hasMatchingArea = $hr->areas()->whereIn('areas.id', $this->areas->pluck('id'))->exists();
-                if ($hasMatchingArea) {
-                    return true;
-                }
-            }
-
-            if ($this->sectors->isNotEmpty()) {
-                $hasMatchingSector = $hr->sectors()
-                    ->whereIn('sectors.id', $this->sectors->pluck('id'))
-                    ->exists();
-
-                if ($hasMatchingSector) {
-                    return true;
-                }
-            }
-
-            if ($this->provinces->isNotEmpty()) {
-                $hasMatchingProvince = $hr->provinces()->whereIn('provinces.id', $this->provinces->pluck('id'))->exists();
-                if ($hasMatchingProvince) {
-                    return true;
-                }
-            }
+        if (in_array('Local Referent', $roles)) {
+            return ! $hr->sectors->intersect($this->sectors)->isEmpty() ||
+                ! $hr->areas->intersect($this->areas)->isEmpty() ||
+                ! $hr->provinces->intersect($this->provinces)->isEmpty();
         }
 
         return false;

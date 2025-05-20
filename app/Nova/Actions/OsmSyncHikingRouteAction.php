@@ -30,49 +30,21 @@ class OsmSyncHikingRouteAction extends Action
         $service = app(OsmService::class);
 
         foreach ($models as $model) {
+
+            if (! $user->canManageHikingRoute($model)) {
+                return Action::danger('You are not authorized to perform this action');
+            }
+
             if ($model->osm2cai_status > 3) {
                 return Action::danger('"Forcing the synchronization with OpenStreetMap is only possible if the route has an OSM2CAI status less than or equal to 3; if necessary, proceed first with REVERT VALIDATION"');
             }
-            $sectors = $model->sectors;
-            $areas = $model->areas;
-            $provinces = $model->provinces;
 
             // Ensure osmfeatures_data and osm_id exist
             if (! isset($model->osmfeatures_data['properties']['osm_id'])) {
                 return Action::danger('Hiking Route model '.$model->id.' does not have a valid osm_id in osmfeatures_data.');
             }
 
-            if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
-                $service->updateHikingRouteModelWithOsmData($model);
-
-                continue;
-            }
-            if ($user->hasRole('Regional Referent')) {
-                if ($model->regions->pluck('id')->contains($user->region->id)) {
-                    $service->updateHikingRouteModelWithOsmData($model);
-
-                    continue;
-                } else {
-                    return Action::danger('You are not authorized to perform this action');
-                }
-            }
-            if ($user->hasRole('Local Referent')) {
-                if (! $sectors->intersect($user->sectors)->isEmpty()) {
-                    $service->updateHikingRouteModelWithOsmData($model);
-
-                    continue;
-                } elseif (! $areas->intersect($user->areas)->isEmpty()) {
-                    $service->updateHikingRouteModelWithOsmData($model);
-
-                    continue;
-                } elseif (! $provinces->intersect($user->provinces)->isEmpty()) {
-                    $service->updateHikingRouteModelWithOsmData($model);
-
-                    continue;
-                } else {
-                    return Action::danger('You are not authorized to perform this action');
-                }
-            }
+            $service->updateHikingRouteModelWithOsmData($model);
         }
 
         // It always operates on a single model because showOnDetail is true
