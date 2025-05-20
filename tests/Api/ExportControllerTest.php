@@ -127,7 +127,7 @@ class ExportControllerTest extends TestCase
             $model = $modelClass::factory()->create();
         }
 
-        $response = $this->getJson($endpoint . '/' . $model->id);
+        $response = $this->getJson($endpoint.'/'.$model->id);
         $response->assertStatus(200);
 
         $data = $response->json();
