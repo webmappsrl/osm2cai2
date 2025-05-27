@@ -458,7 +458,10 @@ class DashboardCardsHelper
             $numbers = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
 
             foreach ($region->hikingRoutes as $hr) {
-                $numbers[$hr->osm2cai_status]++;
+                $status = $hr->osm2cai_status;
+                if (in_array($status, [1, 2, 3, 4])) {
+                    $numbers[$status]++;
+                }
             }
 
             $numAreas = 0;
@@ -789,7 +792,9 @@ class DashboardCardsHelper
             foreach ($models as $model) {
                 foreach ($model->hikingRoutes as $hr) {
                     $status = $hr->osm2cai_status;
-                    $numbers[$status]++;
+                    if (in_array($status, [1, 2, 3, 4])) {
+                        $numbers[$status]++;
+                    }
                 }
             }
 
