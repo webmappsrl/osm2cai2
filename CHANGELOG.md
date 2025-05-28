@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.0](https://github.com/webmappsrl/osm2cai2/compare/v1.1.1...v1.2.0) (2025-05-28)
+
+
+### Features
+
+* add fixOsmfeaturesSDA command to update osmfeatures_data properties ([9866deb](https://github.com/webmappsrl/osm2cai2/commit/9866debfcbae6d97938f20d26bf058b4b80ddce0))
+* added hiking route club association action in club nova resource ([#188](https://github.com/webmappsrl/osm2cai2/issues/188)) ([d0a7207](https://github.com/webmappsrl/osm2cai2/commit/d0a72075f8cd4bd0ed146092ee03679fcb403576))
+* added laravel pint for code formatting and formatted code ([#198](https://github.com/webmappsrl/osm2cai2/issues/198)) ([c118598](https://github.com/webmappsrl/osm2cai2/commit/c118598bc508ea58a29d555718d1824b82e44ef2))
+* added survey name to app popup OC:5522 ([322e3df](https://github.com/webmappsrl/osm2cai2/commit/322e3df8213774e0c8861ea9da5a1ea0e2b51efd))
+
+
+### Bug Fixes
+
+* calculate osm2cai status OC:5580 ([cee7378](https://github.com/webmappsrl/osm2cai2/commit/cee7378f578c39c21dddcefb2220269c57e2b8e1))
+* **commands:** 🐛 update osmfeatures_data status handling ([bc44d31](https://github.com/webmappsrl/osm2cai2/commit/bc44d31b4990f13283e51074ea1ae57e7ffd984d))
+* download routes csv action in club nova resource OC:5556 ([ffc47f3](https://github.com/webmappsrl/osm2cai2/commit/ffc47f3cf0ebf5570edc133acaa25617a66bcddd))
+* enhance condition for updating osm2cai_status in HikingRoute model ([0945f60](https://github.com/webmappsrl/osm2cai2/commit/0945f609313f9307c78d36697b02035a5af019b4))
+* ensure valid status counts for hiking routes ([3234a54](https://github.com/webmappsrl/osm2cai2/commit/3234a544ead33ae6c180c2199406eb8ad7594846))
+* geometry in ugc_poi nova resource required ([5b7a2a2](https://github.com/webmappsrl/osm2cai2/commit/5b7a2a2bfb9050ce6b5d20d7092590c043fde5ea))
+* improve saved hook in hiking routes model ([679f184](https://github.com/webmappsrl/osm2cai2/commit/679f1848a87a13bee66cfe0b346474dc6ee5d652))
+* improved performance on hiking route nova index OC:5559 ([#201](https://github.com/webmappsrl/osm2cai2/issues/201)) ([df01053](https://github.com/webmappsrl/osm2cai2/commit/df010535d3406e9b40e41f51a7bab3fa7319f0e2))
+* media url in html popup ([12d245d](https://github.com/webmappsrl/osm2cai2/commit/12d245d63f8ca8a06ebb8fbaafff70e53f0258bb))
+* refactor latitude and longitude accessors in UgcPoisExport and UgcPoi OC:5523 ([13493db](https://github.com/webmappsrl/osm2cai2/commit/13493dbee8e335110eaa3004f512cd6c3c124784))
+* refactor validation methods in HikingRoute model ([6a8e11a](https://github.com/webmappsrl/osm2cai2/commit/6a8e11a05af18ff3903bf8d790e2c3c2549ebec4))
+* source survey overlay api OC:5521 ([02fbd45](https://github.com/webmappsrl/osm2cai2/commit/02fbd4522b8cc810fd24030844220c4672d40001))
+* user role checks in HikingRoute management actions OC:5554 ([#200](https://github.com/webmappsrl/osm2cai2/issues/200)) ([535c23a](https://github.com/webmappsrl/osm2cai2/commit/535c23a86c4d81f926b69af99ee650324e97afdf))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
