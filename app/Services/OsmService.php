@@ -113,7 +113,7 @@ class OsmService
      */
     public function hikingRouteExists($relationId)
     {
-        return $this->http::head($this->baseApiUrl . 'relation/' . intval($relationId))->ok();
+        return $this->http::head($this->baseApiUrl.'relation/'.intval($relationId))->ok();
     }
 
     /**
@@ -124,7 +124,7 @@ class OsmService
      */
     public function getHikingRoute($relationId)
     {
-        $response = $this->http::get($this->baseApiUrl . 'relation/' . intval($relationId));
+        $response = $this->http::get($this->baseApiUrl.'relation/'.intval($relationId));
 
         if (! $response->ok()) {
             return false;
@@ -153,7 +153,7 @@ class OsmService
      */
     public function getHikingRouteGeojson($relationId)
     {
-        $response = $this->http::get($this->baseWaymarkedUrl . intval($relationId) . '/geometry/geojson');
+        $response = $this->http::get($this->baseWaymarkedUrl.intval($relationId).'/geometry/geojson');
 
         return $response->ok() ? $response->body() : false;
     }
@@ -166,7 +166,7 @@ class OsmService
      */
     public function getHikingRouteGpx($relationId)
     {
-        $response = $this->http::get($this->baseWaymarkedUrl . intval($relationId) . '/geometry/gpx');
+        $response = $this->http::get($this->baseWaymarkedUrl.intval($relationId).'/geometry/gpx');
 
         return $response->ok() ? $response->body() : false;
     }
@@ -382,7 +382,7 @@ class OsmService
             $sectorsIntersecting = $model->getIntersections(new Sector);
             $model->sectors()->sync($sectorsIntersecting->pluck('id'));
         } catch (\Throwable $e) {
-            Log::error("OsmService: Error syncing sectors for HikingRoute ID {$model->id}: " . $e->getMessage());
+            Log::error("OsmService: Error syncing sectors for HikingRoute ID {$model->id}: ".$e->getMessage());
             // Continue even if sector sync fails, but log the error
         }
     }

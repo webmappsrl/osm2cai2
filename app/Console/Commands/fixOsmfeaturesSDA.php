@@ -23,8 +23,11 @@ class fixOsmfeaturesSDA extends Command
     protected $description = 'Fix osmfeatures_data.properties.osm2cai_status if it is not 4 when HikingRoute osm2cai_status is 4';
 
     private bool $isDryRun;
+
     private int $processedCount = 0;
+
     private int $updatedCount = 0;
+
     private array $updatedRouteIds = [];
 
     /**
@@ -49,7 +52,7 @@ class fixOsmfeaturesSDA extends Command
     private function displayStartMessage(): void
     {
         $prefix = $this->isDryRun ? '[DRY RUN] ' : '';
-        $this->info($prefix . 'Starting fix of osmfeatures_data.properties.osm2cai_status...');
+        $this->info($prefix.'Starting fix of osmfeatures_data.properties.osm2cai_status...');
     }
 
     private function processRoute(HikingRoute $route): void
@@ -68,7 +71,7 @@ class fixOsmfeaturesSDA extends Command
     {
         $data = $route->osmfeatures_data;
 
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             $data = $this->tryDecodeFromString($route) ?? [];
         }
 
@@ -79,7 +82,7 @@ class fixOsmfeaturesSDA extends Command
     {
         $rawData = $route->getRawOriginal('osmfeatures_data');
 
-        if (!is_string($rawData)) {
+        if (! is_string($rawData)) {
             return null;
         }
 
@@ -92,7 +95,7 @@ class fixOsmfeaturesSDA extends Command
 
     private function ensurePropertiesStructure(array $data): array
     {
-        if (!isset($data['properties'])) {
+        if (! isset($data['properties'])) {
             $data['properties'] = [];
         }
 
@@ -116,7 +119,7 @@ class fixOsmfeaturesSDA extends Command
         return [
             'needsUpdate' => true,
             'logMessage' => $logMessage,
-            'updatedData' => $osmfeaturesData
+            'updatedData' => $osmfeaturesData,
         ];
     }
 
@@ -127,7 +130,7 @@ class fixOsmfeaturesSDA extends Command
 
         $this->logUpdate($logMessage);
 
-        if (!$this->isDryRun) {
+        if (! $this->isDryRun) {
             $this->saveRoute($route, $osmfeaturesData);
         }
     }
@@ -135,7 +138,7 @@ class fixOsmfeaturesSDA extends Command
     private function logUpdate(string $message): void
     {
         $prefix = $this->isDryRun ? '[DRY RUN] ' : '';
-        $this->info($prefix . $message);
+        $this->info($prefix.$message);
     }
 
     private function saveRoute(HikingRoute $route, array $osmfeaturesData): void
