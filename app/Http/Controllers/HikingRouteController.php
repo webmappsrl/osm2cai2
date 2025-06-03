@@ -708,7 +708,7 @@ class HikingRouteController extends Controller
                 return $this->notFoundResponse('No geometry found for this Hiking Route');
             }
 
-            $response = $this->buildHikingRouteResponse($hr, $hr->geometry);
+            $response = $this->buildHikingRouteResponse($hr);
 
             return response($response, 200, ['Content-type' => 'application/json']);
         } catch (Exception $e) {
@@ -771,9 +771,22 @@ class HikingRouteController extends Controller
      * @param  string  $geom  The geometry data as GeoJSON string
      * @return array The formatted response array
      */
-    private function buildHikingRouteResponse(HikingRoute $hikingRoute, string $geom): array
+    private function buildHikingRouteResponse(HikingRoute $hikingRoute): array
     {
         $osmfeaturesProperties = $hikingRoute->osmfeatures_data['properties'];
+
+        $obj = HikingRoute::where('id', '=', $hikingRoute->id)
+            ->select(
+                DB::raw('ST_AsGeoJSON(geometry) as geom')
+            )
+            ->first();
+
+        if (is_null($obj)) {
+            $geom = [];
+        } else {
+            $geom = $obj->geom;
+        }
+
         $response = [
             'type' => 'Feature',
             'properties' => [
