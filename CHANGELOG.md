@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.2.0](https://github.com/webmappsrl/osm2cai2/compare/v1.1.1...v1.2.0) (2025-06-09)
+
+
+### Features
+
+* added laravel pint for code formatting and formatted code ([#198](https://github.com/webmappsrl/osm2cai2/issues/198)) ([c118598](https://github.com/webmappsrl/osm2cai2/commit/c118598bc508ea58a29d555718d1824b82e44ef2))
+* added survey name to app popup OC:5522 ([322e3df](https://github.com/webmappsrl/osm2cai2/commit/322e3df8213774e0c8861ea9da5a1ea0e2b51efd))
+
+
+### Bug Fixes
+
+* calculate osm2cai status OC:5580 ([cee7378](https://github.com/webmappsrl/osm2cai2/commit/cee7378f578c39c21dddcefb2220269c57e2b8e1))
+* **commands:** 🐛 update osmfeatures_data status handling ([bc44d31](https://github.com/webmappsrl/osm2cai2/commit/bc44d31b4990f13283e51074ea1ae57e7ffd984d))
+* download routes csv action in club nova resource OC:5556 ([ffc47f3](https://github.com/webmappsrl/osm2cai2/commit/ffc47f3cf0ebf5570edc133acaa25617a66bcddd))
+* ensure valid status counts for hiking routes ([3234a54](https://github.com/webmappsrl/osm2cai2/commit/3234a544ead33ae6c180c2199406eb8ad7594846))
+* geometry in ugc_poi nova resource required ([5b7a2a2](https://github.com/webmappsrl/osm2cai2/commit/5b7a2a2bfb9050ce6b5d20d7092590c043fde5ea))
+* **HikingRoute:** update buildHikingRouteResponse method to handle geometry retrieval OC:5638 ([778e0bf](https://github.com/webmappsrl/osm2cai2/commit/778e0bf27063103aba2d26a59eaca1c0a7521490))
+* improve saved hook in hiking routes model ([679f184](https://github.com/webmappsrl/osm2cai2/commit/679f1848a87a13bee66cfe0b346474dc6ee5d652))
+* improved performance on hiking route nova index OC:5559 ([#201](https://github.com/webmappsrl/osm2cai2/issues/201)) ([df01053](https://github.com/webmappsrl/osm2cai2/commit/df010535d3406e9b40e41f51a7bab3fa7319f0e2))
+* media url in html popup ([12d245d](https://github.com/webmappsrl/osm2cai2/commit/12d245d63f8ca8a06ebb8fbaafff70e53f0258bb))
+* refactor latitude and longitude accessors in UgcPoisExport and UgcPoi OC:5523 ([13493db](https://github.com/webmappsrl/osm2cai2/commit/13493dbee8e335110eaa3004f512cd6c3c124784))
+* source survey overlay api OC:5521 ([02fbd45](https://github.com/webmappsrl/osm2cai2/commit/02fbd4522b8cc810fd24030844220c4672d40001))
+* user role checks in HikingRoute management actions OC:5554 ([#200](https://github.com/webmappsrl/osm2cai2/issues/200)) ([535c23a](https://github.com/webmappsrl/osm2cai2/commit/535c23a86c4d81f926b69af99ee650324e97afdf))
+
+
+### Miscellaneous Chores
+
+* **wm-package:** update subproject commit reference ([78b7b1e](https://github.com/webmappsrl/osm2cai2/commit/78b7b1ec55910c7426dcc9cc6e97a5416bf89c98))
+* **wm-package:** update subproject commit reference ([7044a61](https://github.com/webmappsrl/osm2cai2/commit/7044a6151966360cdca7ecc06a60812be730d9ee))
+* **wm-package:** update subproject commit reference ([4a7b8b0](https://github.com/webmappsrl/osm2cai2/commit/4a7b8b05e74173a80b620fdab0dfdab943e0efb0))
+* **wm-package:** update subproject commit reference ([45dc6a7](https://github.com/webmappsrl/osm2cai2/commit/45dc6a792828a2660fe0c8eef5fce2ff0ef48252))
+* **wm-package:** update subproject commit reference ([9f7b0bc](https://github.com/webmappsrl/osm2cai2/commit/9f7b0bceca803a0a5532f0315a063c917a21eb6b))
+* **wm-package:** update subproject commit reference ([38689a7](https://github.com/webmappsrl/osm2cai2/commit/38689a7782fc53387bf8948c44bb3b93247e0ff5))
+* **wm-package:** update subproject commit reference ([4df49f2](https://github.com/webmappsrl/osm2cai2/commit/4df49f218bdac7c5a2fb98318b055fc3a8ab3dc0))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
