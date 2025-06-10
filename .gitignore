@@ -16,3 +16,4 @@ yarn-error.log
 docker-compose.yml
 /tests/stubs
 .php-cs-fixer.cache
+storage/backups/
