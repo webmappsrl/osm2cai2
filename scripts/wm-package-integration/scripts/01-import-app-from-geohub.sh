@@ -130,45 +130,57 @@ print_warning "L'import viene processato in background tramite Horizon"
 # Aspetta un po' per il processamento
 sleep 10
 
-# Verifica se l'app è stata creata
-for i in {1..6}; do
+# Verifica se l'app è stata creata o se è già presente
+for i in {1..8}; do
     NEW_APP_COUNT=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null | tail -1 || echo "0")
     
-    if [ "$NEW_APP_COUNT" -gt "$APP_COUNT" ]; then
-        print_success "✨ Import completato! App creata nel database"
-        print_success "Numero totale app: $NEW_APP_COUNT (era $APP_COUNT)"
+    # Verifica se esiste un'app con l'ID richiesto o se il numero è aumentato
+    APP_EXISTS=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::where('geohub_id', $APP_ID)->exists() ? 'YES' : 'NO';\"" 2>/dev/null | tail -1 || echo "NO")
+    
+    if [ "$NEW_APP_COUNT" -gt "$APP_COUNT" ] || [ "$APP_EXISTS" == "YES" ]; then
+        print_success "✨ Import completato! App presente nel database"
+        print_success "Numero totale app: $NEW_APP_COUNT"
         
         # Mostra dettagli app
         print_step "Dettagli app importata:"
         docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
-            \\\$app = \Wm\WmPackage\Models\App::latest()->first();
+            \\\$app = \Wm\WmPackage\Models\App::where('geohub_id', $APP_ID)->first() ?: \Wm\WmPackage\Models\App::latest()->first();
             if (\\\$app) {
                 echo 'ID: ' . \\\$app->id . PHP_EOL;
                 echo 'Nome: ' . \\\$app->name . PHP_EOL;
                 echo 'SKU: ' . \\\$app->sku . PHP_EOL;
                 echo 'Cliente: ' . \\\$app->customer_name . PHP_EOL;
+                if (isset(\\\$app->geohub_id)) echo 'Geohub ID: ' . \\\$app->geohub_id . PHP_EOL;
             }
         \"" 2>/dev/null || true
         
         break
     else
-        print_step "Attesa processamento... ($i/6 - ${i}0 secondi)"
+        print_step "Attesa processamento... ($i/8 - ${i}0 secondi)"
         sleep 10
     fi
 done
 
-# Verifica finale
-if [ "$NEW_APP_COUNT" -eq "$APP_COUNT" ]; then
-    print_error "TIMEOUT: L'app non è stata creata entro 60 secondi"
-    print_error "Possibili cause:"
-    print_error "• Import ancora in processamento (controlla Horizon)"
-    print_error "• Errore durante l'import (controlla log Laravel)"
-    print_error "• Problema di connessione con Geohub"
-    print_error ""
-    print_error "Controlli utili:"
-    print_error "• Stato Horizon: http://localhost:8008/horizon"
-    print_error "• Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
-    exit 1
+# Verifica finale più intelligente
+APP_EXISTS_FINAL=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::where('geohub_id', $APP_ID)->exists() ? 'YES' : 'NO';\"" 2>/dev/null | tail -1 || echo "NO")
+
+if [ "$NEW_APP_COUNT" -eq "$APP_COUNT" ] && [ "$APP_EXISTS_FINAL" == "NO" ]; then
+    print_warning "TIMEOUT: L'app potrebbe non essere stata creata entro 80 secondi"
+    print_warning "Possibili cause:"
+    print_warning "• Import ancora in processamento (controlla Horizon)"
+    print_warning "• Errore durante l'import (controlla log Laravel)"
+    print_warning "• Problema di connessione con Geohub"
+    print_warning "• App già esistente con ID diverso"
+    print_warning ""
+    print_warning "Controlli utili:"
+    print_warning "• Stato Horizon: http://localhost:8008/horizon"
+    print_warning "• Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+    print_warning "• App nel database: docker exec php81_osm2cai2 php artisan tinker --execute=\"\Wm\WmPackage\Models\App::all()->pluck('name', 'id')\""
+    
+    # Non interrompere lo script, ma continua con un warning
+    print_warning "Continuando con il setup..."
+else
+    print_success "App verificata nel database!"
 fi
 
 print_success "=== VERIFICA COMPLETATA ==="

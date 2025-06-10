@@ -92,7 +92,7 @@ MINIO_ROOT_PASSWORD=minioadmin
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin
 AWS_BUCKET=osm2cai2-bucket
-AWS_ENDPOINT=http://minio_osm2cai2:9000
+AWS_ENDPOINT=http://minio_osm2cai2:9003
 AWS_URL=http://localhost:9002
 AWS_USE_PATH_STYLE_ENDPOINT=true
 

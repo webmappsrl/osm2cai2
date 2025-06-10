@@ -170,7 +170,7 @@ fi
 print_step "Attesa che MinIO sia completamente pronto..."
 timeout=90
 elapsed=0
-while ! curl -f -s http://localhost:9000/minio/health/live &> /dev/null; do
+while ! curl -f -s http://localhost:9003/minio/health/live &> /dev/null; do
     if [ $elapsed -ge $timeout ]; then
         print_warning "Timeout: MinIO non è diventato pronto in $timeout secondi (continuo comunque)"
         break
@@ -180,7 +180,7 @@ while ! curl -f -s http://localhost:9000/minio/health/live &> /dev/null; do
     print_step "Attendo MinIO... ($elapsed/$timeout secondi)"
 done
 
-if curl -f -s http://localhost:9000/minio/health/live &> /dev/null; then
+if curl -f -s http://localhost:9003/minio/health/live &> /dev/null; then
     print_success "MinIO pronto e funzionante"
 else
     print_warning "MinIO non ancora pronto (potrebbero esserci problemi nella FASE 3)"
@@ -239,11 +239,12 @@ if [ "$APP_COUNT" -eq 0 ]; then
     print_step "Nessuna app rilevata, l'import dovrebbe essere già stato eseguito nella FASE 2..."
     print_warning "Se l'app non è stata importata, controlla Horizon: http://localhost:8008/horizon"
     
-    # Assegna app_id=1 a tutte le hiking routes esistenti
-    print_step "Assegnazione app_id=1 a tutte le hiking routes..."
+    # Assegna app_id alla prima app disponibile per tutte le hiking routes esistenti
+    FIRST_APP_ID=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
+    print_step "Assegnazione app_id=$FIRST_APP_ID a tutte le hiking routes..."
     docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
-        \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => 1]);
-        echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=1';
+        \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
+        echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
     \""
     print_success "Hiking routes associate all'app di default"
 else
@@ -253,10 +254,11 @@ else
     ROUTES_WITHOUT_APP=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
     
     if [ "$ROUTES_WITHOUT_APP" -gt 0 ]; then
-        print_step "Assegnazione app_id=1 a $ROUTES_WITHOUT_APP hiking routes senza app..."
+        FIRST_APP_ID=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
+        print_step "Assegnazione app_id=$FIRST_APP_ID a $ROUTES_WITHOUT_APP hiking routes senza app..."
         docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
-            \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => 1]);
-            echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=1';
+            \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
+            echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
         \""
         print_success "Hiking routes associate all'app di default"
     fi
@@ -296,7 +298,7 @@ print_success "Cache configurazione pulita"
 
 # Indicizzazione iniziale
 print_step "Avvio indicizzazione iniziale (può richiedere diversi minuti)..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import 'App\\Models\\HikingRoute'"; then
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import App\\\\Models\\\\HikingRoute"; then
     print_error "Errore durante l'indicizzazione iniziale! Interruzione setup."
     exit 1
 fi
