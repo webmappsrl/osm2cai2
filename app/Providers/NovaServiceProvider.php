@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Nova\App;
 use App\Nova\ArchaeologicalArea;
 use App\Nova\ArchaeologicalSite;
 use App\Nova\Area;
@@ -20,6 +21,7 @@ use App\Nova\EcPoi;
 use App\Nova\GeologicalSite;
 use App\Nova\HikingRoute;
 use App\Nova\Itinerary;
+use App\Nova\Layer;
 use App\Nova\MountainGroups;
 use App\Nova\Municipality;
 use App\Nova\NaturalSpring;
@@ -33,6 +35,7 @@ use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
 use App\Nova\User;
+use App\Nova\User as NovaUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
@@ -60,6 +63,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Nova::mainMenu(function (Request $request) {
             return [
                 MenuSection::dashboard(Main::class)->icon('home'),
+                MenuSection::make(__('MOBILE'), [
+                    MenuItem::resource(App::class),
+                    MenuItem::resource(NovaUser::class),
+                    MenuItem::resource(Layer::class),
+                ])->icon('globe')->collapsable(),
                 MenuGroup::make('', [
                     MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')
                         ->canSee(function () {
