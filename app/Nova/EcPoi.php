@@ -40,7 +40,7 @@ class EcPoi extends OsmfeaturesResource
         'osmfeatures_id',
     ];
 
-    public static function label()
+    public static function label(): string
     {
         $label = 'Punti di Interesse';
 
@@ -49,10 +49,8 @@ class EcPoi extends OsmfeaturesResource
 
     /**
      * Get the fields displayed by the resource.
-     *
-     * @return array
      */
-    public function fields(NovaRequest $request)
+    public function fields(NovaRequest $request): array
     {
         return array_merge(parent::fields($request), [
             Text::make(__('Type'), 'type')->sortable(),
@@ -64,7 +62,7 @@ class EcPoi extends OsmfeaturesResource
         ]);
     }
 
-    public function filters(NovaRequest $request)
+    public function filters(NovaRequest $request): array
     {
         $filters = parent::filters($request);
         $filters[] = (new EcPoiTypeFIlter);
@@ -72,7 +70,7 @@ class EcPoi extends OsmfeaturesResource
         return $filters;
     }
 
-    public function actions(NovaRequest $request)
+    public function actions(NovaRequest $request): array
     {
         $actions = parent::actions($request);
         $actions[] = (new CalculateIntersections('EcPoi'))->canSee(function () {

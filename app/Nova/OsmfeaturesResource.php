@@ -16,19 +16,17 @@ use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Resource;
 use Wm\MapMultiPolygon\MapMultiPolygon;
 use Wm\MapPoint\MapPoint;
 use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
+use Wm\WmPackage\Nova\AbstractEcResource;
 
-abstract class OsmfeaturesResource extends Resource
+abstract class OsmfeaturesResource extends AbstractEcResource
 {
     /**
      * Get the fields displayed by the resource.
-     *
-     * @return array
      */
-    public function fields(NovaRequest $request)
+    public function fields(NovaRequest $request): array
     {
         $geometryField = null;
         $model = $this->model();
@@ -98,10 +96,8 @@ abstract class OsmfeaturesResource extends Resource
 
     /**
      * Get the filters available for the resource.
-     *
-     * @return array
      */
-    public function filters(NovaRequest $request)
+    public function filters(NovaRequest $request): array
     {
         return [
             (new OsmFilter),
@@ -116,30 +112,24 @@ abstract class OsmfeaturesResource extends Resource
 
     /**
      * Get the cards available for the request.
-     *
-     * @return array
      */
-    public function cards(NovaRequest $request)
+    public function cards(NovaRequest $request): array
     {
         return [];
     }
 
     /**
      * Get the lenses available for the resource.
-     *
-     * @return array
      */
-    public function lenses(NovaRequest $request)
+    public function lenses(NovaRequest $request): array
     {
         return [];
     }
 
     /**
      * Get the actions available for the resource.
-     *
-     * @return array
      */
-    public function actions(NovaRequest $request)
+    public function actions(NovaRequest $request): array
     {
         return [];
     }

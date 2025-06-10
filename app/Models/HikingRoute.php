@@ -14,21 +14,17 @@ use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
-use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Wm\WmPackage\Models\EcTrack;
 
-class HikingRoute extends Model implements HasMedia, OsmfeaturesSyncableInterface
+class HikingRoute extends EcTrack
 {
     use AwsCacheable;
     use HasFactory;
-    use InteractsWithMedia;
     use OsmfeaturesGeometryUpdateTrait;
     use OsmfeaturesSyncableTrait;
     use SpatialDataTrait;
@@ -93,6 +89,37 @@ class HikingRoute extends Model implements HasMedia, OsmfeaturesSyncableInterfac
             $hikingRoute->cleanRelations();
             $hikingRoute->clearMediaCollection('feature_image');
         });
+    }
+
+    /**
+     * Get the index name for Elasticsearch
+     */
+    public function searchableAs(): string
+    {
+        return 'hiking_routes';
+    }
+
+    /**
+     * Determine if the model should be searchable.
+     * Only index records with valid geometry and osm2cai_status != 0
+     */
+    public function shouldBeSearchable()
+    {
+        return ! is_null($this->geometry) && $this->osm2cai_status != 0;
+    }
+
+    /**
+     * Override toSearchableArray to handle null geometry gracefully
+     */
+    public function toSearchableArray()
+    {
+        // Skip indexing if geometry is null
+        if (! $this->geometry) {
+            return [];
+        }
+
+        // Call parent method if geometry is valid
+        return parent::toSearchableArray();
     }
 
     /**

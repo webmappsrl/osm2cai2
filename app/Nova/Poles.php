@@ -27,15 +27,15 @@ class Poles extends OsmfeaturesResource
      * @var array
      */
     public static $search = [
-        'id', 'ref', 'osmfeatures_id',
+        'id',
+        'ref',
+        'osmfeatures_id',
     ];
 
     /**
      * Get the fields displayed by the resource.
-     *
-     * @return array
      */
-    public function fields(NovaRequest $request)
+    public function fields(NovaRequest $request): array
     {
         return array_merge(parent::fields($request), [
             Text::make('Ref', 'ref')->sortable(),

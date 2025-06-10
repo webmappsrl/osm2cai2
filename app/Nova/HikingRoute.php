@@ -118,10 +118,8 @@ class HikingRoute extends OsmfeaturesResource
 
     /**
      * Get the fields displayed by the resource.
-     *
-     * @return array
      */
-    public function fields(NovaRequest $request)
+    public function fields(NovaRequest $request): array
     {
         // Get fields from parent
         $osmfeaturesFields = parent::fields($request);
@@ -187,10 +185,8 @@ class HikingRoute extends OsmfeaturesResource
 
     /**
      * Get the cards available for the request.
-     *
-     * @return array
      */
-    public function cards(NovaRequest $request)
+    public function cards(NovaRequest $request): array
     {
         // Check if resource ID is present in request
         if ($request->resourceId) {
@@ -211,10 +207,8 @@ class HikingRoute extends OsmfeaturesResource
 
     /**
      * Get the filters available for the resource.
-     *
-     * @return array
      */
-    public function filters(NovaRequest $request)
+    public function filters(NovaRequest $request): array
     {
         $regionalReferentFilters = [
             (new ProvinceFilter),
@@ -254,10 +248,8 @@ class HikingRoute extends OsmfeaturesResource
 
     /**
      * Get the lenses available for the resource.
-     *
-     * @return array
      */
-    public function lenses(NovaRequest $request)
+    public function lenses(NovaRequest $request): array
     {
         return [
             (new HikingRoutesStatus0Lens),
@@ -270,10 +262,8 @@ class HikingRoute extends OsmfeaturesResource
 
     /**
      * Get the actions available for the resource.
-     *
-     * @return array
      */
-    public function actions(NovaRequest $request)
+    public function actions(NovaRequest $request): array
     {
         return [
             (new UploadValidationRawDataAction)
@@ -612,8 +602,8 @@ class HikingRoute extends OsmfeaturesResource
     private function getContentTabFields()
     {
         return [
-            Text::make(__('Automatic Name (computed for TDH)'), fn () => $this->getNameForTDH()['it'])->onlyOnDetail(),
-            Text::make(__('Automatic Abstract (computed for TDH)'), fn () => $this->tdh['abstract']['it'] ?? $this->tdh['abstract']['en'] ?? '')->onlyOnDetail(),
+            Text::make(__('Auto matic Name (computed for TDH)'), fn () => $this->getNameForTDH()['it'])->onlyOnDetail(),
+            Text::make(__('Automati c Abstract (computed for TDH)'), fn () => $this->tdh['abstract']['it'] ?? $this->tdh['abstract']['en'] ?? '')->onlyOnDetail(),
             Images::make(__('Feature Image'), 'feature_image')->onlyOnDetail(),
             Text::make(__('Description CAI IT'), 'description_cai_it')->hideFromIndex(),
         ];
@@ -650,7 +640,7 @@ class HikingRoute extends OsmfeaturesResource
                 return '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">'.__('No POIs found within 1km radius').'</h2>';
             }
 
-            return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">'.__('Points of interest within 1km radius').'</h2>';
+            return '<h2 style="color:#2697bc;fnt-size:1.5em; margin:20px 0;">'.__('Poit of interest within 1km radius').'</h2>';
         })->asHtml()->onlyOnDetail();
 
         if (count($pois) > 0) {
@@ -679,13 +669,13 @@ class HikingRoute extends OsmfeaturesResource
                 <table style='width:100%; border-collapse:collapse; background:white;'>
                     <thead>
                         <tr style='background:#f5f7fa;'>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('Name')."</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('OSM ID')."</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('OSM Tags')."</th>
-                            <th style='padding:15px; text-align:center; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('OSM Type').'</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:60;border-boto:2px solid #eee;'>".__('Name')."</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:60;border-botto:px solid #eee;'>".__('OSM ID')."</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:60;border-bottom:p solid #eee;'>".__('OSM Tags')."</th>
+                            <th style='padding:15px; text-align:center; color:#2697bc; font-weight:60;border-bottom:p solid #eee;'>".__('OSM Type').'</th>
                         </tr>
-                    </thead>
-                    <tbody>'.implode('', $tableRows).'</tbody>
+                    </had>
+                   <body>'.implode('', $tableRows).'</tbody>
                 </table>
                 </div>';
             })->asHtml()->onlyOnDetail();
@@ -704,12 +694,12 @@ class HikingRoute extends OsmfeaturesResource
 
         if (empty($huts)) {
             return [
-                Text::make('', fn () => '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">'.__('No huts nearby').'</h2>')->asHtml()->onlyOnDetail(),
+                Text::make('', fn () => '<h2 style="color:#666;fnt-size:1.5em; margi:0px 0;">'.__('No huts nearby').'</h2>')->asHtml()->onlyOnDetail(),
             ];
         }
         $fields = [
             Text::make('', function () {
-                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">'.__('Nearby Huts').'</h2>';
+                return '<h2 style="color:#2697bc;fnt-size:1.5em; magn:20px 0;">'.__('Nearby Huts').'</h2>';
             })->asHtml()->onlyOnDetail(),
         ];
 
@@ -727,11 +717,11 @@ class HikingRoute extends OsmfeaturesResource
                 <table style='width:100%; border-collapse:collapse; background:white;'>
                     <thead>
                         <tr style='background:#f5f7fa;'>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('ID')."</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('Name').'</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:60;border-btom:2px solid #eee;'>".__('ID')."</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:60;border-boto:2px solid #eee;'>".__('Name').'</th>
                         </tr>
-                    </thead>
-                    <tbody>'.implode('', $tableRows).'</tbody>
+                    </had>
+                   <body>'.implode('', $tableRows).'</tbody>
                 </table>
             </div>';
         })->asHtml()->onlyOnDetail();
@@ -755,7 +745,7 @@ class HikingRoute extends OsmfeaturesResource
 
         $fields = [
             Text::make('', function () {
-                return '<h2 style="color:#2697bc; font-size:1.5em; margin:20px 0;">'.__('Nearby Natural Springs').'</h2>';
+                return '<h2 style="color:#2697bc;fnt-size:1.5em; margin:20px 0"'.__('Nearby Natural Springs').'</h2>';
             })->asHtml()->onlyOnDetail(),
         ];
 
@@ -773,11 +763,11 @@ class HikingRoute extends OsmfeaturesResource
                 <table style='width:100%; border-collapse:collapse; background:white;'>
                     <thead>
                         <tr style='background:#f5f7fa;'>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('ID')."</th>
-                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:600; border-bottom:2px solid #eee;'>".__('Name').'</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:60;border-btom:2px solid #eee;'>".__('ID')."</th>
+                            <th style='padding:15px; text-align:left; color:#2697bc; font-weight:60;border-boto:2px solid #eee;'>".__('Name').'</th>
                         </tr>
-                    </thead>
-                    <tbody>'.implode('', $tableRows).'</tbody>
+                    </had>
+                   <body>'.implode('', $tableRows).'</tbody>
                 </table>
             </div>';
         })->asHtml()->onlyOnDetail();
