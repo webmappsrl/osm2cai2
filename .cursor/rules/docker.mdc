@@ -1,0 +1,128 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Docker Environment Rules per osm2cai2
+
+## Ambiente Dockerizzato
+- osm2cai2 **SEMPRE** gira in un ambiente dockerizzato
+- Non suggerire mai installazioni dirette di PHP, PostgreSQL, Redis o altre dipendenze sul sistema host
+- Tutti i comandi devono essere eseguiti all'interno dei container Docker appropriati
+
+## Architettura Container
+
+### Container PHP-FPM (`phpfpm`)
+- **Image**: `wm-phpfpm:8.4-fpm`
+- **Container name**: `php81_${APP_NAME}` (solitamente `php81_osm2cai2`)
+- **PHP Version**: 8.4-fpm
+- **Working directory**: `/var/www/html/${DOCKER_PROJECT_DIR_NAME}`
+- **User**: `www-data` (id: 33)
+- **Porte**: 
+  - `${DOCKER_PHP_PORT}:9000` (default: 9108)
+  - `${DOCKER_SERVE_PORT}:8000` (default: 8008, solo locale)
+
+### Container Database (`db`)
+- **Image**: `postgis/postgis:16-3.4`
+- **Container name**: `postgres_${APP_NAME}`
+- **Porta**: `${DOCKER_PSQL_PORT}:5432` (default: 5508)
+- **Extensions**: PostGIS attivo
+
+### Container Redis (`redis`)
+- **Image**: `redis:latest`
+- **Container name**: `redis_${APP_NAME}`
+- **Porta**: `6379:6379`
+
+## Comandi Essenziali
+
+### Accesso ai Container
+```bash
+# Container PHP (utente www-data)
+docker exec -it php81_osm2cai2 bash
+
+# Container PHP (utente root per permessi)
+docker exec -u 0 -it php81_osm2cai2 bash
+
+# Container PostgreSQL
+docker exec -it postgres_osm2cai2 bash
+```
+
+### Comandi Laravel nel Container
+```bash
+# Sempre nel container PHP
+docker exec -it php81_osm2cai2 bash
+php artisan [comando]
+composer [comando]
+npm [comando]
+```
+
+### Server di Sviluppo
+```bash
+# Nel container PHP
+php artisan serve --host 0.0.0.0
+# Accessibile su: http://127.0.0.1:8008
+```
+
+### Gestione Permessi
+```bash
+# Per problemi di permessi (come utente root)
+docker exec -u 0 -it php81_osm2cai2 bash
+chown -R 33 storage/
+chown -R 33 bootstrap/cache/
+```
+
+## Ambiente di Sviluppo vs Produzione
+
+### Locale (Development)
+- `APP_ENV=local`
+- `APP_DEBUG=true`  
+- `LOG_LEVEL=debug`
+- `DOCKER_SERVE_PORT` configurato (8008)
+- Xdebug attivo
+- Password DB semplici
+
+### Produzione
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `LOG_LEVEL=warning`
+- Rimuovere `DOCKER_SERVE_PORT` da docker-compose.yml
+- Password DB complesse
+
+## Tool Specifici Installati
+- **osmium-tool**: per manipolazione file OSM
+- **osm2pgsql**: per import dati OSM in PostgreSQL
+- **gdal-bin**: per manipolazione dati geospaziali
+- **postgresql-client-16**: client PostgreSQL
+- **supervisor**: per gestione processi
+- **nodejs/npm**: per asset frontend
+
+## Debug con Xdebug (Solo Locale)
+- Porta xdebug: 9200
+- Path mapping: `/var/www/html/osm2cai2` → `${workspaceRoot}`
+- Variabile ambiente: `export XDEBUG_SESSION=1`
+- File log: `/var/log/xdebug.log`
+
+## Scripts e Geobox Integration
+- Utilizza il sistema **Geobox** per gestione environment
+- Scripts nella cartella `scripts/` vanno eseguiti nel container PHP
+- Comandi geobox disponibili:
+  - `geobox_install osm2cai2`
+  - `geobox_serve osm2cai2`
+  - `geobox_dump_restore osm2cai2`
+
+## Note Importanti
+- Mai installare dipendenze direttamente sul sistema host
+- Sempre verificare che i container siano attivi con `docker ps`
+- Per modifiche ai file di configurazione Docker, ricostruire i container
+- I volumi sono montati in `./docker/volumes/`
+- Il progetto usa git-flow (branch develop)
+
+## Variabili Ambiente Chiave
+```bash
+APP_NAME=osm2cai2
+DOCKER_PROJECT_DIR_NAME=osm2cai2
+DOCKER_PHP_PORT=9108
+DOCKER_PSQL_PORT=5508
+DOCKER_SERVE_PORT=8008 # solo locale
+DB_HOST=db # sempre "db" (nome container)
+```

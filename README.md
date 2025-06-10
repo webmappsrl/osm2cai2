@@ -59,6 +59,115 @@ Replace `${instance name}` with the instance name (APP_NAME in .env file)
 geobox_serve osm2cai2
 ```
 
+## Ambiente di Sviluppo con MinIO
+
+Per lo sviluppo locale è disponibile un ambiente completo con MinIO (S3-compatible) per gestire i file e MailPit per catturare le email.
+
+### Setup Rapido
+
+```bash
+# 1. Setup completo ambiente di sviluppo
+./scripts/dev-setup.sh
+
+# 2. Configura bucket MinIO
+./scripts/setup-minio-bucket.sh
+```
+
+### Servizi Disponibili
+
+- **Applicazione**: http://localhost:8008
+- **MinIO Console**: http://localhost:9003 (minioadmin/minioadmin)
+- **MailPit**: http://localhost:8025
+- **Elasticsearch**: http://localhost:9200
+- **PostgreSQL**: localhost:5508
+
+### Configurazione .env per MinIO
+
+```bash
+# MinIO Configuration
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
+
+# AWS S3 Compatible Settings
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_BUCKET=osm2cai2-bucket
+AWS_ENDPOINT=http://minio_osm2cai2:9000
+AWS_URL=http://localhost:9002
+AWS_USE_PATH_STYLE_ENDPOINT=true
+
+# Email Development  
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit_osm2cai2
+MAIL_PORT=1025
+```
+
+### Gestione Ambiente
+
+```bash
+# Avvia ambiente di sviluppo
+docker-compose up -d
+docker-compose -f develop.compose.yml up -d
+
+# Ferma ambiente di sviluppo
+docker-compose down
+docker-compose -f develop.compose.yml down
+
+# Solo servizi di sviluppo (MinIO, MailPit)
+docker-compose -f develop.compose.yml up -d
+```
+
+## Configurazione Database Geohub
+
+Per utilizzare gli script di import da Geohub (disponibili in `scripts/wm-package-integration/`), è necessario configurare la connessione al database Geohub nel file `.env`.
+
+### Variabili Ambiente Richieste
+
+Aggiungere le seguenti variabili al file `.env`:
+
+```bash
+# Geohub Database Configuration
+GEOHUB_DB_HOST=your-geohub-host
+GEOHUB_DB_PORT=5432
+GEOHUB_DB_DATABASE=geohub
+GEOHUB_DB_USERNAME=your-username
+GEOHUB_DB_PASSWORD=your-password
+```
+
+### Configurazione per Ambiente Locale
+
+**IMPORTANTE**: Se stai eseguendo il progetto in locale con Docker, devi utilizzare:
+
+```bash
+GEOHUB_DB_HOST=host.docker.internal
+```
+
+Questo permette al container Docker di connettersi al database Geohub in esecuzione sull'host locale.
+
+### Verifica Configurazione
+
+Dopo aver configurato le variabili, pulisci la cache di configurazione:
+
+```bash
+docker exec php81_osm2cai2 php artisan config:clear
+docker exec php81_osm2cai2 php artisan config:cache
+```
+
+E riavvia Horizon per applicare le nuove configurazioni:
+
+```bash
+docker exec php81_osm2cai2 php artisan horizon:terminate
+docker exec -d php81_osm2cai2 php artisan horizon
+```
+
+### Test Connessione
+
+Puoi testare la connessione al database Geohub con:
+
+```bash
+docker exec php81_osm2cai2 php artisan tinker --execute="try { DB::connection('geohub')->getPdo(); echo 'Connessione geohub OK'; } catch(Exception \$e) { echo 'Errore connessione: ' . \$e->getMessage(); }"
+```
+
 ### Differenze ambiente produzione locale
 
 Questo sistema di container docker è utilizzabile sia per lo sviluppo locale sia per un sistema in produzione. In locale abbiamo queste caratteristiche:
