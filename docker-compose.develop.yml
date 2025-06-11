@@ -26,16 +26,13 @@ services:
       timeout: 20s
       retries: 3
 
-  # MailHog - SMTP testing tool per catturare email in sviluppo
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: "mailhog_${APP_NAME}"
-    restart: always
+  # needed for mails testing
+  mailpit:
+    container_name: "mailpit_${APP_NAME}"
+    image: "axllent/mailpit:latest"
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web interface
-    networks:
-      - laravel
+      - "${FORWARD_MAILPIT_PORT:-1025}:1025"
+      - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
 
   # Elasticsearch - Search and analytics engine
   elasticsearch:
