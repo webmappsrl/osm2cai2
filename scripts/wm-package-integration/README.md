@@ -8,8 +8,10 @@ Questa directory contiene tutti gli script per l'integrazione di WM-Package con 
 
 **`wm-package-integration.sh`** - *Script principale completo*
 - Setup ambiente Docker completo
-- Migrazioni database e import app da Geohub
+- **Gestione intelligente migrazioni (rollback automatico se necessario)**
+- Import app da Geohub
 - Configurazione servizi (MinIO, Elasticsearch, Scout)
+- **Pulizia automatica indici Elasticsearch esistenti**
 - Indicizzazione automatica e alias Elasticsearch
 - Avvio servizi finali (Laravel + Horizon)
 
@@ -50,6 +52,18 @@ Gli script seguenti si trovano nella sottocartella `scripts/` e vengono eseguiti
 - Ricarica il dump di backup
 - Riavvia tutti i servizi
 - Include conferma di sicurezza
+
+**`scripts/07-delete-all-elasticsearch-indices.sh`** - *Cancellazione Indici Elasticsearch*
+- Cancella tutti gli indici di Elasticsearch (OPERAZIONE DISTRUTTIVA!)
+- Esclude automaticamente gli indici di sistema
+- Modalità dry-run per test sicuri
+- Richiede conferme multiple per sicurezza
+
+**`scripts/08-manage-migrations.sh`** - *Gestione Intelligente Migrazioni*
+- Controlla stato delle migrazioni WM-Package
+- Rollback automatico se migrazioni già applicate
+- Applicazione controllata di tutte le migrazioni
+- Verifica finale dello stato
 
 ## 🎨 Sistema Layer di Accatastamento
 
@@ -121,6 +135,30 @@ Gli script `02` e `03` gestiscono un sistema di layer colorati per gli stati di 
 
 # Fix alias Elasticsearch
 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh
+
+# Test cancellazione indici (modalità sicura)
+./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --dry-run
+
+# Cancellazione completa indici (⚠️ ATTENZIONE!)
+./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh
+
+# Cancellazione automatica senza conferme (⚠️ MOLTO PERICOLOSO!)
+./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force
+```
+
+### Gestione Migrazioni
+```bash
+# Gestione automatica intelligente (raccomandato)
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh
+
+# Test senza modifiche
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh --dry-run
+
+# Forza rollback + riapplica
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh --force-rollback
+
+# Solo applica migrazioni (salta rollback)
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh --skip-rollback
 ```
 
 ### Reset Database (Attenzione!)

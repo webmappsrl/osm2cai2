@@ -198,15 +198,15 @@ print_success "Laravel serve e Horizon avviati (necessari per import)"
 # FASE 2: DATABASE E MIGRAZIONI
 print_step "=== FASE 2: DATABASE E MIGRAZIONI ==="
 
-# Applicazione Migrazioni
-print_step "Applicazione nuove migrazioni al database esistente..."
+# Gestione intelligente migrazioni (con rollback automatico se necessario)
+print_step "Gestione intelligente migrazioni (controllo stato + rollback automatico)..."
 
-# Applica le nuove migrazioni
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
-    print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
+# Usa lo script dedicato per gestire le migrazioni
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/08-manage-migrations.sh"; then
+    print_error "Errore durante la gestione delle migrazioni! Interruzione setup."
     exit 1
 fi
-print_success "Nuove migrazioni applicate al database"
+print_success "Migrazioni gestite con successo (con rollback automatico se necessario)"
 
 # Import App da Geohub
 print_step "Import App da Geohub (utilizzando script dedicato)..."
@@ -283,6 +283,14 @@ print_step "Setup Elasticsearch e indicizzazione..."
 
 # Aspetta che Elasticsearch sia completamente pronto
 sleep 15
+
+# Cancellazione indici esistenti per partire puliti
+print_step "Pulizia indici Elasticsearch esistenti..."
+if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
+    print_success "Indici Elasticsearch puliti (o nessun indice trovato)"
+else
+    print_warning "Errore durante la pulizia degli indici Elasticsearch (continuo comunque)"
+fi
 
 # Abilita indicizzazione automatica Scout
 if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
