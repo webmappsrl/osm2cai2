@@ -131,15 +131,10 @@ mkdir -p "$PROJECT_ROOT/docker/volumes/postgresql/data"
 mkdir -p "$PROJECT_ROOT/docker/volumes/elasticsearch/data"
 print_success "Directory volumi create"
 
-# Avvio container base
-print_step "Avvio container base..."
+# Avvio container
+print_step "Avvio tutti i container (base + sviluppo)..."
 cd "$PROJECT_ROOT"
-docker-compose up -d
-sleep 10
-
-# Avvio servizi di sviluppo
-print_step "Avvio servizi di sviluppo (MinIO, MailPit)..."
-docker-compose -f docker-compose.develop.yml up -d
+docker-compose -f docker-compose.yml -f docker-compose.develop.yml up -d
 sleep 15
 
 # Torna alla directory degli script
