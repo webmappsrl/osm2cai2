@@ -66,7 +66,7 @@ show_help() {
     echo
     echo "Comportamento:"
     echo "  1. Controlla stato migrazioni WM-Package"
-    echo "  2. Se già applicate -> rollback automatico"
+    echo "  2. Se già applicate -> chiede conferma per rollback"
     echo "  3. Applica tutte le migrazioni"
     echo "  4. Verifica successo operazione"
 }
@@ -143,29 +143,71 @@ check_wm_package_migrations() {
 
 # Funzione per fare rollback delle migrazioni WM-Package
 rollback_wm_package_migrations() {
-    echo -e "${YELLOW}🔄 Rollback migrazioni WM-Package...${NC}"
+    echo -e "${YELLOW}🔄 Rollback migrazioni WM-Package specifiche...${NC}"
     
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY-RUN]${NC} Farebbe rollback delle migrazioni WM-Package"
+        echo -e "${YELLOW}[DRY-RUN]${NC} Farebbe rollback SOLO delle migrazioni WM-Package specificate"
+        for migration in "${WM_PACKAGE_MIGRATIONS[@]}"; do
+            echo -e "${YELLOW}[DRY-RUN]${NC}   - $migration"
+        done
         return 0
     fi
     
-    # Approccio semplificato: rollback degli ultimi 2 batch che contengono le migrazioni WM-Package
-    echo -e "${YELLOW}📋 Rollback batch 17 (migrazioni WM-Package principali)...${NC}"
-    if ! php artisan migrate:rollback --step=20 2>/dev/null; then
-        echo -e "${YELLOW}⚠️  Batch 17 già rollback o parzialmente rollback${NC}"
-    fi
-    
-    echo -e "${YELLOW}📋 Rollback batch 16 (migrazioni layerables)...${NC}"
-    if ! php artisan migrate:rollback --step=5 2>/dev/null; then
-        echo -e "${YELLOW}⚠️  Batch 16 già rollback o parzialmente rollback${NC}"
-    fi
-    
-    # Verifica finale
+    # Ottieni lo stato attuale delle migrazioni
     local migration_output
     migration_output=$(get_migration_status)
     
+    # Array per memorizzare le migrazioni da fare rollback (in ordine inverso)
+    local migrations_to_rollback=()
+    
+    # Controlla quali migrazioni WM-Package sono effettivamente applicate
+    echo -e "${BLUE}🔍 Identificazione migrazioni WM-Package applicate...${NC}"
+    for migration in "${WM_PACKAGE_MIGRATIONS[@]}"; do
+        if echo "$migration_output" | grep -q "$migration.*Ran"; then
+            migrations_to_rollback=("$migration" "${migrations_to_rollback[@]}")
+            echo -e "${YELLOW}   📋 Trovata applicata: $migration${NC}"
+        fi
+    done
+    
+    if [[ ${#migrations_to_rollback[@]} -eq 0 ]]; then
+        echo -e "${GREEN}✅ Nessuna migrazione WM-Package da rollback${NC}"
+        return 0
+    fi
+    
+    echo -e "${YELLOW}📋 Rollback di ${#migrations_to_rollback[@]} migrazioni WM-Package specifiche...${NC}"
+    
+    # Strategia: fare rollback usando il file specifico della migrazione
+    local rollback_errors=0
+    
+    for migration in "${migrations_to_rollback[@]}"; do
+        echo -e "${YELLOW}   🔄 Rollback: $migration${NC}"
+        
+        # Trova il file della migrazione
+        local migration_file
+        migration_file=$(find database/migrations -name "*_${migration}.php" 2>/dev/null | head -1)
+        
+        if [[ -n "$migration_file" ]]; then
+            # Prova a fare rollback usando il path specifico
+            if php artisan migrate:rollback --path="$migration_file" 2>/dev/null; then
+                echo -e "${GREEN}   ✅ Rollback completato: $migration${NC}"
+            else
+                echo -e "${YELLOW}   ⚠️  Rollback alternativo per: $migration${NC}"
+                # Fallback: prova con un singolo step (più sicuro)
+                if ! php artisan migrate:rollback --step=1 2>/dev/null; then
+                    echo -e "${RED}   ❌ Errore rollback: $migration${NC}"
+                    ((rollback_errors++))
+                fi
+            fi
+        else
+            echo -e "${RED}   ❌ File migrazione non trovato: $migration${NC}"
+            ((rollback_errors++))
+        fi
+    done
+    
+    # Verifica finale
+    migration_output=$(get_migration_status)
     local still_applied=0
+    
     for migration in "${WM_PACKAGE_MIGRATIONS[@]}"; do
         if echo "$migration_output" | grep -q "$migration.*Ran"; then
             ((still_applied++))
@@ -173,10 +215,16 @@ rollback_wm_package_migrations() {
     done
     
     if [[ $still_applied -eq 0 ]]; then
-        echo -e "${GREEN}✅ Rollback completato - tutte le migrazioni WM-Package sono state rollback${NC}"
+        echo -e "${GREEN}✅ Rollback completato - tutte le migrazioni WM-Package specifiche sono state rollback${NC}"
     else
-        echo -e "${YELLOW}⚠️  $still_applied migrazioni WM-Package ancora applicate (procedo comunque)${NC}"
+        echo -e "${YELLOW}⚠️  $still_applied migrazioni WM-Package ancora applicate${NC}"
+        if [[ $rollback_errors -gt 0 ]]; then
+            echo -e "${RED}⚠️  Si sono verificati $rollback_errors errori durante il rollback${NC}"
+            echo -e "${BLUE}💡 Le migrazioni rimanenti potrebbero avere dipendenze. Procedo comunque...${NC}"
+        fi
     fi
+    
+    echo -e "${GREEN}✅ Rollback selettivo completato (solo migrazioni WM-Package)${NC}"
 }
 
 # Funzione per applicare le migrazioni
@@ -262,8 +310,33 @@ main() {
     else
         # Controllo automatico
         if check_wm_package_migrations; then
-            echo -e "${YELLOW}⚠️  Migrazioni WM-Package già applicate - rollback necessario${NC}"
-            needs_rollback=true
+            echo -e "${YELLOW}⚠️  Migrazioni WM-Package già applicate${NC}"
+            echo
+            if [[ "$DRY_RUN" == "true" ]]; then
+                echo -e "${YELLOW}[DRY-RUN]${NC} In modalità normale chiederebbe conferma per il rollback"
+                needs_rollback=true
+            else
+                echo -e "${BLUE}❓ Vuoi procedere con il rollback delle migrazioni WM-Package e riapplicarle?${NC}"
+                echo -e "${YELLOW}   Questo cancellerà tutte le modifiche WM-Package esistenti${NC}"
+                echo -n -e "${BLUE}   Procedere? [s/N]: ${NC}"
+                read -r response
+                echo
+                
+                case "$response" in
+                    [sS]|[sS][iI]|[yY]|[yY][eE][sS])
+                        echo -e "${GREEN}✅ Confermato - procedo con rollback${NC}"
+                        needs_rollback=true
+                        ;;
+                    *)
+                        echo -e "${RED}❌ Rollback annullato dall'utente${NC}"
+                        echo -e "${BLUE}💡 Suggerimenti:${NC}"
+                        echo -e "   • Usa ${YELLOW}--force-rollback${NC} per forzare il rollback senza conferma"
+                        echo -e "   • Usa ${YELLOW}--skip-rollback${NC} per saltare il rollback e applicare solo nuove migrazioni"
+                        echo -e "   • Usa ${YELLOW}--dry-run${NC} per simulare senza modifiche"
+                        exit 1
+                        ;;
+                esac
+            fi
         else
             echo -e "${GREEN}✅ Nessuna migrazione WM-Package applicata - rollback non necessario${NC}"
         fi
