@@ -13,8 +13,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
-      - "9000:9000"  # API MinIO
-      - "9001:9001"  # Console Web MinIO
+      - "9003:9000"  # API MinIO
+      - "9004:9001"  # Console Web MinIO
     volumes:
       - "./docker/volumes/minio/data:/data"
     command: server /data --console-address ":9001"
@@ -37,6 +37,29 @@ services:
     networks:
       - laravel
 
+  # Elasticsearch - Search and analytics engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
+    container_name: "elasticsearch_${APP_NAME}"
+    restart: always
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "./docker/volumes/elasticsearch/data:/usr/share/elasticsearch/data"
+    networks:
+      - laravel
+
 networks:
-  laravel:
-    external: true 
+  laravel: 

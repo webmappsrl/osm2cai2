@@ -73,7 +73,7 @@ print_step "Pulizia selettiva ambiente OSM2CAI2..."
 # Ferma solo i container di OSM2CAI2 tramite docker-compose
 print_step "Fermando container OSM2CAI2..."
 docker-compose down -v --remove-orphans 2>/dev/null || true
-docker-compose -f develop.compose.yml down -v --remove-orphans 2>/dev/null || true
+docker-compose -f docker-compose.develop.yml down -v --remove-orphans 2>/dev/null || true
 
 # Lista dei container specifici OSM2CAI2 da verificare/pulire
 OSM2CAI_CONTAINERS=(
@@ -111,9 +111,13 @@ done
 
 print_success "Pulizia selettiva completata (solo container OSM2CAI2)"
 
+# Determina la directory root del progetto
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
+
 # Verifica file .env
 print_step "Verifica file .env..."
-if [ ! -f "../../.env" ]; then
+if [ ! -f "$PROJECT_ROOT/.env" ]; then
     print_error "File .env non trovato nella root del progetto! Configurare .env prima di eseguire lo script."
     exit 1
 else
@@ -122,24 +126,24 @@ fi
 
 # Creazione directory per volumi Docker
 print_step "Creazione directory per volumi Docker..."
-mkdir -p docker/volumes/minio/data
-mkdir -p docker/volumes/postgresql/data
-mkdir -p docker/volumes/elasticsearch/data
+mkdir -p "$PROJECT_ROOT/docker/volumes/minio/data"
+mkdir -p "$PROJECT_ROOT/docker/volumes/postgresql/data"
+mkdir -p "$PROJECT_ROOT/docker/volumes/elasticsearch/data"
 print_success "Directory volumi create"
 
 # Avvio container base
 print_step "Avvio container base..."
-cd ../..
+cd "$PROJECT_ROOT"
 docker-compose up -d
 sleep 10
 
 # Avvio servizi di sviluppo
 print_step "Avvio servizi di sviluppo (MinIO, MailPit)..."
-docker-compose -f develop.compose.yml up -d
+docker-compose -f docker-compose.develop.yml up -d
 sleep 15
 
 # Torna alla directory degli script
-cd scripts/wm-package-integration
+cd "$SCRIPT_DIR"
 
 # Attesa che PostgreSQL sia completamente pronto
 print_step "Attesa che PostgreSQL sia completamente pronto..."
@@ -304,28 +308,13 @@ if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php -d max
 fi
 print_success "Indicizzazione iniziale completata"
 
-# Creazione alias ec_tracks (per compatibilità API)
-print_step "Creazione alias ec_tracks per compatibilità API..."
-INDEX_NAME=$(docker exec php81_osm2cai2 bash -c "curl -s 'elasticsearch:9200/_alias?pretty'" | grep -B2 '"hiking_routes"' | grep -o 'hiking_routes_[0-9]*' | head -1)
-
-if [ ! -z "$INDEX_NAME" ]; then
-    # Rimuovi alias esistente se presente
-    docker exec php81_osm2cai2 bash -c "curl -X POST 'elasticsearch:9200/_aliases' -H 'Content-Type: application/json' -d '{\"actions\":[{\"remove\":{\"index\":\"*\",\"alias\":\"ec_tracks\"}}]}'" 2>/dev/null
-    
-    # Crea nuovo alias
-    docker exec php81_osm2cai2 bash -c "curl -X POST 'elasticsearch:9200/_aliases' -H 'Content-Type: application/json' -d '{\"actions\":[{\"add\":{\"index\":\"$INDEX_NAME\",\"alias\":\"ec_tracks\"}}]}'"
-    print_success "Alias ec_tracks creato per $INDEX_NAME"
-    
-    # Verifica che l'alias funzioni
-    if docker exec php81_osm2cai2 bash -c "curl -f -s 'elasticsearch:9200/ec_tracks/_search?size=0' > /dev/null"; then
-        print_success "Alias ec_tracks verificato e funzionante"
-    else
-        print_warning "Alias ec_tracks creato ma potrebbe non funzionare correttamente"
-    fi
-else
-    print_warning "Indice hiking_routes non trovato, alias ec_tracks non creato"
-    print_warning "L'API Elasticsearch potrebbe non funzionare correttamente"
+# Fix completo Elasticsearch con configurazione single-node
+print_step "Fix Elasticsearch e creazione alias ec_tracks per compatibilità API..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"; then
+    print_error "Errore durante la configurazione dell'alias ec_tracks! Interruzione setup."
+    exit 1
 fi
+print_success "Elasticsearch configurato per single-node e alias ec_tracks creato"
 
 print_success "=== FASE 5 COMPLETATA: Elasticsearch configurato ==="
 
@@ -394,6 +383,6 @@ echo "   • Test MinIO: ./scripts/test-minio-laravel.sh"
 echo "   • Fix alias Elasticsearch: docker exec php81_osm2cai2 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"
 echo ""
 echo "🛑 Per fermare tutto:"
-echo "   docker-compose down && docker-compose -f develop.compose.yml down"
+echo "   docker-compose down && docker-compose -f docker-compose.develop.yml down"
 echo ""
 print_success "Ambiente di sviluppo pronto per l'uso!" 

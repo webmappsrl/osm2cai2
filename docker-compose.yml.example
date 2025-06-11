@@ -42,6 +42,28 @@ services:
       - 6379:6379
     networks:
       - laravel
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
+    container_name: "elasticsearch_${APP_NAME}"
+    restart: always
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "./docker/volumes/elasticsearch/data:/usr/share/elasticsearch/data"
+    networks:
+      - laravel
 networks:
   laravel:
     driver: bridge

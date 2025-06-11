@@ -4,8 +4,8 @@
 set -e
 set -o pipefail
 
-echo "🔧 Fix Elasticsearch Alias ec_tracks -> hiking_routes"
-echo "=================================================="
+echo "🔧 Fix Elasticsearch Alias ec_tracks -> hiking_routes + Single-Node Config"
+echo "======================================================================"
 
 # Funzione per gestire errori
 handle_error() {
@@ -67,7 +67,62 @@ fi
 
 print_success "Elasticsearch raggiungibile"
 
-# 2. Verifica indici hiking_routes esistenti
+# 2. Controlla e configura cluster per single-node
+print_step "Configurazione cluster per single-node..."
+
+CLUSTER_HEALTH=$(curl -s 'elasticsearch:9200/_cluster/health' | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+echo "Stato cluster attuale: $CLUSTER_HEALTH"
+
+if [ "$CLUSTER_HEALTH" = "red" ] || [ "$CLUSTER_HEALTH" = "yellow" ]; then
+    print_warning "Cluster in stato $CLUSTER_HEALTH, applicazione configurazioni single-node..."
+    
+    # Configura tutti gli indici esistenti per 0 repliche
+    print_step "Configurazione indici esistenti per 0 repliche..."
+    INDICES=$(curl -s 'elasticsearch:9200/_cat/indices?h=index' | grep -E '(hiking_routes|ec_tracks)' || true)
+    
+    if [ ! -z "$INDICES" ]; then
+        for INDEX in $INDICES; do
+            echo "Configurazione $INDEX per 0 repliche..."
+            curl -X PUT "elasticsearch:9200/$INDEX/_settings" -H 'Content-Type: application/json' -d '{"index":{"number_of_replicas":0}}' || true
+        done
+    fi
+    
+    # Aspetta un po' per far applicare le modifiche
+    sleep 3
+    
+    # Verifica shard non assegnati e riassegnali se necessario
+    print_step "Verifica e riassegnazione shard non assegnati..."
+    UNASSIGNED_SHARDS=$(curl -s 'elasticsearch:9200/_cat/shards?h=index,shard,prirep,state' | grep UNASSIGNED || true)
+    
+    if [ ! -z "$UNASSIGNED_SHARDS" ]; then
+        print_warning "Trovati shard non assegnati, tentativo di riassegnazione..."
+        echo "$UNASSIGNED_SHARDS"
+        
+        # Riassegna shard primari non assegnati
+        echo "$UNASSIGNED_SHARDS" | while read line; do
+            if echo "$line" | grep -q "p UNASSIGNED"; then
+                INDEX=$(echo "$line" | awk '{print $1}')
+                SHARD=$(echo "$line" | awk '{print $2}')
+                
+                echo "Riassegnazione shard primario $SHARD per indice $INDEX..."
+                curl -X POST "elasticsearch:9200/_cluster/reroute" -H 'Content-Type: application/json' -d "{\"commands\":[{\"allocate_empty_primary\":{\"index\":\"$INDEX\",\"shard\":$SHARD,\"node\":\"elasticsearch\",\"accept_data_loss\":true}}]}" || true
+            fi
+        done
+        
+        # Aspetta per l'inizializzazione
+        sleep 10
+    fi
+    
+    # Verifica stato finale del cluster
+    FINAL_HEALTH=$(curl -s 'elasticsearch:9200/_cluster/health' | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+    if [ "$FINAL_HEALTH" != "green" ]; then
+        print_warning "Cluster ancora in stato $FINAL_HEALTH, ma procediamo..."
+    else
+        print_success "Cluster ora in stato green"
+    fi
+fi
+
+# 3. Verifica indici hiking_routes esistenti
 print_step "Ricerca indici hiking_routes..."
 INDEX_NAME=$(curl -s 'elasticsearch:9200/_alias?pretty' | grep -B2 '"hiking_routes"' | grep -o 'hiking_routes_[0-9]*' | head -1)
 
@@ -86,13 +141,17 @@ if [ -z "$INDEX_NAME" ]; then
         print_error "Impossibile creare indice hiking_routes"
         exit 1
     fi
+    
+    # Configura il nuovo indice per 0 repliche
+    print_step "Configurazione nuovo indice per 0 repliche..."
+    curl -X PUT "elasticsearch:9200/$INDEX_NAME/_settings" -H 'Content-Type: application/json' -d '{"index":{"number_of_replicas":0}}'
 fi
 
 print_success "Indice trovato: $INDEX_NAME"
 
-# 3. Verifica alias ec_tracks esistente
+# 4. Verifica alias ec_tracks esistente
 print_step "Verifica alias ec_tracks esistente..."
-EXISTING_ALIAS=$(curl -s 'elasticsearch:9200/_alias/ec_tracks?pretty' | grep -o '"ec_tracks"' | head -1)
+EXISTING_ALIAS=$(curl -s 'elasticsearch:9200/_alias/ec_tracks?pretty' 2>/dev/null | grep -o '"ec_tracks"' | head -1 || true)
 
 if [ ! -z "$EXISTING_ALIAS" ]; then
     print_warning "Alias ec_tracks già esistente, rimozione..."
@@ -100,7 +159,7 @@ if [ ! -z "$EXISTING_ALIAS" ]; then
     print_success "Alias esistente rimosso"
 fi
 
-# 4. Creazione nuovo alias
+# 5. Creazione nuovo alias
 print_step "Creazione alias ec_tracks -> $INDEX_NAME..."
 RESULT=$(curl -s -X POST 'elasticsearch:9200/_aliases' -H 'Content-Type: application/json' -d "{\"actions\":[{\"add\":{\"index\":\"$INDEX_NAME\",\"alias\":\"ec_tracks\"}}]}")
 
@@ -111,7 +170,7 @@ else
     exit 1
 fi
 
-# 5. Verifica finale
+# 6. Verifica finale
 print_step "Verifica finale..."
 
 # Test alias
@@ -132,8 +191,13 @@ DOCS_COUNT=$(curl -s 'elasticsearch:9200/ec_tracks/_count' | grep -o '"count":[0
 echo ""
 print_success "Documenti indicizzati tramite alias ec_tracks: $DOCS_COUNT"
 
+# Mostra stato cluster finale
 echo ""
-print_success "🎉 Alias ec_tracks configurato correttamente!"
+echo "📊 Stato finale cluster:"
+curl -s 'elasticsearch:9200/_cluster/health?pretty' | grep -E '(status|number_of_nodes|active_shards|unassigned_shards)'
+
+echo ""
+print_success "🎉 Alias ec_tracks configurato correttamente per single-node!"
 echo ""
 echo "🔍 Test API:"
 echo "   curl \"http://localhost:8008/api/v2/elasticsearch?app=geohub_app_1\"" 

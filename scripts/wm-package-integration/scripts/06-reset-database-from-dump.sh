@@ -64,9 +64,13 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
+# Determina la directory root del progetto
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../" && pwd)"
+
 # Verifica che il file dump esista
-if [ ! -f "../../../osm2cai2/storage/app/backups/dump.sql.gz" ]; then
-    print_error "File dump non trovato in ../../../osm2cai2/storage/app/backups/dump.sql.gz"
+if [ ! -f "$PROJECT_ROOT/storage/app/backups/dump.sql.gz" ]; then
+    print_error "File dump non trovato in $PROJECT_ROOT/storage/app/backups/dump.sql.gz"
     exit 1
 fi
 
@@ -138,10 +142,10 @@ print_success "=== FASE 2 COMPLETATA ==="
 print_step "=== FASE 3: RIPRISTINO DA DUMP ==="
 
 print_step "Estraendo e caricando dump (questo può richiedere diversi minuti)..."
-print_warning "Dimensione dump: $(du -h ../../../osm2cai2/storage/app/backups/dump.sql.gz | cut -f1)"
+print_warning "Dimensione dump: $(du -h $PROJECT_ROOT/storage/app/backups/dump.sql.gz | cut -f1)"
 
 # Carica il dump
-if gunzip -c ../../../osm2cai2/storage/app/backups/dump.sql.gz | docker exec -i postgres_osm2cai2 psql -U osm2cai2 -d osm2cai2; then
+if gunzip -c $PROJECT_ROOT/storage/app/backups/dump.sql.gz | docker exec -i postgres_osm2cai2 psql -U osm2cai2 -d osm2cai2; then
     print_success "Dump caricato con successo"
 else
     print_error "Errore durante il caricamento del dump"

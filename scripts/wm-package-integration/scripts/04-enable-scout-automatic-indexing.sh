@@ -35,6 +35,25 @@ cd /var/www/html/osm2cai2
 echo "📝 Verifica configurazione Scout..."
 echo "✅ Assumo che le configurazioni Scout siano già presenti nel .env"
 
+echo "🔧 Configurazione template Elasticsearch per single-node..."
+# Crea template per configurare automaticamente 0 repliche sui nuovi indici
+curl -X PUT 'elasticsearch:9200/_index_template/osm2cai_single_node' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "index_patterns": ["hiking_routes_*", "ec_tracks_*"],
+    "template": {
+      "settings": {
+        "index": {
+          "number_of_replicas": 0,
+          "number_of_shards": 1
+        }
+      }
+    },
+    "priority": 100
+  }'
+
+echo "✅ Template Elasticsearch configurato per single-node"
+
 echo "🔄 Riavvio worker delle code per applicare nuove configurazioni..."
 php artisan queue:restart
 
@@ -46,7 +65,7 @@ echo 'HikingRoute indicizzabili: ' . App\Models\HikingRoute::whereNotNull('geome
 "
 
 echo ""
-echo "✅ Indicizzazione automatica abilitata!"
+echo "✅ Indicizzazione automatica abilitata con configurazione single-node!"
 echo ""
 echo "📋 Prossimi passi:"
 echo "1. Assicurati che Horizon sia attivo: php artisan horizon"
