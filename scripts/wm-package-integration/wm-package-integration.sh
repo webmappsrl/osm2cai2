@@ -47,6 +47,45 @@ handle_error() {
 # Imposta trap per gestire errori
 trap 'handle_error $LINENO' ERR
 
+# Funzioni di attesa per i servizi, per eliminare gli sleep "magici"
+wait_for_service() {
+    local service_name="$1"
+    local health_url="$2"
+    local timeout="$3"
+    
+    print_step "Attesa che $service_name sia completamente pronto..."
+    local elapsed=0
+    while ! curl -f -s "$health_url" &> /dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            print_warning "Timeout: $service_name non è diventato pronto in $timeout secondi (continuo comunque)"
+            return 1
+        fi
+        sleep 3
+        elapsed=$((elapsed + 3))
+        print_step "Attendo $service_name... ($elapsed/$timeout secondi)"
+    done
+    print_success "$service_name pronto e funzionante"
+    return 0
+}
+
+wait_for_postgres() {
+    local container_name="$1"
+    local timeout="$2"
+
+    print_step "Attesa che PostgreSQL sia completamente pronto..."
+    local elapsed=0
+    while ! docker exec "$container_name" pg_isready -h localhost -p 5432 &> /dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            print_error "Timeout: PostgreSQL non è diventato pronto in $timeout secondi"
+            exit 1
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        print_step "Attendo PostgreSQL... ($elapsed/$timeout secondi)"
+    done
+    print_success "PostgreSQL pronto e funzionante"
+}
+
 # Verifica prerequisiti
 print_step "Verifica prerequisiti..."
 
@@ -135,78 +174,38 @@ print_success "Directory volumi create"
 print_step "Avvio tutti i container (base + sviluppo)..."
 cd "$PROJECT_ROOT"
 docker-compose -f docker-compose.yml -f docker-compose.develop.yml up -d
-sleep 15
 
 # Torna alla directory degli script
 cd "$SCRIPT_DIR"
 
-# Attesa che PostgreSQL sia completamente pronto
-print_step "Attesa che PostgreSQL sia completamente pronto..."
-timeout=60
-elapsed=0
-while ! docker exec postgres_osm2cai2 pg_isready -h localhost -p 5432 &> /dev/null; do
-    if [ $elapsed -ge $timeout ]; then
-        print_error "Timeout: PostgreSQL non è diventato pronto in $timeout secondi"
-        exit 1
-    fi
-    sleep 2
-    elapsed=$((elapsed + 2))
-    print_step "Attendo PostgreSQL... ($elapsed/$timeout secondi)"
-done
-print_success "PostgreSQL pronto e funzionante"
-
-# Verifica servizi
-print_step "Verifica finale servizi..."
-
-# Elasticsearch
-if curl -f -s http://localhost:9200/_cluster/health &> /dev/null; then
-    print_success "Elasticsearch attivo"
-else
-    print_warning "Elasticsearch non ancora pronto (verrà configurato dopo)"
-fi
-
-# Attesa che MinIO sia completamente pronto
-print_step "Attesa che MinIO sia completamente pronto..."
-timeout=90
-elapsed=0
-while ! curl -f -s http://localhost:9003/minio/health/live &> /dev/null; do
-    if [ $elapsed -ge $timeout ]; then
-        print_warning "Timeout: MinIO non è diventato pronto in $timeout secondi (continuo comunque)"
-        break
-    fi
-    sleep 3
-    elapsed=$((elapsed + 3))
-    print_step "Attendo MinIO... ($elapsed/$timeout secondi)"
-done
-
-if curl -f -s http://localhost:9003/minio/health/live &> /dev/null; then
-    print_success "MinIO pronto e funzionante"
-else
-    print_warning "MinIO non ancora pronto (potrebbero esserci problemi nella FASE 3)"
-fi
+# Attesa che i servizi principali siano pronti
+wait_for_postgres "postgres_osm2cai2" 90
+wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
+wait_for_service "MinIO" "http://localhost:9003/minio/health/live" 90
 
 print_success "=== FASE 1 COMPLETATA: Ambiente Docker pronto ==="
 
 # Avvio servizi Laravel necessari per le fasi successive
 print_step "Avvio servizi Laravel (serve + Horizon)..."
 docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
-sleep 3
+wait_for_service "Laravel artisan serve" "http://localhost:8008" 30 || print_warning "artisan serve non ha risposto in tempo."
+
 docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
-sleep 3
+sleep 3 # Nota: Horizon non ha un endpoint di health check, un breve sleep è mantenuto.
 print_success "Laravel serve e Horizon avviati (necessari per import)"
 
 # FASE 2: DATABASE E MIGRAZIONI
 print_step "=== FASE 2: DATABASE E MIGRAZIONI ==="
 
-# Gestione intelligente migrazioni (con rollback automatico se necessario)
-print_step "Gestione intelligente migrazioni (controllo stato + rollback automatico)..."
+# Applicazione Migrazioni
+print_step "Applicazione nuove migrazioni al database esistente..."
 
-# Usa lo script dedicato per gestire le migrazioni
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/08-manage-migrations.sh"; then
-    print_error "Errore durante la gestione delle migrazioni! Interruzione setup."
+# Applica le nuove migrazioni
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
+    print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
     exit 1
 fi
-print_success "Migrazioni gestite con successo (con rollback automatico se necessario)"
+print_success "Nuove migrazioni applicate al database"
 
 # Import App da Geohub
 print_step "Import App da Geohub (utilizzando script dedicato)..."
@@ -281,9 +280,6 @@ print_step "=== FASE 5: SETUP ELASTICSEARCH ==="
 # Setup Elasticsearch
 print_step "Setup Elasticsearch e indicizzazione..."
 
-# Aspetta che Elasticsearch sia completamente pronto
-sleep 15
-
 # Cancellazione indici esistenti per partire puliti
 print_step "Pulizia indici Elasticsearch esistenti..."
 if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
@@ -326,12 +322,12 @@ print_step "=== FASE 6: VERIFICA SERVIZI FINALI ==="
 
 # Verifica che Laravel serve e Horizon siano ancora attivi
 print_step "Verifica servizi Laravel..."
-if pgrep -f "artisan serve" > /dev/null; then
-    print_success "Laravel serve attivo"
-else
+if ! curl -f -s http://localhost:8008 &> /dev/null; then
     print_step "Riavvio Laravel serve..."
     docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
-    sleep 3
+    wait_for_service "Laravel artisan serve" "http://localhost:8008" 30
+else
+    print_success "Laravel serve attivo"
 fi
 
 if docker exec php81_osm2cai2 php artisan horizon:status | grep -q "running"; then
