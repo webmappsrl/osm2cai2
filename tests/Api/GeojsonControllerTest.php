@@ -33,20 +33,20 @@ class GeojsonControllerTest extends TestCase
         parent::setUp();
 
         // Create a complete hierarchy of test entities
-        $this->region = Region::factory()->create([
+        $this->region = Region::factory()->createQuietly([
             'id' => 9999,
             'name' => 'Test Region',
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
-        $this->province = Province::factory()->create([
+        $this->province = Province::factory()->createQuietly([
             'id' => 9999,
             'name' => 'Test Province',
             'region_id' => $this->region->id,
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
-        $this->area = Area::factory()->create([
+        $this->area = Area::factory()->createQuietly([
             'id' => 9999,
             'name' => 'Test Area',
             'code' => 'T',
@@ -56,7 +56,7 @@ class GeojsonControllerTest extends TestCase
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')"),
         ]);
 
-        $this->sector = Sector::factory()->create([
+        $this->sector = Sector::factory()->createQuietly([
             'id' => 9999,
             'name' => 'Test Sector',
             'code' => 'T',
@@ -66,7 +66,7 @@ class GeojsonControllerTest extends TestCase
             'area_id' => $this->area->id,
         ]);
 
-        $this->club = Club::factory()->create([
+        $this->club = Club::factory()->createQuietly([
             'id' => 9999,
             'name' => 'Test Club',
             'cai_code' => 'T123',
@@ -119,7 +119,7 @@ class GeojsonControllerTest extends TestCase
 
     public function test_download_geojson_for_club_with_hiking_routes()
     {
-        $hikingRoute = HikingRoute::factory()->create([
+        $hikingRoute = HikingRoute::factory()->createQuietly([
             'id' => 99999,
             'geometry' => DB::raw("ST_GeomFromText('LINESTRING(0 0, 1 1)')"),
             'osmfeatures_data' => [

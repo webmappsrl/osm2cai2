@@ -6,12 +6,13 @@ use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class UgcTrack extends Model
+class UgcTrack extends Model implements HasMedia
 {
-    use HasFactory, SpatialDataTrait;
+    use HasFactory, InteractsWithMedia, SpatialDataTrait;
 
     protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'metadata', 'app_id'];
 
@@ -47,11 +48,6 @@ class UgcTrack extends Model
     public function validator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validator_id');
-    }
-
-    public function ugc_media(): HasMany
-    {
-        return $this->hasMany(UgcMedia::class);
     }
 
     /**

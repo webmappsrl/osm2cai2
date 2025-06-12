@@ -2,22 +2,23 @@
 
 namespace Tests\Api;
 
-use App\Models\Area;
-use App\Models\CaiHut;
-use App\Models\Club;
-use App\Models\EcPoi;
-use App\Models\HikingRoute;
-use App\Models\Itinerary;
-use App\Models\MountainGroups;
-use App\Models\NaturalSpring;
-use App\Models\Sector;
-use App\Models\UgcMedia;
-use App\Models\UgcPoi;
-use App\Models\UgcTrack;
-use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
+use App\Models\Area;
+use App\Models\Club;
+use App\Models\User;
+use App\Models\EcPoi;
+use App\Models\CaiHut;
+use App\Models\Sector;
+use App\Models\UgcPoi;
+use App\Models\UgcMedia;
+use App\Models\UgcTrack;
+use App\Models\Itinerary;
+use App\Models\HikingRoute;
+use App\Models\NaturalSpring;
+use App\Models\MountainGroups;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class ExportControllerTest extends TestCase
 {
@@ -38,13 +39,14 @@ class ExportControllerTest extends TestCase
                 ['email' => 'user1@example.com'],
                 ['email' => 'user2@example.com'],
                 ['email' => 'user3@example.com']
-            )->create();
+            )->createQuietly();
         } elseif ($modelClass === HikingRoute::class) {
-            $modelClass::factory()->count(3)->create([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10],[20,20],[30,30]]}',
+            $modelClass::factory()->count(3)->createQuietly([
+                'osm2cai_status' => 4,
+                'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
             ]);
         } elseif ($modelClass === UgcTrack::class) {
-            $modelClass::factory()->create([
+            $modelClass::factory()->createQuietly([
                 'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}',
             ]);
         } elseif ($modelClass === Sector::class) {
@@ -52,33 +54,33 @@ class ExportControllerTest extends TestCase
                 ['name' => 'Sector 1', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Sector 2', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Sector 3', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
-            )->create();
+            )->createQuietly();
         } elseif ($modelClass === Club::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Club 1', 'cai_code' => '92'],
                 ['name' => 'Club 2', 'cai_code' => '93'],
                 ['name' => 'Club 3', 'cai_code' => '94']
-            )->create();
+            )->createQuietly();
         } elseif ($modelClass === MountainGroups::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Mountain Group 1', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Mountain Group 2', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
                 ['name' => 'Mountain Group 3', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
-            )->create();
+            )->createQuietly();
         } elseif ($modelClass === CaiHut::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Cai Hut 1', 'geometry' => '{"type":"Point","coordinates":[10,10]}'],
                 ['name' => 'Cai Hut 2', 'geometry' => '{"type":"Point","coordinates":[20,20]}'],
                 ['name' => 'Cai Hut 3', 'geometry' => '{"type":"Point","coordinates":[30,30]}']
-            )->create();
+            )->createQuietly();
         } elseif ($modelClass === Area::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Area 1', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
                 ['name' => 'Area 2', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
                 ['name' => 'Area 3', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
-            )->create();
+            )->createQuietly();
         } else {
-            $modelClass::factory()->count(3)->create();
+            $modelClass::factory()->count(3)->createQuietly();
         }
 
         $response = $this->getJson($endpoint);
@@ -96,17 +98,18 @@ class ExportControllerTest extends TestCase
     private function test_single_feature_endpoint(string $endpoint, string $modelClass): void
     {
         if ($modelClass === User::class) {
-            $model = $modelClass::factory()->create(['email' => 'user@example.com']);
+            $model = $modelClass::factory()->createQuietly(['email' => 'user@example.com']);
         } elseif ($modelClass === HikingRoute::class) {
-            $model = $modelClass::factory()->create([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10],[20,20],[30,30]]}',
+            $model = $modelClass::factory()->createQuietly([
+                'osm2cai_status' => 4,
+                'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
             ]);
         } elseif ($modelClass === UgcTrack::class) {
-            $model = $modelClass::factory()->create([
+            $model = $modelClass::factory()->createQuietly([
                 'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}',
             ]);
         } elseif ($modelClass === Sector::class) {
-            $model = $modelClass::factory()->create([
+            $model = $modelClass::factory()->createQuietly([
                 'name' => 'Test Sector',
                 'code' => 'T',
                 'full_code' => 'T123',
@@ -114,20 +117,20 @@ class ExportControllerTest extends TestCase
                 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}',
             ]);
         } elseif ($modelClass === Club::class) {
-            $model = $modelClass::factory()->create(['name' => 'Test Club', 'cai_code' => '95']);
+            $model = $modelClass::factory()->createQuietly(['name' => 'Test Club', 'cai_code' => '95']);
         } elseif ($modelClass === MountainGroups::class) {
-            $model = $modelClass::factory()->create(['name' => 'Test Mountain Group', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}']);
+            $model = $modelClass::factory()->createQuietly(['name' => 'Test Mountain Group', 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}']);
         } elseif ($modelClass === CaiHut::class) {
-            $model = $modelClass::factory()->create(['name' => 'Test Cai Hut', 'geometry' => '{"type":"Point","coordinates":[10,10]}']);
+            $model = $modelClass::factory()->createQuietly(['name' => 'Test Cai Hut', 'geometry' => '{"type":"Point","coordinates":[10,10]}']);
         } elseif ($modelClass === Area::class) {
-            $model = $modelClass::factory()->create(
+            $model = $modelClass::factory()->createQuietly(
                 ['name' => 'Test Area', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
             );
         } else {
-            $model = $modelClass::factory()->create();
+            $model = $modelClass::factory()->createQuietly();
         }
 
-        $response = $this->getJson($endpoint.'/'.$model->id);
+        $response = $this->getJson($endpoint . '/' . $model->id);
         $response->assertStatus(200);
 
         $data = $response->json();

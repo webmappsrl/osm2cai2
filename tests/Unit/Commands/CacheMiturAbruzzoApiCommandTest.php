@@ -18,21 +18,24 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     {
         parent::setUp();
         Queue::fake();
+        //clean up the database
+        HikingRoute::truncate();
+        Region::truncate();
     }
 
     /** @test */
     public function it_processes_hiking_routes_with_status_4()
     {
         // Create some routes with different statuses
-        HikingRoute::factory()->create([
+        HikingRoute::factory()->createQuietly([
             'osm2cai_status' => 4,
             'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
         ]);
-        HikingRoute::factory()->create([
+        HikingRoute::factory()->createQuietly([
             'osm2cai_status' => 4,
             'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((3 3, 4 4))', 4326)"),
         ]);
-        HikingRoute::factory()->create([
+        HikingRoute::factory()->createQuietly([
             'osm2cai_status' => 3,
             'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((5 5, 6 6))', 4326)"),
         ]); // should not be processed
@@ -48,7 +51,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     /** @test */
     public function it_processes_specific_hiking_route_by_id()
     {
-        $route = HikingRoute::factory()->create([
+        $route = HikingRoute::factory()->createQuietly([
             'osm2cai_status' => 4,
             'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
         ]);
