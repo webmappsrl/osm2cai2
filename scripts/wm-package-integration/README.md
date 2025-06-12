@@ -8,7 +8,9 @@ Questa directory contiene tutti gli script per l'integrazione di WM-Package con 
 
 **`wm-package-integration.sh`** - *Script principale completo*
 - Setup ambiente Docker completo
-- **Gestione intelligente migrazioni (rollback automatico se necessario)**
+- **✨ NUOVO: Controllo automatico migrazioni esistenti con scelta rollback**
+- **✨ NUOVO: Modalità automatica (yes/no) e interattiva per rollback**
+- **Gestione intelligente migrazioni (08-manage-migrations PRIMA dell'import)**
 - Import app da Geohub
 - Configurazione servizi (MinIO, Elasticsearch, Scout)
 - **Pulizia automatica indici Elasticsearch esistenti**
@@ -59,11 +61,12 @@ Gli script seguenti si trovano nella sottocartella `scripts/` e vengono eseguiti
 - Modalità dry-run per test sicuri
 - Richiede conferme multiple per sicurezza
 
-**`scripts/08-manage-migrations.sh`** - *Gestione Intelligente Migrazioni*
-- Controlla stato delle migrazioni WM-Package
-- Rollback automatico se migrazioni già applicate
+**`scripts/08-manage-migrations.sh`** - *Gestione Intelligente Migrazioni* 
+- **🔥 ESEGUITO PRIMA dell'import app nel workflow principale**
+- Controlla stato delle migrazioni WM-Package specifiche (21 migrazioni)
+- Rollback intelligente solo delle migrazioni WM-Package se necessario
 - Applicazione controllata di tutte le migrazioni
-- Verifica finale dello stato
+- Verifica finale dello stato e integrità database
 
 ## 🎨 Sistema Layer di Accatastamento
 
@@ -79,10 +82,27 @@ Gli script `02` e `03` gestiscono un sistema di layer colorati per gli stati di 
 ## 🚀 Esempi di Utilizzo
 
 ### Setup Completo (Tutto in Automatico)
+
+**✨ NUOVE MODALITÀ CON GESTIONE ROLLBACK:**
+
 ```bash
-# Integrazione completa WM-Package
+# Modalità INTERATTIVA (default) - chiede conferma per rollback se ci sono migrazioni esistenti
 ./scripts/wm-package-integration/wm-package-integration.sh
+
+# Modalità AUTOMATICA con ROLLBACK FORZATO - non chiede conferma, fa sempre rollback
+./scripts/wm-package-integration/wm-package-integration.sh yes
+
+# Modalità AUTOMATICA SENZA ROLLBACK - non chiede conferma, salta sempre rollback
+./scripts/wm-package-integration/wm-package-integration.sh no
 ```
+
+**🔄 Sequenza di Esecuzione Aggiornata:**
+1. **Controllo migrazioni esistenti** (automatico)
+2. **Scelta rollback** (interattiva o automatica)
+3. **Applicazione migrazioni base** (`php artisan migrate`)
+4. **🔥 Gestione migrazioni avanzate** (`08-manage-migrations.sh`) - **PRIMA dell'import!**
+5. **Import app da Geohub** (`01-import-app-from-geohub.sh`)
+6. **Configurazione layer e servizi**
 
 ### Gestione Layer Manuale
 
@@ -218,18 +238,53 @@ docker exec php81_osm2cai2 php artisan tinker --execute="try { DB::connection('g
 
 ## 📊 Workflow Completo Raccomandato
 
+### 🚀 Setup Automatico (Raccomandato per primi utilizzi)
+
 ```bash
 # 1. Avvia ambiente di sviluppo
 ./scripts/dev-setup.sh
 
-# 2. Integrazione WM-Package completa
+# 2a. PRIMO SETUP: Modalità interattiva (ti chiede cosa fare con le migrazioni)
 ./scripts/wm-package-integration/wm-package-integration.sh
 
-# 3. (Opzionale) Gestione manuale layer se necessario
+# 2b. REINSTALLAZIONE PULITA: Rollback automatico senza domande
+./scripts/wm-package-integration/wm-package-integration.sh yes
+
+# 2c. AGGIORNAMENTO: Salta rollback, applica solo nuove migrazioni
+./scripts/wm-package-integration/wm-package-integration.sh no
+```
+
+### 🔧 Setup Manuale (Per utenti avanzati)
+
+```bash
+# 1. Avvia ambiente
+./scripts/dev-setup.sh
+
+# 2. Gestione migrazioni manuale (se necessario)
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh --dry-run  # Test
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh             # Esecuzione
+
+# 3. Import app specifica
+./scripts/wm-package-integration/scripts/01-import-app-from-geohub.sh 26
+
+# 4. Layer management
 ./scripts/wm-package-integration/scripts/02-create-layers-app26.sh --force
 
-# 4. (Opzionale) Verifica/Fix Elasticsearch
+# 5. Fix Elasticsearch se necessario
 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh
+```
+
+### 🆘 Recovery e Troubleshooting
+
+```bash
+# Reset completo database (ATTENZIONE: cancella tutto!)
+./scripts/wm-package-integration/scripts/06-reset-database-from-dump.sh
+
+# Pulizia completa Elasticsearch
+./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force
+
+# Riavvio completo ambiente
+./scripts/wm-package-integration/wm-package-integration.sh yes
 ```
 
 ## ⚠️ Note Importanti
@@ -271,6 +326,15 @@ docker exec php81_osm2cai2 php artisan tinker --execute="try { DB::connection('g
 ./scripts/dev-setup.sh
 ```
 
+**"Migrazioni già applicate" o conflitti database:**
+```bash
+# Modalità interattiva - ti chiede cosa fare
+./scripts/wm-package-integration/wm-package-integration.sh
+
+# Oppure forzare rollback completo
+./scripts/wm-package-integration/wm-package-integration.sh yes
+```
+
 **"App non trovata":**
 ```bash
 # Verifica che l'app 26 esista o usa un ID diverso
@@ -287,6 +351,15 @@ docker exec php81_osm2cai2 php artisan tinker --execute="try { DB::connection('g
 ```bash
 # Fix alias e indici
 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh
+```
+
+**Script si ferma con errori migrazioni:**
+```bash
+# Test migrazioni senza modifiche
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh --dry-run
+
+# Rollback forzato delle migrazioni WM-Package
+./scripts/wm-package-integration/scripts/08-manage-migrations.sh --force-rollback
 ```
 
 ### Log e Monitoraggio
@@ -309,4 +382,24 @@ docker ps | grep osm2cai2
 
 ---
 
-💡 **Suggerimento**: Per un primo setup completo, esegui semplicemente `./scripts/wm-package-integration/wm-package-integration.sh` che orchestrerà tutto automaticamente! 
+## 🎯 Quick Start
+
+### 🆕 **Primo Setup (Nuovo Progetto)**
+```bash
+./scripts/wm-package-integration/wm-package-integration.sh
+# Modalità interattiva: ti chiederà cosa fare se trova migrazioni esistenti
+```
+
+### 🔄 **Reinstallazione Completa**
+```bash
+./scripts/wm-package-integration/wm-package-integration.sh yes
+# Rollback automatico + setup completo senza domande
+```
+
+### ⚡ **Aggiornamento Incrementale**
+```bash
+./scripts/wm-package-integration/wm-package-integration.sh no
+# Applica solo nuove migrazioni senza rollback
+```
+
+💡 **Suggerimento**: Per un primo setup completo, usa la modalità interattiva che ti guiderà attraverso tutte le scelte necessarie! 

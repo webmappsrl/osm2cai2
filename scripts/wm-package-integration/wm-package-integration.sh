@@ -8,6 +8,9 @@ echo "🚀 Setup Link WMPackage to OSM2CAI2 - Ambiente di Sviluppo"
 echo "=========================================================="
 echo ""
 
+# Parametri dello script
+AUTO_ROLLBACK="${1:-ask}"  # ask | yes | no
+
 # Colori per output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -88,6 +91,31 @@ wait_for_postgres() {
 
 # Verifica prerequisiti
 print_step "Verifica prerequisiti..."
+
+# Controlla se siamo già nel container Docker
+if [ -f "/var/www/html/osm2cai2/.env" ]; then
+    print_warning "Esecuzione dal container Docker rilevata"
+    print_step "Saltando controlli host e passando direttamente alla configurazione..."
+    
+    # Salta alla configurazione Scout/Elasticsearch
+    cd /var/www/html/osm2cai2
+    
+    print_step "=== CONFIGURAZIONE SCOUT/ELASTICSEARCH ==="
+    if ! ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh; then
+        print_error "Errore durante la configurazione di Scout/Elasticsearch!"
+        exit 1
+    fi
+    
+    # Fix alias se necessario
+    print_step "=== FIX ALIAS ELASTICSEARCH ==="
+    if ! ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh; then
+        print_warning "Fix alias completato con avvertimenti, ma procediamo..."
+    fi
+    
+    print_success "🎉 Setup completato dal container!"
+    print_step "📊 Test API: curl \"http://localhost:8008/api/v2/elasticsearch?app=geohub_app_1\""
+    exit 0
+fi
 
 # Controlla se Docker è installato
 if ! command -v docker &> /dev/null; then
@@ -197,15 +225,68 @@ print_success "Laravel serve e Horizon avviati (necessari per import)"
 # FASE 2: DATABASE E MIGRAZIONI
 print_step "=== FASE 2: DATABASE E MIGRAZIONI ==="
 
-# Applicazione Migrazioni
-print_step "Applicazione nuove migrazioni al database esistente..."
+# Controllo migrazioni esistenti
+print_step "Controllo migrazioni esistenti..."
+MIGRATION_COUNT=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:status | grep -c 'Ran'" 2>/dev/null || echo "0")
 
-# Applica le nuove migrazioni
+if [ "$MIGRATION_COUNT" -gt 0 ]; then
+    print_warning "Rilevate $MIGRATION_COUNT migrazioni già applicate nel database"
+    
+    # Gestione della scelta rollback
+    DO_ROLLBACK="no"
+    
+    if [ "$AUTO_ROLLBACK" = "yes" ]; then
+        print_step "Modalità automatica: rollback forzato"
+        DO_ROLLBACK="yes"
+    elif [ "$AUTO_ROLLBACK" = "no" ]; then
+        print_step "Modalità automatica: rollback saltato"
+        DO_ROLLBACK="no"
+    else
+        # Modalità interattiva
+        echo ""
+        echo -e "${YELLOW}❓ Vuoi fare rollback di tutte le migrazioni esistenti?${NC}"
+        echo "   • ${GREEN}y/s${NC}: Rollback completo (rimuove tutte le tabelle e ricrea)"
+        echo "   • ${RED}n${NC}: Continua senza rollback (applica solo nuove migrazioni)"
+        echo ""
+        read -p "Scelta [y/n]: " -n 1 -r
+        echo ""
+        
+        if [[ $REPLY =~ ^[YySs]$ ]]; then
+            DO_ROLLBACK="yes"
+        fi
+    fi
+    
+    if [ "$DO_ROLLBACK" = "yes" ]; then
+        print_step "Esecuzione rollback completo delle migrazioni..."
+        if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:reset --force"; then
+            print_error "Errore durante il rollback delle migrazioni! Interruzione setup."
+            exit 1
+        fi
+        print_success "Rollback delle migrazioni completato"
+    else
+        print_step "Rollback saltato, continuo con migrazioni esistenti"
+    fi
+else
+    print_step "Nessuna migrazione esistente rilevata"
+fi
+
+# Applicazione Migrazioni
+print_step "Applicazione migrazioni al database..."
+
+# Applica le migrazioni
 if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
     print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
     exit 1
 fi
 print_success "Nuove migrazioni applicate al database"
+
+# Gestione migrazioni avanzate (08-manage-migrations)
+print_step "Gestione migrazioni avanzate..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/08-manage-migrations.sh"; then
+    print_error "Errore durante la gestione delle migrazioni avanzate! Interruzione setup."
+    exit 1
+fi
+print_success "Gestione migrazioni avanzate completata"
 
 # Import App da Geohub
 print_step "Import App da Geohub (utilizzando script dedicato)..."
@@ -383,5 +464,10 @@ echo "   • Fix alias Elasticsearch: docker exec php81_osm2cai2 ./scripts/wm-pa
 echo ""
 echo "🛑 Per fermare tutto:"
 echo "   docker-compose down && docker-compose -f docker-compose.develop.yml down"
+echo ""
+echo "📚 Parametri Script:"
+echo "   • ./wm-package-integration.sh         - Modalità interattiva (chiede per rollback)"
+echo "   • ./wm-package-integration.sh yes     - Rollback automatico (non chiede conferma)"  
+echo "   • ./wm-package-integration.sh no      - Nessun rollback (non chiede conferma)"
 echo ""
 print_success "Ambiente di sviluppo pronto per l'uso!" 
