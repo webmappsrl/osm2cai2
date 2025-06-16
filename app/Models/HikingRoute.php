@@ -30,6 +30,8 @@ class HikingRoute extends EcTrack
     use SpatialDataTrait;
     use TagsMappingTrait;
 
+    protected $table = 'hiking_routes';
+
     protected $fillable = [
         'geometry',
         'osm2cai_status',
@@ -275,8 +277,8 @@ class HikingRoute extends EcTrack
             $data = json_decode(file_get_contents($api), true);
             if (! empty($data)) {
                 if ($data['properties']['id'] !== null) {
-                    $infomontLink .= '?track='.$data['properties']['id'];
-                    $osm2caiLink .= '?track='.$data['properties']['id'];
+                    $infomontLink.='?track='.$data['properties']['id'];
+                    $osm2caiLink.='?track='.$data['properties']['id'];
                 }
             }
         }
