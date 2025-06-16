@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\HikingRoute;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use App\Models\HikingRoute;
 
 class CleanupLocalHikingRouteMedia extends Command
 {
@@ -37,6 +37,7 @@ class CleanupLocalHikingRouteMedia extends Command
 
         if ($migratedMedia->isEmpty()) {
             $this->info('No migrated media found. Nothing to clean up.');
+
             return 0;
         }
 
@@ -48,7 +49,7 @@ class CleanupLocalHikingRouteMedia extends Command
         foreach ($migratedMedia as $media) {
             // The old local path was structured as 'public/{media_id}'.
             // We get the full path to the directory.
-            $localDirectoryPath = storage_path('app/public/' . $media->id);
+            $localDirectoryPath = storage_path('app/public/'.$media->id);
 
             if (File::isDirectory($localDirectoryPath)) {
                 if (File::deleteDirectory($localDirectoryPath)) {
