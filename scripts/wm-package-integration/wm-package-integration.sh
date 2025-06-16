@@ -389,12 +389,12 @@ fi
 print_success "Indicizzazione iniziale completata"
 
 # Fix completo Elasticsearch con configurazione single-node
-print_step "Fix Elasticsearch e creazione alias ec_tracks per compatibilità API..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"; then
-    print_error "Errore durante la configurazione dell'alias ec_tracks! Interruzione setup."
-    exit 1
-fi
-print_success "Elasticsearch configurato per single-node e alias ec_tracks creato"
+# print_step "Fix Elasticsearch e creazione alias ec_tracks per compatibilità API..."
+# if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"; then
+#     print_error "Errore durante la configurazione dell'alias ec_tracks! Interruzione setup."
+#     exit 1
+# fi
+# print_success "Elasticsearch configurato per single-node e alias ec_tracks creato"
 
 print_success "=== FASE 5 COMPLETATA: Elasticsearch configurato ==="
 
