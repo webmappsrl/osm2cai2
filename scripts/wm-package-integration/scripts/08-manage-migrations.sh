@@ -66,7 +66,7 @@ show_help() {
     echo
     echo "Comportamento:"
     echo "  1. Controlla stato migrazioni WM-Package"
-    echo "  2. Se già applicate -> chiede conferma per rollback"
+    echo "  2. Se già applicate -> rollback automatico se non --skip-rollback"
     echo "  3. Applica tutte le migrazioni"
     echo "  4. Verifica successo operazione"
 }
@@ -248,118 +248,49 @@ apply_migrations() {
 verify_final_status() {
     echo -e "${BLUE}🔍 Verifica stato finale migrazioni...${NC}"
     
-    if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY-RUN]${NC} Verificherebbe stato finale"
-        return 0
-    fi
-    
     local migration_output
     migration_output=$(get_migration_status)
     
-    local applied_count=0
-    local pending_count=0
-    
+    local failed_count=0
     for migration in "${WM_PACKAGE_MIGRATIONS[@]}"; do
-        if echo "$migration_output" | grep -q "$migration.*Ran"; then
-            ((applied_count++))
-        else
-            ((pending_count++))
+        if ! echo "$migration_output" | grep -q "$migration.*Ran"; then
+            echo -e "${RED}❌ Migrazione non applicata: $migration${NC}"
+            ((failed_count++))
         fi
     done
     
-    echo -e "${PURPLE}📊 Stato finale WM-Package: $applied_count applicate, $pending_count in sospeso${NC}"
-    
-    if [[ $pending_count -eq 0 ]]; then
-        echo -e "${GREEN}✅ Tutte le migrazioni WM-Package sono applicate${NC}"
+    if [[ $failed_count -eq 0 ]]; then
+        echo -e "${GREEN}✅ Tutte le migrazioni WM-Package sono state applicate correttamente${NC}"
+        return 0
     else
-        echo -e "${YELLOW}⚠️  $pending_count migrazioni WM-Package ancora in sospeso${NC}"
-    fi
-    
-    # Conta tutte le migrazioni in sospeso
-    local total_pending
-    total_pending=$(echo "$migration_output" | grep -c "Pending" || echo "0")
-    
-    if [[ $total_pending -eq 0 ]]; then
-        echo -e "${GREEN}✅ Tutte le migrazioni del progetto sono applicate${NC}"
-    else
-        echo -e "${BLUE}📋 $total_pending migrazioni totali ancora in sospeso${NC}"
+        echo -e "${RED}❌ $failed_count migrazioni WM-Package non sono state applicate${NC}"
+        return 1
     fi
 }
 
-# Funzione principale
-main() {
-    echo -e "${BLUE}🔄 Gestione Migrazioni OSM2CAI2${NC}"
-    echo -e "${BLUE}===============================${NC}"
-    
-    if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}🧪 Modalità DRY-RUN attiva - nessuna modifica verrà applicata${NC}"
-        echo
-    fi
-    
-    # Verifica contesto Docker
-    check_docker_context
-    
-    # Determina se serve rollback
-    local needs_rollback=false
-    
+# Main
+check_docker_context
+
+# Controlla se le migrazioni WM-Package sono già applicate
+if check_wm_package_migrations; then
     if [[ "$SKIP_ROLLBACK" == "true" ]]; then
-        echo -e "${BLUE}⏭️  Rollback saltato (--skip-rollback)${NC}"
+        echo -e "${YELLOW}⚠️  Migrazioni WM-Package già applicate, ma --skip-rollback specificato${NC}"
     elif [[ "$FORCE_ROLLBACK" == "true" ]]; then
-        echo -e "${YELLOW}🔄 Rollback forzato (--force-rollback)${NC}"
-        needs_rollback=true
+        echo -e "${YELLOW}⚠️  Forzato rollback delle migrazioni WM-Package...${NC}"
+        rollback_wm_package_migrations
     else
-        # Controllo automatico
-        if check_wm_package_migrations; then
-            echo -e "${YELLOW}⚠️  Migrazioni WM-Package già applicate${NC}"
-            echo
-            if [[ "$DRY_RUN" == "true" ]]; then
-                echo -e "${YELLOW}[DRY-RUN]${NC} In modalità normale chiederebbe conferma per il rollback"
-                needs_rollback=true
-            else
-                echo -e "${BLUE}❓ Vuoi procedere con il rollback delle migrazioni WM-Package e riapplicarle?${NC}"
-                echo -e "${YELLOW}   Questo cancellerà tutte le modifiche WM-Package esistenti${NC}"
-                echo -n -e "${BLUE}   Procedere? [s/N]: ${NC}"
-                read -r response
-                echo
-                
-                case "$response" in
-                    [sS]|[sS][iI]|[yY]|[yY][eE][sS])
-                        echo -e "${GREEN}✅ Confermato - procedo con rollback${NC}"
-                        needs_rollback=true
-                        ;;
-                    *)
-                        echo -e "${RED}❌ Rollback annullato dall'utente${NC}"
-                        echo -e "${BLUE}💡 Suggerimenti:${NC}"
-                        echo -e "   • Usa ${YELLOW}--force-rollback${NC} per forzare il rollback senza conferma"
-                        echo -e "   • Usa ${YELLOW}--skip-rollback${NC} per saltare il rollback e applicare solo nuove migrazioni"
-                        echo -e "   • Usa ${YELLOW}--dry-run${NC} per simulare senza modifiche"
-                        exit 1
-                        ;;
-                esac
-            fi
-        else
-            echo -e "${GREEN}✅ Nessuna migrazione WM-Package applicata - rollback non necessario${NC}"
-        fi
-    fi
-    
-    # Esegui rollback se necessario
-    if [[ "$needs_rollback" == "true" ]]; then
+        echo -e "${YELLOW}⚠️  Migrazioni WM-Package già applicate, procedo con rollback...${NC}"
         rollback_wm_package_migrations
     fi
-    
-    # Applica migrazioni
-    apply_migrations
-    
-    # Verifica stato finale
-    verify_final_status
-    
-    echo
-    if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${GREEN}✅ Simulazione gestione migrazioni completata${NC}"
-    else
-        echo -e "${GREEN}✅ Gestione migrazioni completata con successo${NC}"
-    fi
-}
+else
+    echo -e "${GREEN}✅ Nessuna migrazione WM-Package applicata, procedo con l'applicazione${NC}"
+fi
+
+# Applica le migrazioni
+apply_migrations
+
+# Verifica lo stato finale
+verify_final_status
 
 # Esegui solo se non sourcato
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
