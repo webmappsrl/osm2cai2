@@ -131,10 +131,13 @@ class HikingRouteController extends Controller
             return response(['error' => 'No hiking routes found for region '.$region_code.' and SDA '.implode(',', $sda)], 404);
         }
 
-        $list = $list->pluck('id')->toArray();
+        $data = [];
+        foreach ($list as $hr) {
+            $data[$hr->id] = $hr->updated_at->format('Y-m-d H:i:s');
+        }
 
         // Return
-        return response($list, 200, ['Content-type' => 'application/json']);
+        return response($data, 200, ['Content-type' => 'application/json']);
     }
 
     /**
@@ -194,11 +197,13 @@ class HikingRouteController extends Controller
      */
     public function indexByBoundingBox(string $bounding_box, string $sda)
     {
+        // Cast geometry to geometry type to avoid geography/geometry mismatch in PostGIS
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw('ST_within(geometry,ST_MakeEnvelope('.$bounding_box.', 4326))')
+            ->whereRaw('ST_within(CAST(geometry AS geometry), ST_MakeEnvelope(?, ?, ?, ?, 4326))', explode(',', $bounding_box))
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
+
         $data = [];
         foreach ($list as $hr) {
             $data[$hr->id] = Carbon::create($hr->updated_at)->format('Y-m-d H:i:s');
@@ -342,7 +347,7 @@ class HikingRouteController extends Controller
     {
         $list = DB::table('hiking_routes')
             ->whereRaw('ST_srid(geometry)=4326')
-            ->whereRaw('ST_within(geometry,ST_MakeEnvelope('.$bounding_box.', 4326))')
+            ->whereRaw('ST_within(CAST(geometry AS geometry), ST_MakeEnvelope(?, ?, ?, ?, 4326))', explode(',', $bounding_box))
             ->whereIn('osm2cai_status', explode(',', $sda))
             ->get();
         $data = [];

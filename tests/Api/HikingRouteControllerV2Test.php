@@ -29,7 +29,7 @@ class HikingRouteControllerV2Test extends TestCase
 
     private function createTestHikingRoute($id, $osm_id, $status, $geometry = null)
     {
-        return HikingRoute::create([
+        return HikingRoute::createQuietly([
             'id' => $id,
             'osm2cai_status' => $status,
             'updated_at' => now(),
@@ -82,7 +82,7 @@ class HikingRouteControllerV2Test extends TestCase
 
     private function createTestRegion($code)
     {
-        return Region::create([
+        return Region::createQuietly([
             'code' => $code,
             'name' => 'Test Region',
             'geometry' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 30, 30 30, 30 0, 0 0))', 4326)"),
@@ -114,7 +114,9 @@ class HikingRouteControllerV2Test extends TestCase
         $response = $this->get('/api/v2/hiking-routes/region/'.$region->code.'/'.$hikingRoute->osm2cai_status);
 
         $response->assertStatus(200)
-            ->assertJson([$hikingRoute->id]);
+            ->assertJson([
+                $hikingRoute->id => $hikingRoute->updated_at->format('Y-m-d H:i:s'),
+            ]);
     }
 
     public function test_hiking_route_osm_index_by_region()
@@ -339,6 +341,9 @@ class HikingRouteControllerV2Test extends TestCase
     public function test_hiking_route_index_by_region_returns_404_when_no_routes()
     {
         $region = $this->createTestRegion('L');
+
+        // remove all routes
+        HikingRoute::truncate();
 
         $response = $this->get('/api/v2/hiking-routes/region/'.$region->code.'/4');
 

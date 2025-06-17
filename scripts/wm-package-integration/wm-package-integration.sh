@@ -211,6 +211,20 @@ wait_for_postgres "postgres_osm2cai2" 90
 wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
 wait_for_service "MinIO" "http://localhost:9003/minio/health/live" 90
 
+# Installazione Xdebug per ambiente di sviluppo
+print_step "Installazione Xdebug nel container PHP..."
+if [ -f "$PROJECT_ROOT/docker/configs/phpfpm/init-xdebug.sh" ]; then
+    cd "$PROJECT_ROOT"
+    if ./docker/configs/phpfpm/init-xdebug.sh; then
+        print_success "Xdebug installato e configurato"
+    else
+        print_warning "Errore durante l'installazione di Xdebug (continuo comunque)"
+    fi
+    cd "$SCRIPT_DIR"
+else
+    print_warning "Script init-xdebug.sh non trovato, saltando installazione Xdebug"
+fi
+
 print_success "=== FASE 1 COMPLETATA: Ambiente Docker pronto ==="
 
 # Avvio servizi Laravel necessari per le fasi successive
@@ -398,6 +412,7 @@ echo "   • Status Horizon: docker exec php81_osm2cai2 php artisan horizon:stat
 echo "   • Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
 echo "   • Test MinIO: ./scripts/test-minio-laravel.sh"
 echo "   • Fix alias Elasticsearch: docker exec php81_osm2cai2 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"
+echo "   • Reinstalla Xdebug: ./docker/configs/phpfpm/init-xdebug.sh"
 echo ""
 echo "🛑 Per fermare tutto:"
 echo "   docker-compose down && docker-compose -f docker-compose.develop.yml down"
