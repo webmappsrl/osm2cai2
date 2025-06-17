@@ -12,22 +12,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Add a temporary 3D geometry column
-        Schema::table('hiking_routes', function (Blueprint $table) {
-            $table->geography('geometry_temp', 'multilinestringz', 4326)->nullable();
-        });
+        DB::transaction(function () {
+            // 1. Add a temporary 3D geometry column
+            Schema::table('hiking_routes', function (Blueprint $table) {
+                $table->geography('geometry_temp', 'multilinestringz', 4326)->nullable();
+            });
 
-        // 2. Update the temporary column with 3D geometries from the old column
-        DB::statement('UPDATE hiking_routes SET geometry_temp = ST_Force3D(geometry) WHERE geometry IS NOT NULL');
+            // 2. Update the temporary column with 3D geometries from the old column
+            DB::statement('UPDATE hiking_routes SET geometry_temp = ST_Force3D(geometry::geometry)::geography WHERE geometry IS NOT NULL');
 
-        // 3. Drop the old 2D geometry column
-        Schema::table('hiking_routes', function (Blueprint $table) {
-            $table->dropColumn('geometry');
-        });
+            // 3. Drop the old 2D geometry column
+            Schema::table('hiking_routes', function (Blueprint $table) {
+                $table->dropColumn('geometry');
+            });
 
-        // 4. Rename the temporary column to the final name
-        Schema::table('hiking_routes', function (Blueprint $table) {
-            $table->renameColumn('geometry_temp', 'geometry');
+            // 4. Rename the temporary column to the final name
+            Schema::table('hiking_routes', function (Blueprint $table) {
+                $table->renameColumn('geometry_temp', 'geometry');
+            });
         });
     }
 
@@ -36,22 +38,24 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // 1. Add a temporary 2D geometry column
-        Schema::table('hiking_routes', function (Blueprint $table) {
-            $table->geography('geometry_temp', 'multilinestring', 4326)->nullable();
-        });
+        DB::transaction(function () {
+            // 1. Add a temporary 2D geometry column
+            Schema::table('hiking_routes', function (Blueprint $table) {
+                $table->geography('geometry_temp', 'multilinestring', 4326)->nullable();
+            });
 
-        // 2. Update the temporary column with 2D geometries from the old column
-        DB::statement('UPDATE hiking_routes SET geometry_temp = ST_Force2D(geometry) WHERE geometry IS NOT NULL');
+            // 2. Update the temporary column with 2D geometries from the old column
+            DB::statement('UPDATE hiking_routes SET geometry_temp = ST_Force2D(geometry::geometry)::geography WHERE geometry IS NOT NULL');
 
-        // 3. Drop the old 3D geometry column
-        Schema::table('hiking_routes', function (Blueprint $table) {
-            $table->dropColumn('geometry');
-        });
+            // 3. Drop the old 3D geometry column
+            Schema::table('hiking_routes', function (Blueprint $table) {
+                $table->dropColumn('geometry');
+            });
 
-        // 4. Rename the temporary column to the final name
-        Schema::table('hiking_routes', function (Blueprint $table) {
-            $table->renameColumn('geometry_temp', 'geometry');
+            // 4. Rename the temporary column to the final name
+            Schema::table('hiking_routes', function (Blueprint $table) {
+                $table->renameColumn('geometry_temp', 'geometry');
+            });
         });
     }
 };
