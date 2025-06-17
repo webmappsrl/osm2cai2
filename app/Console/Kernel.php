@@ -49,6 +49,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('osm2cai:cache-mitur-abruzzo-api --all')
             ->weeklyOn(6, '09:00') // 6 = Saturday
             ->description('Cache Mitur Abruzzo API (Saturday)');
+
+        // Refresh dashboard cache with fresh data once per day
+        $schedule->command('osm2cai:refresh-dashboard-cache')
+            ->dailyAt('08:00')
+            ->description('Refresh dashboard cache with fresh data');
     }
 
     /**
