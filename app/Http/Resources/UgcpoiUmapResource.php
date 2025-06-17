@@ -42,7 +42,7 @@ class UgcpoiUmapResource extends JsonResource
                 'description' => $this->raw_data['description'] ?? $this->description ?? '',
                 'waypointtype' => $this->raw_data['waypointtype'] ?? '',
                 'validation_status' => $this->validated ?? '',
-                'osm2cai_link' => url('resources/ugc-pois/' . $this->id),
+                'osm2cai_link' => url('resources/ugc-pois/'.$this->id),
                 'images' => $this->ugc_media?->map(function ($image) {
                     $url = $image->getUrl();
                     if (strpos($url, 'http') === false) {
@@ -67,7 +67,7 @@ class UgcpoiUmapResource extends JsonResource
                 'conservation_status' => $this->raw_data['conservation_status'] ?? '',
                 'notes' => $this->raw_data['notes'] ?? '',
                 'validation_status' => $this->validated ?? '',
-                'osm2cai_link' => url('resources/ugc-pois/' . $this->id),
+                'osm2cai_link' => url('resources/ugc-pois/'.$this->id),
                 'images' => $this->ugc_media?->map(function ($image) {
                     $url = $image->getUrl();
                     if (strpos($url, 'http') === false) {
@@ -92,7 +92,7 @@ class UgcpoiUmapResource extends JsonResource
                 'informational_supports' => $this->raw_data['informational_supports'] ?? '',
                 'notes' => $this->raw_data['notes'] ?? '',
                 'validation_status' => $this->validated ?? '',
-                'osm2cai_link' => url('resources/ugc-pois/' . $this->id),
+                'osm2cai_link' => url('resources/ugc-pois/'.$this->id),
                 'images' => $this->ugc_media?->map(function ($image) {
                     $url = $image->getUrl();
                     if (strpos($url, 'http') === false) {
@@ -116,7 +116,7 @@ class UgcpoiUmapResource extends JsonResource
                 'location' => $this->raw_data['location'] ?? '',
                 'notes' => $this->raw_data['notes'] ?? '',
                 'validation_status' => $this->validated ?? '',
-                'osm2cai_link' => url('resources/ugc-pois/' . $this->id),
+                'osm2cai_link' => url('resources/ugc-pois/'.$this->id),
                 'images' => $this->ugc_media?->map(function ($image) {
                     $url = $image->getUrl();
                     if (strpos($url, 'http') === false) {
@@ -142,7 +142,7 @@ class UgcpoiUmapResource extends JsonResource
                 'ispra_geosite' => $this->raw_data['ispra_geosite'] ?? '',
                 'notes' => $this->raw_data['notes'] ?? '',
                 'validation_status' => $this->validated ?? '',
-                'osm2cai_link' => url('resources/ugc-pois/' . $this->id),
+                'osm2cai_link' => url('resources/ugc-pois/'.$this->id),
                 'images' => $this->ugc_media?->map(function ($image) {
                     $url = $image->getUrl();
                     if (strpos($url, 'http') === false) {
