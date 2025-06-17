@@ -77,7 +77,7 @@ echo "🔧 Configurazione template Elasticsearch per single-node..."
 curl -X PUT 'elasticsearch:9200/_index_template/osm2cai_single_node' \
   -H 'Content-Type: application/json' \
   -d '{
-    "index_patterns": ["hiking_routes_*", "ec_tracks_*"],
+    "index_patterns": ["ec_tracks_*"],
     "template": {
       "settings": {
         "index": {
@@ -178,8 +178,8 @@ perform_indexing_with_retry() {
         if [ $attempt -gt 1 ]; then
             print_step "Pulizia indici esistenti dal tentativo precedente..."
             
-            # Rimuovi indici hiking_routes_ falliti
-            local failed_indices=$(curl -s 'elasticsearch:9200/_cat/indices?v' | grep hiking_routes_ | grep -E "(red|yellow)" | awk '{print $3}' 2>/dev/null || true)
+            # Rimuovi indici ec_tracks_ falliti
+            local failed_indices=$(curl -s 'elasticsearch:9200/_cat/indices?v' | grep ec_tracks_ | grep -E "(red|yellow)" | awk '{print $3}' 2>/dev/null || true)
             for index in $failed_indices; do
                 if [ ! -z "$index" ]; then
                     print_step "Rimozione indice fallito: $index"
@@ -195,12 +195,12 @@ perform_indexing_with_retry() {
         print_step "Avvio indicizzazione (timeout: ${INDEX_TIMEOUT}s, memoria: ${MEMORY_LIMIT})..."
         
         if timeout $INDEX_TIMEOUT php -d max_execution_time=$INDEX_TIMEOUT -d memory_limit=$MEMORY_LIMIT \
-           artisan scout:import 'App\Models\HikingRoute' 2>/dev/null; then
+           artisan scout:import-ectrack 2>/dev/null; then
             
             print_success "Indicizzazione completata con successo!"
             
             # Aspetta che gli shard siano attivi
-            local new_index=$(curl -s 'elasticsearch:9200/_alias?pretty' | grep -B2 '"hiking_routes"' | grep -o 'hiking_routes_[0-9]*' | head -1 2>/dev/null || echo "")
+            local new_index=$(curl -s 'elasticsearch:9200/_cat/indices?v' | grep ec_tracks_ | awk '{print $3}' | head -1 2>/dev/null || echo "")
             if [ ! -z "$new_index" ]; then
                 wait_for_shards "$new_index" 60
                 configure_index_for_single_node "$new_index"
@@ -224,75 +224,6 @@ perform_indexing_with_retry() {
     return 1
 }
 
-# Funzione per creare/aggiornare alias ec_tracks
-setup_ec_tracks_alias() {
-    print_step "Setup alias ec_tracks..."
-    
-    # Trova l'indice hiking_routes più recente
-    local hiking_index=$(curl -s 'elasticsearch:9200/_alias?pretty' | grep -B2 '"hiking_routes"' | grep -o 'hiking_routes_[0-9]*' | head -1 2>/dev/null || echo "")
-    
-    if [ -z "$hiking_index" ]; then
-        print_error "Nessun indice hiking_routes trovato"
-        return 1
-    fi
-    
-    print_step "Indice trovato: $hiking_index"
-    
-    # Rimuovi alias ec_tracks esistente
-    local existing_alias=$(curl -s 'elasticsearch:9200/_alias/ec_tracks?pretty' 2>/dev/null | grep -o '"ec_tracks"' | head -1 || true)
-    if [ ! -z "$existing_alias" ]; then
-        print_step "Rimozione alias ec_tracks esistente..."
-        curl -X POST 'elasticsearch:9200/_aliases' \
-            -H 'Content-Type: application/json' \
-            -d '{"actions":[{"remove":{"index":"*","alias":"ec_tracks"}}]}' \
-            -s > /dev/null
-    fi
-    
-    # Crea nuovo alias
-    print_step "Creazione alias ec_tracks -> $hiking_index..."
-    local result=$(curl -s -X POST 'elasticsearch:9200/_aliases' \
-        -H 'Content-Type: application/json' \
-        -d "{\"actions\":[{\"add\":{\"index\":\"$hiking_index\",\"alias\":\"ec_tracks\"}}]}")
-    
-    if echo "$result" | grep -q '"acknowledged":true'; then
-        print_success "Alias ec_tracks creato con successo"
-        return 0
-    else
-        print_error "Errore nella creazione dell'alias: $result"
-        return 1
-    fi
-}
-
-print_step "Stato attuale dell'indicizzazione..."
-
-# Conta HikingRoutes disponibili
-TOTAL_ROUTES=$(php artisan tinker --execute="echo App\Models\HikingRoute::count();" 2>/dev/null || echo "0")
-INDEXABLE_ROUTES=$(php artisan tinker --execute="echo App\Models\HikingRoute::whereNotNull('geometry')->where('osm2cai_status', '!=', 0)->count();" 2>/dev/null || echo "0")
-
-print_step "HikingRoutes totali: $TOTAL_ROUTES"
-print_step "HikingRoute indicizzabili: $INDEXABLE_ROUTES"
-
-if [ "$INDEXABLE_ROUTES" = "0" ]; then
-    print_warning "Nessun HikingRoute indicizzabile trovato"
-    print_step "Verifica che esistano record con geometry valida e osm2cai_status != 0"
-    print_success "Template configurato per indicizzazione automatica futura"
-    exit 0
-fi
-
-# Configurazione cluster per single-node
-print_step "Configurazione cluster per single-node..."
-curl -X PUT 'elasticsearch:9200/_cluster/settings' \
-    -H 'Content-Type: application/json' \
-    -d '{
-        "persistent": {
-            "cluster.routing.allocation.disk.threshold_enabled": false,
-            "cluster.routing.allocation.enable": "all"
-        }
-    }' -s > /dev/null
-
-print_success "Cluster configurato"
-
-# Esegui indicizzazione con retry
 print_step "Avvio indicizzazione robusta con gestione errori..."
 if perform_indexing_with_retry; then
     print_success "Indicizzazione completata"
@@ -301,26 +232,20 @@ else
     exit 1
 fi
 
-# Setup alias
-if setup_ec_tracks_alias; then
-    print_success "Alias ec_tracks configurato"
-else
-    print_error "Configurazione alias fallita"
-    exit 1
-fi
+echo ""
+print_success "🎉 Indicizzazione Scout avanzata completata!"
+echo ""
 
 # Test finale
 print_step "Test risultato finale..."
 
 # Conta documenti negli indici
-HIKING_COUNT=$(curl -s 'elasticsearch:9200/hiking_routes/_count' 2>/dev/null | grep -o '"count":[0-9]*' | cut -d':' -f2 || echo "0")
 EC_TRACKS_COUNT=$(curl -s 'elasticsearch:9200/ec_tracks/_count' 2>/dev/null | grep -o '"count":[0-9]*' | cut -d':' -f2 || echo "0")
 
 print_step "Documenti indicizzati:"
-print_step "  • hiking_routes: $HIKING_COUNT"
-print_step "  • ec_tracks (alias): $EC_TRACKS_COUNT"
+print_step "  • ec_tracks: $EC_TRACKS_COUNT"
 
-if [ "$HIKING_COUNT" = "$EC_TRACKS_COUNT" ] && [ "$HIKING_COUNT" -gt 0 ]; then
+if [ "$EC_TRACKS_COUNT" -gt 0 ]; then
     print_success "Indicizzazione verificata correttamente"
     
     # Test API
@@ -338,16 +263,14 @@ echo ""
 print_success "🎉 Indicizzazione Scout avanzata completata!"
 echo ""
 echo "📊 Riepilogo:"
-print_step "  • HikingRoutes processati: $INDEXABLE_ROUTES/$TOTAL_ROUTES"
-print_step "  • Indice creato: $(curl -s 'elasticsearch:9200/_alias?pretty' 2>/dev/null | grep -B2 '"hiking_routes"' | grep -o 'hiking_routes_[0-9]*' | head -1 || echo 'N/A')"
-print_step "  • Alias ec_tracks: Configurato"
+print_step "  • ec_tracks: $EC_TRACKS_COUNT"
 print_step "  • API: http://localhost:8008/api/v2/elasticsearch?app=geohub_app_1"
 echo ""
 echo "📋 Prossimi passi:"
 echo "1. Assicurati che Horizon sia attivo: php artisan horizon"
 echo "2. Monitora le code: http://localhost:8008/horizon"
 echo "3. Verifica status: php artisan horizon:status"
-echo "4. Testa modificando un HikingRoute nell'interfaccia Nova"
+echo "4. Testa modificando un ec_track nell'interfaccia Nova"
 echo ""
 echo "🔍 Comandi utili per monitoraggio:"
 echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/_cat/indices?v'"

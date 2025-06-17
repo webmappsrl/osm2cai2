@@ -1,8 +1,20 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
+---
+description: Docker Environment Rules per osm2cai2 - Regole per l'ambiente dockerizzato Laravel
+globs: 
+  - "docker-compose.yml"
+  - "docker-compose.*.yml"
+  - "Dockerfile*"
+  - "docker/**/*"
+  - ".env*"
+  - "scripts/**/*"
+alwaysApply: true
+---
+
 # Docker Environment Rules per osm2cai2
 
 ## Ambiente Dockerizzato

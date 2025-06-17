@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Wm\WmPackage\Services\Models\EcTrackService;
+use App\Models\HikingRoute;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // Configura EcTrackService per usare il modello HikingRoute
+        $this->app->resolving(EcTrackService::class, function ($service, $app) {
+            $service->setModel(new HikingRoute());
+        });
     }
 
     /**

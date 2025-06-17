@@ -225,90 +225,70 @@ print_success "Laravel serve e Horizon avviati (necessari per import)"
 # FASE 2: DATABASE E MIGRAZIONI
 print_step "=== FASE 2: DATABASE E MIGRAZIONI ==="
 
-# Controllo migrazioni esistenti
-print_step "Controllo migrazioni esistenti..."
-MIGRATION_COUNT=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:status | grep -c 'Ran'" 2>/dev/null || echo "0")
-
-if [ "$MIGRATION_COUNT" -gt 0 ]; then
-    print_warning "Rilevate $MIGRATION_COUNT migrazioni già applicate nel database"
-    
-    # Gestione della scelta rollback
-    DO_ROLLBACK="no"
-    
-    if [ "$AUTO_ROLLBACK" = "yes" ]; then
-        print_step "Modalità automatica: rollback forzato"
-        DO_ROLLBACK="yes"
-    elif [ "$AUTO_ROLLBACK" = "no" ]; then
-        print_step "Modalità automatica: rollback saltato"
-        DO_ROLLBACK="no"
-    else
-        # Modalità interattiva
-        echo ""
-        echo -e "${YELLOW}❓ Vuoi fare rollback di tutte le migrazioni esistenti?${NC}"
-        echo "   • ${GREEN}y/s${NC}: Rollback completo (rimuove tutte le tabelle e ricrea)"
-        echo "   • ${RED}n${NC}: Continua senza rollback (applica solo nuove migrazioni)"
-        echo ""
-        read -p "Scelta [y/n]: " -n 1 -r
-        echo ""
-        
-        if [[ $REPLY =~ ^[YySs]$ ]]; then
-            DO_ROLLBACK="yes"
-        fi
-    fi
-    
-    if [ "$DO_ROLLBACK" = "yes" ]; then
-        print_step "Esecuzione rollback completo delle migrazioni..."
-        if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:reset --force"; then
-            print_error "Errore durante il rollback delle migrazioni! Interruzione setup."
-            exit 1
-        fi
-        print_success "Rollback delle migrazioni completato"
-    else
-        print_step "Rollback saltato, continuo con migrazioni esistenti"
-    fi
-else
-    print_step "Nessuna migrazione esistente rilevata"
-fi
-
-# Applicazione Migrazioni
-print_step "Applicazione migrazioni al database..."
-
-# Applica le migrazioni
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
-    print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
-    exit 1
-fi
-print_success "Nuove migrazioni applicate al database"
-
 # Gestione migrazioni avanzate (08-manage-migrations)
-print_step "Gestione migrazioni avanzate..."
+print_step "Gestione migrazioni WM-Package..."
+
 if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/08-manage-migrations.sh"; then
-    print_error "Errore durante la gestione delle migrazioni avanzate! Interruzione setup."
+    print_error "Errore durante la gestione delle migrazioni!"
     exit 1
 fi
-print_success "Gestione migrazioni avanzate completata"
 
-# Import App da Geohub
-print_step "Import App da Geohub (utilizzando script dedicato)..."
-if ! ./scripts/01-import-app-from-geohub.sh 26; then
-    print_error "Import App da Geohub fallito! Interruzione setup."
+print_success "=== FASE 2 COMPLETATA: Database e migrazioni configurati ==="
+
+# FASE 3: CONFIGURAZIONE SCOUT/ELASTICSEARCH
+print_step "=== FASE 3: CONFIGURAZIONE SCOUT/ELASTICSEARCH ==="
+
+# Setup Elasticsearch
+print_step "Setup Elasticsearch e indicizzazione..."
+
+# Cancellazione indici esistenti per partire puliti
+print_step "Pulizia indici Elasticsearch esistenti..."
+if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
+    print_success "Indici Elasticsearch puliti (o nessun indice trovato)"
+else
+    print_warning "Errore durante la pulizia degli indici Elasticsearch (continuo comunque)"
+fi
+
+# Abilita indicizzazione automatica Scout
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
+    print_error "Errore durante la configurazione di Scout/Elasticsearch! Interruzione setup."
     exit 1
 fi
-print_success "Import App da Geohub completato con successo"
 
-print_success "=== FASE 2 COMPLETATA: Database configurato ==="
+# Pulisci cache configurazione
+print_step "Pulizia cache configurazione..."
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
+print_success "Cache configurazione pulita"
 
-# FASE 3: CONFIGURAZIONE SERVIZI
-print_step "=== FASE 3: CONFIGURAZIONE SERVIZI ==="
+# Indicizzazione iniziale
+print_step "Avvio indicizzazione iniziale (può richiedere diversi minuti)..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import App\\\\Models\\\\HikingRoute"; then
+    print_error "Errore durante l'indicizzazione iniziale! Interruzione setup."
+    exit 1
+fi
+print_success "Indicizzazione iniziale completata"
+
+# Fix completo Elasticsearch con configurazione single-node
+# print_step "Fix Elasticsearch e creazione alias ec_tracks per compatibilità API..."
+# if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"; then
+#     print_error "Errore durante la configurazione dell'alias ec_tracks! Interruzione setup."
+#     exit 1
+# fi
+# print_success "Elasticsearch configurato per single-node e alias ec_tracks creato"
+
+print_success "=== FASE 3 COMPLETATA: Elasticsearch configurato ==="
+
+# FASE 4: CONFIGURAZIONE SERVIZI
+print_step "=== FASE 4: CONFIGURAZIONE SERVIZI ==="
 
 # Setup bucket MinIO
 print_step "Setup bucket MinIO..."
 docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/setup-minio-bucket.sh"
 
-print_success "=== FASE 3 COMPLETATA: Servizi configurati ==="
+print_success "=== FASE 4 COMPLETATA: Servizi configurati ==="
 
-# FASE 4: CONFIGURAZIONE APPS E LAYER
-print_step "=== FASE 4: CONFIGURAZIONE APPS E LAYER ==="
+# FASE 5: CONFIGURAZIONE APPS E LAYER
+print_step "=== FASE 5: CONFIGURAZIONE APPS E LAYER ==="
 
 # Verifica/Creazione App di default
 print_step "Verifica App di default..."
@@ -353,50 +333,7 @@ print_step "Associazione hiking routes ai layer..."
 docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:associate-hiking-routes-to-layers"
 print_success "Hiking routes associati ai layer"
 
-print_success "=== FASE 4 COMPLETATA: Apps e Layer configurati ==="
-
-# FASE 5: SETUP ELASTICSEARCH
-print_step "=== FASE 5: SETUP ELASTICSEARCH ==="
-
-# Setup Elasticsearch
-print_step "Setup Elasticsearch e indicizzazione..."
-
-# Cancellazione indici esistenti per partire puliti
-print_step "Pulizia indici Elasticsearch esistenti..."
-if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
-    print_success "Indici Elasticsearch puliti (o nessun indice trovato)"
-else
-    print_warning "Errore durante la pulizia degli indici Elasticsearch (continuo comunque)"
-fi
-
-# Abilita indicizzazione automatica Scout
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
-    print_error "Errore durante la configurazione di Scout/Elasticsearch! Interruzione setup."
-    exit 1
-fi
-
-# Pulisci cache configurazione
-print_step "Pulizia cache configurazione..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
-print_success "Cache configurazione pulita"
-
-# Indicizzazione iniziale
-print_step "Avvio indicizzazione iniziale (può richiedere diversi minuti)..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import App\\\\Models\\\\HikingRoute"; then
-    print_error "Errore durante l'indicizzazione iniziale! Interruzione setup."
-    exit 1
-fi
-print_success "Indicizzazione iniziale completata"
-
-# Fix completo Elasticsearch con configurazione single-node
-print_step "Fix Elasticsearch e creazione alias ec_tracks per compatibilità API..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"; then
-    print_error "Errore durante la configurazione dell'alias ec_tracks! Interruzione setup."
-    exit 1
-fi
-print_success "Elasticsearch configurato per single-node e alias ec_tracks creato"
-
-print_success "=== FASE 5 COMPLETATA: Elasticsearch configurato ==="
+print_success "=== FASE 5 COMPLETATA: Apps e Layer configurati ==="
 
 # FASE 6: VERIFICA SERVIZI FINALI
 print_step "=== FASE 6: VERIFICA SERVIZI FINALI ==="
