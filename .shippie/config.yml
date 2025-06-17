@@ -1,0 +1,175 @@
+# Shippie Configuration for OSM2CAI Project
+
+# AI Provider Configuration
+ai:
+  provider: "openai"  # or "anthropic", "gemini", etc.
+  model: "gpt-4o"     # Recommended model for code review
+  temperature: 0.1    # Low temperature for more consistent reviews
+  max_tokens: 4000    # Sufficient for detailed reviews
+
+# Code Review Settings
+review:
+  # File patterns to include in reviews
+  include_patterns:
+    - "**/*.php"
+    - "**/*.js"
+    - "**/*.ts"
+    - "**/*.vue"
+    - "**/*.blade.php"
+    - "**/composer.json"
+    - "**/package.json"
+    - "**/*.sql"
+    - "**/*.yml"
+    - "**/*.yaml"
+
+  # File patterns to exclude from reviews
+  exclude_patterns:
+    - "vendor/**"
+    - "node_modules/**"
+    - "storage/**"
+    - "bootstrap/cache/**"
+    - "public/vendor/**"
+    - "**/*.min.js"
+    - "**/*.min.css"
+    - "lang/vendor/**"
+    - ".phpunit.cache/**"
+    - "cypress/downloads/**"
+    - "cypress/screenshots/**"
+    - "*.log"
+
+  # Maximum file size for review (in KB)
+  max_file_size: 200
+
+  # Review focus areas
+  focus_areas:
+    - "security"
+    - "performance"
+    - "maintainability" 
+    - "laravel_best_practices"
+    - "clean_code"
+
+# Project-specific settings
+project:
+  type: "laravel"
+  framework_version: "11.0+"
+  php_version: "8.3+"
+  
+  # Project-specific contexts
+  context:
+    - "This is the OSM2CAI project for managing hiking routes"
+    - "Uses PostGIS for spatial data operations"
+    - "Integrates with OpenStreetMap and OSMFeatures API"
+    - "Manages hiking route validation workflow (status 0->1->2->3->4)"
+    - "Uses Laravel Nova for admin interface"
+    - "Implements background jobs for heavy spatial computations"
+
+# Rules configuration
+rules:
+  enabled: true
+  rules_directory: ".shippie/rules"
+  
+  # Rule file priorities (higher number = higher priority)
+  rule_files:
+    - file: "formatting-guidelines.md"
+      priority: 11  # Highest priority for format consistency
+    - file: "security.md"
+      priority: 10
+    - file: "osm2cai-specific.md" 
+      priority: 9
+    - file: "laravel-best-practices.md"
+      priority: 8
+    - file: "performance.md"
+      priority: 7
+    - file: "clean-code.md"
+      priority: 6
+
+# Output settings
+output:
+  format: "markdown"
+  show_line_numbers: true
+  show_suggestions: true
+  show_praise: false  # Focus on issues, not praise
+  max_suggestions_per_file: 10
+  
+  # Enhanced code snippet settings
+  include_code_snippets: true
+  snippet_context_lines: 3  # Show 3 lines before/after the problematic line
+  show_line_references: true
+  highlight_syntax: true
+  
+  # Suggestion format template
+  suggestion_template: |
+    ### 🔍 **{severity}** - Line {line_number}: {title}
+    
+    **File:** `{file_path}:{line_number}`
+    
+    **Issue:** {description}
+    
+    **Code:**
+    ```{language}
+    {code_snippet}
+    ```
+    
+    **Suggestion:** {suggestion}
+    
+    **Rule:** {rule_category}
+    
+    ---
+
+# GitHub Integration (if using GitHub Actions)
+github:
+  post_review_comment: true
+  create_review_summary: true
+  fail_on_high_severity: false  # Don't fail builds on high severity issues
+  
+  # Severity levels for different types of issues
+  severity_mapping:
+    security: "🚨 HIGH"
+    performance: "⚡ MEDIUM"  
+    maintainability: "🔧 LOW"
+    style: "💄 LOW"
+    clean_code: "🧹 MEDIUM"
+    laravel_best_practices: "🎯 MEDIUM"
+
+# Custom prompts for better suggestions
+prompts:
+  system_prompt: |
+    You are an expert Laravel/PHP code reviewer focusing on the OSM2CAI project.
+    
+    CRITICAL REQUIREMENTS:
+    1. ALWAYS include the exact line number where the issue occurs
+    2. ALWAYS include a code snippet showing the problematic code
+    3. Use the format: `Line X:` at the start of each suggestion
+    4. Include 2-3 lines of context around the problematic line
+    5. Reference specific rule categories from our custom rules
+    6. Provide actionable, specific suggestions with code examples
+    
+    ANALYSIS FOCUS:
+    - Security vulnerabilities (SQL injection, XSS, etc.)
+    - Performance issues (N+1 queries, memory leaks)
+    - Laravel best practices violations
+    - Clean code principles
+    - OSM2CAI-specific patterns
+    
+    FORMAT EXAMPLE:
+    "Line 45: SQL Injection vulnerability in raw query
+    ```php
+    // Line 43-47
+    $query = "SELECT * FROM users WHERE id = " . $userId;
+    $result = DB::select($query); // ❌ Vulnerable to SQL injection
+    ```
+    Use parameter binding instead: DB::select('SELECT * FROM users WHERE id = ?', [$userId])"
+
+  suggestion_prompt: |
+    When suggesting improvements:
+    1. Start with "Line X:" where X is the exact line number
+    2. Include a code snippet with the problematic line highlighted
+    3. Explain WHY it's a problem
+    4. Provide a specific, actionable solution
+    5. Reference which rule category it violates
+    6. Use appropriate severity emoji (🚨🔥⚡🔧💄🧹🎯)
+
+# Logging
+logging:
+  level: "info"
+  file: ".shippie/logs/review.log" 
