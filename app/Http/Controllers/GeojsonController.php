@@ -164,7 +164,6 @@ class GeojsonController extends Controller
     private function getResourceProperties($resource, $modelType)
     {
         if ($resource instanceof HikingRoute) {
-            $geometry = DB::select('SELECT ST_AsGeoJSON(ST_ForceRHR(geometry)) as geom FROM hiking_routes WHERE id = ?;', [$resource->id]);
             $osmfeaturesDataProperties = $resource->osmfeatures_data['properties'];
 
             $name = $resource->name ? $resource->name.' - '.$resource->ref : $resource->ref;

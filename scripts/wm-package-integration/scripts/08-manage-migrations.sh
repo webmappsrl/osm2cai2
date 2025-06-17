@@ -41,6 +41,8 @@ WM_PACKAGE_MIGRATIONS=(
     "2025_06_05_111426_z_add_foreign_keys_to_taxonomy_poi_typeables_table"
     "2025_06_05_111427_z_add_foreign_keys_to_taxonomy_targetables_table"
     "2025_06_05_111428_z_add_foreign_keys_to_taxonomy_whenables_table"
+    "2025_06_10_111003_update_media_table_for_wm_package"
+    "2025_06_12_143945_convert_hr_geometry_to_3_d"
 )
 
 # Funzione di help
