@@ -2,24 +2,26 @@
 
 namespace App\Models;
 
-use App\Jobs\CalculateIntersectionsJob;
-use App\Jobs\CheckNearbyEcPoisJob;
-use App\Jobs\CheckNearbyHutsJob;
-use App\Jobs\CheckNearbyNaturalSpringsJob;
 use App\Jobs\ComputeTdhJob;
-use App\Jobs\SyncClubHikingRouteRelationJob;
-use App\Services\HikingRouteDescriptionService;
 use App\Traits\AwsCacheable;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Jobs\CheckNearbyHutsJob;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Wm\WmPackage\Models\EcTrack;
+use App\Jobs\CheckNearbyEcPoisJob;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use App\Jobs\CalculateIntersectionsJob;
+use App\Jobs\CheckNearbyNaturalSpringsJob;
+use App\Jobs\SyncClubHikingRouteRelationJob;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
+use App\Services\HikingRouteDescriptionService;
+use App\Jobs\GetTaxonomyWheresFromOsmfeaturesJob;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
+use App\Observers\HikingRouteObserver;
 
 class HikingRoute extends EcTrack
 {
@@ -50,6 +52,7 @@ class HikingRoute extends EcTrack
         'issues_description',
         'description_cai_it',
         'geometry_raw_data',
+        'properties',
     ];
 
     protected $casts = [
@@ -58,6 +61,7 @@ class HikingRoute extends EcTrack
         'issues_last_update' => 'date',
         'tdh' => 'array',
         'issues_chronology' => 'array',
+        'properties' => 'array',
     ];
 
     private HikingRouteDescriptionService $descriptionService;
@@ -70,27 +74,8 @@ class HikingRoute extends EcTrack
 
     protected static function booted()
     {
-        static::created(function ($hikingRoute) {
-            SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
-        });
-
-        static::saved(function ($hikingRoute) {
-            if ($hikingRoute->isDirty('geometry')) {
-                $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
-            }
-        });
-
-        static::updated(function ($hikingRoute) {
-            if ($hikingRoute->osm2cai_status == 4 && $hikingRoute->isDirty('geometry') && app()->environment('production')) {
-                ComputeTdhJob::dispatch($hikingRoute->id);
-            }
-        });
-
-        static::deleting(function ($hikingRoute) {
-
-            $hikingRoute->cleanRelations();
-            $hikingRoute->clearMediaCollection('feature_image');
-        });
+        parent::booted();
+        HikingRoute::observe(HikingRouteObserver::class);
     }
 
     /**
@@ -850,13 +835,88 @@ SQL;
         $refSuffix = substr($ref, 1);
 
         if ($refLength === 3) {
-            return $mainSector->full_code.$refSuffix.'0';
+            return $mainSector->full_code . $refSuffix . '0';
         }
 
         if ($refLength === 4) {
-            return $mainSector->full_code.$refSuffix;
+            return $mainSector->full_code . $refSuffix;
         }
 
-        return $mainSector->full_code.'????';
+        return $mainSector->full_code . '????';
+    }
+
+    /**
+     * Extract and populate properties from osmfeatures_data for Elasticsearch indexing.
+     *
+     * @param array|string|null $osmfeaturesData
+     * @return array
+     */
+    public static function extractPropertiesFromOsmfeatures($osmfeaturesData): array
+    {
+        if (is_string($osmfeaturesData)) {
+            $osmfeaturesData = json_decode($osmfeaturesData, true);
+        }
+
+        if (
+            empty($osmfeaturesData)
+            || !isset($osmfeaturesData['properties'])
+            || !is_array($osmfeaturesData['properties'])
+        ) {
+            return [];
+        }
+
+        $props = $osmfeaturesData['properties'];
+
+        $properties = array_merge(
+            self::extractBaseProperties($props),
+            self::extractDemProperties($props),
+            [
+                'roundtrip' => $props['roundtrip'] ?? null,
+                'network'   => $props['network'] ?? null,
+                'osm_id'    => $props['osm_id'] ?? null,
+            ]
+        );
+
+        // Remove null and empty string values for compactness
+        return array_filter(
+            $properties,
+            static fn($value) => $value !== null && $value !== ''
+        );
+    }
+
+    private static function extractBaseProperties(array $props): array
+    {
+        return [
+            'ref'       => $props['ref']       ?? '',
+            'cai_scale' => $props['cai_scale'] ?? '',
+            'name'      => $props['name']      ?? null,
+            'from'      => $props['from']      ?? '',
+            'to'        => $props['to']        ?? '',
+        ];
+    }
+
+    private static function extractDemProperties(array $props): array
+    {
+        if (!empty($props['dem_enrichment']) && is_array($props['dem_enrichment'])) {
+            $dem = $props['dem_enrichment'];
+            return [
+                'distance'          => $dem['distance'] ?? null,
+                'ascent'            => $dem['ascent'] ?? null,
+                'descent'           => $dem['descent'] ?? null,
+                'ele_from'          => $dem['ele_from'] ?? null,
+                'ele_to'            => $dem['ele_to'] ?? null,
+                'ele_max'           => $dem['ele_max'] ?? null,
+                'ele_min'           => $dem['ele_min'] ?? null,
+                'duration_forward'  => $dem['duration_forward_hiking'] ?? null,
+                'duration_backward' => $dem['duration_backward_hiking'] ?? null,
+            ];
+        }
+        return [
+            'distance'          => $props['distance'] ?? null,
+            'ascent'            => $props['ascent'] ?? null,
+            'descent'           => $props['descent'] ?? null,
+            'duration_forward'  => $props['duration_forward'] ?? null,
+            'duration_backward' => $props['duration_backward'] ?? null,
+        ];
     }
 }
