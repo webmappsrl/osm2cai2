@@ -74,7 +74,7 @@ return [
             'driver' => 'redis',
             'connection' => 'default',
             'queue' => 'geometric-computations',
-            'retry_after' => 300,
+            'retry_after' => 600,
             'block_for' => null,
             'after_commit' => false,
         ],
