@@ -18,7 +18,6 @@ class HikingRouteObserver
     public function created(HikingRoute $hikingRoute): void
     {
         SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
-        GetTaxonomyWheresFromOsmfeaturesJob::dispatch($hikingRoute)->onQueue('geometric-computations');
     }
 
     /**
@@ -39,7 +38,6 @@ class HikingRouteObserver
             // This logic was previously in the 'saved' event.
             // Moved to 'saving' to ensure it runs before the 'updated' event logic.
             if ($hikingRoute->exists) { // To mimic 'updated' event behavior
-                GetTaxonomyWheresFromOsmfeaturesJob::dispatch($hikingRoute)->onQueue('geometric-computations');
                 if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
                     ComputeTdhJob::dispatch($hikingRoute->id);
                 }
