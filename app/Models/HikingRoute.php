@@ -877,11 +877,7 @@ SQL;
             ]
         );
 
-        // Remove null and empty string values for compactness
-        return array_filter(
-            $properties,
-            static fn($value) => $value !== null && $value !== ''
-        );
+        return $properties;
     }
 
     private static function extractBaseProperties(array $props): array

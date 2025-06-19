@@ -7,6 +7,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use App\Jobs\GetTaxonomyWheresFromOsmfeaturesJob;
+use Wm\WmPackage\Jobs\UpdateModelWithGeometryTaxonomyWhere;
 
 class GetTaxonomyWheresFromOsmfeaturesCommand extends Command
 {
@@ -15,7 +16,7 @@ class GetTaxonomyWheresFromOsmfeaturesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'osm2cai:get-taxonomy-wheres-from-osmfeatures';
+    protected $signature = 'osm2cai:get-taxonomy-where-from-osmfeatures';
 
     /**
      * The console command description.
@@ -39,7 +40,7 @@ class GetTaxonomyWheresFromOsmfeaturesCommand extends Command
         $bar->start();
 
         foreach ($hikingRoutes as $route) {
-            dispatch(new GetTaxonomyWheresFromOsmfeaturesJob($route))->onQueue('geometric-computations');
+            dispatch(new UpdateModelWithGeometryTaxonomyWhere($route))->onQueue('geometric-computations');
             $bar->advance();
         }
 
