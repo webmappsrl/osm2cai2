@@ -77,7 +77,7 @@ echo "🔧 Configurazione template Elasticsearch per single-node..."
 curl -X PUT 'elasticsearch:9200/_index_template/osm2cai_single_node' \
   -H 'Content-Type: application/json' \
   -d '{
-    "index_patterns": ["ec_tracks_*"],
+    "index_patterns": ["hiking_routes_*"],
     "template": {
       "settings": {
         "index": {
@@ -178,8 +178,8 @@ perform_indexing_with_retry() {
         if [ $attempt -gt 1 ]; then
             print_step "Pulizia indici esistenti dal tentativo precedente..."
             
-            # Rimuovi indici ec_tracks_ falliti
-            local failed_indices=$(curl -s 'elasticsearch:9200/_cat/indices?v' | grep ec_tracks_ | grep -E "(red|yellow)" | awk '{print $3}' 2>/dev/null || true)
+            # Rimuovi indici hiking_routes_ falliti
+            local failed_indices=$(curl -s 'elasticsearch:9200/_cat/indices?v' | grep hiking_routes_ | grep -E "(red|yellow)" | awk '{print $3}' 2>/dev/null || true)
             for index in $failed_indices; do
                 if [ ! -z "$index" ]; then
                     print_step "Rimozione indice fallito: $index"
@@ -200,7 +200,7 @@ perform_indexing_with_retry() {
             print_success "Indicizzazione completata con successo!"
             
             # Aspetta che gli shard siano attivi
-            local new_index=$(curl -s 'elasticsearch:9200/_cat/indices?v' | grep ec_tracks_ | awk '{print $3}' | head -1 2>/dev/null || echo "")
+            local new_index=$(curl -s 'elasticsearch:9200/_cat/indices?v' | grep hiking_routes_ | awk '{print $3}' | head -1 2>/dev/null || echo "")
             if [ ! -z "$new_index" ]; then
                 wait_for_shards "$new_index" 60
                 configure_index_for_single_node "$new_index"
@@ -240,10 +240,10 @@ echo ""
 print_step "Test risultato finale..."
 
 # Conta documenti negli indici
-EC_TRACKS_COUNT=$(curl -s 'elasticsearch:9200/ec_tracks/_count' 2>/dev/null | grep -o '"count":[0-9]*' | cut -d':' -f2 || echo "0")
+EC_TRACKS_COUNT=$(curl -s 'elasticsearch:9200/hiking_routes/_count' 2>/dev/null | grep -o '"count":[0-9]*' | cut -d':' -f2 || echo "0")
 
 print_step "Documenti indicizzati:"
-print_step "  • ec_tracks: $EC_TRACKS_COUNT"
+print_step "  • hiking_routes: $EC_TRACKS_COUNT"
 
 if [ "$EC_TRACKS_COUNT" -gt 0 ]; then
     print_success "Indicizzazione verificata correttamente"
@@ -263,7 +263,7 @@ echo ""
 print_success "🎉 Indicizzazione Scout avanzata completata!"
 echo ""
 echo "📊 Riepilogo:"
-print_step "  • ec_tracks: $EC_TRACKS_COUNT"
+print_step "  • hiking_routes: $EC_TRACKS_COUNT"
 print_step "  • API: http://localhost:8008/api/v2/elasticsearch?app=geohub_app_1"
 echo ""
 echo "📋 Prossimi passi:"
@@ -275,5 +275,5 @@ echo ""
 echo "🔍 Comandi utili per monitoraggio:"
 echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/_cat/indices?v'"
 echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/_cat/shards?v'"
-echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/ec_tracks/_count'"
+echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/hiking_routes/_count'"
 echo "  • tail -f storage/logs/laravel.log | grep -i scout" 
