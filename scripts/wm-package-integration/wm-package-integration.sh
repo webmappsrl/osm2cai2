@@ -372,6 +372,22 @@ print_step "Associazione hiking routes ai layer..."
 docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:associate-hiking-routes-to-layers"
 print_success "Hiking routes associati ai layer"
 
+# Popolamento proprietà e tassonomie per i percorsi
+print_step "Popolamento proprietà e tassonomie per i percorsi..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
+    print_error "Errore durante il popolamento delle proprietà e tassonomie dei percorsi! Interruzione setup."
+    exit 1
+fi
+print_success "Proprietà e tassonomie dei percorsi popolate"
+
+# Migrazione media per Hiking Routes
+print_step "Migrazione media per Hiking Routes..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
+    print_error "Errore durante la migrazione dei media! Interruzione setup."
+    exit 1
+fi
+print_success "Migrazione media per Hiking Routes completata"
+
 print_success "=== FASE 4 COMPLETATA: Apps e Layer configurati ==="
 
 # FASE 5: SETUP ELASTICSEARCH
