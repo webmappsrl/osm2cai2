@@ -122,6 +122,43 @@ chown -R 33 bootstrap/cache/
   - `geobox_serve osm2cai2`
   - `geobox_dump_restore osm2cai2`
 
+## AVVIO AUTOMATICO AMBIENTE DI SVILUPPO
+
+### Quando l'utente dice "tira su l'ambiente di sviluppo" o frasi simili:
+Eseguire automaticamente e in sequenza i seguenti comandi:
+
+1. **Avvio container Docker**:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Attesa che i container siano pronti** (aspettare qualche secondo):
+   ```bash
+   sleep 5
+   ```
+
+3. **Avvio Laravel serve nel container PHP** (in background):
+   ```bash
+   docker exec -d php81_osm2cai2 php artisan serve --host 0.0.0.0
+   ```
+
+4. **Avvio Horizon nel container PHP** (in background):
+   ```bash
+   docker exec -d php81_osm2cai2 php artisan horizon
+   ```
+
+### Risultato atteso:
+- Tutti i container attivi (db, redis, elasticsearch, phpfpm)
+- Laravel accessibile su http://127.0.0.1:8008
+- Horizon attivo per la gestione delle code
+- Ambiente di sviluppo completamente operativo
+
+### Note per l'AI:
+- **NON chiedere conferma** per questi comandi quando l'utente richiede l'avvio dell'ambiente
+- Eseguire i comandi automaticamente in sequenza
+- Se un comando fallisce, segnalare l'errore e continuare con i successivi
+- **NON creare script** - eseguire direttamente i comandi con run_terminal_cmd
+
 ## Note Importanti
 - Mai installare dipendenze direttamente sul sistema host
 - Sempre verificare che i container siano attivi con `docker ps`

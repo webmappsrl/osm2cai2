@@ -258,8 +258,8 @@ if [ "$MIGRATION_COUNT" -gt 0 ]; then
     else
         # Modalità interattiva
         echo ""
-        echo -e "${YELLOW}❓ Vuoi fare rollback di tutte le migrazioni esistenti?${NC}"
-        echo "   • ${GREEN}y/s${NC}: Rollback completo (rimuove tutte le tabelle e ricrea)"
+        echo -e "${YELLOW}❓ Vuoi fare rollback selettivo delle migrazioni WM-Package già applicate?${NC}"
+        echo "   • ${GREEN}y/s${NC}: Rollback selettivo (rimuove solo le tabelle WM-Package e ricrea)"
         echo "   • ${RED}n${NC}: Continua senza rollback (applica solo nuove migrazioni)"
         echo ""
         read -p "Scelta [y/n]: " -n 1 -r
@@ -271,12 +271,12 @@ if [ "$MIGRATION_COUNT" -gt 0 ]; then
     fi
     
     if [ "$DO_ROLLBACK" = "yes" ]; then
-        print_step "Esecuzione rollback completo delle migrazioni..."
-        if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:reset --force"; then
-            print_error "Errore durante il rollback delle migrazioni! Interruzione setup."
+        print_step "Esecuzione rollback selettivo delle migrazioni WM-Package..."
+        if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/08-manage-migrations.sh"; then
+            print_error "Errore durante il rollback selettivo delle migrazioni! Interruzione setup."
             exit 1
         fi
-        print_success "Rollback delle migrazioni completato"
+        print_success "Rollback selettivo delle migrazioni completato"
     else
         print_step "Rollback saltato, continuo con migrazioni esistenti"
     fi
@@ -306,11 +306,14 @@ fi
 
 # Import App da Geohub
 print_step "Import App da Geohub (utilizzando script dedicato)..."
-if ! ./scripts/01-import-app-from-geohub.sh 26; then
-    print_error "Import App da Geohub fallito! Interruzione setup."
-    exit 1
-fi
-print_success "Import App da Geohub completato con successo"
+for APP_ID in 26 20 58; do
+    print_step "Import App da Geohub con ID $APP_ID..."
+    if ! ./scripts/01-import-app-from-geohub.sh $APP_ID; then
+        print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
+        exit 1
+    fi
+    print_success "Import App da Geohub con ID $APP_ID completato con successo"
+done
 
 print_success "=== FASE 2 COMPLETATA: Database configurato ==="
 
