@@ -15,6 +15,8 @@ class ValidatedFilter extends Filter
      */
     public $component = 'select-filter';
 
+    public $name = 'Validation status';
+
     /**
      * Apply the filter to the given query.
      *

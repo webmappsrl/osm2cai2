@@ -36,6 +36,7 @@ use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
 use App\Nova\User;
 use App\Nova\User as NovaUser;
+use App\Nova\WmUgcPoi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
@@ -140,7 +141,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Rilievi
                 MenuSection::make(__('Rilievi'), [
                     MenuSection::make(__('Elementi rilevati'), [
-                        MenuItem::resource(UgcPoi::class),
+                        MenuItem::resource(UgcPoi::class, 'Deprecated ugc poi'),
+                        MenuItem::resource(WmUgcPoi::class, 'Wm ugc poi'),
                         MenuItem::resource(UgcTrack::class),
                         MenuItem::resource(UgcMedia::class),
                     ])->icon('none')->collapsable(),
