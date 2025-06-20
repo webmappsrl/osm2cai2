@@ -139,56 +139,58 @@ class AssociateHikingRoutesToLayersCommand extends Command
 
         $this->info("🔄 Processando hiking routes con osm2cai_status = {$status}");
 
-        // Trova le hiking routes con questo status
-        $hikingRoutes = HikingRoute::where('osm2cai_status', $status)->get();
+        $query = HikingRoute::where('osm2cai_status', $status);
+        $totalCount = $query->count();
 
-        if ($hikingRoutes->isEmpty()) {
+        if ($totalCount === 0) {
             $this->info("   📭 Nessuna hiking route trovata con status {$status}");
 
             return;
         }
 
-        $this->info("   📊 Trovate {$hikingRoutes->count()} hiking routes");
+        $this->info("   📊 Trovate {$totalCount} hiking routes");
 
         if ($isDryRun) {
-            $this->info("   🧪 [DRY RUN] Avrei associato {$hikingRoutes->count()} hiking routes al layer {$layer->id}");
+            $this->info("   🧪 [DRY RUN] Avrei associato {$totalCount} hiking routes al layer {$layer->id}");
 
             return;
         }
 
         // Rimuovi associazioni esistenti per questo layer
-        $existingCount = DB::table('layerables')
+        $this->info('   🧹 Pulizia associazioni esistenti...');
+        DB::table('layerables')
             ->where('layer_id', $layer->id)
             ->where('layerable_type', HikingRoute::class)
-            ->count();
+            ->delete();
+        $this->info('   🧹 Pulizia completata.');
 
-        if ($existingCount > 0) {
-            DB::table('layerables')
-                ->where('layer_id', $layer->id)
-                ->where('layerable_type', HikingRoute::class)
-                ->delete();
-            $this->info("   🧹 Rimosse {$existingCount} associazioni esistenti");
-        }
+        // Crea le nuove associazioni in batch con una progress bar
+        $this->info('   ➕ Creazione nuove associazioni...');
+        $bar = $this->output->createProgressBar($totalCount);
+        $bar->start();
 
-        // Crea le nuove associazioni
-        $insertData = [];
-        foreach ($hikingRoutes as $hr) {
-            $insertData[] = [
-                'layer_id' => $layer->id,
-                'layerable_id' => $hr->id,
-                'layerable_type' => HikingRoute::class,
-                'properties' => '{}', // JSON vuoto per rispettare il vincolo NOT NULL
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
+        $query->select('id')->orderBy('id')->chunk(500, function ($hikingRoutes) use ($layer, $bar) {
+            $insertData = [];
+            foreach ($hikingRoutes as $hr) {
+                $insertData[] = [
+                    'layer_id' => $layer->id,
+                    'layerable_id' => $hr->id,
+                    'layerable_type' => HikingRoute::class,
+                    'properties' => '{}', // JSON vuoto per rispettare il vincolo NOT NULL
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
 
-        // Inserisci in batch per performance
-        $chunks = array_chunk($insertData, 1000);
-        foreach ($chunks as $chunk) {
-            DB::table('layerables')->insert($chunk);
-        }
+            if (! empty($insertData)) {
+                DB::table('layerables')->insert($insertData);
+                $bar->advance(count($insertData));
+            }
+        });
 
-        $this->info("   ✅ Associate {$hikingRoutes->count()} hiking routes al layer per stato {$status}");
+        $bar->finish();
+        $this->newLine();
+
+        $this->info("   ✅ Associate {$totalCount} hiking routes al layer per stato {$status}");
     }
 }

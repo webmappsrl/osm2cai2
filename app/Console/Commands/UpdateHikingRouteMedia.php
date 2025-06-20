@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\Conversions\ConversionCollection;
+use Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Wm\WmPackage\Services\StorageService;
 
@@ -60,7 +62,7 @@ class UpdateHikingRouteMedia extends Command
         foreach ($mediaItems as $media) {
             if ($media->disk !== 'wmfe') {
                 $sourceDisk = Storage::disk($media->disk);
-                $sourcePath = $media->id.'/'.$media->file_name;
+                $sourcePath = $media->id . '/' . $media->file_name;
 
                 if ($sourceDisk->exists($sourcePath)) {
                     $mediaContent = $sourceDisk->get($sourcePath);
@@ -71,6 +73,12 @@ class UpdateHikingRouteMedia extends Command
                     $targetDisk->put($destinationPath, $mediaContent);
 
                     $media->conversions_disk = 'wmfe';
+
+                    // Manually dispatch the conversion job for an older version of Spatie Media Library
+                    $conversions = ConversionCollection::createForMedia($media);
+                    dispatch(new PerformConversionsJob($conversions, $media));
+
+                    $this->line("\nQueued thumbnail regeneration for Media ID {$media->id}.");
                 } else {
                     $this->warn("\n[SKIPPING FILE MOVE] Media ID {$media->id}: file not found at '{$sourcePath}' on disk '{$media->disk}'.");
                 }
