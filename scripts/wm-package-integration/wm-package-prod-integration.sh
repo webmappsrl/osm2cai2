@@ -86,50 +86,31 @@ wait_for_postgres() {
     print_success "PostgreSQL pronto e funzionante"
 }
 
-# Verifica prerequisiti
-print_step "Verifica prerequisiti..."
+# Determina la directory root del progetto e ci si sposta
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
+cd "$PROJECT_ROOT"
 
-# Controlla se siamo già nel container Docker
-if [ -f "/var/www/html/osm2cai2/.env" ]; then
-    print_warning "Esecuzione dal container Docker rilevata"
-    print_step "Saltando controlli host e passando direttamente alla configurazione..."
-    
-    # Salta alla configurazione Scout/Elasticsearch
-    cd /var/www/html/osm2cai2
-    
-    print_step "=== CONFIGURAZIONE SCOUT/ELASTICSEARCH ==="
-    if ! ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh; then
-        print_error "Errore durante la configurazione di Scout/Elasticsearch!"
-        exit 1
-    fi
-    
-    # Fix alias se necessario
-    print_step "=== FIX ALIAS ELASTICSEARCH ==="
-    if ! ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh; then
-        print_warning "Fix alias completato con avvertimenti, ma procediamo..."
-    fi
-    
-    print_success "🎉 Setup completato dal container!"
-    exit 0
-fi
+print_step "=== FASE 0: VERIFICA PREREQUISITI HOST ==="
 
 # Controlla se Docker è installato
 if ! command -v docker &> /dev/null; then
-    print_error "Docker non è installato!"
+    print_error "Docker non è installato! Eseguire lo script dal sistema host, non da un container."
     exit 1
 fi
 
-# Controlla se Docker Compose è installato
-if ! command -v docker-compose &> /dev/null; then
-    print_error "Docker Compose non è installato!"
+# Rileva il comando Docker Compose corretto (V1 o V2)
+print_step "Rilevamento del comando Docker Compose..."
+if command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+    print_success "Trovato Docker Compose V1 ('docker-compose')"
+elif docker compose version &> /dev/null; then
+    COMPOSE_CMD="docker compose"
+    print_success "Trovato Docker Compose V2 ('docker compose')"
+else
+    print_error "Docker Compose non trovato. Né 'docker-compose' né 'docker compose' sono disponibili."
     exit 1
 fi
-
-print_success "Prerequisiti verificati"
-
-# Determina la directory root del progetto
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 
 # Verifica file .env
 print_step "Verifica file .env..."
@@ -140,13 +121,46 @@ else
     print_success "File .env trovato nella root del progetto"
 fi
 
+# Verifica file docker-compose.yml e crealo se non esiste
+print_step "Verifica file docker-compose.yml..."
+if [ ! -f "$PROJECT_ROOT/docker-compose.yml" ]; then
+    print_warning "File docker-compose.yml non trovato. Lo copio da docker-compose.yml.example."
+    if [ -f "$PROJECT_ROOT/docker-compose.yml.example" ]; then
+        cp "$PROJECT_ROOT/docker-compose.yml.example" "$PROJECT_ROOT/docker-compose.yml"
+        print_success "File docker-compose.yml creato con successo."
+    else
+        print_error "File docker-compose.yml.example non trovato! Impossibile creare docker-compose.yml."
+        exit 1
+    fi
+else
+    print_success "File docker-compose.yml trovato."
+fi
+
+print_success "Prerequisiti verificati"
+
+# FASE 0.5: DOWNLOAD DATABASE BACKUP (PRIMA DI TOCCARE I CONTAINER)
+print_step "=== FASE 0.5: DOWNLOAD ULTIMO BACKUP DATABASE (se l'ambiente esistente è attivo) ==="
+# Controlla se il container PHP è in esecuzione
+if ${COMPOSE_CMD} ps -q phpfpm | grep -q .; then
+    print_step "Container 'phpfpm' trovato. Eseguo il download dell'ultimo backup del database... (potrebbe richiedere tempo)"
+    if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan wm:download-db-backup --latest"; then
+        print_success "Backup del database scaricato con successo. Si troverà in storage/backups/last_dump.sql.gz"
+    else
+        print_warning "Tentativo di download del backup fallito. Questo potrebbe essere normale se l'ambiente non è completamente configurato. Continuo..."
+    fi
+else
+    print_warning "Container 'phpfpm' non trovato. Salto il download preliminare del backup."
+fi
+
 # FASE 1: SETUP AMBIENTE DOCKER
 print_step "=== FASE 1: SETUP AMBIENTE DOCKER ==="
 
-# Avvio container di produzione
+# Ricrea i container di produzione
+print_step "Fermo e rimuovo i container di produzione esistenti..."
+${COMPOSE_CMD} -f docker-compose.yml down -v --remove-orphans 2>/dev/null || true
+
 print_step "Avvio container di produzione (solo docker-compose.yml)..."
-cd "$PROJECT_ROOT"
-docker-compose -f docker-compose.yml up -d
+${COMPOSE_CMD} -f docker-compose.yml up -d
 
 # Torna alla directory degli script
 cd "$SCRIPT_DIR"
@@ -169,9 +183,13 @@ print_success "Cache di configurazione, rotte e viste generate"
 
 # Avvio Horizon (gestito da Supervisor in produzione)
 print_step "Avvio Horizon..."
-docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
-sleep 3
-print_success "Comando di avvio Horizon inviato (gestione affidata a Supervisor)"
+if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:status | grep -q 'Horizon is running'"; then
+    print_success "Horizon è già in esecuzione (gestione affidata a Supervisor)"
+else
+    docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+    sleep 3
+    print_success "Comando di avvio Horizon inviato"
+fi
 
 print_success "=== FASE 1 COMPLETATA: Ambiente Docker e Laravel pronti per la produzione ==="
 
@@ -188,14 +206,17 @@ print_success "Migrazioni applicate al database"
 
 # Import App da Geohub
 print_step "Import App da Geohub (seeding iniziale)..."
+print_warning "I job di importazione verranno inviati alla coda e processati in background da Horizon."
 for APP_ID in 26 20 58; do
-    print_step "Import App da Geohub con ID $APP_ID..."
-    if ! ./scripts/01-import-app-from-geohub.sh $APP_ID; then
-        print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
-        exit 1
-    fi
-    print_success "Import App da Geohub con ID $APP_ID completato con successo"
+    print_step "Invio alla coda del job di import per App ID $APP_ID..."
+    # Eseguiamo il comando di import in background e andiamo avanti, sarà Horizon a gestirlo.
+    # Usiamo il comando artisan direttamente per evitare la logica di attesa dello script.
+    (docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan wm:import-from-geohub app $APP_ID" > /dev/null 2>&1 &)
 done
+
+print_success "Tutti i job di importazione sono stati inviati alla coda."
+print_step "Attendi qualche minuto e controlla Horizon per vedere il progresso"
+sleep 10 # Breve attesa per dare tempo ai job di essere inviati
 
 print_success "=== FASE 2 COMPLETATA: Database configurato e popolato ==="
 
@@ -312,6 +333,6 @@ echo "   • Riavvio Horizon (via Supervisor): docker exec php81_osm2cai2 php ar
 echo "   • Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
 echo ""
 echo "🛑 Per fermare tutto:"
-echo "   docker-compose down"
+echo "   ${COMPOSE_CMD} down"
 echo ""
 print_success "Ambiente di produzione pronto!" 

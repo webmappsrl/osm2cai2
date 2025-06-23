@@ -889,6 +889,8 @@ SQL;
             'from'      => $props['from']      ?? '',
             'to'        => $props['to']        ?? '',
             'description' => $props['description_it'] ?? $props['description'] ?? '',
+            'excerpt'     => $props['excerpt'] ??  '',
+            'osm_id'      => $props['osm_id'] ?? null,
         ];
     }
 
