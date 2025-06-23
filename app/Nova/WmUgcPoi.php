@@ -9,7 +9,6 @@ use Carbon\Carbon;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Schema;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
@@ -87,8 +86,11 @@ class WmUgcPoi extends NovaUgcPoi
                 'defaultCenter' => [43.7125, 10.4013],
             ])->hideFromIndex()
                 ->required(),
-            PropertiesPanel::make('properties', 'form')->collapsible(),
             Images::make('Image', 'default')->onlyOnDetail(),
+            PropertiesPanel::makeWithModel('Form', 'properties->form', $this, true),
+            PropertiesPanel::makeWithModel('Nominatim Address', 'properties->nominatim->address', $this, false)->collapsible(),
+            PropertiesPanel::makeWithModel('Device', 'properties->device', $this, false)->collapsible()->collapsedByDefault(),
+            PropertiesPanel::makeWithModel('Nominatim', 'properties->nominatim', $this, false)->collapsible()->collapsedByDefault(),
         ];
     }
 
@@ -108,63 +110,6 @@ class WmUgcPoi extends NovaUgcPoi
         }
 
         return $this->created_at;
-    }
-
-    public function jsonForm(string $columnName, string $attribute, ?array $formSchema = null)
-    {
-        // Ensure Laravel Nova is installed
-        $this->ensureNovaIsInstalled();
-
-        $fields = [];
-
-        if ($columnName && Schema::hasColumn($this->getTable(), $columnName)) {
-            // Fetch the JSON data from the column
-            $column = $this->$columnName ?? '';
-            if (! is_array($column)) {
-                $formData = json_decode($column, true) ?? [];
-            } else {
-                $formData = $column;
-            }
-            if (is_null($formSchema) || empty($formSchema)) {
-                // If no form schema is provided, use the form data directly
-                foreach ($formData as $key => $value) {
-                    // Create a dummy schema based on existing form data
-                    $fieldSchema = [
-                        'name' => $key,
-                        'type' => is_numeric($value) ? 'number' : 'text',
-                        'value' => $value,
-                    ];
-                    $novaField = $this->createFieldFromSchema($fieldSchema, $columnName);
-                    if ($novaField) {
-                        $fields[] = $novaField;
-                    }
-                }
-            } else {
-                // Initialize the fields with data from the JSON column
-                foreach ($formSchema as $fieldSchema) {
-                    $label = $fieldSchema['label'];
-                    $value = $formData[$label] ?? $fieldSchema['value'] ?? null;
-                    $fieldSchema['value'] = $value; // Set the value from form data or default
-                    $novaField = $this->createFieldFromSchema($fieldSchema, $columnName);
-                    if ($novaField) {
-                        $fields[] = $novaField;
-                    }
-                }
-            }
-        } elseif ($formSchema) {
-            // Use the provnameed form schema
-            foreach ($formSchema as $fieldSchema) {
-                $novaField = $this->createFieldFromSchema($fieldSchema);
-                if ($novaField) {
-                    $fields[] = $novaField;
-                }
-            }
-        } else {
-            throw new \Exception('Either form JSON column name or form schema must be provnameed. Please check your database or
-provnamee a form schema.');
-        }
-
-        return $fields;
     }
 
     public function filters(Request $request): array
