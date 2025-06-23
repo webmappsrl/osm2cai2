@@ -1,0 +1,317 @@
+#!/bin/bash
+
+# Abilita strict mode: ferma lo script in caso di errore
+set -e
+set -o pipefail
+
+echo "🚀 Setup Link WMPackage to OSM2CAI2 - Ambiente di Produzione"
+echo "=========================================================="
+echo ""
+
+# Colori per output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Funzione per stampe colorate
+print_step() {
+    echo -e "${BLUE}➜${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}✅${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}❌${NC} $1"
+}
+
+# Funzione per gestire errori
+handle_error() {
+    print_error "ERRORE: Script interrotto alla riga $1"
+    print_error "Ultimo comando: $BASH_COMMAND"
+    print_error ""
+    print_error "📞 Per assistenza controlla:"
+    print_error "• Log container: docker-compose logs"
+    print_error "• Stato container: docker ps -a"
+    print_error "• Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+    exit 1
+}
+
+# Imposta trap per gestire errori
+trap 'handle_error $LINENO' ERR
+
+# Funzioni di attesa per i servizi
+wait_for_service() {
+    local service_name="$1"
+    local health_url="$2"
+    local timeout="$3"
+    
+    print_step "Attesa che $service_name sia completamente pronto..."
+    local elapsed=0
+    while ! curl -f -s "$health_url" &> /dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            print_warning "Timeout: $service_name non è diventato pronto in $timeout secondi (continuo comunque)"
+            return 1
+        fi
+        sleep 3
+        elapsed=$((elapsed + 3))
+        print_step "Attendo $service_name... ($elapsed/$timeout secondi)"
+    done
+    print_success "$service_name pronto e funzionante"
+    return 0
+}
+
+wait_for_postgres() {
+    local container_name="$1"
+    local timeout="$2"
+
+    print_step "Attesa che PostgreSQL sia completamente pronto..."
+    local elapsed=0
+    while ! docker exec "$container_name" pg_isready -h localhost -p 5432 &> /dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            print_error "Timeout: PostgreSQL non è diventato pronto in $timeout secondi"
+            exit 1
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        print_step "Attendo PostgreSQL... ($elapsed/$timeout secondi)"
+    done
+    print_success "PostgreSQL pronto e funzionante"
+}
+
+# Verifica prerequisiti
+print_step "Verifica prerequisiti..."
+
+# Controlla se siamo già nel container Docker
+if [ -f "/var/www/html/osm2cai2/.env" ]; then
+    print_warning "Esecuzione dal container Docker rilevata"
+    print_step "Saltando controlli host e passando direttamente alla configurazione..."
+    
+    # Salta alla configurazione Scout/Elasticsearch
+    cd /var/www/html/osm2cai2
+    
+    print_step "=== CONFIGURAZIONE SCOUT/ELASTICSEARCH ==="
+    if ! ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh; then
+        print_error "Errore durante la configurazione di Scout/Elasticsearch!"
+        exit 1
+    fi
+    
+    # Fix alias se necessario
+    print_step "=== FIX ALIAS ELASTICSEARCH ==="
+    if ! ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh; then
+        print_warning "Fix alias completato con avvertimenti, ma procediamo..."
+    fi
+    
+    print_success "🎉 Setup completato dal container!"
+    exit 0
+fi
+
+# Controlla se Docker è installato
+if ! command -v docker &> /dev/null; then
+    print_error "Docker non è installato!"
+    exit 1
+fi
+
+# Controlla se Docker Compose è installato
+if ! command -v docker-compose &> /dev/null; then
+    print_error "Docker Compose non è installato!"
+    exit 1
+fi
+
+print_success "Prerequisiti verificati"
+
+# Determina la directory root del progetto
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
+
+# Verifica file .env
+print_step "Verifica file .env..."
+if [ ! -f "$PROJECT_ROOT/.env" ]; then
+    print_error "File .env non trovato nella root del progetto! Configurare .env prima di eseguire lo script."
+    exit 1
+else
+    print_success "File .env trovato nella root del progetto"
+fi
+
+# FASE 1: SETUP AMBIENTE DOCKER
+print_step "=== FASE 1: SETUP AMBIENTE DOCKER ==="
+
+# Avvio container di produzione
+print_step "Avvio container di produzione (solo docker-compose.yml)..."
+cd "$PROJECT_ROOT"
+docker-compose -f docker-compose.yml up -d
+
+# Torna alla directory degli script
+cd "$SCRIPT_DIR"
+
+# Attesa che i servizi principali siano pronti
+wait_for_postgres "postgres_osm2cai2" 90
+wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
+
+# Installazione dipendenze Composer
+print_step "Installazione dipendenze Composer per la produzione..."
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && composer install --no-dev --optimize-autoloader"
+print_success "Dipendenze Composer installate"
+
+# Ottimizzazione Laravel per la produzione
+print_step "Ottimizzazione cache Laravel per la produzione..."
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:cache"
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan route:cache"
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan view:cache"
+print_success "Cache di configurazione, rotte e viste generate"
+
+# Avvio Horizon (gestito da Supervisor in produzione)
+print_step "Avvio Horizon..."
+docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+sleep 3
+print_success "Comando di avvio Horizon inviato (gestione affidata a Supervisor)"
+
+print_success "=== FASE 1 COMPLETATA: Ambiente Docker e Laravel pronti per la produzione ==="
+
+# FASE 2: DATABASE E MIGRAZIONI
+print_step "=== FASE 2: DATABASE, MIGRAZIONI E SEED INIZIALE ==="
+
+# Applicazione Migrazioni
+print_step "Applicazione migrazioni al database..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
+    print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
+    exit 1
+fi
+print_success "Migrazioni applicate al database"
+
+# Import App da Geohub
+print_step "Import App da Geohub (seeding iniziale)..."
+for APP_ID in 26 20 58; do
+    print_step "Import App da Geohub con ID $APP_ID..."
+    if ! ./scripts/01-import-app-from-geohub.sh $APP_ID; then
+        print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
+        exit 1
+    fi
+    print_success "Import App da Geohub con ID $APP_ID completato con successo"
+done
+
+print_success "=== FASE 2 COMPLETATA: Database configurato e popolato ==="
+
+# FASE 3: CONFIGURAZIONE APPS E LAYER
+print_step "=== FASE 3: CONFIGURAZIONE APPS E LAYER ==="
+
+# Verifica/Creazione App di default e associazione hiking routes
+print_step "Verifica App di default e associazione hiking routes..."
+ROUTES_WITHOUT_APP=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
+if [ "$ROUTES_WITHOUT_APP" -gt 0 ]; then
+    FIRST_APP_ID=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
+    print_step "Assegnazione app_id=$FIRST_APP_ID a $ROUTES_WITHOUT_APP hiking routes senza app..."
+    docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
+        \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
+        echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
+    \""
+    print_success "Hiking routes associate all'app di default"
+else
+    print_success "Tutte le hiking routes hanno già un'app associata."
+fi
+
+# Creazione layer di accatastamento
+print_step "Creazione layer di accatastamento..."
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:create-accatastamento-layers"
+print_success "Layer di accatastamento creati"
+
+# Associazione hiking routes ai layer
+print_step "Associazione hiking routes ai layer..."
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:associate-hiking-routes-to-layers"
+print_success "Hiking routes associati ai layer"
+
+# Popolamento proprietà e tassonomie per i percorsi
+print_step "Popolamento proprietà e tassonomie per i percorsi..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
+    print_error "Errore durante il popolamento delle proprietà e tassonomie dei percorsi! Interruzione setup."
+    exit 1
+fi
+print_success "Proprietà e tassonomie dei percorsi popolate"
+
+# Migrazione media per Hiking Routes
+print_step "Migrazione media per Hiking Routes..."
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
+    print_error "Errore durante la migrazione dei media! Interruzione setup."
+    exit 1
+fi
+print_success "Migrazione media per Hiking Routes completata"
+
+print_success "=== FASE 3 COMPLETATA: Apps e Layer configurati ==="
+
+# FASE 4: SETUP ELASTICSEARCH
+print_step "=== FASE 4: SETUP ELASTICSEARCH ==="
+
+# Setup Elasticsearch
+print_step "Setup Elasticsearch e indicizzazione..."
+
+# Cancellazione indici esistenti (per setup iniziale pulito)
+print_warning "Pulizia indici Elasticsearch esistenti... Questa operazione è distruttiva!"
+if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
+    print_success "Indici Elasticsearch puliti (o nessun indice trovato)"
+else
+    print_warning "Errore durante la pulizia degli indici Elasticsearch (continuo comunque)"
+fi
+
+# Abilita indicizzazione automatica Scout
+if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
+    print_error "Errore durante la configurazione di Scout/Elasticsearch! Interruzione setup."
+    exit 1
+fi
+
+# Pulisci cache configurazione
+print_step "Pulizia cache configurazione..."
+docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
+print_success "Cache configurazione pulita"
+
+# Indicizzazione iniziale
+print_step "Avvio indicizzazione iniziale (può richiedere diversi minuti)..."
+if ! docker exec php81_osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import-ectrack'; then
+    print_error "Errore durante l'indicizzazione iniziale! Interruzione setup."
+    exit 1
+fi
+print_success "Indicizzazione iniziale completata"
+
+print_success "=== FASE 4 COMPLETATA: Elasticsearch configurato ==="
+
+# FASE 5: VERIFICA SERVIZI FINALI
+print_step "=== FASE 5: VERIFICA SERVIZI FINALI ==="
+
+# Verifica che Horizon sia attivo
+print_step "Verifica stato di Horizon..."
+if docker exec php81_osm2cai2 php artisan horizon:status | grep -q "running"; then
+    print_success "Horizon attivo e in esecuzione"
+else
+    print_warning "Horizon non risulta attivo. Potrebbe essere necessario un controllo manuale del Supervisor."
+    print_step "Tentativo di riavvio di Horizon..."
+    docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+    sleep 3
+fi
+
+echo ""
+echo "🎉 Setup di Produzione per WMPackage to OSM2CAI2 Completato!"
+echo "=========================================================="
+echo ""
+echo "📋 Servizi Docker Attivi:"
+echo "   • phpfpm"
+echo "   • db (PostgreSQL)"
+echo "   • redis"
+echo "   • elasticsearch"
+echo ""
+echo "🔧 Comandi Utili:"
+echo "   • Accesso container PHP (root): docker exec -u 0 -it php81_osm2cai2 bash"
+echo "   • Accesso container PHP (www-data): docker exec -it php81_osm2cai2 bash"
+echo "   • Status Horizon: docker exec php81_osm2cai2 php artisan horizon:status"
+echo "   • Riavvio Horizon (via Supervisor): docker exec php81_osm2cai2 php artisan horizon:terminate"
+echo "   • Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+echo ""
+echo "🛑 Per fermare tutto:"
+echo "   docker-compose down"
+echo ""
+print_success "Ambiente di produzione pronto!" 
