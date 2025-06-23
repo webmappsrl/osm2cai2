@@ -8,7 +8,14 @@ use Wm\WmPackage\Models\UgcPoi as ModelsUgcPoi;
 class WmUgcPoi extends ModelsUgcPoi
 {
     protected $table = 'ugc_pois';
-    
+
+    protected $casts = [
+        'validation_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'properties' => 'array',
+    ];
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
