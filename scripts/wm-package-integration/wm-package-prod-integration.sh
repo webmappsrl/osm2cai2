@@ -208,10 +208,12 @@ print_success "Migrazioni applicate al database"
 print_step "Import App da Geohub (seeding iniziale)..."
 print_warning "I job di importazione verranno inviati alla coda e processati in background da Horizon."
 for APP_ID in 26 20 58; do
-    print_step "Invio alla coda del job di import per App ID $APP_ID..."
-    # Eseguiamo il comando di import in background e andiamo avanti, sarà Horizon a gestirlo.
-    # Usiamo il comando artisan direttamente per evitare la logica di attesa dello script.
-    (docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan wm:import-from-geohub app $APP_ID" > /dev/null 2>&1 &)
+    print_step "Import App da Geohub con ID $APP_ID..."
+    if ! ./scripts/01-import-app-from-geohub.sh $APP_ID 'SI'; then
+        print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
+        exit 1
+    fi
+    print_success "Import App da Geohub con ID $APP_ID completato con successo"
 done
 
 print_success "Tutti i job di importazione sono stati inviati alla coda."
