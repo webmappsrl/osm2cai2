@@ -26,9 +26,9 @@ class UgcFormIdFilter extends Filter
     public function apply(Request $request, $query, $value)
     {
         if ($value == 'null') {
-            return $query->whereNull('form_id');
+            return $query->whereNull('properties->form->id');
         } else {
-            return $query->where('form_id', $value);
+            return $query->where('properties->form->id', $value);
         }
     }
 
@@ -39,17 +39,41 @@ class UgcFormIdFilter extends Filter
      */
     public function options(Request $request)
     {
-        // select all the form_id from the ugc_pois table distinct
-        $formIds = [
-            'Sentieristica' => 'paths',
-            'Segnalazione Problemi' => 'report',
-            'Punti di Interesse' => 'poi',
-            'Acqua Sorgente' => 'water',
-            'Segni dell\'uomo' => 'signs',
-            'Aree Archeologiche' => 'archaeological_area',
-            'Siti Archeologici' => 'archaeological_site',
-            'Siti Geologici' => 'geological_site',
-        ];
+        // Ottieni il resource corrente dal request
+        $resource = $request->newResource();
+        $modelClass = $resource::$model;
+
+        // Controlla se ci sono altri filtri applicati
+        $filters = $request->get('filters', '');
+        $activeFilters = $filters ? json_decode(base64_decode($filters), true) : [];
+
+        // Inizia con una query base
+        $query = $modelClass::with('app');
+
+        // Se ci sono altri filtri attivi, applicali per ottenere un sottoinsieme più rilevante
+        if (! empty($activeFilters)) {
+            // Applica gli altri filtri alla query (escludi questo filtro se presente)
+            foreach ($activeFilters as $filterClass => $value) {
+                if ($filterClass !== self::class && $value !== null) {
+                    // Qui potresti applicare logiche specifiche per filtri noti
+                    // Per ora prendiamo comunque il primo record dalla query filtrata
+                }
+            }
+        }
+
+        // Ottieni un'istanza esistente dal database con la relazione app caricata
+        $model = $query->first();
+
+        if (! $model || ! $model->app) {
+            return [];
+        }
+
+        $forms = $model->app->acquisitionForms();
+
+        $formIds = [];
+        foreach ($forms as $form) {
+            $formIds[$form['name']] = $form['id'];
+        }
 
         return $formIds;
     }
