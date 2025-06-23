@@ -888,6 +888,7 @@ SQL;
             'name'      => $props['name']      ?? null,
             'from'      => $props['from']      ?? '',
             'to'        => $props['to']        ?? '',
+            'description' => $props['description_it'] ?? $props['description'] ?? '',
         ];
     }
 
