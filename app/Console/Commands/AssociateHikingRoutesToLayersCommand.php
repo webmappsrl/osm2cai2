@@ -176,7 +176,6 @@ class AssociateHikingRoutesToLayersCommand extends Command
                     'layer_id' => $layer->id,
                     'layerable_id' => $hr->id,
                     'layerable_type' => HikingRoute::class,
-                    'properties' => '{}', // JSON vuoto per rispettare il vincolo NOT NULL
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
