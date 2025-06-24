@@ -68,7 +68,8 @@ final class PopulatePropertiesFromSourceCommand extends Command
                     $existingProperties = $record->{$destinationColumn} ?? [];
                     $sourceData = $record->{$sourceColumn};
 
-                    $newProperties = $modelClass::$methodName($sourceData);
+                    // Pass record id as second argument to the static method
+                    $newProperties = $modelClass::$methodName($sourceData, $record->id);
 
                     $mergedProperties = array_merge($existingProperties, $newProperties);
                     $record->updateQuietly([$destinationColumn => $mergedProperties]);
