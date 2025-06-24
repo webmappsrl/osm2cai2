@@ -13,6 +13,8 @@ use Wm\WmPackage\Nova\Layer as WmNovaLayer;
 
 class Layer extends WmNovaLayer
 {
+    public static $with = ['manualEcPois', 'appOwner', 'associatedApps'];
+
     /**
      * The model the resource corresponds to.
      *
@@ -46,7 +48,7 @@ class Layer extends WmNovaLayer
             Images::make(__('Image'), 'default'),
             PropertiesPanel::makeWithModel(__('Properties'), 'properties', $this, true)->collapsible(),
             Panel::make('Ec Tracks', [
-                //      LayerFeatures::make('ecTracks', $this->resource, WmEcTrack::class)->hideWhenCreating(),
+                // LayerFeatures::make('ecTracks', $this->resource, HikingRoute::class)->hideWhenCreating(),
             ]),
         ];
     }
