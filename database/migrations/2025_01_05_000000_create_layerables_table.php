@@ -17,7 +17,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('layer_id');
             $table->morphs('layerable');
-            $table->jsonb('properties');
             $table->timestamps();
 
             $table->index('layer_id');
