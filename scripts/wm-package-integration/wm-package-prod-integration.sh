@@ -40,7 +40,7 @@ handle_error() {
     print_error "📞 Per assistenza controlla:"
     print_error "• Log container: docker-compose logs"
     print_error "• Stato container: docker ps -a"
-    print_error "• Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+    print_error "• Log Laravel: docker exec ${PHP_CONTAINER} tail -f storage/logs/laravel.log"
     exit 1
 }
 
@@ -74,7 +74,7 @@ wait_for_postgres() {
 
     print_step "Attesa che PostgreSQL sia completamente pronto..."
     local elapsed=0
-    while ! docker exec "$container_name" pg_isready -h localhost -p 5432 &> /dev/null; do
+    while ! docker exec "$container_name" pg_isready -h db -p 5432 &> /dev/null; do
         if [ $elapsed -ge $timeout ]; then
             print_error "Timeout: PostgreSQL non è diventato pronto in $timeout secondi"
             exit 1
@@ -90,6 +90,29 @@ wait_for_postgres() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 cd "$PROJECT_ROOT"
+
+# Carica le variabili dal file .env se esiste
+if [ -f .env ]; then
+    print_step "Caricamento delle variabili dal file .env..."
+    # Esporta le variabili per renderle disponibili allo script
+    set -o allexport
+    source .env
+    set +o allexport
+    print_success "Variabili d'ambiente caricate."
+else
+    print_error "File .env non trovato. Impossibile continuare senza configurazione."
+    exit 1
+fi
+
+# Definisci i nomi dei container utilizzando le variabili d'ambiente
+if [ -z "$APP_NAME" ]; then
+    print_error "La variabile APP_NAME non è definita nel file .env."
+    exit 1
+fi
+PHP_CONTAINER="php81_${APP_NAME}"
+POSTGRES_CONTAINER="postgres_${APP_NAME}"
+
+print_step "Utilizzo dei nomi container: ${PHP_CONTAINER}, ${POSTGRES_CONTAINER}"
 
 print_step "=== FASE 0: VERIFICA PREREQUISITI HOST ==="
 
@@ -143,7 +166,7 @@ print_step "=== FASE 0.5: DOWNLOAD ULTIMO BACKUP DATABASE (se l'ambiente esisten
 # Controlla se il container PHP è in esecuzione
 if ${COMPOSE_CMD} ps -q phpfpm | grep -q .; then
     print_step "Container 'phpfpm' trovato. Eseguo il download dell'ultimo backup del database... (potrebbe richiedere tempo)"
-    if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan wm:download-db-backup --latest"; then
+    if docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan wm:download-db-backup --latest"; then
         print_success "Backup del database scaricato con successo. Si troverà in storage/backups/last_dump.sql.gz"
     else
         print_warning "Tentativo di download del backup fallito. Questo potrebbe essere normale se l'ambiente non è completamente configurato. Continuo..."
@@ -166,27 +189,27 @@ ${COMPOSE_CMD} -f docker-compose.yml up -d
 cd "$SCRIPT_DIR"
 
 # Attesa che i servizi principali siano pronti
-wait_for_postgres "postgres_osm2cai2" 90
+wait_for_postgres "$POSTGRES_CONTAINER" 90
 wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
 
 # Installazione dipendenze Composer
 print_step "Installazione dipendenze Composer per la produzione..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && composer install --no-dev --optimize-autoloader"
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && composer install --no-dev --optimize-autoloader"
 print_success "Dipendenze Composer installate"
 
 # Ottimizzazione Laravel per la produzione
 print_step "Ottimizzazione cache Laravel per la produzione..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:cache"
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan route:cache"
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan view:cache"
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan config:cache"
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan route:cache"
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan view:cache"
 print_success "Cache di configurazione, rotte e viste generate"
 
 # Avvio Horizon (gestito da Supervisor in produzione)
 print_step "Avvio Horizon..."
-if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:status | grep -q 'Horizon is running'"; then
+if docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:status | grep -q 'Horizon is running'"; then
     print_success "Horizon è già in esecuzione (gestione affidata a Supervisor)"
 else
-    docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+    docker exec -d "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
     sleep 3
     print_success "Comando di avvio Horizon inviato"
 fi
@@ -198,7 +221,7 @@ print_step "=== FASE 2: DATABASE, MIGRAZIONI E SEED INIZIALE ==="
 
 # Applicazione Migrazioni
 print_step "Applicazione migrazioni al database..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
     print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
     exit 1
 fi
@@ -227,11 +250,11 @@ print_step "=== FASE 3: CONFIGURAZIONE APPS E LAYER ==="
 
 # Verifica/Creazione App di default e associazione hiking routes
 print_step "Verifica App di default e associazione hiking routes..."
-ROUTES_WITHOUT_APP=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
+ROUTES_WITHOUT_APP=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
 if [ "$ROUTES_WITHOUT_APP" -gt 0 ]; then
-    FIRST_APP_ID=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
+    FIRST_APP_ID=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
     print_step "Assegnazione app_id=$FIRST_APP_ID a $ROUTES_WITHOUT_APP hiking routes senza app..."
-    docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
+    docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
         \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
         echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
     \""
@@ -242,17 +265,17 @@ fi
 
 # Creazione layer di accatastamento
 print_step "Creazione layer di accatastamento..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:create-accatastamento-layers"
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:create-accatastamento-layers"
 print_success "Layer di accatastamento creati"
 
 # Associazione hiking routes ai layer
 print_step "Associazione hiking routes ai layer..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:associate-hiking-routes-to-layers"
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:associate-hiking-routes-to-layers"
 print_success "Hiking routes associati ai layer"
 
 # Popolamento proprietà e tassonomie per i percorsi
 print_step "Popolamento proprietà e tassonomie per i percorsi..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
     print_error "Errore durante il popolamento delle proprietà e tassonomie dei percorsi! Interruzione setup."
     exit 1
 fi
@@ -260,7 +283,7 @@ print_success "Proprietà e tassonomie dei percorsi popolate"
 
 # Migrazione media per Hiking Routes
 print_step "Migrazione media per Hiking Routes..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
     print_error "Errore durante la migrazione dei media! Interruzione setup."
     exit 1
 fi
@@ -276,26 +299,26 @@ print_step "Setup Elasticsearch e indicizzazione..."
 
 # Cancellazione indici esistenti (per setup iniziale pulito)
 print_warning "Pulizia indici Elasticsearch esistenti... Questa operazione è distruttiva!"
-if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
+if docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
     print_success "Indici Elasticsearch puliti (o nessun indice trovato)"
 else
     print_warning "Errore durante la pulizia degli indici Elasticsearch (continuo comunque)"
 fi
 
 # Abilita indicizzazione automatica Scout
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
     print_error "Errore durante la configurazione di Scout/Elasticsearch! Interruzione setup."
     exit 1
 fi
 
 # Pulisci cache configurazione
 print_step "Pulizia cache configurazione..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
 print_success "Cache configurazione pulita"
 
 # Indicizzazione iniziale
 print_step "Avvio indicizzazione iniziale (può richiedere diversi minuti)..."
-if ! docker exec php81_osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import-ectrack'; then
+if ! docker exec "$PHP_CONTAINER" bash -c 'cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import-ectrack'; then
     print_error "Errore durante l'indicizzazione iniziale! Interruzione setup."
     exit 1
 fi
@@ -308,12 +331,12 @@ print_step "=== FASE 5: VERIFICA SERVIZI FINALI ==="
 
 # Verifica che Horizon sia attivo
 print_step "Verifica stato di Horizon..."
-if docker exec php81_osm2cai2 php artisan horizon:status | grep -q "running"; then
+if docker exec "$PHP_CONTAINER" php artisan horizon:status | grep -q "running"; then
     print_success "Horizon attivo e in esecuzione"
 else
     print_warning "Horizon non risulta attivo. Potrebbe essere necessario un controllo manuale del Supervisor."
     print_step "Tentativo di riavvio di Horizon..."
-    docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+    docker exec -d "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
     sleep 3
 fi
 
@@ -328,11 +351,11 @@ echo "   • redis"
 echo "   • elasticsearch"
 echo ""
 echo "🔧 Comandi Utili:"
-echo "   • Accesso container PHP (root): docker exec -u 0 -it php81_osm2cai2 bash"
-echo "   • Accesso container PHP (www-data): docker exec -it php81_osm2cai2 bash"
-echo "   • Status Horizon: docker exec php81_osm2cai2 php artisan horizon:status"
-echo "   • Riavvio Horizon (via Supervisor): docker exec php81_osm2cai2 php artisan horizon:terminate"
-echo "   • Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+echo "   • Accesso container PHP (root): docker exec -u 0 -it ${PHP_CONTAINER} bash"
+echo "   • Accesso container PHP (www-data): docker exec -it ${PHP_CONTAINER} bash"
+echo "   • Status Horizon: docker exec ${PHP_CONTAINER} php artisan horizon:status"
+echo "   • Riavvio Horizon (via Supervisor): docker exec ${PHP_CONTAINER} php artisan horizon:terminate"
+echo "   • Log Laravel: docker exec ${PHP_CONTAINER} tail -f storage/logs/laravel.log"
 echo ""
 echo "🛑 Per fermare tutto:"
 echo "   ${COMPOSE_CMD} down"

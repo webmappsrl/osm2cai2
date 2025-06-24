@@ -37,13 +37,25 @@ handle_error() {
     print_error "Ultimo comando: $BASH_COMMAND"
     print_error ""
     print_error "📞 Per assistenza controlla:"
-    print_error "• Log container: docker-compose logs php81_osm2cai2"
-    print_error "• Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+    print_error "• Log container: docker-compose logs ${PHP_CONTAINER}"
+    print_error "• Log Laravel: docker exec ${PHP_CONTAINER} tail -f storage/logs/laravel.log"
     exit 1
 }
 
 # Imposta trap per gestire errori
 trap 'handle_error $LINENO' ERR
+
+# Carica le variabili dal file .env se esiste
+# Necessario per i messaggi di errore che contengono il nome del container
+if [ -f "/var/www/html/osm2cai2/.env" ]; then
+    set -o allexport
+    source "/var/www/html/osm2cai2/.env"
+    set +o allexport
+    PHP_CONTAINER="php81_${APP_NAME}"
+else
+    # Fallback nel caso in cui lo script venga eseguito in un ambiente non standard
+    PHP_CONTAINER="php81_osm2cai2"
+fi
 
 echo "🖼️ Migrazione Media Hiking Routes per WM-Package Compliance"
 echo "==========================================================="
