@@ -130,7 +130,7 @@ class CreateAccatastamentoLayersCommand extends Command
     {
         // Cerca layer esistente
         $existingLayer = Layer::where('app_id', $app->id)
-            ->where('properties->stato_accatastamento', $status)
+            ->where('properties->osm2cai_status', $status)
             ->first();
 
         if ($existingLayer && ! $force) {
@@ -143,7 +143,7 @@ class CreateAccatastamentoLayersCommand extends Command
         $properties = [
             'title' => $config['name'],
             'color' => $config['color'],
-            'stato_accatastamento' => $status,
+            'osm2cai_status' => $status,
             'description' => $config['description'],
         ];
 
