@@ -101,7 +101,7 @@ class AssociateHikingRoutesToLayersCommand extends Command
 
         for ($i = 1; $i <= 4; $i++) {
             $layer = Layer::where('app_id', $app->id)
-                ->where('properties->stato_accatastamento', $i)
+                ->where('properties->osm2cai_status', $i)
                 ->first();
 
             if ($layer) {
