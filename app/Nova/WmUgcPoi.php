@@ -39,7 +39,16 @@ class WmUgcPoi extends NovaUgcPoi
             Text::make('Name', 'properties->name'),
             Text::make(__('Validation Status'), 'validated')
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->displayUsing(function ($value) {
+                    return match ($value) {
+                        ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
+                        ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
+                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="'.__('Not Validated').'">⏳</span>',
+                        default => '<span title="'.ucfirst($value).'">❓</span>',
+                    };
+                })
+                ->asHtml(),
             DateTime::make(__('Validation Date'), 'validation_date')
                 ->onlyOnDetail(),
             DateTime::make(__('Registered At'), function () {

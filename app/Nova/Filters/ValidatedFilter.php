@@ -36,6 +36,10 @@ class ValidatedFilter extends Filter
      */
     public function options(Request $request)
     {
-        return ValidatedStatusEnum::cases();
+        return [
+            '✅ '.__('Valid') => ValidatedStatusEnum::VALID->value,
+            '❌ '.__('Invalid') => ValidatedStatusEnum::INVALID->value,
+            '⏳ '.__('Not Validated') => ValidatedStatusEnum::NOT_VALIDATED->value,
+        ];
     }
 }
