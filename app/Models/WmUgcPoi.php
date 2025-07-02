@@ -22,6 +22,31 @@ class WmUgcPoi extends ModelsUgcPoi
     }
 
     /**
+     * The "booted" method of the model per gestire eventi
+     */
+    protected static function booted()
+    {
+        parent::booted();
+
+        // Quando si crea un nuovo UGC, assicurati che abbia la struttura form
+        static::creating(function ($ugcPoi) {
+            if (! $ugcPoi->properties) {
+                $ugcPoi->properties = [];
+            }
+
+            $properties = $ugcPoi->properties;
+
+            // Se non esiste la struttura form, creala
+            if (! isset($properties['form'])) {
+                $properties['form'] = [
+                    'id' => null,
+                ];
+                $ugcPoi->properties = $properties;
+            }
+        });
+    }
+
+    /**
      * Override the author relation to use the local User model
      */
     public function author(): BelongsTo
@@ -35,6 +60,37 @@ class WmUgcPoi extends ModelsUgcPoi
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Relazione con App
+     */
+    public function app(): BelongsTo
+    {
+        return $this->belongsTo(\Wm\WmPackage\Models\App::class, 'app_id');
+    }
+
+    /**
+     * Mutator per properties: crea automaticamente la struttura form se non esiste
+     */
+    public function setPropertiesAttribute($value)
+    {
+        // Assicurati che value sia un array
+        $properties = is_array($value) ? $value : [];
+
+        // Se non esiste la struttura form, creala
+        if (! isset($properties['form'])) {
+            $properties['form'] = [
+                'id' => null, // Verrà impostato successivamente se necessario
+            ];
+        }
+
+        // Se form esiste ma non ha un id, assicurati che abbia la struttura base
+        if (isset($properties['form']) && ! isset($properties['form']['id'])) {
+            $properties['form']['id'] = null;
+        }
+
+        $this->attributes['properties'] = json_encode($properties);
     }
 
     /**

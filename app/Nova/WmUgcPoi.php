@@ -34,7 +34,10 @@ class WmUgcPoi extends NovaUgcPoi
     {
         return [
             ID::make()->sortable(),
-            BelongsTo::make('App', 'app', App::class),
+            BelongsTo::make('App', 'app', App::class)
+                ->readonly(function ($request) {
+                    return $request->isUpdateOrUpdateAttachedRequest();
+                }),
             BelongsTo::make('Author', 'author', User::class)->filterable()->searchable()->hideWhenUpdating()->hideWhenCreating(),
             Text::make('Name', 'properties->name'),
             Text::make(__('Validation Status'), 'validated')
@@ -64,7 +67,13 @@ class WmUgcPoi extends NovaUgcPoi
                 ->options($this->validatedStatusOptions())
                 ->default(ValidatedStatusEnum::NOT_VALIDATED->value)
                 ->canSee(function ($request) {
-                    return $request->user()->isValidatorForFormId($this->properties['form']['id']) ?? false;
+                    // Controllo se properties, form e id esistono prima di accedere
+                    $formId = null;
+                    if ($this->properties && isset($this->properties['form']['id'])) {
+                        $formId = $this->properties['form']['id'];
+                    }
+
+                    return $formId ? $request->user()->isValidatorForFormId($formId) : false;
                 })->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
                     $isValidated = $request->$requestAttribute;
                     $model->$attribute = $isValidated;
@@ -78,13 +87,27 @@ class WmUgcPoi extends NovaUgcPoi
                         $model->validation_date = null;
                     }
                 })->onlyOnForms(),
-            Text::make('Form ID', 'form_id')->resolveUsing(function ($value) {
-                if ($this->properties and isset($this->properties['form']['id'])) {
-                    return $this->properties['form']['id'];
-                } else {
-                    return $value;
-                }
-            }),
+            Select::make('Form ID', 'form_id')
+                ->options($this->getFormIdOptions())
+                ->hideWhenCreating()
+                ->resolveUsing(function ($value) {
+                    if (isset($this->properties['form']['id'])) {
+                        return $this->properties['form']['id'];
+                    } else {
+                        return $value;
+                    }
+                })
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $formId = $request->$requestAttribute;
+
+                    // Aggiorna le properties con il nuovo form_id
+                    $properties = $model->properties ?? [];
+                    if (! isset($properties['form'])) {
+                        $properties['form'] = [];
+                    }
+                    $properties['form']['id'] = $formId;
+                    $model->properties = $properties;
+                }),
             MapPoint::make('geometry')->withMeta([
                 'center' => [43.7125, 10.4013],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
@@ -100,6 +123,7 @@ class WmUgcPoi extends NovaUgcPoi
             PropertiesPanel::makeWithModel('Nominatim Address', 'properties->nominatim->address', $this, false)->collapsible(),
             PropertiesPanel::makeWithModel('Device', 'properties->device', $this, false)->collapsible()->collapsedByDefault(),
             PropertiesPanel::makeWithModel('Nominatim', 'properties->nominatim', $this, false)->collapsible()->collapsedByDefault(),
+            PropertiesPanel::makeWithModel('Properties', 'properties', $this, false)->collapsible()->collapsedByDefault(),
         ];
     }
 
@@ -119,6 +143,35 @@ class WmUgcPoi extends NovaUgcPoi
         }
 
         return $this->created_at;
+    }
+
+    /**
+     * Ottieni le opzioni per il Form ID select basate sui form disponibili nell'app associata
+     */
+    public function getFormIdOptions(): array
+    {
+        // Se non c'è un'app associata, restituisci un array vuoto
+        if (! $this->app) {
+            return [];
+        }
+
+        // Ottieni tutti i form di acquisizione dall'app associata
+        $forms = $this->app->acquisitionForms();
+
+        if (! $forms) {
+            return [];
+        }
+
+        $options = [];
+        foreach ($forms as $form) {
+            if (isset($form['id'])) {
+                // Usa il nome/label del form se disponibile, altrimenti l'id
+                $label = $form['name'] ?? $form['label']['it'] ?? $form['label'] ?? $form['id'];
+                $options[$form['id']] = $label;
+            }
+        }
+
+        return $options;
     }
 
     public function filters(Request $request): array
