@@ -474,11 +474,11 @@ class HikingRoute extends OsmfeaturesResource
             Text::make(__('OSM ID'), 'osmfeatures_data->properties->osm_id')->onlyOnDetail(),
             Text::make(__('Legend'), function () {
                 return <<<'HTML'
-    <ul>
-        <li>Blue line: OSM2CAI/OSM path</li>
-        <li>Red line: user uploaded path</li>
-    </ul>
-    HTML;
+                    <ul>
+                        <li>Blue line: OSM2CAI/OSM path</li>
+                        <li>Red line: user uploaded path</li>
+                    </ul>
+                    HTML;
             })->asHtml()->onlyOnDetail(),
 
         ];
