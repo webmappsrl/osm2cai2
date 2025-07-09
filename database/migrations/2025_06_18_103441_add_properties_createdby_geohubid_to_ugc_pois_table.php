@@ -92,8 +92,8 @@ return new class extends Migration
                 // form solo con chiavi valorizzate
                 $form = [];
                 // Aggiungi sempre id
-                $form['id'] = isset($raw['id']) ? $raw['id'] : null;
-                
+                $form['id'] = $raw['id'] ?? null;
+
                 foreach ($all_form_keys as $key) {
                     if (isset($raw[$key]) && $raw[$key] !== null && $raw[$key] !== '') {
                         $form[$key] = $raw[$key];
