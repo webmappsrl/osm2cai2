@@ -34,6 +34,15 @@ class WmUgcPoi extends NovaUgcPoi
     {
         return [
             ID::make()->sortable(),
+            Text::make('Created by', 'created_by')
+                ->displayUsing(function ($value) {
+                    if ($value === 'device') {
+                        return '📱';
+                    } elseif ($value === 'platform') {
+                        return '💻';
+                    }
+                    return '❓';
+                }),
             BelongsTo::make('App', 'app', App::class)
                 ->readonly(function ($request) {
                     return $request->isUpdateOrUpdateAttachedRequest();
