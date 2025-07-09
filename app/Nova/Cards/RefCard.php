@@ -45,8 +45,8 @@ class RefCard extends HtmlCard
         $sectors = $this->hr->sectors()->pluck('name')->implode(', ');
 
         return <<<HTML
-       <h1 class='text-3xl'>REF:$ref (CODICE REI: $refRei/$refReiComp)</h1><p class='text-lg text-gray-400 text-center'>Settori: {$this->getSectorsString($this->hr)}</p> 
-       HTML;
+            <h1 class='text-3xl'>REF:$ref (CODICE REI: $refRei/$refReiComp)</h1><p class='text-lg text-gray-400 text-center'>Settori: {$this->getSectorsString($this->hr)}</p> 
+            HTML;
     }
 
     public function getSectorsString(HikingRoute $hr): string

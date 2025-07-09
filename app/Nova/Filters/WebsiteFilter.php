@@ -20,17 +20,17 @@ class WebsiteFilter extends BooleanFilter
     {
         if ($value['has_website']) {
             $sql = <<<'SQL'
-            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'website')
-            AND osmfeatures_data->'properties'->'osm_tags'->>'website' IS NOT NULL
-        SQL;
+                    jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'website')
+                    AND osmfeatures_data->'properties'->'osm_tags'->>'website' IS NOT NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }
         if ($value['no_website']) {
             $sql = <<<'SQL'
-            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'website')
-            OR osmfeatures_data->'properties'->'osm_tags'->>'website' IS NULL
-        SQL;
+                    NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'website')
+                    OR osmfeatures_data->'properties'->'osm_tags'->>'website' IS NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }

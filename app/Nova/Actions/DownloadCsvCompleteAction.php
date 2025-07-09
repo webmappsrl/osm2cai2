@@ -50,8 +50,8 @@ class DownloadCsvCompleteAction extends Action
     {
         $string = __('File generation may take a few moments. Click "Run Action" to proceed.');
         $heading = <<<HTML
-<p><strong>{$string}</strong> </p>
-HTML;
+            <p><strong>{$string}</strong> </p>
+            HTML;
 
         return [
             Heading::make($heading)

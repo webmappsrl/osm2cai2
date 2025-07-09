@@ -35,11 +35,11 @@ class LinksCard extends HtmlCard
     public function content(): string
     {
         return <<<HTML
-    <p>OpenStreetMap: <a style="color:blue" target="_blank" href="{$this->linksData['openstreetmapLink']}">{$this->linksData['osm_id']}</a></p>
-    <p>Waymarkedtrails: <a style="color:blue" target="_blank" href="{$this->linksData['waymarkedtrailsLink']}">{$this->linksData['osm_id']}</a></p>
-    <p>OSM Relation Analyzer: <a style="color:blue" target="_blank" href="{$this->linksData['analyzerLink']}">{$this->linksData['osm_id']}</a></p>
-    <p>OSM2CAI: <a style="color:blue" target="_blank" href="{$this->linksData['osm2caiLink']}">{$this->linksData['id']}</a></p>
-    <p>INFOMONT: <a style="color:blue" target="_blank" href="{$this->linksData['infomontLink']}">{$this->linksData['id']}</a></p>
-    HTML;
+            <p>OpenStreetMap: <a style="color:blue" target="_blank" href="{$this->linksData['openstreetmapLink']}">{$this->linksData['osm_id']}</a></p>
+            <p>Waymarkedtrails: <a style="color:blue" target="_blank" href="{$this->linksData['waymarkedtrailsLink']}">{$this->linksData['osm_id']}</a></p>
+            <p>OSM Relation Analyzer: <a style="color:blue" target="_blank" href="{$this->linksData['analyzerLink']}">{$this->linksData['osm_id']}</a></p>
+            <p>OSM2CAI: <a style="color:blue" target="_blank" href="{$this->linksData['osm2caiLink']}">{$this->linksData['id']}</a></p>
+            <p>INFOMONT: <a style="color:blue" target="_blank" href="{$this->linksData['infomontLink']}">{$this->linksData['id']}</a></p>
+            HTML;
     }
 }

@@ -20,17 +20,17 @@ class WikiDatafilter extends BooleanFilter
     {
         if ($value['has_wikidata']) {
             $sql = <<<'SQL'
-            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikidata')
-            AND osmfeatures_data->'properties'->'osm_tags'->>'wikidata' IS NOT NULL
-        SQL;
+                    jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikidata')
+                    AND osmfeatures_data->'properties'->'osm_tags'->>'wikidata' IS NOT NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }
         if ($value['no_wikidata']) {
             $sql = <<<'SQL'
-            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikidata')
-            OR osmfeatures_data->'properties'->'osm_tags'->>'wikidata' IS NULL
-        SQL;
+                    NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikidata')
+                    OR osmfeatures_data->'properties'->'osm_tags'->>'wikidata' IS NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }

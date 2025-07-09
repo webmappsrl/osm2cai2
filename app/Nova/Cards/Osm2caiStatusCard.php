@@ -40,7 +40,7 @@ class Osm2caiStatusCard extends HtmlCard
         $validator = $this->hr->validator->name ?? '';
 
         return <<<HTML
-      <h1 class='text-4xl'>$status</h1><h3 class='text-lg text-gray-400'>Stato di Accatastamento</h3> <p text-gray-200>Data di validazione : $validationDate </p><p text-gray-200>Validatore : $validator </p>
-      HTML;
+            <h1 class='text-4xl'>$status</h1><h3 class='text-lg text-gray-400'>Stato di Accatastamento</h3> <p text-gray-200>Data di validazione : $validationDate </p><p text-gray-200>Validatore : $validator </p>
+            HTML;
     }
 }

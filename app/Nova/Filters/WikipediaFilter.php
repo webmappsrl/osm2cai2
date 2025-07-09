@@ -20,17 +20,17 @@ class WikipediaFilter extends BooleanFilter
     {
         if ($value['has_wikipedia']) {
             $sql = <<<'SQL'
-            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
-            AND osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NOT NULL
-        SQL;
+                    jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
+                    AND osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NOT NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }
         if ($value['no_wikipedia']) {
             $sql = <<<'SQL'
-            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
-            OR osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NULL
-        SQL;
+                    NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'wikipedia')
+                    OR osmfeatures_data->'properties'->'osm_tags'->>'wikipedia' IS NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }

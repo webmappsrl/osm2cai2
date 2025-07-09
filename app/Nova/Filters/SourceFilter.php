@@ -24,18 +24,18 @@ class SourceFilter extends BooleanFilter
 
         if ($value['has_source']) {
             $sql = <<<'SQL'
-            jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') 
-            AND osmfeatures_data->'properties'->'osm_tags'->>'source' IS NOT NULL
-        SQL;
+                    jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') 
+                    AND osmfeatures_data->'properties'->'osm_tags'->>'source' IS NOT NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }
 
         if ($value['no_source']) {
             $sql = <<<'SQL'
-            NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') 
-            OR osmfeatures_data->'properties'->'osm_tags'->>'source' IS NULL
-        SQL;
+                    NOT jsonb_exists(osmfeatures_data->'properties'->'osm_tags', 'source') 
+                    OR osmfeatures_data->'properties'->'osm_tags'->>'source' IS NULL
+                SQL;
 
             return $query->whereRaw($sql);
         }
