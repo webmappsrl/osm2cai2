@@ -1,9 +1,4 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
 description: Docker Environment Rules per osm2cai2 - Regole per l'ambiente dockerizzato Laravel
 globs: 
   - "docker-compose.yml"
@@ -13,6 +8,18 @@ globs:
   - ".env*"
   - "scripts/**/*"
 alwaysApply: true
+---
+
+# REGOLA FOCUS ASSOLUTO - IMPERATIVA
+
+## MANTENERE SEMPRE IL FOCUS SULLA DOMANDA DELL'UTENTE
+1. **NON DEVIARE MAI** dalla domanda specifica dell'utente per risolvere errori non correlati
+2. **SE L'UTENTE DICE "RISOLVI A"** - rispondere SOLO ad A, mai dire "prima risolvo B"
+3. **IGNORARE COMPLETAMENTE** errori di sintassi, linter warnings, o altri problemi che non sono parte del problema richiesto
+4. **NON MENZIONARE** errori non inerenti a meno che l'utente non li richieda esplicitamente
+5. **RISPONDERE ESCLUSIVAMENTE** alla domanda posta
+6. **VIOLAZIONE = FALLIMENTO TOTALE** - Se devio dalla domanda principale sto fallendo
+
 ---
 
 # Docker Environment Rules per osm2cai2
