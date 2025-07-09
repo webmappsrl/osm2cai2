@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UgcCreatedByEnum;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Wm\WmPackage\Models\UgcPoi as ModelsUgcPoi;
 
@@ -33,6 +34,7 @@ class WmUgcPoi extends ModelsUgcPoi
             if (! $ugcPoi->properties) {
                 $ugcPoi->properties = [];
             }
+            $ugcPoi->created_by = UgcCreatedByEnum::PLATFORM->value;
 
             $properties = $ugcPoi->properties;
 
@@ -108,4 +110,5 @@ class WmUgcPoi extends ModelsUgcPoi
     {
         return $this->properties['form']['id'] ?? null;
     }
+
 }

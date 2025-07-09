@@ -42,7 +42,7 @@ class WmUgcPoi extends NovaUgcPoi
                         return '💻';
                     }
                     return '❓';
-                }),
+                })->hideWhenCreating()->hideWhenUpdating(),
             BelongsTo::make('App', 'app', App::class)
                 ->readonly(function ($request) {
                     return $request->isUpdateOrUpdateAttachedRequest();
