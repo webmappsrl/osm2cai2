@@ -80,10 +80,10 @@ class UgcMedia extends Resource
                     }
 
                     return <<<HTML
-                    <a href='{$url}' target='_blank'>
-                        <img src='{$url}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'>
-                    </a>
-                    HTML;
+                        <a href='{$url}' target='_blank'>
+                            <img src='{$url}' style='max-width: 100px; max-height: 100px; border: 1px solid #ccc; border-radius: 10%; padding: 2px;' alt='Thumbnail'>
+                        </a>
+                        HTML;
                 }
             })->asHtml(),
             BelongsTo::make('Ugc Poi', 'ugcPoi')
