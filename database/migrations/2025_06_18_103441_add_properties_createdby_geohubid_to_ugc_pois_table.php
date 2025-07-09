@@ -91,13 +91,13 @@ return new class extends Migration
                 }
                 // form solo con chiavi valorizzate
                 $form = [];
+                // Aggiungi sempre id
+                $form['id'] = isset($raw['id']) ? $raw['id'] : null;
+                
                 foreach ($all_form_keys as $key) {
                     if (isset($raw[$key]) && $raw[$key] !== null && $raw[$key] !== '') {
                         $form[$key] = $raw[$key];
                     }
-                }
-                if (isset($raw['id'])) {
-                    $form['id'] = $raw['id'];
                 }
                 $properties['form'] = $form;
                 DB::table('ugc_pois')->where('id', $poi->id)->update([
