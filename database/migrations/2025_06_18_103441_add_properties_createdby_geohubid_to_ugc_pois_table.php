@@ -71,7 +71,7 @@ return new class extends Migration
             'weather',
         ];
 
-        DB::table('ugc_pois')->select('id', 'geohub_id', 'raw_data')->orderBy('id')->chunk(100, function ($pois) use ($all_form_keys, $main_keys) {
+        DB::table('ugc_pois')->select('id', 'geohub_id', 'raw_data', 'form_id')->orderBy('id')->chunk(100, function ($pois) use ($all_form_keys, $main_keys) {
             foreach ($pois as $poi) {
                 if (empty($poi->raw_data)) {
                     continue;
@@ -92,7 +92,7 @@ return new class extends Migration
                 // form solo con chiavi valorizzate
                 $form = [];
                 // Aggiungi sempre id
-                $form['id'] = $raw['id'] ?? null;
+                $form['id'] = $poi->form_id ?? $raw['id'] ?? null;
 
                 foreach ($all_form_keys as $key) {
                     if (isset($raw[$key]) && $raw[$key] !== null && $raw[$key] !== '') {
