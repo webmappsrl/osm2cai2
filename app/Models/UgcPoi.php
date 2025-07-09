@@ -54,7 +54,7 @@ class UgcPoi extends Model implements HasMedia
 
         static::created(function ($model) {
             $model->user_id = auth()->id() ?? $model->user_id;
-            $model->app_id = $model->app_id ?? 'osm2cai';
+            $model->app_id ??= 'osm2cai';
             $model->save();
 
             if (isset($model->geometry)) {
