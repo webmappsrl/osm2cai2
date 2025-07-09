@@ -69,13 +69,15 @@ class WmUgcPoi extends NovaUgcPoi
                 ->canSee(function ($request) {
                     // Controllo se properties, form e id esistono prima di accedere
                     $formId = null;
-                    if ($this->properties && isset($this->properties['form']['id'])) {
-                        $formId = $this->properties['form']['id'];
+                    $properties = $this->properties ?? [];
+                
+                    if (isset($properties['form']['id'])) {
+                        $formId = $properties['form']['id'];
                     }
 
                     return $formId ? $request->user()->isValidatorForFormId($formId) : false;
                 })->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    $isValidated = $request->$requestAttribute;
+                    $isValidated = $request->get($requestAttribute);
                     $model->$attribute = $isValidated;
                     // logic to track validator and validation date
 
@@ -87,7 +89,7 @@ class WmUgcPoi extends NovaUgcPoi
                         $model->validation_date = null;
                     }
                 })->onlyOnForms(),
-            Select::make('Form ID', 'form_id')
+                Select::make('Form ID', 'form_id')
                 ->options($this->getFormIdOptions())
                 ->hideWhenCreating()
                 ->resolveUsing(function ($value) {
@@ -134,12 +136,13 @@ class WmUgcPoi extends NovaUgcPoi
 
     public function getRegisteredAtAttribute()
     {
-        if (isset($this->properties['date'])) {
-            return Carbon::parse($this->properties['date']);
+        $properties = $this->properties ?? [];
+        
+        if (isset($properties['date'])) {
+            return Carbon::parse($properties['date']);
         }
-
-        if (isset($this->properties['createdAt'])) {
-            return Carbon::parse($this->properties['createdAt']);
+        if (isset($properties['createdAt'])) {
+            return Carbon::parse($properties['createdAt']);
         }
 
         return $this->created_at;
