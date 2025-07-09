@@ -141,7 +141,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Rilievi
                 MenuSection::make(__('Rilievi'), [
                     MenuSection::make(__('Elementi rilevati'), [
-                        MenuItem::resource(UgcPoi::class, 'Deprecated ugc poi'),
+                       // MenuItem::resource(UgcPoi::class, 'Deprecated ugc poi'),
                         MenuItem::resource(WmUgcPoi::class, 'Wm ugc poi'),
                         MenuItem::resource(UgcTrack::class),
                         MenuItem::resource(UgcMedia::class),
