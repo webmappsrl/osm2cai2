@@ -17,3 +17,4 @@ docker-compose.yml
 /tests/stubs
 .php-cs-fixer.cache
 storage/backups/
+.env copy
