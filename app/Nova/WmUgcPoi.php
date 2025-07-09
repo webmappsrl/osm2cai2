@@ -44,6 +44,7 @@ class WmUgcPoi extends NovaUgcPoi
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
+                    // phpcs:ignore Generic.PHP.Syntax
                     return match ($value) {
                         ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
                         ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
@@ -70,7 +71,7 @@ class WmUgcPoi extends NovaUgcPoi
                     // Controllo se properties, form e id esistono prima di accedere
                     $formId = null;
                     $properties = $this->properties ?? [];
-                
+
                     if (isset($properties['form']['id'])) {
                         $formId = $properties['form']['id'];
                     }
@@ -89,7 +90,7 @@ class WmUgcPoi extends NovaUgcPoi
                         $model->validation_date = null;
                     }
                 })->onlyOnForms(),
-                Select::make('Form ID', 'form_id')
+            Select::make('Form ID', 'form_id')
                 ->options($this->getFormIdOptions())
                 ->hideWhenCreating()
                 ->resolveUsing(function ($value) {
@@ -137,7 +138,7 @@ class WmUgcPoi extends NovaUgcPoi
     public function getRegisteredAtAttribute()
     {
         $properties = $this->properties ?? [];
-        
+
         if (isset($properties['date'])) {
             return Carbon::parse($properties['date']);
         }
