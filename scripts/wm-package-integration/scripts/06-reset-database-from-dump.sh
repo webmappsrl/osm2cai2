@@ -68,6 +68,29 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../" && pwd)"
 
+# Carica le variabili dal file .env se esiste
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    print_step "Caricamento delle variabili dal file .env..."
+    # Esporta le variabili per renderle disponibili allo script
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+    print_success "Variabili d'ambiente caricate."
+else
+    print_error "File .env non trovato. Impossibile continuare senza configurazione."
+    exit 1
+fi
+
+# Definisci i nomi dei container utilizzando le variabili d'ambiente
+if [ -z "$APP_NAME" ]; then
+    print_error "La variabile APP_NAME non è definita nel file .env."
+    exit 1
+fi
+PHP_CONTAINER="php81_${APP_NAME}"
+POSTGRES_CONTAINER="postgres_${APP_NAME}"
+
+print_step "Utilizzo dei nomi container: ${PHP_CONTAINER}, ${POSTGRES_CONTAINER}"
+
 # Verifica che il file dump esista
 if [ ! -f "$PROJECT_ROOT/storage/app/backups/dump.sql.gz" ]; then
     print_error "File dump non trovato in $PROJECT_ROOT/storage/app/backups/dump.sql.gz"
@@ -78,7 +101,7 @@ print_success "Prerequisiti verificati"
 
 # Verifica che PostgreSQL sia attivo
 print_step "Verifica che PostgreSQL sia attivo..."
-if ! docker exec postgres_osm2cai2 pg_isready -h localhost -p 5432 &> /dev/null; then
+if ! docker exec "$POSTGRES_CONTAINER" pg_isready -h localhost -p 5432 &> /dev/null; then
     print_error "PostgreSQL non è attivo. Avvia prima l'ambiente con docker-compose up -d"
     exit 1
 fi
@@ -113,12 +136,12 @@ print_step "=== FASE 1: STOP SERVIZI COLLEGATI AL DATABASE ==="
 
 # Ferma Laravel server se attivo
 print_step "Fermando Laravel server..."
-docker exec php81_osm2cai2 bash -c "pkill -f 'php artisan serve'" 2>/dev/null || true
+docker exec "$PHP_CONTAINER" bash -c "pkill -f 'php artisan serve'" 2>/dev/null || true
 print_success "Laravel server fermato"
 
 # Ferma Horizon se attivo
 print_step "Fermando Laravel Horizon..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:terminate" 2>/dev/null || true
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:terminate" 2>/dev/null || true
 print_success "Horizon fermato"
 
 # Aspetta che i processi si fermino
@@ -131,7 +154,7 @@ print_step "=== FASE 2: RESET DATABASE ==="
 
 # Termina connessioni attive al database
 print_step "Terminando connessioni attive al database..."
-docker exec postgres_osm2cai2 psql -U osm2cai2 -d postgres -c "
+docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d postgres -c "
 SELECT pg_terminate_backend(pid) 
 FROM pg_stat_activity 
 WHERE datname = 'osm2cai2' AND pid <> pg_backend_pid();
@@ -139,11 +162,11 @@ WHERE datname = 'osm2cai2' AND pid <> pg_backend_pid();
 
 # Drop e ricrea database
 print_step "Cancellando database osm2cai2..."
-docker exec postgres_osm2cai2 psql -U osm2cai2 -d postgres -c "DROP DATABASE IF EXISTS osm2cai2;" 2>/dev/null
+docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d postgres -c "DROP DATABASE IF EXISTS osm2cai2;" 2>/dev/null
 print_success "Database cancellato"
 
 print_step "Ricreando database osm2cai2..."
-docker exec postgres_osm2cai2 psql -U osm2cai2 -d postgres -c "CREATE DATABASE osm2cai2 OWNER osm2cai2;"
+docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d postgres -c "CREATE DATABASE osm2cai2 OWNER osm2cai2;"
 print_success "Database ricreato"
 
 print_success "=== FASE 2 COMPLETATA ==="
@@ -155,7 +178,7 @@ print_step "Estraendo e caricando dump (questo può richiedere diversi minuti)..
 print_warning "Dimensione dump: $(du -h $PROJECT_ROOT/storage/app/backups/dump.sql.gz | cut -f1)"
 
 # Carica il dump
-if gunzip -c $PROJECT_ROOT/storage/app/backups/dump.sql.gz | docker exec -i postgres_osm2cai2 psql -U osm2cai2 -d osm2cai2; then
+if gunzip -c $PROJECT_ROOT/storage/app/backups/dump.sql.gz | docker exec -i "$POSTGRES_CONTAINER" psql -U osm2cai2 -d osm2cai2; then
     print_success "Dump caricato con successo"
 else
     print_error "Errore durante il caricamento del dump"
@@ -169,7 +192,7 @@ print_step "=== FASE 4: VERIFICA DATABASE ==="
 
 # Test connessione database
 print_step "Test connessione database..."
-if docker exec postgres_osm2cai2 psql -U osm2cai2 -d osm2cai2 -c "SELECT 1;" &> /dev/null; then
+if docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d osm2cai2 -c "SELECT 1;" &> /dev/null; then
     print_success "Connessione database OK"
 else
     print_error "Problema connessione database"
@@ -178,10 +201,10 @@ fi
 
 # Conta record principali
 print_step "Verifica dati principali..."
-HIKING_ROUTES=$(docker exec postgres_osm2cai2 psql -U osm2cai2 -d osm2cai2 -t -c "SELECT count(*) FROM hiking_routes;" 2>/dev/null | tr -d ' ' || echo "0")
+HIKING_ROUTES=$(docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d osm2cai2 -t -c "SELECT count(*) FROM hiking_routes;" 2>/dev/null | tr -d ' ' || echo "0")
 print_success "HikingRoutes trovati: $HIKING_ROUTES"
 
-USERS=$(docker exec postgres_osm2cai2 psql -U osm2cai2 -d osm2cai2 -t -c "SELECT count(*) FROM users;" 2>/dev/null | tr -d ' ' || echo "0")
+USERS=$(docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d osm2cai2 -t -c "SELECT count(*) FROM users;" 2>/dev/null | tr -d ' ' || echo "0")
 print_success "Users trovati: $USERS"
 
 print_success "=== FASE 4 COMPLETATA ==="
@@ -191,18 +214,18 @@ print_step "=== FASE 5: RIAVVIO SERVIZI ==="
 
 # Clear cache Laravel
 print_step "Pulizia cache Laravel..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan cache:clear && php artisan config:clear && php artisan view:clear" 2>/dev/null || true
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan cache:clear && php artisan config:clear && php artisan view:clear" 2>/dev/null || true
 print_success "Cache pulita"
 
 # Riavvia Laravel server
 print_step "Riavvio Laravel server..."
-docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
+docker exec -d "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
 sleep 3
 print_success "Laravel server riavviato"
 
 # Riavvia Horizon
 print_step "Riavvio Laravel Horizon..."
-docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+docker exec -d "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
 sleep 2
 print_success "Horizon riavviato"
 

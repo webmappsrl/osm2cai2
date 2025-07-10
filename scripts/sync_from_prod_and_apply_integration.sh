@@ -145,9 +145,21 @@ print_success "=== FASE 3 COMPLETATA ==="
 # FASE 4: Verifica Finale
 print_step "=== FASE 4: VERIFICA FINALE ==="
 
+# Carica le variabili dal file .env per la verifica finale
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+    PHP_CONTAINER="php81_${APP_NAME}"
+    POSTGRES_CONTAINER="postgres_${APP_NAME}"
+else
+    print_error "File .env non trovato per la verifica finale"
+    exit 1
+fi
+
 # Verifica che i servizi siano attivi
 print_step "Verifica servizi attivi..."
-if docker ps | grep -q "php81_osm2cai2" && docker ps | grep -q "postgres_osm2cai2"; then
+if docker ps | grep -q "$PHP_CONTAINER" && docker ps | grep -q "$POSTGRES_CONTAINER"; then
     print_success "Container attivi"
 else
     print_warning "Alcuni container potrebbero non essere attivi"
@@ -155,7 +167,7 @@ fi
 
 # Test connessione database
 print_step "Test connessione database finale..."
-if docker exec postgres_osm2cai2 psql -U osm2cai2 -d osm2cai2 -c "SELECT 1;" &> /dev/null; then
+if docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d osm2cai2 -c "SELECT 1;" &> /dev/null; then
     print_success "Database funzionante"
 else
     print_error "Problema connessione database"
