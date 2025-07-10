@@ -84,16 +84,26 @@ if ! docker exec postgres_osm2cai2 pg_isready -h localhost -p 5432 &> /dev/null;
 fi
 print_success "PostgreSQL attivo"
 
-# Conferma dall'utente
-echo ""
-print_warning "⚠️  ATTENZIONE: Questa operazione cancellerà TUTTI i dati nel database!"
-print_warning "⚠️  Il database verrà sostituito completamente con il dump di backup."
-echo ""
-read -p "🤔 Sei sicuro di voler procedere? (digita 'SI' per confermare): " confirm
+# Controlla se è modalità automatica (cronjob)
+AUTO_MODE=false
+if [ "$1" = "--auto" ] || [ "$1" = "-a" ]; then
+    AUTO_MODE=true
+fi
 
-if [ "$confirm" != "SI" ]; then
-    print_warning "Operazione annullata"
-    exit 0
+# Conferma dall'utente (solo se non in modalità automatica)
+if [ "$AUTO_MODE" = false ]; then
+    echo ""
+    print_warning "⚠️  ATTENZIONE: Questa operazione cancellerà TUTTI i dati nel database!"
+    print_warning "⚠️  Il database verrà sostituito completamente con il dump di backup."
+    echo ""
+    read -p "🤔 Sei sicuro di voler procedere? (digita 'SI' per confermare): " confirm
+
+    if [ "$confirm" != "SI" ]; then
+        print_warning "Operazione annullata"
+        exit 0
+    fi
+else
+    print_step "🤖 Modalità automatica (cronjob) - procedo senza conferma utente"
 fi
 
 echo ""
