@@ -3,17 +3,19 @@
 namespace App\Nova;
 
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
+use Laravel\Nova\Fields\Text;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\Layer as WmNovaLayer;
 
 class Layer extends WmNovaLayer
 {
-    public static $with = ['manualEcPois', 'appOwner', 'associatedApps'];
+    public static $with = ['appOwner', 'associatedApps'];
 
     /**
      * The model the resource corresponds to.
@@ -36,6 +38,9 @@ class Layer extends WmNovaLayer
     {
         return [
             ID::make()->sortable(),
+            NovaTabTranslatable::make([
+                Text::make('name'),
+            ]),
             Number::make(__('Rank'), 'rank', function () {
                 if (is_array($this->properties) && isset($this->properties['rank'])) {
                     return (int) $this->properties['rank'];
