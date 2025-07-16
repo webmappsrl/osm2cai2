@@ -138,29 +138,19 @@ class WebhookController extends Controller
             'feature_decoded' => $feature
         ]);
 
-        // Crea una nuova richiesta con i dati corretti (senza immagini)
-        $newRequest = \Illuminate\Http\Request::create(
-            $request->url(),
-            $request->method(),
-            ['feature' => json_encode($feature)],
-            $request->cookies->all(),
-            [], // Non passare immagini al controller
-            $request->server->all()
-        );
+        // Rimuovi il feature dalla richiesta originale (era un file)
+        $request->request->remove('feature');
 
-        // Copia gli headers necessari
-        $newRequest->headers->replace($request->headers->all());
-
-        // Copia la route dalla richiesta originale
-        $newRequest->setRouteResolver($request->getRouteResolver());
+        // Aggiungi il feature come stringa JSON (il controller del package si aspetta una stringa da decodificare)
+        $request->request->add(['feature' => json_encode($feature)]);
 
         // Log per debug della richiesta finale
         Log::info('Webhook: Final request structure', [
-            'feature_type' => gettype($newRequest->input('feature')),
-            'feature_value' => $newRequest->input('feature'),
-            'has_files' => $newRequest->hasFile('feature'),
-            'files_count' => count($newRequest->allFiles()),
-            'content_type' => $newRequest->header('Content-Type')
+            'feature_type' => gettype($request->input('feature')),
+            'feature_value' => $request->input('feature'),
+            'has_files' => $request->hasFile('feature'),
+            'files_count' => count($request->allFiles()),
+            'content_type' => $request->header('Content-Type')
         ]);
 
         Log::info('Webhook: Request prepared for controller', [
@@ -175,13 +165,13 @@ class WebhookController extends Controller
             // Log della richiesta finale per debug
             Log::info('Webhook: Final request for controller', [
                 'action' => $action,
-                'new_request_all' => $newRequest->all(),
-                'new_request_has_files' => $newRequest->hasFile('images'),
-                'new_request_files_count' => count($newRequest->allFiles())
+                'request_all' => $request->all(),
+                'request_has_files' => $request->hasFile('images'),
+                'request_files_count' => count($request->allFiles())
             ]);
 
             // Chiama direttamente il controller store (non controlla action)
-            $response = $controller->store($newRequest);
+            $response = $controller->store($request);
 
             // Dopo la creazione, aggiorna il modello per impostare created_by come 'device' e associare l'utente
             if ($response->getStatusCode() === 201) {
