@@ -14,6 +14,7 @@ use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\SourceSurveyController;
 use App\Http\Controllers\UmapController;
 use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 use Wm\WmPackage\Http\Controllers\Api\UgcPoiController;
 use Wm\WmPackage\Http\Controllers\Api\UgcTrackController;
@@ -139,4 +140,10 @@ Route::prefix('umap')->name('umap.')->group(function () {
     Route::get('/archaeological_sites', [UmapController::class, 'archaeologicalSites'])->name('archaeological_sites');
     Route::get('/archaeological_areas', [UmapController::class, 'archaeologicalAreas'])->name('archaeological_areas');
     Route::get('/geological_sites', [UmapController::class, 'geologicalSites'])->name('geological_sites');
+});
+
+// Webhook routes for geohub integration
+Route::prefix('webhook')->name('webhook.')->group(function () {
+    Route::post('/ugc/poi', [WebhookController::class, 'ugcPoi'])->name('ugc.poi');
+    Route::post('/ugc/track', [WebhookController::class, 'ugcTrack'])->name('ugc.track');
 });

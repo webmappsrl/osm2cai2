@@ -34,7 +34,10 @@ class WmUgcPoi extends ModelsUgcPoi
             if (! $ugcPoi->properties) {
                 $ugcPoi->properties = [];
             }
-            $ugcPoi->created_by = UgcCreatedByEnum::PLATFORM->value;
+
+            if (! isset($ugcPoi->created_by)) {
+                $ugcPoi->created_by = 'platform';
+            }
 
             $properties = $ugcPoi->properties;
 
@@ -110,5 +113,4 @@ class WmUgcPoi extends ModelsUgcPoi
     {
         return $this->properties['form']['id'] ?? null;
     }
-
 }
