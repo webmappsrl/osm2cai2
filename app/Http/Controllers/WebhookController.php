@@ -204,7 +204,7 @@ class WebhookController extends Controller
                 $ugcPoiId = $responseData['id'] ?? null;
 
                 if ($ugcPoiId) {
-                    $ugcPoi = \Wm\WmPackage\Models\UgcPoi::find($ugcPoiId);
+                    $ugcPoi = \App\Models\WmUgcPoi::find($ugcPoiId);
                     if ($ugcPoi) {
                         // Imposta created_by come 'device'
                         $ugcPoi->created_by = 'device';
@@ -230,7 +230,7 @@ class WebhookController extends Controller
                             foreach ($imagesArray as $image) {
                                 if ($image instanceof \Illuminate\Http\UploadedFile) {
                                     $ugcPoi->addMedia($image)
-                                        ->toMediaCollection('images', 'public');
+                                        ->toMediaCollection('default');
                                 }
                             }
                             Log::info('Webhook: Associated images with POI', [
