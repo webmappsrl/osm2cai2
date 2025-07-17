@@ -138,19 +138,42 @@ class WebhookController extends Controller
             'feature_decoded' => $feature
         ]);
 
-        // Rimuovi il feature dalla richiesta originale (era un file)
-        $request->request->remove('feature');
+        // Crea una nuova richiesta con i dati modificati
+        $newRequestData = [
+            'action' => $action,
+            'feature' => json_encode($feature)
+        ];
 
-        // Aggiungi il feature come stringa JSON (il controller del package si aspetta una stringa da decodificare)
-        $request->request->add(['feature' => json_encode($feature)]);
+        // Crea una nuova richiesta Request
+        $newRequest = Request::create(
+            $request->url(),
+            $request->method(),
+            $newRequestData,
+            $request->cookies->all(),
+            [], // files - li gestiamo separatamente dopo
+            $request->server->all(),
+            $request->getContent()
+        );
+
+        // Copia gli headers dalla richiesta originale
+        foreach ($request->headers->all() as $key => $values) {
+            $newRequest->headers->set($key, $values);
+        }
+
+        // Copia il routing dalla richiesta originale
+        if ($request->route()) {
+            $newRequest->setRouteResolver(function () use ($request) {
+                return $request->route();
+            });
+        }
 
         // Log per debug della richiesta finale
         Log::info('Webhook: Final request structure', [
-            'feature_type' => gettype($request->input('feature')),
-            'feature_value' => $request->input('feature'),
-            'has_files' => $request->hasFile('feature'),
-            'files_count' => count($request->allFiles()),
-            'content_type' => $request->header('Content-Type')
+            'feature_type' => gettype($newRequest->input('feature')),
+            'feature_value' => $newRequest->input('feature'),
+            'has_files' => $newRequest->hasFile('feature'),
+            'files_count' => count($newRequest->allFiles()),
+            'content_type' => $newRequest->header('Content-Type')
         ]);
 
         Log::info('Webhook: Request prepared for controller', [
@@ -165,13 +188,13 @@ class WebhookController extends Controller
             // Log della richiesta finale per debug
             Log::info('Webhook: Final request for controller', [
                 'action' => $action,
-                'request_all' => $request->all(),
-                'request_has_files' => $request->hasFile('images'),
-                'request_files_count' => count($request->allFiles())
+                'request_all' => $newRequest->all(),
+                'request_has_files' => $newRequest->hasFile('images'),
+                'request_files_count' => count($newRequest->allFiles())
             ]);
 
-            // Chiama direttamente il controller store (non controlla action)
-            $response = $controller->store($request);
+            // Chiama direttamente il controller store con la nuova richiesta
+            $response = $controller->store($newRequest);
 
             // Dopo la creazione, aggiorna il modello per impostare created_by come 'device' e associare l'utente
             if ($response->getStatusCode() === 201) {
