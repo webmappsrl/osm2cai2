@@ -134,26 +134,15 @@ class GeometryService
     public static function getGeometryType(string $table, string $geometryColumn)
     {
         // Costruire la query per determinare il tipo di geometria
-        if ($table == 'hiking_routes') {
-            $query = <<<SQL
+        // Nota: Per le colonne di tipo geography, dobbiamo fare un cast a geometry
+        // prima di usare ST_GeometryType()
+        $query = <<<SQL
         SELECT 
-            ST_GeometryType(
-                CASE 
-                    WHEN GeometryType({$geometryColumn}) = 'GEOMETRY' THEN {$geometryColumn}
-                    ELSE {$geometryColumn}
-                END
-            ) AS geom_type
+            ST_GeometryType({$geometryColumn}::geometry) AS geom_type
         FROM {$table}
+        WHERE {$geometryColumn} IS NOT NULL
         LIMIT 1;
         SQL;
-        } else {
-            $query = <<<SQL
-        SELECT 
-            ST_GeometryType({$geometryColumn}) AS geom_type
-        FROM {$table}
-        LIMIT 1;
-        SQL;
-        }
 
         // Eseguire la query e ottenere il tipo di geometria
         $type = DB::selectOne($query);
