@@ -8,8 +8,7 @@ echo "🚀 Setup Link WMPackage to OSM2CAI2 - Ambiente di Sviluppo"
 echo "=========================================================="
 echo ""
 
-# Parametri dello script
-AUTO_ROLLBACK="${1:-ask}"  # ask | yes | no
+# Script non richiede più parametri
 
 # Colori per output
 RED='\033[0;31m'
@@ -244,42 +243,7 @@ print_step "Controllo migrazioni esistenti..."
 MIGRATION_COUNT=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:status | grep -c 'Ran'" 2>/dev/null || echo "0")
 
 if [ "$MIGRATION_COUNT" -gt 0 ]; then
-    print_warning "Rilevate $MIGRATION_COUNT migrazioni già applicate nel database"
-    
-    # Gestione della scelta rollback
-    DO_ROLLBACK="no"
-    
-    if [ "$AUTO_ROLLBACK" = "yes" ]; then
-        print_step "Modalità automatica: rollback forzato"
-        DO_ROLLBACK="yes"
-    elif [ "$AUTO_ROLLBACK" = "no" ]; then
-        print_step "Modalità automatica: rollback saltato"
-        DO_ROLLBACK="no"
-    else
-        # Modalità interattiva
-        echo ""
-        echo -e "${YELLOW}❓ Vuoi fare rollback selettivo delle migrazioni WM-Package già applicate?${NC}"
-        echo "   • ${GREEN}y/s${NC}: Rollback selettivo (rimuove solo le tabelle WM-Package e ricrea)"
-        echo "   • ${RED}n${NC}: Continua senza rollback (applica solo nuove migrazioni)"
-        echo ""
-        read -p "Scelta [y/n]: " -n 1 -r
-        echo ""
-        
-        if [[ $REPLY =~ ^[YySs]$ ]]; then
-            DO_ROLLBACK="yes"
-        fi
-    fi
-    
-    if [ "$DO_ROLLBACK" = "yes" ]; then
-        print_step "Esecuzione rollback selettivo delle migrazioni WM-Package..."
-        if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/08-manage-migrations.sh"; then
-            print_error "Errore durante il rollback selettivo delle migrazioni! Interruzione setup."
-            exit 1
-        fi
-        print_success "Rollback selettivo delle migrazioni completato"
-    else
-        print_step "Rollback saltato, continuo con migrazioni esistenti"
-    fi
+    print_step "Rilevate $MIGRATION_COUNT migrazioni già applicate nel database - continuo senza rollback"
 else
     print_step "Nessuna migrazione esistente rilevata"
 fi
@@ -294,15 +258,7 @@ if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisa
 fi
 print_success "Nuove migrazioni applicate al database"
 
-# Gestione migrazioni avanzate (08-manage-migrations) solo se è stato fatto il rollback
-if [ "$DO_ROLLBACK" = "yes" ]; then
-    print_step "Gestione migrazioni avanzate..."
-    if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/08-manage-migrations.sh"; then
-        print_error "Errore durante la gestione delle migrazioni avanzate! Interruzione setup."
-        exit 1
-    fi
-    print_success "Gestione migrazioni avanzate completata"
-fi
+# Note: Gestione migrazioni avanzate rimossa - non più necessaria senza rollback
 
 # Import App da Geohub
 print_step "Import App da Geohub (utilizzando script dedicato)..."
@@ -493,9 +449,8 @@ echo ""
 echo "🛑 Per fermare tutto:"
 echo "   docker-compose down && docker-compose -f docker-compose.develop.yml down"
 echo ""
-echo "📚 Parametri Script:"
-echo "   • ./wm-package-integration.sh         - Modalità interattiva (chiede per rollback)"
-echo "   • ./wm-package-integration.sh yes     - Rollback automatico (non chiede conferma)"  
-echo "   • ./wm-package-integration.sh no      - Nessun rollback (non chiede conferma)"
+echo "📚 Note:"
+echo "   • Lo script applica sempre le migrazioni senza rollback automatico"
+echo "   • Per gestione avanzata delle migrazioni eseguire manualmente gli script specifici"
 echo ""
 print_success "Ambiente di sviluppo pronto per l'uso!" 

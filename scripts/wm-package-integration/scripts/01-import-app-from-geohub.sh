@@ -85,7 +85,6 @@ print_success "Prerequisiti verificati"
 
 # Parametri app
 APP_ID=${1:-26}  # Default app ID 26, ma può essere passato come parametro
-FORCE_CONFIRM=${2:-} # Parametro per la conferma non interattiva
 
 echo ""
 print_step "=== IMPORT APP DA GEOHUB ==="
@@ -100,21 +99,7 @@ if [ "$APP_COUNT" -gt 0 ]; then
     echo ""
     print_warning "⚠️  Esistono già $APP_COUNT app nel database"
     print_warning "⚠️  L'import potrebbe creare duplicati o conflitti"
-    
-    confirm="NO"
-    if [[ "$FORCE_CONFIRM" == "SI" ]]; then
-        confirm="SI"
-        echo ""
-        print_step "Conferma automatica 'SI' ricevuta, procedo..."
-    else
-        echo ""
-        read -p "🤔 Vuoi procedere comunque? (digita 'SI' per confermare): " confirm
-    fi
-    
-    if [ "$confirm" != "SI" ]; then
-        print_warning "Import annullato"
-        exit 0
-    fi
+    print_step "Procedo automaticamente con l'import..."
 fi
 
 echo ""
