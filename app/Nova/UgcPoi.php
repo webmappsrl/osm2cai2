@@ -53,7 +53,6 @@ class UgcPoi extends WmUgcPoi
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
-                    // phpcs:ignore Generic.PHP.Syntax
                     return match ($value) {
                         ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
                         ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',

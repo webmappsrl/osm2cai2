@@ -17,9 +17,10 @@ class UgcTrack extends Model implements HasMedia
     protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'metadata', 'app_id'];
 
     protected $casts = [
-        'raw_data' => 'array',
         'validation_date' => 'datetime',
-        'raw_data->date' => 'datetime:Y-m-d H:i:s',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'properties' => 'array',
     ];
 
     protected static function boot()
@@ -31,6 +32,11 @@ class UgcTrack extends Model implements HasMedia
             $model->app_id ??= 'osm2cai';
             $model->save();
         });
+    }
+
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function getRegisteredAtAttribute()
@@ -85,4 +91,13 @@ class UgcTrack extends Model implements HasMedia
 
         return $array;
     }
+
+        /**
+     * Relazione con App
+     */
+    public function app(): BelongsTo
+    {
+        return $this->belongsTo(\Wm\WmPackage\Models\App::class, 'app_id');
+    }
+
 }
