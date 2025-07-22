@@ -1,0 +1,16 @@
+{
+    "intelephense.environment.phpVersion": "8.4.0",
+    "php.validate.executablePath": "docker",
+    "php.validate.args": [
+        "exec",
+        "-i",
+        "php81_osm2cai2",
+        "php"
+    ],
+    "php.suggest.basic": false,
+    "intelephense.completion.triggerParameterHints": true,
+    "intelephense.completion.insertUseDeclaration": true,
+    "intelephense.completion.fullyQualifyGlobalConstantsAndFunctions": false,
+    "intelephense.files.maxSize": 5000000,
+    "intelephense.telemetry.enabled": false
+}
