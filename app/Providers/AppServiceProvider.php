@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register the morphMap for polymorphic relationships
         \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
-            'App\Models\WmUgcPoi' => \Wm\WmPackage\Models\UgcPoi::class,
+            'App\Models\UgcPoi' => \Wm\WmPackage\Models\UgcPoi::class,
         ]);
     }
 }

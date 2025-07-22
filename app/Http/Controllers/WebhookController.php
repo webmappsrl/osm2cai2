@@ -204,7 +204,7 @@ class WebhookController extends Controller
                 $ugcPoiId = $responseData['id'] ?? null;
 
                 if ($ugcPoiId) {
-                    $ugcPoi = \App\Models\WmUgcPoi::find($ugcPoiId);
+                    $ugcPoi = \App\Models\UgcPoi::find($ugcPoiId);
                     if ($ugcPoi) {
                         // Imposta created_by come 'device'
                         $ugcPoi->created_by = 'device';

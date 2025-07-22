@@ -33,7 +33,7 @@ class SourceSurvey extends AbstractValidationResource
      *
      * @return array
      */
-    public function fields(Request $request)
+    public function fields(Request $request): array
     {
         // Retrieves fields from parent class
         $fields = parent::fields($request);
@@ -108,7 +108,7 @@ class SourceSurvey extends AbstractValidationResource
      *
      * @return array
      */
-    public function filters(Request $request)
+    public function filters(Request $request): array
     {
         return [
             new ValidatedFilter,

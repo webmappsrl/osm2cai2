@@ -11,6 +11,7 @@ use App\Nova\Filters\SectorFilter;
 use App\Nova\Filters\UserTypeFilter;
 use App\Nova\Region as NovaRegion;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Text;
@@ -40,7 +41,7 @@ class User extends AbstractUserResource
         /**
          * @var UserModel
          */
-        $user = auth()->user();
+        $user = Auth::user();
 
         // if user is administrator or national referent
         if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {

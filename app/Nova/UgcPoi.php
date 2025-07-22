@@ -2,19 +2,23 @@
 
 namespace App\Nova;
 
-use App\Nova\Filters\UgcFormIdFilter;
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\Enums\ValidatedStatusEnum;
+use App\Nova\Filters\RelatedUGCFilter;
+use App\Nova\Filters\ValidatedFilter;
+use Carbon\Carbon;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Laravel\Nova\Fields\Number;
+use Illuminate\Support\Arr;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Wm\MapPoint\MapPoint;
-use Wm\WmPackage\Exporters\ModelExporter;
-use Wm\WmPackage\Nova\Actions\ExportTo;
+use Wm\WmPackage\Nova\Fields\PropertiesPanel;
+use Wm\WmPackage\Nova\UgcPoi as WmUgcPoi;
 
-class UgcPoi extends AbstractUgc
+class UgcPoi extends WmUgcPoi
 {
     /**
      * The model the resource corresponds to.
@@ -24,86 +28,98 @@ class UgcPoi extends AbstractUgc
     public static $model = \App\Models\UgcPoi::class;
 
     /**
-     * The single value that should be used to represent the resource when being displayed.
-     *
-     * @var string
-     */
-    public function title()
-    {
-        return $this->raw_data['title'] ?? $this->name ?? $this->id;
-    }
-
-    public static function label()
-    {
-        $label = 'Poi';
-
-        return __($label);
-    }
-
-    /**
-     * Apply search filters to the query
-     *
-     * Searches for matches in:
-     * - POI name
-     * - POI ID
-     * - Associated user's name
-     * - Associated user's email
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query  The query builder instance
-     * @param  string  $search  The search term to filter by
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public static function applySearch(Builder $query, string $search): Builder
-    {
-        return $query->where(function ($query) use ($search) {
-            $query->where('name', 'like', '%'.$search.'%')
-                ->orWhere('id', 'like', '%'.$search.'%')
-                ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', '%'.$search.'%')
-                        ->orWhere('email', 'like', '%'.$search.'%');
-                });
-        });
-    }
-
-    /**
      * Get the fields displayed by the resource.
-     *
-     * @return array
      */
-    public function fields(Request $request)
-    {
-        if ($request->isCreateOrAttachRequest()) {
-            $formIdOptions = $this->getFormIdOptions();
-
-            return [
-                Select::make('Form ID', 'form_id')
-                    ->options($formIdOptions)
-                    ->rules('required')
-                    ->help('Seleziona il tipo di UGC che vuoi creare. Dopo il salvataggio, potrai inserire tutti i dettagli.'),
-            ];
-        }
-
-        $parentFields = parent::fields($request);
-
-        if ($this->form_id == 'poi') {
-            array_splice($parentFields, array_search('user', array_column($parentFields, 'name')), 0, [Text::make('Poi Type', 'raw_data->waypointtype')->onlyOnDetail()]);
-        }
-
-        return array_merge($parentFields, $this->additionalFields($request));
-    }
-
-    public function additionalFields(Request $request)
+    public function fields(Request $request): array
     {
         return [
-            Text::make('Form ID', 'form_id')->resolveUsing(function ($value) {
-                if ($this->raw_data and isset($this->raw_data['id'])) {
-                    return $this->raw_data['id'];
-                } else {
-                    return $value;
-                }
-            })
+            ID::make()->sortable(),
+            Text::make('Created by', 'created_by')
+                ->displayUsing(function ($value) {
+                    if ($value === 'device') {
+                        return '📱';
+                    } elseif ($value === 'platform') {
+                        return '💻';
+                    }
+                    return '❓';
+                })->hideWhenCreating()->hideWhenUpdating(),
+            BelongsTo::make('App', 'app', App::class)
+                ->readonly(function ($request) {
+                    return $request->isUpdateOrUpdateAttachedRequest();
+                }),
+            BelongsTo::make('Author', 'author', User::class)->filterable()->searchable()->hideWhenUpdating()->hideWhenCreating(),
+            Text::make('Name', 'properties->name'),
+            Text::make(__('Validation Status'), 'validated')
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->displayUsing(function ($value) {
+                    // phpcs:ignore Generic.PHP.Syntax
+                    return match ($value) {
+                        ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
+                        ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
+                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="'.__('Not Validated').'">⏳</span>',
+                        default => '<span title="'.ucfirst($value).'">❓</span>',
+                    };
+                })
+                ->asHtml(),
+            DateTime::make(__('Validation Date'), 'validation_date')
+                ->onlyOnDetail(),
+            DateTime::make(__('Registered At'), function () {
+                return $this->getRegisteredAtAttribute();
+            }),
+            DateTime::make(__('Updated At'))
+                ->sortable()
+                ->hideWhenUpdating()
+                ->hideWhenCreating(),
+            Text::make(__('Geohub  ID'), 'geohub_id')
+                ->onlyOnDetail(),
+            Select::make(__('Validated'), 'validated')
+                ->options($this->validatedStatusOptions())
+                ->default(ValidatedStatusEnum::NOT_VALIDATED->value)
+                ->canSee(function ($request) {
+                    // Controllo se properties, form e id esistono prima di accedere
+                    $formId = null;
+                    $properties = $this->properties ?? [];
+
+                    if (isset($properties['form']['id'])) {
+                        $formId = $properties['form']['id'];
+                    }
+
+                    return $formId ? $request->user()->isValidatorForFormId($formId) : false;
+                })->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $isValidated = $request->get($requestAttribute);
+                    $model->$attribute = $isValidated;
+                    // logic to track validator and validation date
+
+                    if ($isValidated == ValidatedStatusEnum::VALID->value) {
+                        $model->validator_id = $request->user()->id;
+                        $model->validation_date = now();
+                    } else {
+                        $model->validator_id = null;
+                        $model->validation_date = null;
+                    }
+                })->onlyOnForms(),
+            Select::make('Form ID', 'form_id')
+                ->options($this->getFormIdOptions())
+                ->hideWhenCreating()
+                ->resolveUsing(function ($value) {
+                    if (isset($this->properties['form']['id'])) {
+                        return $this->properties['form']['id'];
+                    } else {
+                        return $value;
+                    }
+                })
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $formId = $request->$requestAttribute;
+
+                    // Aggiorna le properties con il nuovo form_id
+                    $properties = $model->properties ?? [];
+                    if (! isset($properties['form'])) {
+                        $properties['form'] = [];
+                    }
+                    $properties['form']['id'] = $formId;
+                    $model->properties = $properties;
+                }),
             MapPoint::make('geometry')->withMeta([
                 'center' => [43.7125, 10.4013],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
@@ -114,140 +130,69 @@ class UgcPoi extends AbstractUgc
                 'defaultCenter' => [43.7125, 10.4013],
             ])->hideFromIndex()
                 ->required(),
-            Number::make('Elevation', 'raw_data->position->altitude')->step(.0000000000001)->hideFromIndex(),
-            $this->getCodeField('Form data', ['id', 'form_id', 'waypointtype', 'key', 'date', 'title']),
-            $this->getCodeField('Device data', ['device']),
-            $this->getCodeField('Nominatim'),
-            $this->getCodeField('Raw data'),
+            Images::make('Image', 'default')->onlyOnDetail(),
+            PropertiesPanel::makeWithModel('Form', 'properties->form', $this, true),
+            PropertiesPanel::makeWithModel('Nominatim Address', 'properties->nominatim->address', $this, false)->collapsible(),
+            PropertiesPanel::makeWithModel('Device', 'properties->device', $this, false)->collapsible()->collapsedByDefault(),
+            PropertiesPanel::makeWithModel('Nominatim', 'properties->nominatim', $this, false)->collapsible()->collapsedByDefault(),
+            PropertiesPanel::makeWithModel('Properties', 'properties', $this, false)->collapsible()->collapsedByDefault(),
         ];
     }
 
-    /**
-     * Get the cards available for the request.
-     *
-     * @return array
-     */
-    public function cards(Request $request)
+    public function validatedStatusOptions()
     {
-        return [];
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
+    }
+
+    public function getRegisteredAtAttribute()
+    {
+        $properties = $this->properties ?? [];
+
+        if (isset($properties['date'])) {
+            return Carbon::parse($properties['date']);
+        }
+        if (isset($properties['createdAt'])) {
+            return Carbon::parse($properties['createdAt']);
+        }
+
+        return $this->created_at;
     }
 
     /**
-     * Get the filters available for the resource.
-     *
-     * @return array
+     * Ottieni le opzioni per il Form ID select basate sui form disponibili nell'app associata
      */
-    public function filters(Request $request)
+    public function getFormIdOptions(): array
     {
-        $parentFilters = parent::filters($request);
+        // Se non c'è un'app associata, restituisci un array vuoto
+        if (! $this->app) {
+            return [];
+        }
 
-        return array_merge($parentFilters, [
-            (new UgcFormIdFilter),
-        ]);
-    }
+        // Ottieni tutti i form di acquisizione dall'app associata
+        $forms = $this->app->acquisitionForms();
 
-    /**
-     * Get the lenses available for the resource.
-     *
-     * @return array
-     */
-    public function lenses(Request $request)
-    {
-        return [];
-    }
+        if (! $forms) {
+            return [];
+        }
 
-    /**
-     * Get the actions available for the resource.
-     *
-     * @return array
-     */
-    public function actions(Request $request)
-    {
-        $parentActions = parent::actions($request);
-        $specificActions = [
-            (new ExportTo(
-                $this->getExportFields(),
-                ['user' => 'name', 'user' => 'email'],
-                'ugc-poi',
-                ModelExporter::DEFAULT_STYLE
-            ))->canSee(function () {
-                return true;
-            })->canRun(function () {
-                return true;
-            }),
-        ];
-
-        return array_merge($parentActions, $specificActions);
-    }
-
-    /**
-     * Determines if the user is authorized to create a new resource.
-     *
-     * @param  Request  $request  The current HTTP request
-     * @return bool Always returns true, allowing all users to create new resources
-     */
-    public static function authorizedToCreate(Request $request)
-    {
-        return true;
-    }
-
-    /**
-     * Redirects the user after creating a new resource.
-     *
-     * @param  Request  $request  The current HTTP request
-     * @param  \Laravel\Nova\Resource  $resource  The newly created resource
-     * @return string The URL to redirect the user to after resource creation
-     */
-    public static function redirectAfterCreate(Request $request, $resource)
-    {
-        return '/resources/ugc-pois/'.$resource->id.'/edit';
-    }
-
-    /**
-     * Get the options for the form_id field.
-     *
-     * This method retrieves configurations from a config file,
-     * makes HTTP requests to fetch form data, and builds an array
-     * of options for the form_id field. The result is cached for
-     * one hour to improve performance.
-     *
-     * @return array An associative array with form IDs as keys and labels as values
-     */
-    protected function getFormIdOptions()
-    {
-        // cache for 24 hours
-        return Cache::remember('form_id_options', 86400, function () {
-            $configs = config('geohub.configs');
-            $formIdOptions = [];
-
-            foreach ($configs as $configUrl) {
-                $response = Http::get($configUrl);
-                if ($response->successful()) {
-                    $data = $response->json();
-                    if (isset($data['APP']['poi_acquisition_form'])) {
-                        foreach ($data['APP']['poi_acquisition_form'] as $form) {
-                            $formIdOptions[$form['id']] = $form['label']['it'] ?? $form['id'];
-                        }
-                    }
-                }
+        $options = [];
+        foreach ($forms as $form) {
+            if (isset($form['id'])) {
+                // Usa il nome/label del form se disponibile, altrimenti l'id
+                $label = $form['name'] ?? $form['label']['it'] ?? $form['label'] ?? $form['id'];
+                $options[$form['id']] = $label;
             }
+        }
 
-            return $formIdOptions;
-        });
+        return $options;
     }
 
-    public static function getExportFields(): array
+    public function filters(Request $request): array
     {
         return [
-            'id' => 'ID',
-            'user.name' => 'Nome utente',
-            'user.email' => 'Email utente',
-            'registered_at' => 'Data di acquisizione',
-            'latitude' => 'Latitudine',
-            'longitude' => 'Longitudine',
-            'validated' => 'Stato di validazione',
-            'validation_date' => 'Data di validazione',
-            'app_id' => 'App ID',
+            new RelatedUGCFilter,
+            new ValidatedFilter,
+            ...parent::filters($request),
         ];
     }
 }

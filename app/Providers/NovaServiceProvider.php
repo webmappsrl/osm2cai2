@@ -36,8 +36,8 @@ use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
 use App\Nova\User;
 use App\Nova\User as NovaUser;
-use App\Nova\WmUgcPoi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Nova\Menu\MenuGroup;
@@ -87,27 +87,27 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                     MenuItem::link(__('Riepilogo utenti'), '/dashboards/utenti')
                         ->canSee(function () {
-                            return auth()->user()->hasRole(['Administrator']);
+                            return optional(Auth::user())->hasRole('Administrator');
                         }),
 
                     MenuItem::link(__('Riepilogo Percorribilità'), '/dashboards/percorribilità')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
+                            return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
                         }),
 
                     MenuItem::link(__('Riepilogo MITUR-Abruzzo'), '/dashboards/sal-mitur-abruzzo')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                            return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
                         }),
 
                     MenuItem::link(__('Riepilogo Acqua Sorgente'), '/dashboards/acqua-sorgente')
                         ->canSee(function () {
-                            return auth()->user()->hasAnyRole(['Administrator', 'National Referent']);
+                            return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
                         }),
 
                     MenuItem::link(__('Riepilogo Settori'), '/dashboards/settori')
                         ->canSee(function () {
-                            return auth()->user()->hasRole('Regional Referent');
+                            return optional(Auth::user())->hasRole('Regional Referent');
                         }),
                 ]),
 
@@ -141,8 +141,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Rilievi
                 MenuSection::make(__('Rilievi'), [
                     MenuSection::make(__('Elementi rilevati'), [
-                       // MenuItem::resource(UgcPoi::class, 'Deprecated ugc poi'),
-                        MenuItem::resource(WmUgcPoi::class, 'Wm ugc poi'),
+                        MenuItem::resource(UgcPoi::class, 'Ugc Poi'),
                         MenuItem::resource(UgcTrack::class),
                         MenuItem::resource(UgcMedia::class),
                     ])->icon('none')->collapsable(),
@@ -164,20 +163,20 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
                     MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
                     MenuItem::externalLink(__('Migration check'), route('migration-check'))->canSee(function () {
-                        return auth()->user()->hasRole('Administrator');
+                        return optional(Auth::user())->hasRole('Administrator');
                     })->openInNewTab(),
                 ])->icon('color-swatch')->collapsable(),
 
                 // Admin
                 MenuSection::make(__('Admin'), [
                     MenuItem::resource(User::class, __('User'))->canSee(function () {
-                        return auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent') || auth()->user()->hasRole('Regional Referent');
+                        return optional(Auth::user())->hasRole('Administrator') || optional(Auth::user())->hasRole('National Referent') || optional(Auth::user())->hasRole('Regional Referent');
                     }),
                     MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab()->canSee(function () {
-                        return auth()->user()->hasRole('Administrator');
+                        return optional(Auth::user())->hasRole('Administrator');
                     }),
                     MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab()->canSee(function () {
-                        return auth()->user()->hasRole('Administrator');
+                        return optional(Auth::user())->hasRole('Administrator');
                     }),
                 ])->icon('user'),
 
@@ -226,30 +225,32 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new Main,
         ];
 
-        $loggedInUser = auth()->user();
+        $loggedInUser = Auth::user();
         if (! $loggedInUser) {
             return $dashboards;
         }
 
-        if ($loggedInUser->hasRole('Administrator')) {
+        /** @var \App\Models\User $loggedInUser */
+
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Administrator')) {
             $dashboards[] = new Utenti;
             $dashboards[] = new Percorribilità;
             $dashboards[] = new SALMiturAbruzzo;
             $dashboards[] = new AcquaSorgente;
         }
 
-        if ($loggedInUser->hasRole('National Referent')) {
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('National Referent')) {
             $dashboards[] = new Percorribilità;
             $dashboards[] = new SALMiturAbruzzo;
             $dashboards[] = new AcquaSorgente;
         }
 
-        if ($loggedInUser->hasRole('Regional Referent')) {
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Regional Referent')) {
             $dashboards[] = new SectorsDashboard;
             $dashboards[] = new Percorribilità;
         }
 
-        if ($loggedInUser->hasRole('Local Referent')) {
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Local Referent')) {
             $dashboards[] = new Percorribilità;
         }
 

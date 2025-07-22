@@ -3,8 +3,8 @@
 namespace App\Nova;
 
 use App\Nova\Filters\UgcFormIdFilter;
-use App\Nova\Filters\UgcUserNoMatchFilter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Fields\Text;
 
 abstract class AbstractValidationResource extends UgcPoi
@@ -23,7 +23,7 @@ abstract class AbstractValidationResource extends UgcPoi
         return $query->where('form_id', static::getFormId());
     }
 
-    public function fields(Request $request)
+    public function fields(Request $request): array
     {
         $parentFields = parent::fields($request);
 
@@ -34,11 +34,11 @@ abstract class AbstractValidationResource extends UgcPoi
         return $fields;
     }
 
-    public function filters(Request $request)
+    public function filters(Request $request): array
     {
         $parentFilters = parent::filters($request);
         $parentFilters = collect($parentFilters)->reject(function ($filter) {
-            return $filter instanceof UgcFormIdFilter || $filter instanceof UgcUserNoMatchFilter;
+            return $filter instanceof UgcFormIdFilter;
         })->toArray();
 
         return $parentFilters;
@@ -46,22 +46,22 @@ abstract class AbstractValidationResource extends UgcPoi
 
     public function authorizeToView(Request $request)
     {
-        return auth()->user()->isValidatorForFormId(static::getFormId());
+        return optional(Auth::user())->isValidatorForFormId(static::getFormId());
     }
 
     public function authorizeToViewAny(Request $request)
     {
-        return auth()->user()->isValidatorForFormId(static::getFormId());
+        return optional(Auth::user())->isValidatorForFormId(static::getFormId());
     }
 
     public static function availableForNavigation(Request $request)
     {
-        return auth()->user()->isValidatorForFormId(static::getFormId());
+        return optional(Auth::user())->isValidatorForFormId(static::getFormId());
     }
 
     public function authorizedToUpdate(Request $request)
     {
-        return auth()->user()->isValidatorForFormId(static::getFormId());
+        return optional(Auth::user())->isValidatorForFormId(static::getFormId());
     }
 
     public static function authorizedToCreate(Request $request)

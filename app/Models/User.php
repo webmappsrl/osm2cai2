@@ -12,6 +12,9 @@ use Spatie\Permission\Models\Permission;
 use Wm\WmPackage\Database\Factories\UserFactory;
 use Wm\WmPackage\Models\User as WmUser;
 
+/**
+ * @mixin \Spatie\Permission\Traits\HasRoles
+ */
 class User extends WmUser
 {
     use Impersonatable;

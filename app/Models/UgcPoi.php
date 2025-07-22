@@ -2,209 +2,114 @@
 
 namespace App\Models;
 
-use App\Enums\ValidatedStatusEnum;
-use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
+use Wm\WmPackage\Models\UgcPoi as WmUgcPoi;
 
-class UgcPoi extends Model implements HasMedia
+class UgcPoi extends WmUgcPoi
 {
-    use HasFactory, InteractsWithMedia, SpatialDataTrait;
-
     protected $table = 'ugc_pois';
 
-    protected $guarded = [];
-
     protected $casts = [
-        'raw_data' => 'array',
         'validation_date' => 'datetime',
-        'raw_data->date' => 'datetime:Y-m-d H:i:s',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'properties' => 'array',
     ];
 
-    /**
-     * Get the registered at date attribute.
-     *
-     * Checks for 'date' or 'createdAt' in raw_data, falling back to model's created_at.
-     * This handles changes in the raw_data structure from the app.
-     * See: https://osm2cai.cai.it/resources/source-surveys/4779 (new) and https://osm2cai.cai.it/resources/source-surveys/1235 (old)
-     *
-     * @return Carbon|null
-     */
-    public function getRegisteredAtAttribute()
+    public function __construct(array $attributes = [])
     {
-        if (isset($this->raw_data['date'])) {
-            return Carbon::parse($this->raw_data['date']);
-        }
-
-        if (isset($this->raw_data['createdAt'])) {
-            return Carbon::parse($this->raw_data['createdAt']);
-        }
-
-        return $this->created_at;
+        parent::__construct($attributes);
     }
 
-    protected static function boot()
+    /**
+     * The "booted" method of the model per gestire eventi
+     */
+    protected static function booted()
     {
-        parent::boot();
+        parent::booted();
 
-        static::created(function ($model) {
-            $model->user_id = auth()->id() ?? $model->user_id;
-            $model->app_id ??= 'osm2cai';
-            $model->save();
+        // Quando si crea un nuovo UGC, assicurati che abbia la struttura form
+        static::creating(function ($ugcPoi) {
+            if (! $ugcPoi->properties) {
+                $ugcPoi->properties = [];
+            }
 
-            if (isset($model->geometry)) {
-                $model->fillRawDataLatitudeAndLongitude();
+            if (! isset($ugcPoi->created_by)) {
+                $ugcPoi->created_by = 'platform';
+            }
+
+            $properties = $ugcPoi->properties;
+
+            // Se non esiste la struttura form, creala
+            if (! isset($properties['form'])) {
+                $properties['form'] = [
+                    'id' => null,
+                ];
+                $ugcPoi->properties = $properties;
             }
         });
     }
 
-    // getter for the name attribute
-    public function getNameAttribute()
+    /**
+     * Override the author relation to use the local User model
+     */
+    public function author(): BelongsTo
     {
-        return $this->raw_data['title'] ?? $this->name ?? null;
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function validator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'validator_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
-     * Return the json version of the ugc poi, avoiding the geometry
+     * Override the user relation to use the local User model
      */
-    public function getJsonProperties(): array
+    public function user(): BelongsTo
     {
-        $array = $this->toArray();
-
-        $propertiesToClear = ['geometry'];
-        foreach ($array as $property => $value) {
-            if (is_null($value) || in_array($property, $propertiesToClear)) {
-                unset($array[$property]);
-            }
-        }
-
-        if (isset($array['raw_data'])) {
-            $array['raw_data'] = json_encode($array['raw_data']);
-        }
-
-        return $array;
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
-     * Create a geojson from the ugc poi
+     * Relazione con App
      */
-    public function getGeojson(): ?array
+    public function app(): BelongsTo
     {
-        $feature = $this->getEmptyGeojson();
-        if (isset($feature['properties'])) {
-            $feature['properties'] = $this->getJsonProperties();
-
-            return $feature;
-        } else {
-            return null;
-        }
+        return $this->belongsTo(\Wm\WmPackage\Models\App::class, 'app_id');
     }
 
     /**
-     * Calculate the geometry based on the raw_data
+     * Mutator per properties: crea automaticamente la struttura form se non esiste
      */
-    public function calculateGeometryFromRawData(): string
+    public function setPropertiesAttribute($value)
     {
-        $latitude = $this->raw_data['position']['latitude'];
-        $longitude = $this->raw_data['position']['longitude'];
+        // Assicurati che value sia un array
+        $properties = is_array($value) ? $value : [];
 
-        return DB::select(
-            'SELECT ST_AsGeoJSON(ST_SetSRID(ST_MakePoint(?, ?), 4326))::json as geom',
-            [$longitude, $latitude]
-        )[0]->geom;
+        // Se non esiste la struttura form, creala
+        if (! isset($properties['form'])) {
+            $properties['form'] = [
+                'id' => null, // Verrà impostato successivamente se necessario
+            ];
+        }
+
+        // Se form esiste ma non ha un id, assicurati che abbia la struttura base
+        if (isset($properties['form']) && ! isset($properties['form']['id'])) {
+            $properties['form']['id'] = null;
+        }
+
+        $this->attributes['properties'] = json_encode($properties);
     }
 
     /**
-     * Fill raw_data latitude and longitude based on the geometry
+     * Accessor to get the form data from properties
      */
-    public function fillRawDataLatitudeAndLongitude(): void
+    public function getFormAttribute()
     {
-        // check if the latitude and longitude are already set
-        if (isset($this->raw_data['position']['latitude']) && isset($this->raw_data['position']['longitude'])) {
-            return;
-        }
-
-        // get latitude and longitude from geometry using postgis
-        $geometry = $this->geometry;
-
-        $coordinates = DB::select(
-            'SELECT ST_Y(geometry) as latitude, ST_X(geometry) as longitude 
-             FROM (SELECT geometry::geometry FROM (SELECT ?::geometry as geometry) g) as t',
-            [$geometry]
-        )[0];
-
-        // save rawdata in a variable because with the array cast it is not possible to set the raw_data attribute
-        $rawData = $this->raw_data ?? [];
-
-        if (! isset($rawData['position'])) {
-            $rawData['position'] = [];
-        }
-
-        $rawData['position']['latitude'] = floatval($coordinates->latitude);
-        $rawData['position']['longitude'] = floatval($coordinates->longitude);
-
-        // override the raw_data attribute with the new raw data
-        $this->raw_data = $rawData;
-
-        $this->save();
+        return $this->properties['form'] ?? null;
     }
 
     /**
-     * Calculates the water flow rate based on raw data for UGC POIS ACQUASORGENTE
-     *
-     * @return string
+     * Accessor to get the form ID from properties
      */
-    public function calculateFlowRate()
+    public function getFormIdAttribute()
     {
-        $rawData = $this->raw_data;
-        $flowRate = 'N/A';
-
-        if ($this->water_flow_rate_validated == ValidatedStatusEnum::VALID->value) {
-            $volume = $this->formatNumericValue($rawData['range_volume'] ?? '');
-            $time = $this->formatNumericValue($rawData['range_time'] ?? '');
-
-            if (is_numeric($volume) && is_numeric($time) && $time != 0) {
-                $flowRate = round($volume / $time, 3);
-            }
-        }
-
-        // Update raw_data with the calculated flow rate
-        $rawData['flow_rate'] = $flowRate;
-        $this->raw_data = $rawData;
-        $this->saveQuietly();
-
-        return $flowRate;
-    }
-
-    /**
-     * Formats a numeric value for calculation.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    private function formatNumericValue($value)
-    {
-        if (strpos($value, '.') !== false) {
-            return $value;
-        }
-
-        $value = preg_replace('/[^0-9,]/', '', $value);
-
-        return str_replace(',', '.', $value);
+        return $this->properties['form']['id'] ?? null;
     }
 }
