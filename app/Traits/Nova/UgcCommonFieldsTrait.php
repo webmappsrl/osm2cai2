@@ -118,28 +118,6 @@ trait UgcCommonFieldsTrait
                 })
                 ->onlyOnForms(),
             
-            // Form ID select with complex logic
-            Select::make('Form ID', 'form_id')
-                ->options($this->getFormIdOptions())
-                ->hideWhenCreating()
-                ->resolveUsing(function ($value) {
-                    if (isset($this->properties['form']['id'])) {
-                        return $this->properties['form']['id'];
-                    } else {
-                        return $value;
-                    }
-                })
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    $formId = $request->$requestAttribute;
-
-                    $properties = $model->properties ?? [];
-                    if (! isset($properties['form'])) {
-                        $properties['form'] = [];
-                    }
-                    $properties['form']['id'] = $formId;
-                    $model->properties = $properties;
-                }),
-            
             // Images
             Images::make('Image', 'default')->onlyOnDetail(),
             
