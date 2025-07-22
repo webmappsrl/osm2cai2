@@ -3,16 +3,14 @@
 namespace App\Models;
 
 use App\Traits\SpatialDataTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
+use Wm\WmPackage\Models\UgcTrack as WmUgcTrack;
 
-class UgcTrack extends Model implements HasMedia
+class UgcTrack extends WmUgcTrack
 {
-    use HasFactory, InteractsWithMedia, SpatialDataTrait;
+    protected $table = 'ugc_tracks';
+    use SpatialDataTrait;
 
     protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'metadata', 'app_id'];
 
@@ -23,15 +21,36 @@ class UgcTrack extends Model implements HasMedia
         'properties' => 'array',
     ];
 
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+    }
+    
     protected static function boot()
     {
         parent::boot();
 
-        static::created(function ($model) {
-            $model->user_id = auth()->id() ?? $model->user_id;
-            $model->app_id ??= 'osm2cai';
-            $model->save();
+           // Quando si crea un nuovo UGC, assicurati che abbia la struttura form
+           static::creating(function ($ugcPoi) {
+            if (! $ugcPoi->properties) {
+                $ugcPoi->properties = [];
+            }
+
+            if (! isset($ugcPoi->created_by)) {
+                $ugcPoi->created_by = 'platform';
+            }
+
+            $properties = $ugcPoi->properties;
+
+            // Se non esiste la struttura form, creala
+            if (! isset($properties['form'])) {
+                $properties['form'] = [
+                    'id' => null,
+                ];
+                $ugcPoi->properties = $properties;
+            }
         });
+
     }
 
     public function author(): BelongsTo
@@ -48,7 +67,16 @@ class UgcTrack extends Model implements HasMedia
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+
+        /**
+     * Relazione con App
+     */
+    public function app(): BelongsTo
+    {
+        return $this->belongsTo(\Wm\WmPackage\Models\App::class, 'app_id');
     }
 
     public function validator(): BelongsTo
@@ -56,20 +84,7 @@ class UgcTrack extends Model implements HasMedia
         return $this->belongsTo(User::class, 'validator_id');
     }
 
-    /**
-     * Create a geojson from the ugc track
-     */
-    public function getGeojson(): ?array
-    {
-        $feature = $this->getEmptyGeojson();
-        if (isset($feature['properties'])) {
-            $feature['properties'] = $this->getJsonProperties();
 
-            return $feature;
-        } else {
-            return null;
-        }
-    }
 
     /**
      * Return the json version of the ugctrack, avoiding the geometry
@@ -92,12 +107,44 @@ class UgcTrack extends Model implements HasMedia
         return $array;
     }
 
-        /**
-     * Relazione con App
+       /**
+     * Mutator per properties: crea automaticamente la struttura form se non esiste
      */
-    public function app(): BelongsTo
+    public function setPropertiesAttribute($value)
     {
-        return $this->belongsTo(\Wm\WmPackage\Models\App::class, 'app_id');
+        // Assicurati che value sia un array
+        $properties = is_array($value) ? $value : [];
+
+        // Se non esiste la struttura form, creala
+        if (! isset($properties['form'])) {
+            $properties['form'] = [
+                'id' => null, // Verrà impostato successivamente se necessario
+            ];
+        }
+
+        // Se form esiste ma non ha un id, aCssicurati che abbia la struttura base
+        if (isset($properties['form']) && ! isset($properties['form']['id'])) {
+            $properties['form']['id'] = null;
+        }
+
+        $this->attributes['properties'] = json_encode($properties);
+    }
+
+
+       /**
+     * Accessor to get the form data from properties
+     */
+    public function getFormAttribute()
+    {
+        return $this->properties['form'] ?? null;
+    }
+
+    /**
+     * Accessor to get the form ID from properties
+     */
+    public function getFormIdAttribute()
+    {
+        return $this->properties['form']['id'] ?? null;
     }
 
 }

@@ -2,6 +2,11 @@
 
 namespace App\Nova;
 
+// DEPRECATO: Questa classe è deprecata in favore del trait UgcCommonFieldsTrait.
+// Le nuove classi UgcTrack e UgcPoi estendono le classi del WmPackage e utilizzano
+// il trait UgcCommonFieldsTrait per condividere il codice comune.
+// Questa classe rimane per compatibilità con eventuali altre classi esistenti.
+
 use App\Enums\ValidatedStatusEnum;
 use App\Nova\Actions\DeleteUgcMedia;
 use App\Nova\Actions\DownloadFeatureCollection;
