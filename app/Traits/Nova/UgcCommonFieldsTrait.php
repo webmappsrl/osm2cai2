@@ -30,16 +30,34 @@ trait UgcCommonFieldsTrait
         return [
             ID::make()->sortable(),
             
-            // Created by field with emoji
+            // Created by field with platform icons and version
             Text::make('Created by', 'created_by')
                 ->displayUsing(function ($value) {
                     if ($value === 'device') {
-                        return '📱';
+                        $version = $this->properties['device']['appVersion'] ?? null;
+                        $platform = $this->properties['device']['platform'] ?? null;
+                        
+                        // Default mobile icon
+                        $platformIcon = '<span style="font-size: 16px;">📱</span>';
+                        
+                        if ($platform) {
+                            $platformLower = strtolower($platform);
+                            if (str_contains($platformLower, 'android')) {
+                                $platformIcon = '<img src="/assets/images/android-icon.png" alt="Android" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">';
+                            } elseif (str_contains($platformLower, 'ios')) {
+                                $platformIcon = '<img src="/assets/images/ios-icon.png" alt="iOS" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">';
+                            }
+                        }
+                        
+                        return $version ? "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$platformIcon}<span>v{$version}</span></div>" : $platformIcon;
                     } elseif ($value === 'platform') {
-                        return '💻';
+                        return '<span style="font-size: 16px;">💻</span>';
                     }
-                    return '❓';
-                })->hideWhenCreating()->hideWhenUpdating(),
+                    return '<span style="font-size: 16px;">❓</span>';
+                })
+                ->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             
             // App relationship
             BelongsTo::make('App', 'app', App::class)
