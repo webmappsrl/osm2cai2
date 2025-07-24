@@ -120,15 +120,14 @@ class DownloadMediaFromGeohubCommand extends Command
 
             $imageContent = $response->body();
             
-            // Use the same path pattern that MediaLibrary uses
-            // This respects the filesystem configuration (local/s3/minio)
+            // Use the PathGeneratorFactory to get the correct path generator for this media
             $disk = Storage::disk($existingMedia->disk);
             
-            // Generate the path exactly like MediaLibrary does
-            $directory = $existingMedia->id;
-            $filePath = "{$directory}/{$existingMedia->file_name}";
+            // Let MediaLibrary determine the correct path generator via factory
+            $pathGenerator = \Spatie\MediaLibrary\Support\PathGenerator\PathGeneratorFactory::create($existingMedia);
+            $filePath = $pathGenerator->getPath($existingMedia) . '/' . $existingMedia->file_name;
             
-            // Save to the configured storage (respects AWS/Minio config)
+            // Save to the configured storage (respects AWS/Minio config and correct path structure)
             $disk->put($filePath, $imageContent);
             
             // Update the media record
