@@ -51,9 +51,14 @@ class DownloadMediaFromGeohubCommand extends Command
 
         // Order by most recent media first (better for testing new uploads)
         $mediaRecords = $query
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
+            ->orderBy('created_at', 'desc');
+            
+        // Apply limit only if greater than 0 (0 means no limit)
+        if ($limit > 0) {
+            $mediaRecords = $mediaRecords->limit($limit);
+        }
+        
+        $mediaRecords = $mediaRecords->get();
 
         if ($mediaRecords->isEmpty()) {
             $this->info('ℹ️ No Geohub images found to download');
