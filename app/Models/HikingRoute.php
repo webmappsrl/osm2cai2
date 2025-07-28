@@ -20,6 +20,7 @@ use App\Services\HikingRouteDescriptionService;
 use App\Jobs\GetTaxonomyWheresFromOsmfeaturesJob;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use App\Observers\HikingRouteObserver;
 
@@ -332,6 +333,15 @@ class HikingRoute extends EcTrack
     public function nearbyEcPois()
     {
         return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi')->withPivot(['buffer']);
+    }
+
+    /**
+     * Override della relazione ecPois del parent EcTrack per usare la tabella corretta
+     * La tabella pivot per HikingRoute è 'hiking_route_ec_poi' non 'ec_poi_hiking_route'
+     */
+    public function ecPois(): BelongsToMany
+    {
+        return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi')->withPivot('order')->orderByPivot('order');
     }
 
     public function mountainGroups()
