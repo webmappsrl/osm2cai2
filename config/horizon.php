@@ -211,6 +211,14 @@ return [
                 'tries' => 2,
                 'timeout' => 300,
             ],
+            'supervisor-aws' => [
+                'connection' => 'redis',
+                'queue' => ['aws'],
+                'balance' => 'simple',
+                'maxProcesses' => 5,
+                'tries' => 3,
+                'timeout' => 120,
+            ],
         ],
 
         'local' => [
@@ -229,6 +237,14 @@ return [
                 'memory' => 256,
                 'tries' => 1,
                 'timeout' => 300,
+            ],
+            'supervisor-aws' => [
+                'connection' => 'redis',
+                'queue' => ['aws'],
+                'balance' => 'simple',
+                'maxProcesses' => 2,
+                'tries' => 3,
+                'timeout' => 120,
             ],
         ],
     ],
