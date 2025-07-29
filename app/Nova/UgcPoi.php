@@ -2,10 +2,6 @@
 
 namespace App\Nova;
 
-use App\Nova\Metrics\UgcAppNameDistribution;
-use App\Nova\Metrics\UgcDevicePlatformDistribution;
-use App\Nova\Metrics\UgcValidatedStatusDistribution;
-use App\Nova\Metrics\UgcAttributeDistribution;
 use App\Traits\Nova\UgcCommonFieldsTrait;
 use App\Traits\Nova\UgcCommonMethodsTrait;
 use Illuminate\Http\Request;
@@ -31,16 +27,6 @@ class UgcPoi extends WmUgcPoi
         return static::getResourceLabel('Poi');
     }
 
-    public function cards(Request $request): array
-    {
-        return [
-            new UgcAppNameDistribution,
-            new UgcAttributeDistribution('App Version', "properties->'device'->>'appVersion'"),
-            new UgcAttributeDistribution('App Form', "properties->'form'->>'id'"),
-            new UgcDevicePlatformDistribution,
-            new UgcValidatedStatusDistribution,
-        ];
-    }
     /**
      * Get the fields displayed by the resource.
      */
@@ -69,5 +55,13 @@ class UgcPoi extends WmUgcPoi
     protected function getPermissionType(): string
     {
         return 'pois';
+    }
+
+    /**
+     * Get the cards available for the request.
+     */
+    public function cards(Request $request): array
+    {
+        return $this->getCommonCards(static::$model);
     }
 }

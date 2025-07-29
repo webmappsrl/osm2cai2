@@ -6,6 +6,10 @@ use App\Enums\ValidatedStatusEnum;
 use App\Nova\App;
 use App\Nova\Filters\RelatedUGCFilter;
 use App\Nova\Filters\ValidatedFilter;
+use App\Nova\Metrics\UgcAppNameDistribution;
+use App\Nova\Metrics\UgcAttributeDistribution;
+use App\Nova\Metrics\UgcDevicePlatformDistribution;
+use App\Nova\Metrics\UgcValidatedStatusDistribution;
 use App\Nova\User;
 use Carbon\Carbon;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
@@ -29,17 +33,17 @@ trait UgcCommonFieldsTrait
     {
         return [
             ID::make()->sortable(),
-            
+
             // Created by field with platform icons and version
             Text::make('Created by', 'created_by')
                 ->displayUsing(function ($value) {
                     if ($value === 'device') {
                         $version = $this->properties['device']['appVersion'] ?? null;
                         $platform = $this->properties['device']['platform'] ?? null;
-                        
+
                         // Default mobile icon
                         $platformIcon = '<span style="font-size: 16px;">📱</span>';
-                        
+
                         if ($platform) {
                             $platformLower = strtolower($platform);
                             if (str_contains($platformLower, 'android')) {
@@ -48,7 +52,7 @@ trait UgcCommonFieldsTrait
                                 $platformIcon = '<img src="/assets/images/ios-icon.png" alt="iOS" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">';
                             }
                         }
-                        
+
                         return $version ? "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$platformIcon}<span>v{$version}</span></div>" : $platformIcon;
                     } elseif ($value === 'platform') {
                         return '<span style="font-size: 16px;">💻</span>';
@@ -58,56 +62,56 @@ trait UgcCommonFieldsTrait
                 ->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
-            
+
             // App relationship
             BelongsTo::make('App', 'app', App::class)
                 ->readonly(function ($request) {
                     return $request->isUpdateOrUpdateAttachedRequest();
                 }),
-            
+
             // Author relationship
             BelongsTo::make('Author', 'author', User::class)
                 ->filterable()
                 ->searchable()
                 ->hideWhenUpdating()
                 ->hideWhenCreating(),
-            
+
             // Name from properties
             Text::make('Name', 'properties->name'),
-            
+
             // Validation Status display with emoji
             Text::make(__('Validation Status'), 'validated')
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
                     return match ($value) {
-                        ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
-                        ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
-                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="'.__('Not Validated').'">⏳</span>',
-                        default => '<span title="'.ucfirst($value).'">❓</span>',
+                        ValidatedStatusEnum::VALID->value => '<span title="' . __('Valid') . '">✅</span>',
+                        ValidatedStatusEnum::INVALID->value => '<span title="' . __('Invalid') . '">❌</span>',
+                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="' . __('Not Validated') . '">⏳</span>',
+                        default => '<span title="' . ucfirst($value) . '">❓</span>',
                     };
                 })
                 ->asHtml(),
-            
+
             // Validation Date
             DateTime::make(__('Validation Date'), 'validation_date')
                 ->onlyOnDetail(),
-            
+
             // Registered At
             DateTime::make(__('Registered At'), function () {
                 return $this->getRegisteredAtAttribute();
             }),
-            
+
             // Updated At
             DateTime::make(__('Updated At'))
                 ->sortable()
                 ->hideWhenUpdating()
                 ->hideWhenCreating(),
-            
+
             // Geohub ID
             Text::make(__('Geohub  ID'), 'geohub_id')
                 ->onlyOnDetail(),
-            
+
             // Validated select with complex logic
             Select::make(__('Validated'), 'validated')
                 ->options($this->validatedStatusOptions())
@@ -135,10 +139,10 @@ trait UgcCommonFieldsTrait
                     }
                 })
                 ->onlyOnForms(),
-            
+
             // Images
             Images::make('Image', 'default')->onlyOnDetail(),
-            
+
             // Properties panels
             PropertiesPanel::makeWithModel('Form', 'properties->form', $this, true),
             PropertiesPanel::makeWithModel('Nominatim Address', 'properties->nominatim->address', $this, false)->collapsible(),
@@ -153,7 +157,7 @@ trait UgcCommonFieldsTrait
      */
     public function validatedStatusOptions(): array
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
     }
 
     /**
@@ -221,4 +225,18 @@ trait UgcCommonFieldsTrait
             }),
         ];
     }
-} 
+
+    /**
+     * Get the common cards for the resource
+     */
+    protected function getCommonCards($model): array
+    {
+        return [
+            new UgcAppNameDistribution($model),
+            new UgcAttributeDistribution('App Version', "properties->'device'->>'appVersion'", $model),
+            new UgcAttributeDistribution('App Form', "properties->'form'->>'id'", $model),
+            new UgcDevicePlatformDistribution($model),
+            new UgcValidatedStatusDistribution($model),
+        ];
+    }
+}

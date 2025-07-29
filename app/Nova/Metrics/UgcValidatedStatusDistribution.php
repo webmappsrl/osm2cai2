@@ -2,7 +2,6 @@
 
 namespace App\Nova\Metrics;
 
-use App\Models\UgcPoi;
 use App\Enums\ValidatedStatusEnum;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -10,10 +9,25 @@ use Laravel\Nova\Metrics\Partition;
 
 class UgcValidatedStatusDistribution extends Partition
 {
+    /**
+     * Classe del modello da utilizzare
+     * @var string
+     */
+    protected string $modelClass;
+
+    /**
+     * Costruttore parametrico
+     */
+    public function __construct(string $modelClass)
+    {
+        parent::__construct();
+        $this->modelClass = $modelClass;
+    }
+
     public function calculate(NovaRequest $request)
     {
         // Conta i POI per ogni stato di validazione
-        $data = UgcPoi::query()
+        $data = $this->modelClass::query()
             ->select('validated', DB::raw('count(*) as count'))
             ->groupBy('validated')
             ->pluck('count', 'validated')

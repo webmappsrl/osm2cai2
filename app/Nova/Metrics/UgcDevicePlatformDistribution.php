@@ -2,7 +2,6 @@
 
 namespace App\Nova\Metrics;
 
-use App\Models\UgcPoi;
 use DateTimeInterface;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
@@ -10,9 +9,24 @@ use Laravel\Nova\Metrics\PartitionResult;
 
 class UgcDevicePlatformDistribution extends Partition
 {
+    /**
+     * Classe del modello da utilizzare
+     * @var string
+     */
+    protected string $modelClass;
+
+    /**
+     * Costruttore parametrico
+     */
+    public function __construct(string $modelClass)
+    {
+        parent::__construct();
+        $this->modelClass = $modelClass;
+    }
+
     public function calculate(NovaRequest $request): PartitionResult
     {
-        $data = UgcPoi::query()
+        $data = $this->modelClass::query()
             ->selectRaw("COALESCE(NULLIF(TRIM(properties->'device'->>'platform'), ''), 'null') as device_platform, count(*) as count")
             ->groupBy('device_platform')
             ->orderByDesc('count')

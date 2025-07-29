@@ -2,7 +2,6 @@
 
 namespace App\Nova\Metrics;
 
-use App\Models\UgcPoi;
 use DateTimeInterface;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
@@ -23,13 +22,20 @@ class UgcAttributeDistribution extends Partition
     protected string $path;
 
     /**
+     * Classe del modello da utilizzare
+     * @var string
+     */
+    protected string $modelClass;
+
+    /**
      * Costruttore parametrico
      */
-    public function __construct(string $label = 'App Version Distribution', string $path = "properties->'device'->>'appVersion'")
+    public function __construct(string $label, string $path, string $modelClass)
     {
         parent::__construct();
         $this->customLabel = $label;
         $this->path = $path;
+        $this->modelClass = $modelClass;
     }
 
     /**
@@ -37,7 +43,7 @@ class UgcAttributeDistribution extends Partition
      */
     public function calculate(NovaRequest $request): PartitionResult
     {
-        $data = UgcPoi::query()
+        $data = $this->modelClass::query()
             ->selectRaw("{$this->path} as value, count(*) as count")
             ->groupBy('value')
             ->get()

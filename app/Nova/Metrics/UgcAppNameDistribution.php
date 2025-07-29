@@ -2,7 +2,6 @@
 
 namespace App\Nova\Metrics;
 
-use App\Models\UgcPoi;
 use DateTimeInterface;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
@@ -11,11 +10,26 @@ use Wm\WmPackage\Models\App;
 
 class UgcAppNameDistribution extends Partition
 {
+    /**
+     * Classe del modello da utilizzare
+     * @var string
+     */
+    protected string $modelClass;
+
+    /**
+     * Costruttore parametrico
+     */
+    public function __construct(string $modelClass)
+    {
+        parent::__construct();
+        $this->modelClass = $modelClass;
+    }
+
     public function calculate(NovaRequest $request): PartitionResult
     {
-        $data = UgcPoi::query()
-            ->selectRaw("COALESCE((properties->'app'->>'id'), 'null') as app_id, count(*) as count")
-            ->groupByRaw("COALESCE((properties->'app'->>'id'), 'null')")
+        $data = $this->modelClass::query()
+            ->selectRaw("COALESCE(app_id, 'null') as app_id, count(*) as count")
+            ->groupByRaw("COALESCE(app_id, 'null')")
             ->orderByDesc('count')
             ->get();
 
