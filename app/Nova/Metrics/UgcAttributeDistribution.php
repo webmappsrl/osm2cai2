@@ -11,19 +11,16 @@ class UgcAttributeDistribution extends Partition
 {
     /**
      * Etichetta visualizzata sulla metrica
-     * @var string
      */
     protected string $customLabel;
 
     /**
      * Path SQL dell'attributo da contare (es: properties->'device'->>'appVersion')
-     * @var string
      */
     protected string $path;
 
     /**
      * Classe del modello da utilizzare
-     * @var string
      */
     protected string $modelClass;
 
@@ -84,7 +81,7 @@ class UgcAttributeDistribution extends Partition
     /**
      * Determine the amount of time the results of the metric should be cached.
      */
-    public function cacheFor(): DateTimeInterface|null
+    public function cacheFor(): ?DateTimeInterface
     {
         return null;
     }

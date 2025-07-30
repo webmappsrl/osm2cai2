@@ -12,7 +12,6 @@ class UgcAppNameDistribution extends Partition
 {
     /**
      * Classe del modello da utilizzare
-     * @var string
      */
     protected string $modelClass;
 
@@ -46,7 +45,7 @@ class UgcAppNameDistribution extends Partition
             $result[$name] = $count;
         }
 
-        $result = array_filter($result, fn($v) => $v > 0);
+        $result = array_filter($result, fn ($v) => $v > 0);
         arsort($result);
 
         return $this->result($result);
@@ -57,7 +56,7 @@ class UgcAppNameDistribution extends Partition
         return __('App Name');
     }
 
-    public function cacheFor(): DateTimeInterface|null
+    public function cacheFor(): ?DateTimeInterface
     {
         return null;
     }

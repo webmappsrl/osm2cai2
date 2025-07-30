@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Wm\MapPoint\MapPoint;
 use Wm\WmPackage\Nova\UgcPoi as WmUgcPoi;
 
-
 class UgcPoi extends WmUgcPoi
 {
     use UgcCommonFieldsTrait, UgcCommonMethodsTrait;
@@ -19,6 +18,7 @@ class UgcPoi extends WmUgcPoi
      * @var string
      */
     public static $model = \App\Models\UgcPoi::class;
+
     /**
      * Get the resource label
      */

@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
@@ -22,7 +23,6 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Wm\WmPackage\Nova\Actions\EditFields;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
-use Illuminate\Support\Facades\Auth;
 
 trait UgcCommonFieldsTrait
 {
@@ -57,6 +57,7 @@ trait UgcCommonFieldsTrait
                     } elseif ($value === 'platform') {
                         return '<span style="font-size: 16px;">💻</span>';
                     }
+
                     return '<span style="font-size: 16px;">❓</span>';
                 })
                 ->asHtml()
@@ -85,10 +86,10 @@ trait UgcCommonFieldsTrait
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
                     return match ($value) {
-                        ValidatedStatusEnum::VALID->value => '<span title="' . __('Valid') . '">✅</span>',
-                        ValidatedStatusEnum::INVALID->value => '<span title="' . __('Invalid') . '">❌</span>',
-                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="' . __('Not Validated') . '">⏳</span>',
-                        default => '<span title="' . ucfirst($value) . '">❓</span>',
+                        ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
+                        ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
+                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="'.__('Not Validated').'">⏳</span>',
+                        default => '<span title="'.ucfirst($value).'">❓</span>',
                     };
                 })
                 ->asHtml(),
@@ -157,7 +158,7 @@ trait UgcCommonFieldsTrait
      */
     public function validatedStatusOptions(): array
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
     }
 
     /**

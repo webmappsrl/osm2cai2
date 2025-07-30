@@ -11,7 +11,6 @@ class UgcValidatedStatusDistribution extends Partition
 {
     /**
      * Classe del modello da utilizzare
-     * @var string
      */
     protected string $modelClass;
 
@@ -47,7 +46,7 @@ class UgcValidatedStatusDistribution extends Partition
         // Costruisce array emoji + label => count
         $result = [];
         foreach ($labels as $value => $label) {
-            $result[$emojis[$value] . ' ' . $label] = $data[$value] ?? 0;
+            $result[$emojis[$value].' '.$label] = $data[$value] ?? 0;
         }
 
         return $this->result($result);

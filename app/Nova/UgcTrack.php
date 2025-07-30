@@ -30,8 +30,6 @@ class UgcTrack extends WmUgcTrack
 
     /**
      * Get the fields displayed by the resource.
-     *
-     * @return array
      */
     public function fields(Request $request): array
     {

@@ -11,7 +11,6 @@ class UgcDevicePlatformDistribution extends Partition
 {
     /**
      * Classe del modello da utilizzare
-     * @var string
      */
     protected string $modelClass;
 
@@ -41,7 +40,7 @@ class UgcDevicePlatformDistribution extends Partition
         ];
 
         // Mostra solo le etichette con conteggio > 0
-        $result = array_filter($result, fn($v) => $v > 0);
+        $result = array_filter($result, fn ($v) => $v > 0);
 
         arsort($result);
 
@@ -53,7 +52,7 @@ class UgcDevicePlatformDistribution extends Partition
         return __('Device Platform');
     }
 
-    public function cacheFor(): DateTimeInterface|null
+    public function cacheFor(): ?DateTimeInterface
     {
         return null;
     }
