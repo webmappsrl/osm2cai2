@@ -18,7 +18,9 @@ class ManageHikingRouteValidationAction extends Action
     use InteractsWithQueue, Queueable, SerializesModels;
 
     public $showOnDetail = true;
+
     public $name = 'MANAGE VALIDATION';
+
     /**
      * Perform the action on the given models.
      *
@@ -41,7 +43,7 @@ class ManageHikingRouteValidationAction extends Action
 
         if ($model->osm2cai_status == 4) {
             $this->revertValidation($model);
-        } else if ($model->osm2cai_status == 3) {
+        } elseif ($model->osm2cai_status == 3) {
             $this->validateSDA($model, $user, $date);
         }
 
@@ -96,5 +98,27 @@ class ManageHikingRouteValidationAction extends Action
         // save the model
         $model->osmfeatures_data = $osmfeatures_data;
         $model->save();
+    }
+
+    public static function getValidationConfirmText(HikingRoute $model)
+    {
+        if ($model->osm2cai_status == 4) {
+            return __('Are you sure you want to revert the validation of this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')';
+        } elseif ($model->osm2cai_status == 3) {
+            return __('Are you sure you want to validate this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')';
+        }
+
+        return __('Are you sure you want to perform this action?');
+    }
+
+    public static function getValidationButtonText(HikingRoute $model)
+    {
+        if ($model->osm2cai_status == 4) {
+            return __('Revert validation');
+        } elseif ($model->osm2cai_status == 3) {
+            return __('Validate');
+        }
+
+        return __('Confirm');
     }
 }
