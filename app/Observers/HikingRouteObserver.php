@@ -6,6 +6,8 @@ use App\Jobs\ComputeTdhJob;
 use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\HikingRoute;
 use App\Models\Layer;
+use Illuminate\Http\Client\Request;
+use Wm\WmPackage\Services\PBFGeneratorService;
 
 class HikingRouteObserver
 {
@@ -18,12 +20,27 @@ class HikingRouteObserver
     }
 
     /**
+     * Handle the HikingRoute "updated" event.
+     */
+    public function updated(HikingRoute $hikingRoute): void
+    {
+        // Rigenera i tile PBF ottimizzati solo se la geometria è stata modificata
+        if ($hikingRoute->isDirty('geometry')) {
+         //   app(\Wm\WmPackage\Services\PBFGeneratorService::class)->generatePbfsForTrack($hikingRoute, 13, 5);
+        }
+
+
+        // app(PBFGeneratorService::class)->generatePbfsForTrack($hikingRoute, 13, 5);
+
+    }
+
+    /**
      * Handle the HikingRoute "saving" event.
      */
     public function saving(HikingRoute $hikingRoute): void
     {
         if ($hikingRoute->isDirty('osmfeatures_data.properties.ref') && $hikingRoute->isDirty('osmfeatures_data.properties.from') && $hikingRoute->isDirty('osmfeatures_data.properties.to')) {
-            $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'].' - '.$hikingRoute->osmfeatures_data['properties']['from'].' - '.$hikingRoute->osmfeatures_data['properties']['to'];
+            $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['from'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['to'];
             $hikingRoute->saveQuietly();
         }
 

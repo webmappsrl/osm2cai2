@@ -219,6 +219,14 @@ return [
                 'tries' => 3,
                 'timeout' => 120,
             ],
+            'supervisor-pbf' => [
+                'connection' => 'redis',
+                'queue' => ['pbf'],
+                'balance' => 'simple',
+                'maxProcesses' => 20,
+                'tries' => 2,
+                'timeout' => 300,
+            ],
         ],
 
         'local' => [
@@ -245,6 +253,14 @@ return [
                 'maxProcesses' => 2,
                 'tries' => 3,
                 'timeout' => 120,
+            ],
+            'supervisor-pbf' => [
+                'connection' => 'redis',
+                'queue' => ['pbf'],
+                'balance' => 'simple',
+                'maxProcesses' => 20,
+                'tries' => 2,
+                'timeout' => 300,
             ],
         ],
     ],
