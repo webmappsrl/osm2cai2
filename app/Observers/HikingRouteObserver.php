@@ -7,7 +7,11 @@ use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\HikingRoute;
 use App\Models\Layer;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Log;
 use Wm\WmPackage\Services\PBFGeneratorService;
+use Wm\WmPackage\Services\GeometryComputationService;
+use Wm\WmPackage\Jobs\Pbf\GenerateLayerPBFJob;
+use Wm\WmPackage\Jobs\Pbf\GeneratePBFJob;
 
 class HikingRouteObserver
 {
@@ -19,18 +23,53 @@ class HikingRouteObserver
         SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
     }
 
+    public function updatePbfsForHikingRoute(HikingRoute $hikingRoute): void
+    {
+        $pbfService = app(PBFGeneratorService::class);
+        $geometryService = app(GeometryComputationService::class);
+
+        // Genera i tile impattati dalla modifica della traccia
+        $impactedTiles = $geometryService->generateImpactedTilesForTrack(
+            $hikingRoute,
+            13, // startZoom
+            5   // minZoom
+        );
+
+        if (!empty($impactedTiles)) {
+            // Crea i job per ogni tile impattato
+            $jobs = [];
+            foreach ($impactedTiles as $tile) {
+                [$x, $y, $zoom] = $tile;
+
+                // Scegli il tipo di job in base al livello di zoom
+                if ($zoom <= $pbfService->getZoomTreshold()) {
+                    $jobs[] = new GenerateLayerPBFJob($zoom, $x, $y, $hikingRoute->app_id);
+                } else {
+                    $jobs[] = new GeneratePBFJob($zoom, $x, $y, $hikingRoute->app_id);
+                }
+            }
+
+            // Dispatch del batch se ci sono job da eseguire
+            if (!empty($jobs)) {
+                $batch = \Illuminate\Support\Facades\Bus::batch($jobs)
+                    ->name("PBF Regeneration for Track {$hikingRoute->id}: {$hikingRoute->app_id}")
+                    ->onConnection('redis')
+                    ->onQueue('pbf')
+                    ->dispatch();
+
+                Log::info("Batch di rigenerazione PBF avviato per traccia {$hikingRoute->id}: " . count($jobs) . " job");
+            }
+        }
+    }
+
     /**
      * Handle the HikingRoute "updated" event.
      */
     public function updated(HikingRoute $hikingRoute): void
     {
+        Log::info('HikingRouteObserver updated event');
         // Rigenera i tile PBF ottimizzati solo se la geometria è stata modificata
-        if ($hikingRoute->isDirty('geometry')) {
-         //   app(\Wm\WmPackage\Services\PBFGeneratorService::class)->generatePbfsForTrack($hikingRoute, 13, 5);
-        }
-
-
-        // app(PBFGeneratorService::class)->generatePbfsForTrack($hikingRoute, 13, 5);
+        //if ($hikingRoute->isDirty('geometry')) {}
 
     }
 
@@ -39,9 +78,10 @@ class HikingRouteObserver
      */
     public function saving(HikingRoute $hikingRoute): void
     {
+        Log::info('HikingRouteObserver saving event');
         if ($hikingRoute->isDirty('osmfeatures_data.properties.ref') && $hikingRoute->isDirty('osmfeatures_data.properties.from') && $hikingRoute->isDirty('osmfeatures_data.properties.to')) {
             $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['from'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['to'];
-            $hikingRoute->saveQuietly();
+            // Non usare saveQuietly() qui per evitare il loop di eventi
         }
 
         // todo: insert all properties
@@ -57,6 +97,7 @@ class HikingRouteObserver
         }
         if ($hikingRoute->isDirty('osm2cai_status')) {
             $this->updateLayerAssociations($hikingRoute);
+            $this->updatePbfsForHikingRoute($hikingRoute);
         }
     }
 
@@ -80,15 +121,20 @@ class HikingRouteObserver
                 ->first();
         }
 
-        // Disassocia dal layer precedente se esiste
+        // Sincronizza le relazioni con i layer usando sync()
+        $layerIds = $hikingRoute->layers()->pluck('layers.id')->toArray();
+        
+        // Rimuovi il layer del vecchio status se esiste
         if ($previousStatusLayer) {
-            $hikingRoute->layers()->detach($previousStatusLayer->id);
+            $layerIds = array_diff($layerIds, [$previousStatusLayer->id]);
         }
-
-        // Associa al nuovo layer se esiste
-        if ($osm2caiStatusLayer && ! $hikingRoute->layers()->where('layer_id', $osm2caiStatusLayer->id)->exists()) {
-            $hikingRoute->layers()->attach($osm2caiStatusLayer->id);
+        
+        // Aggiungi il layer del nuovo status se esiste
+        if ($osm2caiStatusLayer) {
+            $layerIds[] = $osm2caiStatusLayer->id;
         }
+        Log::info('layerIds', $layerIds);
+        $hikingRoute->layers()->sync($layerIds);
     }
 
     /**
