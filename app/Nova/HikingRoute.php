@@ -10,13 +10,12 @@ use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;
 use App\Nova\Actions\DeleteHikingRouteAction;
 use App\Nova\Actions\ImportPois;
+use App\Nova\Actions\ManageHikingRouteValidationAction;
 use App\Nova\Actions\OsmSyncHikingRouteAction;
 use App\Nova\Actions\OverpassMap;
 use App\Nova\Actions\PercorsoFavoritoAction;
-use App\Nova\Actions\RevertValidateHikingRouteAction;
 use App\Nova\Actions\SectorRefactoring;
 use App\Nova\Actions\UploadValidationRawDataAction;
-use App\Nova\Actions\ValidateHikingRouteAction;
 use App\Nova\Cards\LinksCard;
 use App\Nova\Cards\Osm2caiStatusCard;
 use App\Nova\Cards\RefCard;
@@ -277,10 +276,10 @@ class HikingRoute extends OsmfeaturesResource
                         return true;
                     }
                 ),
-            (new ValidateHikingRouteAction)
-                ->confirmText(__('Are you sure you want to validate this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
-                ->confirmButtonText(__('Confirm'))
-                ->cancelButtonText(__('Do not validate'))
+            (new ManageHikingRouteValidationAction)
+                ->confirmText(ManageHikingRouteValidationAction::getValidationConfirmText($this->model()))
+                ->confirmButtonText(ManageHikingRouteValidationAction::getValidationButtonText($this->model()))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return true;
                 })
@@ -292,18 +291,6 @@ class HikingRoute extends OsmfeaturesResource
             (new OsmSyncHikingRouteAction)
                 ->confirmText(__('Are you sure you want to sync OSM data?'))
                 ->confirmButtonText(__('Update with OSM data'))
-                ->cancelButtonText(__('Cancel'))
-                ->canSee(function ($request) {
-                    return true;
-                })
-                ->canRun(
-                    function ($request, $user) {
-                        return true;
-                    }
-                ),
-            (new RevertValidateHikingRouteAction)
-                ->confirmText(__('Are you sure you want to revert the validation of this route?').'REF:'.$this->ref.' (REI CODE: '.$this->ref_REI.' / '.$this->ref_REI_comp.')')
-                ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return true;
