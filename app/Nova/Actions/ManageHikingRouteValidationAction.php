@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -28,7 +29,8 @@ class ManageHikingRouteValidationAction extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        $user = auth()->user();
+        $authUser = Auth::user();
+        $user = User::find($authUser->id);
         $date = Carbon::now();
 
         if (! $user || $user == null) {
