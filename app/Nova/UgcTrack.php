@@ -30,15 +30,13 @@ class UgcTrack extends WmUgcTrack
 
     /**
      * Get the fields displayed by the resource.
-     *
-     * @return array
      */
     public function fields(Request $request): array
     {
-     $commonFields = $this->getCommonFields();
-     $commonFields = array_merge($commonFields, $this->additionalFields($request));
+        $commonFields = $this->getCommonFields();
+        $commonFields = array_merge($commonFields, $this->additionalFields($request));
 
-     return $commonFields;
+        return $commonFields;
     }
 
     /**
@@ -89,5 +87,13 @@ class UgcTrack extends WmUgcTrack
             'raw_data->latitude' => __('Latitudine'),
             'raw_data->longitude' => __('Longitudine'),
         ];
+    }
+
+    /**
+     * Get the cards available for the request.
+     */
+    public function cards(Request $request): array
+    {
+        return $this->getCommonCards(static::$model);
     }
 }

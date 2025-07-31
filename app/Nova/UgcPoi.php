@@ -33,7 +33,7 @@ class UgcPoi extends WmUgcPoi
     public function fields(Request $request): array
     {
         $commonFields = $this->getCommonFields();
-        
+
         // Aggiungi MapPoint dopo tutti i campi comuni
         $commonFields[] = MapPoint::make('geometry')->withMeta([
             'center' => [43.7125, 10.4013],
@@ -45,7 +45,7 @@ class UgcPoi extends WmUgcPoi
             'defaultCenter' => [43.7125, 10.4013],
         ])->hideFromIndex()
             ->required();
-        
+
         return $commonFields;
     }
 
@@ -55,5 +55,13 @@ class UgcPoi extends WmUgcPoi
     protected function getPermissionType(): string
     {
         return 'pois';
+    }
+
+    /**
+     * Get the cards available for the request.
+     */
+    public function cards(Request $request): array
+    {
+        return $this->getCommonCards(static::$model);
     }
 }
