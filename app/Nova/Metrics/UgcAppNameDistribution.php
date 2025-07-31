@@ -27,8 +27,8 @@ class UgcAppNameDistribution extends Partition
     public function calculate(NovaRequest $request): PartitionResult
     {
         $data = $this->modelClass::query()
-            ->selectRaw("COALESCE(app_id, 'null') as app_id, count(*) as count")
-            ->groupByRaw("COALESCE(app_id, 'null')")
+            ->selectRaw('app_id, count(*) as count')
+            ->groupByRaw('app_id')
             ->orderByDesc('count')
             ->get();
 
@@ -36,11 +36,11 @@ class UgcAppNameDistribution extends Partition
 
         $result = [];
         foreach ($counts as $appId => $count) {
-            if ($appId === 'null' || $appId === null || $appId === '') {
-                $name = 'Unknown';
-            } else {
+            try {
                 $app = App::find($appId);
                 $name = $app ? ($app->name ?? $app->id) : $appId;
+            } catch (\Exception $e) {
+                $name = 'Unknown';
             }
             $result[$name] = $count;
         }
