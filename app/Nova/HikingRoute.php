@@ -495,11 +495,11 @@ class HikingRoute extends OsmfeaturesResource
                 $poles = $this->getPolesWithBuffer($bufferDistance);
 >>>>>>> 9e936fe (refactor(models): ♻️ update buffer logic and add spatial indexes OC:6024)
             Text::make(__('Poles'), function () {
-                $bufferMeters = 100;
-                $poles = $this->getPolesWithBuffer($bufferMeters);
+                $bufferDistance = 10;
+                $poles = $this->getPolesWithBuffer($bufferDistance);
 
                 if ($poles->isEmpty()) {
-                    return "No poles found within {$bufferMeters} meters.";
+                    return "No poles found within {$bufferDistance} meters.";
                 }
 
                 $polesList = $this->getPolesList($poles);
