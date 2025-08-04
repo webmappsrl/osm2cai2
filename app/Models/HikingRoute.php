@@ -2,27 +2,24 @@
 
 namespace App\Models;
 
-use App\Jobs\ComputeTdhJob;
-use App\Traits\AwsCacheable;
+use App\Jobs\CalculateIntersectionsJob;
+use App\Jobs\CheckNearbyEcPoisJob;
 use App\Jobs\CheckNearbyHutsJob;
+use App\Jobs\CheckNearbyNaturalSpringsJob;
+use App\Observers\HikingRouteObserver;
+use App\Services\HikingRouteDescriptionService;
+use App\Traits\AwsCacheable;
+use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
-use Wm\WmPackage\Models\EcTrack;
-use App\Jobs\CheckNearbyEcPoisJob;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
-use App\Jobs\CalculateIntersectionsJob;
-use App\Jobs\CheckNearbyNaturalSpringsJob;
-use App\Jobs\SyncClubHikingRouteRelationJob;
-use App\Traits\OsmfeaturesGeometryUpdateTrait;
-use App\Services\HikingRouteDescriptionService;
-use App\Jobs\GetTaxonomyWheresFromOsmfeaturesJob;
-use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
-use App\Observers\HikingRouteObserver;
+use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Wm\WmPackage\Models\EcTrack;
 
 class HikingRoute extends EcTrack
 {
@@ -76,7 +73,7 @@ class HikingRoute extends EcTrack
     protected static function booted()
     {
         parent::booted();
-        HikingRoute::observe(HikingRouteObserver::class);
+        self::observe(HikingRouteObserver::class);
     }
 
     /**
@@ -200,7 +197,7 @@ class HikingRoute extends EcTrack
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for HikingRoute ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for HikingRoute '.$osmfeaturesId);
 
             return;
         }
@@ -209,7 +206,7 @@ class HikingRoute extends EcTrack
         if (isset($osmfeaturesData['properties']['osm2cai_status'])) {
             $incomingStatus = $osmfeaturesData['properties']['osm2cai_status'];
             if ($incomingStatus == 0) {
-                Log::channel('wm-osmfeatures')->info('HikingRoute ' . $osmfeaturesId . ' has incoming osm2cai_status 0. Deleting model.');
+                Log::channel('wm-osmfeatures')->info('HikingRoute '.$osmfeaturesId.' has incoming osm2cai_status 0. Deleting model.');
                 $model->delete(); // This will trigger the 'deleting' event
 
                 return; // Stop further processing for this model
@@ -224,7 +221,7 @@ class HikingRoute extends EcTrack
             if (isset($osmfeaturesData['properties']['osm2cai_status']) && $osmfeaturesData['properties']['osm2cai_status'] !== null) {
                 if ($model->osm2cai_status !== $osmfeaturesData['properties']['osm2cai_status']) {
                     $updateData['osm2cai_status'] = $osmfeaturesData['properties']['osm2cai_status'];
-                    Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute ' . $osmfeaturesId);
+                    Log::channel('wm-osmfeatures')->info('osm2cai_status updated for HikingRoute '.$osmfeaturesId);
                 }
             }
         }
@@ -249,11 +246,11 @@ class HikingRoute extends EcTrack
         }
         $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
         $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
-        $osmLink = 'https://www.openstreetmap.org/relation/' . $osmId;
-        $wmt = 'https://hiking.waymarkedtrails.org/#route?id=' . $osmId;
-        $analyzer = 'https://ra.osmsurround.org/analyzeRelation?relationId=' . $osmId . '&noCache=true&_noCache=on';
+        $osmLink = 'https://www.openstreetmap.org/relation/'.$osmId;
+        $wmt = 'https://hiking.waymarkedtrails.org/#route?id='.$osmId;
+        $analyzer = 'https://ra.osmsurround.org/analyzeRelation?relationId='.$osmId.'&noCache=true&_noCache=on';
         $endpoint = 'https://geohub.webmapp.it/api/osf/track/osm2cai/';
-        $api = $endpoint . $this->id;
+        $api = $endpoint.$this->id;
 
         $headers = get_headers($api);
         $statusLine = $headers[0];
@@ -263,8 +260,8 @@ class HikingRoute extends EcTrack
             $data = json_decode(file_get_contents($api), true);
             if (! empty($data)) {
                 if ($data['properties']['id'] !== null) {
-                    $infomontLink .= '?track=' . $data['properties']['id'];
-                    $osm2caiLink .= '?track=' . $data['properties']['id'];
+                    $infomontLink .= '?track='.$data['properties']['id'];
+                    $osm2caiLink .= '?track='.$data['properties']['id'];
                 }
             }
         }
@@ -529,7 +526,7 @@ SQL;
             if (count($res) > 0) {
                 $info['city_from'] = $res[0]->comune;
                 $info['city_from_istat'] = $res[0]->istat;
-                $info['region_from'] = config('osm2cai.region_istat_name.' . $res[0]->cod_reg);
+                $info['region_from'] = config('osm2cai.region_istat_name.'.$res[0]->cod_reg);
                 $info['region_from_istat'] = $res[0]->cod_reg;
 
                 if (empty($info['from'])) {
@@ -537,7 +534,7 @@ SQL;
                 }
             }
         } catch (\Throwable $th) {
-            Log::error("HikingRoute::getFromInfo: ERROR on query: $query (ID:$this->id), " . $th->getMessage());
+            Log::error("HikingRoute::getFromInfo: ERROR on query: $query (ID:$this->id), ".$th->getMessage());
         }
 
         return $info;
@@ -586,7 +583,7 @@ SQL;
             if (count($res) > 0) {
                 $info['city_to'] = $res[0]->comune;
                 $info['city_to_istat'] = $res[0]->istat;
-                $info['region_to'] = config('osm2cai.region_istat_name.' . $res[0]->cod_reg);
+                $info['region_to'] = config('osm2cai.region_istat_name.'.$res[0]->cod_reg);
                 $info['region_to_istat'] = $res[0]->cod_reg;
 
                 if (empty($info['to'])) {
@@ -594,7 +591,7 @@ SQL;
                 }
             }
         } catch (\Throwable $th) {
-            Log::error("HikingRoute::getToInfo: ERROR on query: $query (ID:$this->id), " . $th->getMessage());
+            Log::error("HikingRoute::getToInfo: ERROR on query: $query (ID:$this->id), ".$th->getMessage());
         }
 
         return $info;
@@ -614,7 +611,7 @@ SQL;
     public function getTechInfoFromDem(): array
     {
         $info = [
-            'gpx_url' => url('/api/v2/hiking-routes/' . $this->id . '.gpx'),
+            'gpx_url' => url('/api/v2/hiking-routes/'.$this->id.'.gpx'),
             'distance' => 'Unknown',
             'ascent' => 'Unknown',
             'descent' => 'Unknown',
@@ -641,11 +638,11 @@ SQL;
             $info['duration_backward'] = $info['duration_backward_hiking'];
             unset($info['duration_forward_hiking'], $info['duration_backward_hiking']);
             unset($info['duration_forward_bike'], $info['duration_backward_bike']);
-            $info['gpx_url'] = url('/api/v2/hiking-routes/' . $this->id . '.gpx');
+            $info['gpx_url'] = url('/api/v2/hiking-routes/'.$this->id.'.gpx');
         } else {
             $errorCode = $response->status();
             $errorBody = $response->body();
-            Log::error($this->id . "UpdateEcTrack3DDemJob: FAILED: Error {$errorCode}: {$errorBody}");
+            Log::error($this->id."UpdateEcTrack3DDemJob: FAILED: Error {$errorCode}: {$errorBody}");
         }
 
         return $info;
@@ -774,22 +771,22 @@ SQL;
             ];
         } elseif (! empty($this->osmfeatures_data['properties']['ref'])) {
             $v = [
-                'it' => 'Sentiero ' . $this->osmfeatures_data['properties']['ref'],
-                'en' => 'Path ' . $this->osmfeatures_data['properties']['ref'],
-                'es' => 'Camino ' . $this->osmfeatures_data['properties']['ref'],
-                'de' => 'Weg ' . $this->osmfeatures_data['properties']['ref'],
-                'fr' => 'Chemin ' . $this->osmfeatures_data['properties']['ref'],
-                'pt' => 'Caminho ' . $this->ref,
+                'it' => 'Sentiero '.$this->osmfeatures_data['properties']['ref'],
+                'en' => 'Path '.$this->osmfeatures_data['properties']['ref'],
+                'es' => 'Camino '.$this->osmfeatures_data['properties']['ref'],
+                'de' => 'Weg '.$this->osmfeatures_data['properties']['ref'],
+                'fr' => 'Chemin '.$this->osmfeatures_data['properties']['ref'],
+                'pt' => 'Caminho '.$this->ref,
             ];
         } else {
             $info = $this->getFromInfo();
             $v = [
-                'it' => 'Sentiero del Comune di ' . $info['city_from'],
-                'en' => 'Path in the municipality of ' . $info['city_from'],
-                'es' => 'Camino en el municipio de ' . $info['city_from'],
-                'de' => 'Weg in der Gemeinde ' . $info['city_from'],
-                'fr' => 'Chemin dans la municipalité de ' . $info['city_from'],
-                'pt' => 'Caminho no município de ' . $info['city_from'],
+                'it' => 'Sentiero del Comune di '.$info['city_from'],
+                'en' => 'Path in the municipality of '.$info['city_from'],
+                'es' => 'Camino en el municipio de '.$info['city_from'],
+                'de' => 'Weg in der Gemeinde '.$info['city_from'],
+                'fr' => 'Chemin dans la municipalité de '.$info['city_from'],
+                'pt' => 'Caminho no município de '.$info['city_from'],
             ];
         }
 
@@ -845,21 +842,20 @@ SQL;
         $refSuffix = substr($ref, 1);
 
         if ($refLength === 3) {
-            return $mainSector->full_code . $refSuffix . '0';
+            return $mainSector->full_code.$refSuffix.'0';
         }
 
         if ($refLength === 4) {
-            return $mainSector->full_code . $refSuffix;
+            return $mainSector->full_code.$refSuffix;
         }
 
-        return $mainSector->full_code . '????';
+        return $mainSector->full_code.'????';
     }
 
     /**
      * Extract and populate properties from osmfeatures_data for Elasticsearch indexing.
      *
-     * @param array|string|null $osmfeaturesData
-     * @return array
+     * @param  array|string|null  $osmfeaturesData
      */
     public static function extractPropertiesFromOsmfeatures($osmfeaturesData, $id): array
     {
@@ -869,8 +865,8 @@ SQL;
 
         if (
             empty($osmfeaturesData)
-            || !isset($osmfeaturesData['properties'])
-            || !is_array($osmfeaturesData['properties'])
+            || ! isset($osmfeaturesData['properties'])
+            || ! is_array($osmfeaturesData['properties'])
         ) {
             return [];
         }
@@ -884,7 +880,7 @@ SQL;
                 'roundtrip' => $props['roundtrip'] ?? null,
                 'network'   => $props['network'] ?? null,
                 'osm_id'    => $props['osm_id'] ?? null,
-                'layers' => HikingRoute::find($id)->layers->pluck('id')->toArray()
+                'layers' => self::find($id)->layers->pluck('id')->toArray(),
             ]
         );
 
@@ -894,20 +890,21 @@ SQL;
     private static function extractBaseProperties(array $props): array
     {
         return [
-            'ref'       => $props['ref']       ?? '',
+            'ref'       => $props['ref'] ?? '',
             'cai_scale' => $props['cai_scale'] ?? '',
-            'name'      => $props['name']      ?? null,
-            'from'      => $props['from']      ?? '',
-            'to'        => $props['to']        ?? '',
+            'name'      => $props['name'] ?? null,
+            'from'      => $props['from'] ?? '',
+            'to'        => $props['to'] ?? '',
             'description' => $props['description_it'] ?? $props['description'] ?? '',
-            'excerpt'     => $props['excerpt'] ??  '',
+            'excerpt'     => $props['excerpt'] ?? '',
         ];
     }
 
     private static function extractDemProperties(array $props): array
     {
-        if (!empty($props['dem_enrichment']) && is_array($props['dem_enrichment'])) {
+        if (! empty($props['dem_enrichment']) && is_array($props['dem_enrichment'])) {
             $dem = $props['dem_enrichment'];
+
             return [
                 'distance'          => $dem['distance'] ?? null,
                 'ascent'            => $dem['ascent'] ?? null,
@@ -920,6 +917,7 @@ SQL;
                 'duration_backward' => $dem['duration_backward_hiking'] ?? null,
             ];
         }
+
         return [
             'distance'          => $props['distance'] ?? null,
             'ascent'            => $props['ascent'] ?? null,
@@ -927,5 +925,16 @@ SQL;
             'duration_forward'  => $props['duration_forward'] ?? null,
             'duration_backward' => $props['duration_backward'] ?? null,
         ];
+    }
+
+    public function getPolesWithBuffer(float $bufferDistance = 5)
+    {
+        return Poles::select('poles.*')
+            ->whereRaw(
+                'ST_DWithin(poles.geometry, ?::geometry, ?)',
+                [$this->geometry, $bufferDistance]
+            )
+            ->limit(10)
+            ->get();
     }
 }
