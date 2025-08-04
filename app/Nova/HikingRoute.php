@@ -37,6 +37,7 @@ use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
@@ -467,6 +468,7 @@ class HikingRoute extends OsmfeaturesResource
                     </ul>
                     HTML;
             })->asHtml()->onlyOnDetail(),
+<<<<<<< HEAD
             Text::make(__('Feature Collection Widget Map'), function () {
                 // Genera l'URL per il GeoJSON dinamico basato sull'ID del record
                 $geojsonUrl = url("/widget/feature-collection-map-url/{$this->id}");
@@ -482,10 +484,39 @@ class HikingRoute extends OsmfeaturesResource
                         </div>
                     HTML;
             })->asHtml()->onlyOnDetail(),
+=======
+            Text::make(__('Poles'), function () {
+                $bufferMeters = 100;
+                $poles = $this->getPolesWithBuffer($bufferMeters);
+>>>>>>> a7eea08 (feat(HikingRoute): ✨ add function to retrieve nearby poles with buffer OC:6024)
 
+                if ($poles->isEmpty()) {
+                    return "No poles found within {$bufferMeters} meters.";
+                }
+
+                $polesList = $this->getPolesList($poles);
+
+                return <<<HTML
+                <ul>
+                    {$polesList}
+                </ul>
+                HTML;
+            })->asHtml()->onlyOnDetail(),
         ];
 
         return $fields;
+    }
+
+    private function getPolesList(Collection|array $poles)
+    {
+        $list = [];
+        foreach ($poles as $pole) {
+            $url = "/resources/poles/{$pole->id}";
+            $name = $pole->ref;
+            $list[] = "<li><a href='{$url}' target='_blank' class='text-primary'>{$name}</a></li>";
+        }
+
+        return implode('', $list);
     }
 
     private function createField($label, $infomont, $osmPath, $modelAttribute = null, $isLink = false, $withCalculated = false)
