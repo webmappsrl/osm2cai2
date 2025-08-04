@@ -965,4 +965,15 @@ SQL;
             )
             ->get();
     }
+
+    public function getPolesWithBuffer(float $bufferDistance = 5)
+    {
+        return Poles::select('poles.*')
+            ->whereRaw(
+                'ST_DWithin(poles.geometry, ?::geometry, ?)',
+                [$this->geometry, $bufferDistance]
+            )
+            ->limit(10)
+            ->get();
+    }
 }
