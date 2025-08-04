@@ -952,14 +952,17 @@ SQL;
         ];
     }
 
-    public function getPolesWithBuffer(float $bufferDistance = 5)
+    public function getPolesWithBuffer(float $bufferDistance = 10)
     {
+        $geojson = DB::table('hiking_routes')
+            ->where('id', $this->id)
+            ->value(DB::raw('ST_AsGeoJSON(geometry)'));
+
         return Poles::select('poles.*')
             ->whereRaw(
-                'ST_DWithin(poles.geometry, ?::geometry, ?)',
-                [$this->geometry, $bufferDistance]
+                'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                [$geojson, $bufferDistance]
             )
-            ->limit(10)
             ->get();
     }
 }
