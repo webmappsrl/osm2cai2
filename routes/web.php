@@ -65,3 +65,16 @@ Route::get('loscarpone/export/', [HikingRouteLoScarponeExportController::class, 
 Route::get('hiking-route-map/{id}', function ($id) {
     return view('maps.hikingroute', ['hikingroute' => HikingRoute::findOrFail($id)]);
 })->name('hiking-route-public-map');
+
+// Widget Feature Collection Map
+Route::get('widget/feature-collection-map', function () {
+    $geojsonUrl = request()->get('geojson', 'https://sis-te.com/api/v1/catalog/geohub/1.geojson');
+    return view('widgets.feature-collection-map', ['geojsonUrl' => $geojsonUrl]);
+})->name('widget.feature-collection-map');
+
+// GeoJSON endpoint for hiking route feature collection
+Route::get('widget/feature-collection-map-url/{id}', function ($id) {
+    $hikingRoute = HikingRoute::findOrFail($id);
+    $geojson = $hikingRoute->getFeatureCollectionMap();
+    return response()->json($geojson);
+})->name('widget.feature-collection-map-url');
