@@ -468,7 +468,6 @@ class HikingRoute extends OsmfeaturesResource
                     </ul>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-<<<<<<< HEAD
             Text::make(__('Feature Collection Widget Map'), function () {
                 // Genera l'URL per il GeoJSON dinamico basato sull'ID del record
                 $geojsonUrl = url("/widget/feature-collection-map-url/{$this->id}");
@@ -484,16 +483,6 @@ class HikingRoute extends OsmfeaturesResource
                         </div>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-=======
-            Text::make(__('Poles'), function () {
-<<<<<<< HEAD
-                $bufferMeters = 100;
-                $poles = $this->getPolesWithBuffer($bufferMeters);
->>>>>>> a7eea08 (feat(HikingRoute): ✨ add function to retrieve nearby poles with buffer OC:6024)
-=======
-                $bufferDistance = 10;
-                $poles = $this->getPolesWithBuffer($bufferDistance);
->>>>>>> 9e936fe (refactor(models): ♻️ update buffer logic and add spatial indexes OC:6024)
             Text::make(__('Poles'), function () {
                 $bufferDistance = 10;
                 $poles = $this->getPolesWithBuffer($bufferDistance);
