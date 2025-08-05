@@ -366,7 +366,7 @@ class HikingRoute extends EcTrack
                 ]
             ]
         ];
-        $rawGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
+        $rawGeometryFeature = [$this->getFeatureMap($this->geometry_raw_data)];
         
         
         $geojson['features'] = array_merge($geojson['features'], $poleFeatures, $rawGeometryFeature);
