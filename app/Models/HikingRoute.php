@@ -349,6 +349,31 @@ class HikingRoute extends EcTrack
         return $this->belongsToMany(MountainGroups::class, 'mountain_group_hiking_route', 'hiking_route_id', 'mountain_group_id');
     }
 
+    public function getFeatureCollectionMap(): array
+    {
+        $geojson = parent::getFeatureCollectionMap();
+
+        $poleFeatures = [
+            [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [10.5, 44.5]
+                ],
+                'properties' => [
+                    'name' => 'Polo Test',
+                    'type' => 'rifugio'
+                ]
+            ]
+        ];
+        $rawGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
+        
+        
+        $geojson['features'] = array_merge($geojson['features'], $poleFeatures, $rawGeometryFeature);
+
+        return $geojson;
+    }
+
     public function cleanRelations()
     {
         $this->regions()->detach();
