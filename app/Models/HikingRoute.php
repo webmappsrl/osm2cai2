@@ -350,23 +350,14 @@ class HikingRoute extends EcTrack
     {
         $geojson = parent::getFeatureCollectionMap();
 
-        $poleFeatures = [
-            [
-                'type' => 'Feature',
-                'geometry' => [
-                    'type' => 'Point',
-                    'coordinates' => [10.5, 44.5]
-                ],
-                'properties' => [
-                    'name' => 'Polo Test',
-                    'type' => 'rifugio'
-                ]
-            ]
-        ];
-        $rawGeometryFeature = [$this->getFeatureMap($this->geometry_raw_data)];
-        
-        
-        $geojson['features'] = array_merge($geojson['features'], $poleFeatures, $rawGeometryFeature);
+        $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) {
+            $poleFeature = $this->getFeatureMap($pole->geometry);
+
+            return $poleFeature;
+        })->toArray();
+        $checkedGeometryFeature = [$this->getFeatureMap($this->geometry_raw_data)];
+
+        $geojson['features'] = array_merge($geojson['features'], $poleFeatures, $checkedGeometryFeature);
 
         return $geojson;
     }
@@ -963,6 +954,8 @@ SQL;
                 'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
                 [$geojson, $bufferDistance]
             )
+            // ->selectRaw('ST_LineLocatePoint(ST_GeomFromGeoJSON(?), poles.geometry) as position', [$geojson])
+            // ->orderBy('position_along_line', 'asc')
             ->get();
     }
 }
