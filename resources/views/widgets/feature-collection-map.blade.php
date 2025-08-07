@@ -29,6 +29,8 @@
             geojsonurl="{{ $geojsonUrl }}"
             strokeColor="rgba(0, 0, 255, 1)"
             strokeWidth="3"
+            pointStrokeColor="rgba(0, 0, 255, 1)"
+            pointStrokeWidth="3"
             fillColor="rgba(0, 0, 255, 0.3)"
             showControlZoom="true"
             mouseWheelZoom="true"
@@ -38,8 +40,8 @@
     </div>
 
     <!-- Script Angular -->
-    <script src="https://cdn.statically.io/gh/webmappsrl/feature-collection-widget-map/master/dist/runtime.js"></script>
-    <script src="https://cdn.statically.io/gh/webmappsrl/feature-collection-widget-map/master/dist/polyfills.js"></script>
-    <script src="https://cdn.statically.io/gh/webmappsrl/feature-collection-widget-map/master/dist/main.js"></script>
+    <script src="https://cdn.statically.io/gh/webmappsrl/feature-collection-widget-map/refs/heads/master/dist_07_08_2025/runtime.js"></script>
+    <script src="https://cdn.statically.io/gh/webmappsrl/feature-collection-widget-map/refs/heads/master/dist_07_08_2025/polyfills.js"></script>
+    <script src="https://cdn.statically.io/gh/webmappsrl/feature-collection-widget-map/refs/heads/master/dist_07_08_2025/main.js"></script>
 </body>
 </html> 

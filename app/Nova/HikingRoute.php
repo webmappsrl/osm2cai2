@@ -37,6 +37,7 @@ use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
@@ -132,11 +133,11 @@ class HikingRoute extends OsmfeaturesResource
         $order = [
             'Osmfeatures ID' => __('Osmfeatures ID'),
             'percorribilita' => __('Accessibility'),
-            'legenda' => __('Legend'),
-            'geometry' => __('Geometry'),
             'correttezza_geometria' => __('Geometry Correctness'),
             'coerenza_ref_rei' => __('REI Ref Consistency'),
             'geometry_sync' => __('Geometry Sync'),
+            'legenda' => __('Legend'),
+            'geometry' => __('Geometry'),
         ];
 
         $specificFields = array_merge($this->getIndexFields(), $this->getDetailFields());
@@ -467,7 +468,7 @@ class HikingRoute extends OsmfeaturesResource
                     </ul>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-            Text::make(__('Feature Collection Widget Map'), function () {
+            Text::make(__('geometry'), function () {
                 // Genera l'URL per il GeoJSON dinamico basato sull'ID del record
                 $geojsonUrl = url("/widget/feature-collection-map-url/{$this->id}");
                 
@@ -482,10 +483,21 @@ class HikingRoute extends OsmfeaturesResource
                         </div>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-
         ];
 
         return $fields;
+    }
+
+    private function getPolesList(Collection|array $poles)
+    {
+        $list = [];
+        foreach ($poles as $pole) {
+            $url = "/resources/poles/{$pole->id}";
+            $name = $pole->ref;
+            $list[] = "<li><a href='{$url}' target='_blank' class='text-primary'>{$name}</a></li>";
+        }
+
+        return implode('', $list);
     }
 
     private function createField($label, $infomont, $osmPath, $modelAttribute = null, $isLink = false, $withCalculated = false)
