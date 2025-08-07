@@ -134,7 +134,6 @@ class HikingRoute extends OsmfeaturesResource
             'Osmfeatures ID' => __('Osmfeatures ID'),
             'percorribilita' => __('Accessibility'),
             'legenda' => __('Legend'),
-            'geometry' => __('Geometry'),
             'correttezza_geometria' => __('Geometry Correctness'),
             'coerenza_ref_rei' => __('REI Ref Consistency'),
             'geometry_sync' => __('Geometry Sync'),
@@ -468,7 +467,7 @@ class HikingRoute extends OsmfeaturesResource
                     </ul>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-            Text::make(__('Feature Collection Widget Map'), function () {
+            Text::make(__('geometry'), function () {
                 // Genera l'URL per il GeoJSON dinamico basato sull'ID del record
                 $geojsonUrl = url("/widget/feature-collection-map-url/{$this->id}");
                 
@@ -483,21 +482,7 @@ class HikingRoute extends OsmfeaturesResource
                         </div>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-            Text::make(__('Poles'), function () {
-                $poles = $this->getPolesWithBuffer();
 
-                if ($poles->isEmpty()) {
-                    return "No poles found within 10 meters.";
-                }
-
-                $polesList = $this->getPolesList($poles);
-
-                return <<<HTML
-                <ul>
-                    {$polesList}
-                </ul>
-                HTML;
-            })->asHtml()->onlyOnDetail(),
         ];
 
         return $fields;
