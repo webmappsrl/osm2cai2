@@ -362,20 +362,20 @@ class HikingRoute extends EcTrack
                 'link' => url('/resources/poles/'.$pole->id),
                 'pointStrokeColor' => 'rgb(255, 255, 255)',
                 'pointStrokeWidth' => 2,
-                'pointFillColor' => 'rgba(0, 255, 0, 0.3)',
+                'pointFillColor' => 'rgba(255, 0, 0, 0.8)',
                 'pointRadius' => 4,
             ];
             $poleFeature['properties'] = $properties;
             return $poleFeature;
         })->toArray();
-        $checkedGeometryFeature = [$this->getFeatureMap($this->geometry_raw_data)];
+        $checkedGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
         $properties = [
             'strokeColor' => 'blue',
             'strokeWidth' => 6,
         ];
-        $checkedGeometryFeature[0]['properties'] = $properties;
+        $checkedGeometryFeature['properties'] = $properties;
 
-        $geojson['features'] = array_merge($poleFeatures, $checkedGeometryFeature,$geojson['features']);
+        $geojson['features'] = array_merge($poleFeatures, [$checkedGeometryFeature], $geojson['features']);
 
         return $geojson;
     }
@@ -961,19 +961,58 @@ SQL;
         ];
     }
 
+    /**
+     * Get poles within a buffer distance from the hiking route geometry.
+     *
+     * This method retrieves all poles that are within a specified buffer distance
+     * from the hiking route. It considers both the main geometry and the raw geometry
+     * data if available, performing a spatial union of both geometries to ensure
+     * comprehensive coverage.
+     *
+     * The method uses PostGIS spatial functions to:
+     * 1. Extract the main route geometry
+     * 2. Optionally merge with geometry_raw_data if it exists
+     * 3. Find all poles within the specified buffer distance
+     *
+     * @param float $bufferDistance The buffer distance in meters (default: 10m)
+     * @return \Illuminate\Database\Eloquent\Collection Collection of Poles within the buffer
+     * 
+     * @example
+     * // Get poles within 10 meters of the route
+     * $poles = $hikingRoute->getPolesWithBuffer();
+     * 
+     * // Get poles within 50 meters of the route
+     * $poles = $hikingRoute->getPolesWithBuffer(50);
+     * 
+     * @throws \Illuminate\Database\QueryException If there's an error in the spatial query
+     * 
+     * @see \App\Models\Poles
+     * @see https://postgis.net/docs/ST_DWithin.html
+     * @see https://postgis.net/docs/ST_Union.html
+     */
     public function getPolesWithBuffer(float $bufferDistance = 10)
     {
+        // Ottieni la geometria principale
         $geojson = DB::table('hiking_routes')
             ->where('id', $this->id)
             ->value(DB::raw('ST_AsGeoJSON(geometry)'));
+
+        // Se esiste geometry_raw_data, fai un merge delle geometrie
+        if (!empty($this->geometry_raw_data)) {
+            $mergedGeojson = DB::table('hiking_routes')
+                ->where('id', $this->id)
+                ->value(DB::raw('ST_AsGeoJSON(ST_Union(geometry::geometry, geometry_raw_data))'));
+            
+            if ($mergedGeojson) {
+                $geojson = $mergedGeojson;
+            }
+        }
 
         return Poles::select('poles.*')
             ->whereRaw(
                 'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
                 [$geojson, $bufferDistance]
             )
-            // ->selectRaw('ST_LineLocatePoint(ST_GeomFromGeoJSON(?), poles.geometry) as position', [$geojson])
-            // ->orderBy('position_along_line', 'asc')
             ->get();
     }
 }

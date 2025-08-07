@@ -484,11 +484,10 @@ class HikingRoute extends OsmfeaturesResource
                     HTML;
             })->asHtml()->onlyOnDetail(),
             Text::make(__('Poles'), function () {
-                $bufferDistance = 10;
-                $poles = $this->getPolesWithBuffer($bufferDistance);
+                $poles = $this->getPolesWithBuffer();
 
                 if ($poles->isEmpty()) {
-                    return "No poles found within {$bufferDistance} meters.";
+                    return "No poles found within 10 meters.";
                 }
 
                 $polesList = $this->getPolesList($poles);
