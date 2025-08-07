@@ -349,15 +349,33 @@ class HikingRoute extends EcTrack
     public function getFeatureCollectionMap(): array
     {
         $geojson = parent::getFeatureCollectionMap();
+        $properties = [     
+            'strokeColor' => 'red',
+            'strokeWidth' => 2,
+        ];
+        $geojson['features'][0]['properties'] = $properties;
 
         $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) {
             $poleFeature = $this->getFeatureMap($pole->geometry);
-
+            $properties = [
+                'tooltip' => $pole->ref,
+                'link' => url('/resources/poles/'.$pole->id),
+                'pointStrokeColor' => 'rgb(255, 255, 255)',
+                'pointStrokeWidth' => 2,
+                'pointFillColor' => 'rgba(0, 255, 0, 0.3)',
+                'pointRadius' => 4,
+            ];
+            $poleFeature['properties'] = $properties;
             return $poleFeature;
         })->toArray();
         $checkedGeometryFeature = [$this->getFeatureMap($this->geometry_raw_data)];
+        $properties = [
+            'strokeColor' => 'blue',
+            'strokeWidth' => 6,
+        ];
+        $checkedGeometryFeature[0]['properties'] = $properties;
 
-        $geojson['features'] = array_merge($geojson['features'], $poleFeatures, $checkedGeometryFeature);
+        $geojson['features'] = array_merge($poleFeatures, $checkedGeometryFeature,$geojson['features']);
 
         return $geojson;
     }

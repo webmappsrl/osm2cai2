@@ -29,6 +29,8 @@
             geojsonurl="{{ $geojsonUrl }}"
             strokeColor="rgba(0, 0, 255, 1)"
             strokeWidth="3"
+            pointStrokeColor="rgba(0, 0, 255, 1)"
+            pointStrokeWidth="3"
             fillColor="rgba(0, 0, 255, 0.3)"
             showControlZoom="true"
             mouseWheelZoom="true"
