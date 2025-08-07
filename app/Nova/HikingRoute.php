@@ -133,10 +133,11 @@ class HikingRoute extends OsmfeaturesResource
         $order = [
             'Osmfeatures ID' => __('Osmfeatures ID'),
             'percorribilita' => __('Accessibility'),
-            'legenda' => __('Legend'),
             'correttezza_geometria' => __('Geometry Correctness'),
             'coerenza_ref_rei' => __('REI Ref Consistency'),
             'geometry_sync' => __('Geometry Sync'),
+            'legenda' => __('Legend'),
+            'geometry' => __('Geometry'),
         ];
 
         $specificFields = array_merge($this->getIndexFields(), $this->getDetailFields());
@@ -482,7 +483,6 @@ class HikingRoute extends OsmfeaturesResource
                         </div>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-
         ];
 
         return $fields;
