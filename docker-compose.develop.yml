@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Docker Compose per ambiente di sviluppo
 # Estende docker-compose.yml aggiungendo servizi di sviluppo come MinIO
 
@@ -7,37 +5,42 @@ services:
   # MinIO - AWS S3 Compatible Object Storage per sviluppo locale
   minio:
     image: minio/minio:latest
-    container_name: "minio_${APP_NAME}"
+    container_name: "minio-${APP_NAME}"
     restart: always
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: 'minio server /data/minio --console-address ":8900"'
+    platform: linux/amd64
     ports:
-      - "9003:9000"  # API MinIO
-      - "9004:9001"  # Console Web MinIO
+      - "${FORWARD_MINIO_PORT:-9000}:9000"
+      - "${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900"
     volumes:
       - "./docker/volumes/minio/data:/data"
-    command: server /data --console-address ":9001"
+    healthcheck:
+      test:
+        - CMD
+        - mc
+        - ready
+        - local
+      retries: 3
+      timeout: 5s
     networks:
       - laravel
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
   # needed for mails testing
   mailpit:
-    container_name: "mailpit_${APP_NAME}"
+    container_name: "mailpit-${APP_NAME}"
     image: "axllent/mailpit:latest"
     ports:
       - "${FORWARD_MAILPIT_PORT:-1025}:1025"
       - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
+    networks:
+      - laravel
 
   # Elasticsearch - Search and analytics engine
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
-    container_name: "elasticsearch_${APP_NAME}"
+    container_name: "elasticsearch-${APP_NAME}"
     restart: always
     environment:
       - node.name=elasticsearch
@@ -57,6 +60,3 @@ services:
       - "./docker/volumes/elasticsearch/data:/usr/share/elasticsearch/data"
     networks:
       - laravel
-
-networks:
-  laravel: 
