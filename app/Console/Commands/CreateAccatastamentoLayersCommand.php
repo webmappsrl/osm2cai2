@@ -112,8 +112,13 @@ class CreateAccatastamentoLayersCommand extends Command
             return App::find($appId);
         }
 
-        // Cerca l'app sentierista
-        $app = App::where('name', 'LIKE', '%sentierista%')->first();
+        // Cerca l'app per SKU it.webmapp.osm2cai
+        $app = App::where('sku', 'it.webmapp.osm2cai')->first();
+
+        if (! $app) {
+            // Fallback: cerca l'app sentierista per nome
+            $app = App::where('name', 'LIKE', '%sentierista%')->first();
+        }
 
         if (! $app) {
             // Fallback: cerca un'app generica

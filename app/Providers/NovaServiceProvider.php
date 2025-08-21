@@ -18,6 +18,7 @@ use App\Nova\Dashboards\SALMiturAbruzzo;
 use App\Nova\Dashboards\SectorsDashboard;
 use App\Nova\Dashboards\Utenti;
 use App\Nova\EcPoi;
+use App\Nova\EcTrack;
 use App\Nova\GeologicalSite;
 use App\Nova\HikingRoute;
 use App\Nova\Itinerary;
@@ -31,6 +32,7 @@ use App\Nova\Region;
 use App\Nova\Sector;
 use App\Nova\Sign;
 use App\Nova\SourceSurvey;
+use App\Nova\TaxonomyActivity;
 use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
@@ -68,6 +70,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(App::class),
                     MenuItem::resource(NovaUser::class),
                     MenuItem::resource(Layer::class),
+                    MenuItem::resource(EcTrack::class),
+                    MenuItem::resource(TaxonomyActivity::class),
                 ])->icon('globe')->collapsable(),
                 MenuGroup::make('', [
                     MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')

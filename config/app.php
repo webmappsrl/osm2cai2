@@ -215,6 +215,7 @@ return [
         /*
          * Package Service Providers...
          */
+        Wm\WmPackage\WmPackageServiceProvider::class,
 
         /*
          * Application Service Providers...

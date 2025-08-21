@@ -107,6 +107,9 @@ class HikingRoute extends OsmfeaturesResource
             'sectors', // Eager load sectors
         ]);
 
+        // Filtra solo le hiking routes con app_id = 1
+        $query->where('app_id', 1);
+
         if (auth()->user()->getTerritorialRole() == 'regional') {
             return $query->whereHas('regions', function (Builder $q) {
                 $q->where('regions.id', auth()->user()->region->id);
@@ -648,7 +651,17 @@ class HikingRoute extends OsmfeaturesResource
             return [];
         }
 
-        $pois = $this->model()->getElementsInBuffer(new EcPoi, 10000);
+        try {
+            \Log::info("HikingRoute getPOITabFields() called for ID: " . ($this->model()->id ?? 'N/A'));
+            $pois = $this->model()->getElementsInBuffer(new EcPoi, 10000);
+            \Log::info("HikingRoute getPOITabFields() found " . count($pois) . " POIs");
+        } catch (\Exception $e) {
+            \Log::error("HikingRoute getPOITabFields() error: " . $e->getMessage(), [
+                'hiking_route_id' => $this->model()->id ?? 'N/A',
+                'exception' => $e
+            ]);
+            $pois = collect([]); // Return empty collection on error
+        }
         $fields[] = Text::make('', function () use ($pois) {
             if (count($pois) < 1) {
                 return '<h2 style="color:#666; font-size:1.5em; margin:20px 0;">'.__('No POIs found within 1km radius').'</h2>';

@@ -23,6 +23,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Wm\WmPackage\Nova\Actions\EditFields;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
+use Wm\WmPackage\Nova\Metrics\TopUgcCreators;
 
 trait UgcCommonFieldsTrait
 {
@@ -233,6 +234,7 @@ trait UgcCommonFieldsTrait
     protected function getCommonCards($model): array
     {
         return [
+            new TopUgcCreators($model)->width('full')->height('dynamic'),
             new UgcAppNameDistribution($model),
             new UgcAttributeDistribution('App Version', "properties->'device'->>'appVersion'", $model),
             new UgcAttributeDistribution('App Form', "properties->'form'->>'id'", $model),
