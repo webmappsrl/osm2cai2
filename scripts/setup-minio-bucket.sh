@@ -4,7 +4,7 @@ echo "🪣 Configurazione Bucket MinIO per OSM2CAI2"
 echo "==========================================="
 
 BUCKET_NAME=${AWS_BUCKET:-osm2cai2-bucket}
-MINIO_HOST="http://minio_osm2cai2:9000"
+MINIO_HOST="http://minio-osm2cai2:9000"
 MINIO_USER=${MINIO_ROOT_USER:-minioadmin}
 MINIO_PASS=${MINIO_ROOT_PASSWORD:-minioadmin}
 

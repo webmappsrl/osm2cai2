@@ -42,7 +42,7 @@ handle_error() {
     print_error "📞 Per assistenza controlla:"
     print_error "• Log container: docker-compose logs"
     print_error "• Stato container: docker ps -a"
-    print_error "• Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+    print_error "• Log Laravel: docker exec php81-osm2cai2 tail -f storage/logs/laravel.log"
     exit 1
 }
 
@@ -143,11 +143,11 @@ docker-compose -f docker-compose.develop.yml down -v --remove-orphans 2>/dev/nul
 
 # Lista dei container specifici OSM2CAI2 da verificare/pulire
 OSM2CAI_CONTAINERS=(
-    "php81_osm2cai2"
-    "postgres_osm2cai2" 
-    "elasticsearch_osm2cai2"
-    "minio_osm2cai2"
-    "mailpit_osm2cai2"
+    "php81-osm2cai2"
+    "postgres-osm2cai2" 
+    "elasticsearch-osm2cai2"
+    "minio-osm2cai2"
+    "mailpit-osm2cai2"
 )
 
 # Verifica e ferma eventuali container OSM2CAI2 rimasti attivi
@@ -206,7 +206,7 @@ docker-compose -f docker-compose.yml -f docker-compose.develop.yml up -d
 cd "$SCRIPT_DIR"
 
 # Attesa che i servizi principali siano pronti
-wait_for_postgres "postgres_osm2cai2" 90
+wait_for_postgres "postgres-osm2cai2" 90
 wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
 wait_for_service "MinIO" "http://localhost:9003/minio/health/live" 90
 
@@ -228,10 +228,10 @@ print_success "=== FASE 1 COMPLETATA: Ambiente Docker pronto ==="
 
 # Avvio servizi Laravel necessari per le fasi successive
 print_step "Avvio servizi Laravel (serve + Horizon)..."
-docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
+docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
 wait_for_service "Laravel artisan serve" "http://localhost:8008" 30 || print_warning "artisan serve non ha risposto in tempo."
 
-docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
 sleep 3 # Nota: Horizon non ha un endpoint di health check, un breve sleep è mantenuto.
 print_success "Laravel serve e Horizon avviati (necessari per import)"
 
@@ -240,7 +240,7 @@ print_step "=== FASE 2: DATABASE E MIGRAZIONI ==="
 
 # Controllo migrazioni esistenti
 print_step "Controllo migrazioni esistenti..."
-MIGRATION_COUNT=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:status | grep -c 'Ran'" 2>/dev/null || echo "0")
+MIGRATION_COUNT=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:status | grep -c 'Ran'" 2>/dev/null || echo "0")
 
 if [ "$MIGRATION_COUNT" -gt 0 ]; then
     print_step "Rilevate $MIGRATION_COUNT migrazioni già applicate nel database - continuo senza rollback"
@@ -252,7 +252,7 @@ fi
 print_step "Applicazione migrazioni al database..."
 
 # Applica le migrazioni
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
+if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
     print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
     exit 1
 fi
@@ -262,7 +262,39 @@ print_success "Nuove migrazioni applicate al database"
 
 # Import App da Geohub
 print_step "Import App da Geohub (utilizzando script dedicato)..."
-for APP_ID in 26 20 58; do
+
+# FASE 2A: IMPORT APP 26 PRIMA (con customizzazioni specifiche)
+print_step "=== FASE 2A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
+print_step "🎯 App 26: Import SOLO taxonomy_activity + creazione layer + associazione hiking routes"
+
+print_step "Import App da Geohub con ID 26..."
+if ! ./scripts/01-import-app-from-geohub.sh 26; then
+    print_error "Import App da Geohub con ID 26 fallito! Interruzione setup."
+    exit 1
+fi
+print_success "Import App da Geohub con ID 26 completato con successo"
+
+# Creazione layer di accatastamento per app 26
+print_step "Creazione layer di accatastamento per app 26..."
+if ! ./scripts/02-create-layers-app26.sh; then
+    print_error "Creazione layer per app 26 fallita! Interruzione setup."
+    exit 1
+fi
+print_success "Layer di accatastamento per app 26 creati"
+
+# Associazione hiking routes ai layer per app 26
+print_step "Associazione hiking routes ai layer per app 26..."
+if ! ./scripts/03-associate-routes-app26.sh; then
+    print_error "Associazione hiking routes per app 26 fallita! Interruzione setup."
+    exit 1
+fi
+print_success "Hiking routes associati ai layer per app 26"
+
+print_success "=== FASE 2A COMPLETATA: App 26 configurata con customizzazioni ==="
+
+# FASE 2B: IMPORT ALTRE APP (20, 58)
+print_step "=== FASE 2B: IMPORT ALTRE APP ==="
+for APP_ID in 20 58; do
     print_step "Import App da Geohub con ID $APP_ID..."
     if ! ./scripts/01-import-app-from-geohub.sh $APP_ID; then
         print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
@@ -271,6 +303,8 @@ for APP_ID in 26 20 58; do
     print_success "Import App da Geohub con ID $APP_ID completato con successo"
 done
 
+print_success "=== FASE 2B COMPLETATA: Altre app importate ==="
+
 print_success "=== FASE 2 COMPLETATA: Database configurato ==="
 
 # FASE 3: CONFIGURAZIONE SERVIZI
@@ -278,7 +312,7 @@ print_step "=== FASE 3: CONFIGURAZIONE SERVIZI ==="
 
 # Setup bucket MinIO
 print_step "Setup bucket MinIO..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/setup-minio-bucket.sh"
+docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/setup-minio-bucket.sh"
 
 print_success "=== FASE 3 COMPLETATA: Servizi configurati ==="
 
@@ -287,16 +321,16 @@ print_step "=== FASE 4: CONFIGURAZIONE APPS E LAYER ==="
 
 # Verifica/Creazione App di default
 print_step "Verifica App di default..."
-APP_COUNT=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null || echo "0")
+APP_COUNT=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null || echo "0")
 
 if [ "$APP_COUNT" -eq 0 ]; then
     print_step "Nessuna app rilevata, l'import dovrebbe essere già stato eseguito nella FASE 2..."
     print_warning "Se l'app non è stata importata, controlla Horizon: http://localhost:8008/horizon"
     
     # Assegna app_id alla prima app disponibile per tutte le hiking routes esistenti
-    FIRST_APP_ID=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
+    FIRST_APP_ID=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
     print_step "Assegnazione app_id=$FIRST_APP_ID a tutte le hiking routes..."
-    docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
+    docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
         \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
         echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
     \""
@@ -305,12 +339,12 @@ else
     print_success "App esistenti rilevate ($APP_COUNT)"
     
     # Verifica se ci sono hiking routes senza app_id e assegnale
-    ROUTES_WITHOUT_APP=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
+    ROUTES_WITHOUT_APP=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
     
     if [ "$ROUTES_WITHOUT_APP" -gt 0 ]; then
-        FIRST_APP_ID=$(docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
+        FIRST_APP_ID=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
         print_step "Assegnazione app_id=$FIRST_APP_ID a $ROUTES_WITHOUT_APP hiking routes senza app..."
-        docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
+        docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
             \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
             echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
         \""
@@ -318,19 +352,12 @@ else
     fi
 fi
 
-# Creazione layer di accatastamento
-print_step "Creazione layer di accatastamento..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:create-accatastamento-layers"
-print_success "Layer di accatastamento creati"
-
-# Associazione hiking routes ai layer
-print_step "Associazione hiking routes ai layer..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:associate-hiking-routes-to-layers"
-print_success "Hiking routes associati ai layer"
+# Nota: Layer e associazione hiking routes sono già stati gestiti per app 26 nella FASE 2A
+print_step "Layer e associazione hiking routes già gestiti per app 26 nella FASE 2A"
 
 # Popolamento proprietà e tassonomie per i percorsi
 print_step "Popolamento proprietà e tassonomie per i percorsi..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
+if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
     print_error "Errore durante il popolamento delle proprietà e tassonomie dei percorsi! Interruzione setup."
     exit 1
 fi
@@ -338,7 +365,7 @@ print_success "Proprietà e tassonomie dei percorsi popolate"
 
 # Migrazione media per Hiking Routes
 print_step "Migrazione media per Hiking Routes..."
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
+if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
     print_error "Errore durante la migrazione dei media! Interruzione setup."
     exit 1
 fi
@@ -354,26 +381,26 @@ print_step "Setup Elasticsearch e indicizzazione..."
 
 # Cancellazione indici esistenti per partire puliti
 print_step "Pulizia indici Elasticsearch esistenti..."
-if docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
+if docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
     print_success "Indici Elasticsearch puliti (o nessun indice trovato)"
 else
     print_warning "Errore durante la pulizia degli indici Elasticsearch (continuo comunque)"
 fi
 
 # Abilita indicizzazione automatica Scout
-if ! docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
+if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
     print_error "Errore durante la configurazione di Scout/Elasticsearch! Interruzione setup."
     exit 1
 fi
 
 # Pulisci cache configurazione
 print_step "Pulizia cache configurazione..."
-docker exec php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
+docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
 print_success "Cache configurazione pulita"
 
 # Indicizzazione iniziale
 print_step "Avvio indicizzazione iniziale (può richiedere diversi minuti)..."
-if ! docker exec php81_osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import-ectrack'; then
+if ! docker exec php81-osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import-ectrack'; then
     print_error "Errore durante l'indicizzazione iniziale! Interruzione setup."
     exit 1
 fi
@@ -388,17 +415,17 @@ print_step "=== FASE 6: VERIFICA SERVIZI FINALI ==="
 print_step "Verifica servizi Laravel..."
 if ! curl -f -s http://localhost:8008 &> /dev/null; then
     print_step "Riavvio Laravel serve..."
-    docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
+    docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
     wait_for_service "Laravel artisan serve" "http://localhost:8008" 30
 else
     print_success "Laravel serve attivo"
 fi
 
-if docker exec php81_osm2cai2 php artisan horizon:status | grep -q "running"; then
+if docker exec php81-osm2cai2 php artisan horizon:status | grep -q "running"; then
     print_success "Horizon attivo"
 else
     print_step "Riavvio Horizon..."
-    docker exec -d php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
+    docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
     sleep 3
 fi
 
@@ -437,13 +464,13 @@ echo "   • Elasticsearch: http://localhost:9200"
 echo "   • PostgreSQL: localhost:5508"
 echo ""
 echo "🔧 Comandi Utili:"
-echo "   • Accesso container PHP: docker exec -u 0 -it php81_osm2cai2 bash"
+echo "   • Accesso container PHP: docker exec -u 0 -it php81-osm2cai2 bash"
 echo "   • Dashboard Horizon: http://localhost:8008/horizon"
-echo "   • Riavvio Horizon: docker exec php81_osm2cai2 php artisan horizon:terminate"
-echo "   • Status Horizon: docker exec php81_osm2cai2 php artisan horizon:status"
-echo "   • Log Laravel: docker exec php81_osm2cai2 tail -f storage/logs/laravel.log"
+echo "   • Riavvio Horizon: docker exec php81-osm2cai2 php artisan horizon:terminate"
+echo "   • Status Horizon: docker exec php81-osm2cai2 php artisan horizon:status"
+echo "   • Log Laravel: docker exec php81-osm2cai2 tail -f storage/logs/laravel.log"
 echo "   • Test MinIO: ./scripts/test-minio-laravel.sh"
-echo "   • Fix alias Elasticsearch: docker exec php81_osm2cai2 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"
+echo "   • Fix alias Elasticsearch: docker exec php81-osm2cai2 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"
 echo "   • Reinstalla Xdebug: ./docker/configs/phpfpm/init-xdebug.sh"
 echo ""
 echo "🛑 Per fermare tutto:"

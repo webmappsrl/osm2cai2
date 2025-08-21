@@ -15,8 +15,8 @@ handle_error() {
     echo ""
     echo "🔧 Possibili soluzioni:"
     echo "   • Verifica che il container sia attivo: docker ps"
-    echo "   • Controlla i log: docker logs php81_osm2cai2"
-    echo "   • Verifica il database: docker exec php81_osm2cai2 php artisan migrate:status"
+    echo "   • Controlla i log: docker logs php81-osm2cai2"
+echo "   • Verifica il database: docker exec php81-osm2cai2 php artisan migrate:status"
     exit 1
 }
 
@@ -24,11 +24,11 @@ handle_error() {
 trap 'handle_error $LINENO' ERR
 
 # Valori di default
-APP_ID="26"
+APP_ID=""
 FORCE_FLAG=""
 SKIP_ASSOCIATION=false
 DRY_RUN_FLAG=""
-CONTAINER_NAME="php81_osm2cai2"
+CONTAINER_NAME="php81-osm2cai2"
 
 # Funzione di help
 show_help() {
@@ -84,7 +84,8 @@ done
 
 # Controlla se il container è in esecuzione
 echo "🔍 Verificando container Docker..."
-if ! docker ps | grep -q "$CONTAINER_NAME"; then
+CONTAINER_STATUS=$(docker ps --format "table {{.Names}}" | grep "$CONTAINER_NAME" || echo "")
+if [ -z "$CONTAINER_STATUS" ]; then
     echo "❌ Container $CONTAINER_NAME non in esecuzione"
     echo "💡 Avvia l'ambiente di sviluppo: ./scripts/dev-setup.sh"
     exit 1
@@ -117,54 +118,10 @@ echo ""
 if [ $LAYER_EXIT_CODE -eq 0 ]; then
     echo "✅ Layer creati con successo!"
     
-    # Step 2: Associazione hiking routes (se non saltata)
-    if [ "$SKIP_ASSOCIATION" = false ]; then
-        echo ""
-        echo "🔗 Procedendo con l'associazione hiking routes ai layer..."
-        
-        ASSOCIATE_COMMAND="./scripts/wm-package-integration/scripts/03-associate-routes-app26.sh"
-        
-        if [ -n "$APP_ID" ]; then
-            ASSOCIATE_COMMAND="$ASSOCIATE_COMMAND --app=$APP_ID"
-        fi
-        
-        if [ -n "$DRY_RUN_FLAG" ]; then
-            ASSOCIATE_COMMAND="$ASSOCIATE_COMMAND $DRY_RUN_FLAG"
-        fi
-        
-        echo "🚀 Eseguendo: $ASSOCIATE_COMMAND"
-        echo ""
-        
-        $ASSOCIATE_COMMAND
-        
-        ASSOCIATE_EXIT_CODE=$?
-        
-        echo ""
-        if [ $ASSOCIATE_EXIT_CODE -eq 0 ]; then
-            if [ -n "$DRY_RUN_FLAG" ]; then
-                echo "✅ Setup completato! Layer creati e associazione simulata (DRY RUN)"
-                echo ""
-                echo "💡 Per applicare realmente l'associazione:"
-                echo "   ./scripts/wm-package-integration/scripts/03-associate-routes-app26.sh"
-            else
-                echo "🎉 Setup completato! Layer creati e hiking routes associate con successo!"
-                echo ""
-                echo "🔗 I layer sono ora pronti per l'uso:"
-                echo "   • Stato 1: Giallo (#F2C511)"
-                echo "   • Stato 2: Viola (#8E43AD)"  
-                echo "   • Stato 3: Blu (#2980B9)"
-                echo "   • Stato 4: Verde (#27AF60)"
-            fi
-        else
-            echo "⚠️  Layer creati ma errore durante l'associazione hiking routes"
-            echo "💡 Puoi riprovare l'associazione con: ./scripts/wm-package-integration/scripts/03-associate-routes-app26.sh"
-        fi
-    else
-        echo ""
-        echo "🔗 Prossimi passi:"
-        echo "   • Associa le hiking routes: ./scripts/wm-package-integration/scripts/03-associate-routes-app26.sh"
-        echo "   • Verifica i layer nel database o nell'interfaccia web"
-    fi
+    echo ""
+    echo "🔗 Prossimi passi:"
+    echo "   • Associa le hiking routes: ./scripts/wm-package-integration/scripts/03-associate-routes-app26.sh"
+    echo "   • Verifica i layer nel database o nell'interfaccia web"
 else
     echo "❌ Errore durante la creazione dei layer (codice: $LAYER_EXIT_CODE)"
     echo ""

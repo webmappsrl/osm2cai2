@@ -60,7 +60,7 @@ if [ -z "$APP_NAME" ]; then
     print_error "La variabile APP_NAME non è definita nel file .env."
     exit 1
 fi
-PHP_CONTAINER="php81_${APP_NAME}"
+PHP_CONTAINER="php81-${APP_NAME}"
 
 # Ritorna alla directory originale dello script, se necessario
 cd - > /dev/null
@@ -90,6 +90,14 @@ echo ""
 print_step "=== IMPORT APP DA GEOHUB ==="
 echo ""
 print_step "App ID da importare: $APP_ID"
+if [ "$APP_ID" == "26" ]; then
+    print_step "🎯 Configurazione speciale per App 26: SOLO taxonomy_activity"
+    print_step "⚠️  Skipperò: ec_poi, ec_track, layer, ec_media"
+    print_step "📋 App 26 utilizza le hiking routes esistenti e crea layer di accatastamento"
+    print_step "🔗 Dopo l'import, verranno creati layer per stati 1,2,3,4 e associate le hiking routes"
+else
+    print_step "🔄 Configurazione standard: tutte le dipendenze"
+fi
 
 # Verifica se esistono già app
 APP_COUNT=$(docker exec "${PHP_CONTAINER}" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null | tail -1 || echo "0")
@@ -114,8 +122,17 @@ if docker exec "${PHP_CONTAINER}" bash -c "cd /var/www/html/osm2cai2 && php arti
     IMPORT_CMD="wm-geohub:import --app=$APP_ID"
     print_step "Utilizzo comando: wm-geohub:import"
 elif docker exec "${PHP_CONTAINER}" bash -c "cd /var/www/html/osm2cai2 && php artisan list | grep -q 'wm:import-from-geohub'"; then
-    IMPORT_CMD="wm:import-from-geohub app $APP_ID"
-    print_step "Utilizzo comando: wm:import-from-geohub"
+    # Configurazione specifica per app 26: solo taxonomy_activity
+    if [ "$APP_ID" == "26" ]; then
+        IMPORT_CMD="wm:import-from-geohub app $APP_ID --dependencies=taxonomy_activity"
+        print_step "Utilizzo comando: wm:import-from-geohub"
+        print_step "🎯 App 26 detected: Import configurato per importare SOLO taxonomy_activity"
+        print_step "⚠️  Skipperò: ec_poi, ec_track, layer, ec_media"
+    else
+        IMPORT_CMD="wm:import-from-geohub app $APP_ID --dependencies=taxonomy_activity,ec_track,layer,ec_media"
+        print_step "Utilizzo comando: wm:import-from-geohub"
+        print_step "🔄 App $APP_ID: Import standard (tutte le dipendenze)"
+    fi
 else
     print_error "NESSUN COMANDO DI IMPORT DISPONIBILE!"
     print_error "I comandi 'wm-geohub:import' e 'wm:import-from-geohub' non sono disponibili"
@@ -211,14 +228,30 @@ echo ""
 echo "📊 Statistiche:"
 echo "   • App ID importata: $APP_ID"
 echo "   • Totale app nel database: $NEW_APP_COUNT"
+if [ "$APP_ID" == "26" ]; then
+    echo "   • Dipendenze importate: SOLO taxonomy_activity"
+    echo "   • Dipendenze saltate: ec_poi, ec_track, layer, ec_media"
+    echo "   • Customizzazioni: Utilizza hiking routes esistenti + crea layer accatastamento"
+else
+    echo "   • Dipendenze importate: TUTTE (comportamento standard)"
+fi
 echo ""
 echo "🔧 Prossimi passi:"
 echo "   1. Verifica app in Nova Admin: http://localhost:8008/nova/resources/apps"
 echo "   2. Controlla stato Horizon: http://localhost:8008/horizon"
-echo "   3. Se necessario, crea layer per l'app:"
-echo "      docker exec ${PHP_CONTAINER} php artisan osm2cai:create-accatastamento-layers"
-echo "   4. Associa hiking routes ai layer:"
-echo "      docker exec ${PHP_CONTAINER} php artisan osm2cai:associate-hiking-routes-to-layers"
+if [ "$APP_ID" == "26" ]; then
+    echo "   3. 🎯 App 26: Layer di accatastamento verranno creati automaticamente"
+    echo "   4. 🎯 App 26: Hiking routes verranno associate automaticamente ai layer"
+    echo "   5. ⚠️  NOTA App 26: Layer NON importati da Geohub - se necessari, importa manualmente:"
+    echo "      docker exec ${PHP_CONTAINER} php artisan wm:import-from-geohub app $APP_ID --dependencies=layer"
+    echo "   6. ⚠️  NOTA App 26: POI/Track NON importati - se necessari, importa manualmente:"
+    echo "      docker exec ${PHP_CONTAINER} php artisan wm:import-from-geohub app $APP_ID --dependencies=ec_poi,ec_track"
+else
+    echo "   3. Se necessario, crea layer per l'app:"
+    echo "      docker exec ${PHP_CONTAINER} php artisan osm2cai:create-accatastamento-layers"
+    echo "   4. Associa hiking routes ai layer:"
+    echo "      docker exec ${PHP_CONTAINER} php artisan osm2cai:associate-hiking-routes-to-layers"
+fi
 echo ""
 
 print_success "Script import completato!" 

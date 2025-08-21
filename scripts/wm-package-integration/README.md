@@ -21,8 +21,17 @@ Questa directory contiene tutti gli script per l'integrazione di WM-Package con 
 
 Gli script seguenti si trovano nella sottocartella `scripts/` e vengono eseguiti nell'ordine numerico dal script principale o possono essere lanciati singolarmente:
 
+**`scripts/00-setup-app26-complete.sh`** - *Setup Completo App 26*
+- **🎯 NUOVO: Script dedicato per App 26 con tutte le customizzazioni**
+- Import SOLO taxonomy_activity da Geohub (app 26)
+- Creazione layer di accatastamento per app 26
+- Associazione hiking routes esistenti ai layer
+- Verifica finale completa del setup
+- Gestione completa delle customizzazioni specifiche dell'app 26
+
 **`scripts/01-import-app-from-geohub.sh`** - *Import App da Geohub*
 - Import automatico app da Geohub (default: app ID 26)
+- **🎯 Configurazione speciale per App 26: SOLO taxonomy_activity**
 - Supporta ID app personalizzato come parametro
 - Verifica e attesa processamento code
 - Gestione errori e fallback alternativi
@@ -68,6 +77,29 @@ Gli script seguenti si trovano nella sottocartella `scripts/` e vengono eseguiti
 - Applicazione controllata di tutte le migrazioni
 - Verifica finale dello stato e integrità database
 
+## 🎯 App 26 - Configurazione Speciale
+
+L'**App 26** (Geohub) ha una configurazione speciale che richiede un trattamento specifico:
+
+### 🔧 Customizzazioni App 26
+- **Import limitato**: Importa SOLO `taxonomy_activity` da Geohub
+- **Skippa**: `ec_poi`, `ec_track`, `layer`, `ec_media` (non importati)
+- **Utilizza**: Hiking routes esistenti nel database
+- **Crea**: Layer di accatastamento specifici per app 26
+- **Associa**: Hiking routes ai layer basandosi su `osm2cai_status`
+
+### 📋 Workflow App 26
+1. **Import taxonomy_activity** da Geohub
+2. **Creazione layer** di accatastamento (stati 1,2,3,4)
+3. **Associazione hiking routes** esistenti ai layer
+4. **Verifica finale** del setup completo
+
+### 🚀 Script Dedicato App 26
+```bash
+# Setup completo App 26 con tutte le customizzazioni
+./scripts/wm-package-integration/scripts/00-setup-app26-complete.sh
+```
+
 ## 🎨 Sistema Layer di Accatastamento
 
 Gli script `02` e `03` gestiscono un sistema di layer colorati per gli stati di accatastamento:
@@ -98,6 +130,9 @@ Gli script `02` e `03` gestiscono un sistema di layer colorati per gli stati di 
 
 **🔄 Sequenza di Esecuzione Aggiornata:**
 1. **Controllo migrazioni esistenti** (automatico)
+2. **FASE 2A: Import App 26 con customizzazioni** (prima delle altre app)
+3. **FASE 2B: Import altre app** (20, 58)
+4. **Configurazione servizi e indicizzazione**
 2. **Scelta rollback** (interattiva o automatica)
 3. **Applicazione migrazioni base** (`php artisan migrate`)
 4. **🔥 Gestione migrazioni avanzate** (`08-manage-migrations.sh`) - **PRIMA dell'import!**
@@ -137,6 +172,12 @@ Gli script `02` e `03` gestiscono un sistema di layer colorati per gli stati di 
 
 # Combinazione parametri
 ./scripts/wm-package-integration/scripts/03-associate-routes-app26.sh --status=2 --dry-run
+```
+
+### Setup App 26 Completo
+```bash
+# Setup completo App 26 con tutte le customizzazioni
+./scripts/wm-package-integration/scripts/00-setup-app26-complete.sh
 ```
 
 ### Import App Specifica

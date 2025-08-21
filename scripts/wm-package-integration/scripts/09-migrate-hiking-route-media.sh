@@ -54,7 +54,7 @@ if [ -f "/var/www/html/osm2cai2/.env" ]; then
     PHP_CONTAINER="php81_${APP_NAME}"
 else
     # Fallback nel caso in cui lo script venga eseguito in un ambiente non standard
-    PHP_CONTAINER="php81_osm2cai2"
+    PHP_CONTAINER="php81-osm2cai2"
 fi
 
 echo "🖼️ Migrazione Media Hiking Routes per WM-Package Compliance"

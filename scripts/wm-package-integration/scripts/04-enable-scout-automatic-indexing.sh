@@ -62,7 +62,7 @@ trap 'handle_error $LINENO "$BASH_COMMAND"' ERR
 # Controlla se siamo nel container Docker
 if [ ! -f "/var/www/html/osm2cai2/.env" ]; then
     print_error "Script deve essere eseguito dal container Docker PHP"
-    print_step "Esegui: docker exec -it php81_osm2cai2 bash"
+    print_step "Esegui: docker exec -it php81-osm2cai2 bash"
     print_step "Poi: cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"
     exit 1
 fi
@@ -273,7 +273,7 @@ echo "3. Verifica status: php artisan horizon:status"
 echo "4. Testa modificando un ec_track nell'interfaccia Nova"
 echo ""
 echo "🔍 Comandi utili per monitoraggio:"
-echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/_cat/indices?v'"
-echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/_cat/shards?v'"
-echo "  • docker exec php81_osm2cai2 curl -X GET 'elasticsearch:9200/hiking_routes/_count'"
+echo "  • docker exec php81-osm2cai2 curl -X GET 'elasticsearch:9200/_cat/indices?v'"
+echo "  • docker exec php81-osm2cai2 curl -X GET 'elasticsearch:9200/_cat/shards?v'"
+echo "  • docker exec php81-osm2cai2 curl -X GET 'elasticsearch:9200/hiking_routes/_count'"
 echo "  • tail -f storage/logs/laravel.log | grep -i scout" 

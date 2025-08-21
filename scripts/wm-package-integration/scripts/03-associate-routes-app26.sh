@@ -15,7 +15,7 @@ handle_error() {
     echo ""
     echo "🔧 Possibili soluzioni:"
     echo "   • Verifica che il container sia attivo: docker ps"
-    echo "   • Controlla i log: docker logs php81_osm2cai2"
+    echo "   • Controlla i log: docker logs php81-osm2cai2"
     echo "   • Verifica che i layer esistano nel database"
     exit 1
 }
@@ -27,7 +27,7 @@ trap 'handle_error $LINENO' ERR
 APP_ID="1"
 STATUS=""
 DRY_RUN_FLAG=""
-CONTAINER_NAME="php81_osm2cai2"
+CONTAINER_NAME="php81-osm2cai2"
 
 # Funzione di help
 show_help() {
@@ -89,7 +89,8 @@ done
 
 # Controlla se il container è in esecuzione
 echo "🔍 Verificando container Docker..."
-if ! docker ps | grep -q "$CONTAINER_NAME"; then
+CONTAINER_STATUS=$(docker ps --format "table {{.Names}}" | grep "$CONTAINER_NAME" || echo "")
+if [ -z "$CONTAINER_STATUS" ]; then
     echo "❌ Container $CONTAINER_NAME non in esecuzione"
     echo "💡 Avvia l'ambiente di sviluppo: ./scripts/dev-setup.sh"
     exit 1

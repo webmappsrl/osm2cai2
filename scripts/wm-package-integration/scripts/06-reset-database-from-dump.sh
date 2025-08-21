@@ -86,8 +86,8 @@ if [ -z "$APP_NAME" ]; then
     print_error "La variabile APP_NAME non è definita nel file .env."
     exit 1
 fi
-PHP_CONTAINER="php81_${APP_NAME}"
-POSTGRES_CONTAINER="postgres_${APP_NAME}"
+PHP_CONTAINER="php81-${APP_NAME}"
+POSTGRES_CONTAINER="postgres-${APP_NAME}"
 
 print_step "Utilizzo dei nomi container: ${PHP_CONTAINER}, ${POSTGRES_CONTAINER}"
 
@@ -248,8 +248,8 @@ echo "🔧 Prossimi passi consigliati:"
 echo "   1. Verifica login Nova Admin"
 echo "   2. Controlla che i dati siano presenti"
 echo "   3. Se necessario, riesegui le migrazioni:"
-echo "      docker exec php81_osm2cai2 php artisan migrate"
+echo "      docker exec php81-osm2cai2 php artisan migrate"
 echo "   4. Reindicizza Elasticsearch se necessario:"
-echo "      docker exec php81_osm2cai2 php artisan scout:import 'App\\Models\\HikingRoute'"
+echo "      docker exec php81-osm2cai2 php artisan scout:import 'App\\Models\\HikingRoute'"
 echo ""
 print_success "Database ripristinato con successo dal dump!" 
