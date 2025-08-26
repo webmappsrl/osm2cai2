@@ -86,12 +86,13 @@ class HikingRoute extends EcTrack
 
     /**
      * Determine if the model should be searchable.
-     * Only index records with valid geometry and osm2cai_status != 0
+     * Only index records with valid geometry and osm2cai_status can be null or != 0
      */
     public function shouldBeSearchable()
     {
-        return ! is_null($this->geometry) && $this->osm2cai_status != 0;
+        return ! is_null($this->geometry) && ($this->osm2cai_status === null || $this->osm2cai_status != 0);
     }
+
 
     /**
      * Override toSearchableArray to handle null geometry gracefully
