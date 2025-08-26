@@ -51,10 +51,10 @@ if [ -f "/var/www/html/osm2cai2/.env" ]; then
     set -o allexport
     source "/var/www/html/osm2cai2/.env"
     set +o allexport
-    PHP_CONTAINER="php81_${APP_NAME}"
+    PHP_CONTAINER="php81-${APP_NAME}"
 else
     # Fallback nel caso in cui lo script venga eseguito in un ambiente non standard
-    PHP_CONTAINER="php81-osm2cai2"
+    PHP_CONTAINER="php81-osm2cai2dev"
 fi
 
 echo "🖼️ Migrazione Media Hiking Routes per WM-Package Compliance"

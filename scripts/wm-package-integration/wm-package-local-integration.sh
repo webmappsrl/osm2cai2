@@ -226,6 +226,25 @@ fi
 
 print_success "=== FASE 1 COMPLETATA: Ambiente Docker pronto ==="
 
+# PULIZIA CODE LARAVEL E REDIS
+print_step "Pulizia code Laravel e Redis..."
+
+# Termina Horizon se attivo
+print_step "Terminando Horizon se attivo..."
+docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:terminate" 2>/dev/null || true
+sleep 2
+
+# Pulisci Redis
+print_step "Pulizia Redis..."
+docker exec redis-osm2cai2 redis-cli FLUSHALL 2>/dev/null || true
+print_success "Redis pulito"
+
+# Pulisci code Laravel
+print_step "Pulizia code Laravel..."
+docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan queue:clear" 2>/dev/null || true
+docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan queue:flush" 2>/dev/null || true
+print_success "Code Laravel pulite"
+
 # Avvio servizi Laravel necessari per le fasi successive
 print_step "Avvio servizi Laravel (serve + Horizon)..."
 docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
@@ -233,79 +252,45 @@ wait_for_service "Laravel artisan serve" "http://localhost:8008" 30 || print_war
 
 docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
 sleep 3 # Nota: Horizon non ha un endpoint di health check, un breve sleep è mantenuto.
-print_success "Laravel serve e Horizon avviati (necessari per import)"
 
-# FASE 2: DATABASE E MIGRAZIONI
-print_step "=== FASE 2: DATABASE E MIGRAZIONI ==="
-
-# Controllo migrazioni esistenti
-print_step "Controllo migrazioni esistenti..."
-MIGRATION_COUNT=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate:status | grep -c 'Ran'" 2>/dev/null || echo "0")
-
-if [ "$MIGRATION_COUNT" -gt 0 ]; then
-    print_step "Rilevate $MIGRATION_COUNT migrazioni già applicate nel database - continuo senza rollback"
+# Verifica che i servizi siano attivi
+print_step "Verifica servizi Laravel..."
+if curl -f -s http://localhost:8008 &> /dev/null; then
+    print_success "Laravel serve attivo"
 else
-    print_step "Nessuna migrazione esistente rilevata"
+    print_error "Laravel serve non è accessibile!"
+    exit 1
 fi
+
+if docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:status" | grep -q "running"; then
+    print_success "Horizon attivo"
+else
+    print_error "Horizon non è attivo!"
+    exit 1
+fi
+
+print_success "Laravel serve e Horizon avviati e verificati (necessari per import)"
+
+# FASE 2: RESET DATABASE
+print_step "=== FASE 2: RESET DATABASE ==="
+
+# Reset Database da Dump
+print_step "Reset database da dump di backup..."
+if ! ./scripts/06-reset-database-from-dump.sh --auto; then
+    print_error "Reset database fallito! Interruzione setup."
+    exit 1
+fi
+print_success "Database resettato da dump di backup"
 
 # Applicazione Migrazioni
 print_step "Applicazione migrazioni al database..."
-
-# Applica le migrazioni
 if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
     print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
     exit 1
 fi
-print_success "Nuove migrazioni applicate al database"
+print_success "Migrazioni applicate al database"
 
-# Note: Gestione migrazioni avanzate rimossa - non più necessaria senza rollback
-
-# Import App da Geohub
-print_step "Import App da Geohub (utilizzando script dedicato)..."
-
-# FASE 2A: IMPORT APP 26 PRIMA (con customizzazioni specifiche)
-print_step "=== FASE 2A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
-print_step "🎯 App 26: Import SOLO taxonomy_activity + creazione layer + associazione hiking routes"
-
-print_step "Import App da Geohub con ID 26..."
-if ! ./scripts/01-import-app-from-geohub.sh 26; then
-    print_error "Import App da Geohub con ID 26 fallito! Interruzione setup."
-    exit 1
-fi
-print_success "Import App da Geohub con ID 26 completato con successo"
-
-# Creazione layer di accatastamento per app 26
-print_step "Creazione layer di accatastamento per app 26..."
-if ! ./scripts/02-create-layers-app26.sh; then
-    print_error "Creazione layer per app 26 fallita! Interruzione setup."
-    exit 1
-fi
-print_success "Layer di accatastamento per app 26 creati"
-
-# Associazione hiking routes ai layer per app 26
-print_step "Associazione hiking routes ai layer per app 26..."
-if ! ./scripts/03-associate-routes-app26.sh; then
-    print_error "Associazione hiking routes per app 26 fallita! Interruzione setup."
-    exit 1
-fi
-print_success "Hiking routes associati ai layer per app 26"
-
-print_success "=== FASE 2A COMPLETATA: App 26 configurata con customizzazioni ==="
-
-# FASE 2B: IMPORT ALTRE APP (20, 58)
-print_step "=== FASE 2B: IMPORT ALTRE APP ==="
-for APP_ID in 20 58; do
-    print_step "Import App da Geohub con ID $APP_ID..."
-    if ! ./scripts/01-import-app-from-geohub.sh $APP_ID; then
-        print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
-        exit 1
-    fi
-    print_success "Import App da Geohub con ID $APP_ID completato con successo"
-done
-
-print_success "=== FASE 2B COMPLETATA: Altre app importate ==="
-
-print_success "=== FASE 2 COMPLETATA: Database configurato ==="
+print_success "=== FASE 2 COMPLETATA: Database resettato e migrazioni applicate ==="
 
 # FASE 3: CONFIGURAZIONE SERVIZI
 print_step "=== FASE 3: CONFIGURAZIONE SERVIZI ==="
@@ -316,62 +301,7 @@ docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/setup
 
 print_success "=== FASE 3 COMPLETATA: Servizi configurati ==="
 
-# FASE 4: CONFIGURAZIONE APPS E LAYER
-print_step "=== FASE 4: CONFIGURAZIONE APPS E LAYER ==="
 
-# Verifica/Creazione App di default
-print_step "Verifica App di default..."
-APP_COUNT=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null || echo "0")
-
-if [ "$APP_COUNT" -eq 0 ]; then
-    print_step "Nessuna app rilevata, l'import dovrebbe essere già stato eseguito nella FASE 2..."
-    print_warning "Se l'app non è stata importata, controlla Horizon: http://localhost:8008/horizon"
-    
-    # Assegna app_id alla prima app disponibile per tutte le hiking routes esistenti
-    FIRST_APP_ID=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
-    print_step "Assegnazione app_id=$FIRST_APP_ID a tutte le hiking routes..."
-    docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
-        \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
-        echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
-    \""
-    print_success "Hiking routes associate all'app di default"
-else
-    print_success "App esistenti rilevate ($APP_COUNT)"
-    
-    # Verifica se ci sono hiking routes senza app_id e assegnale
-    ROUTES_WITHOUT_APP=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
-    
-    if [ "$ROUTES_WITHOUT_APP" -gt 0 ]; then
-        FIRST_APP_ID=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
-        print_step "Assegnazione app_id=$FIRST_APP_ID a $ROUTES_WITHOUT_APP hiking routes senza app..."
-        docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
-            \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
-            echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
-        \""
-        print_success "Hiking routes associate all'app di default"
-    fi
-fi
-
-# Nota: Layer e associazione hiking routes sono già stati gestiti per app 26 nella FASE 2A
-print_step "Layer e associazione hiking routes già gestiti per app 26 nella FASE 2A"
-
-# Popolamento proprietà e tassonomie per i percorsi
-print_step "Popolamento proprietà e tassonomie per i percorsi..."
-if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
-    print_error "Errore durante il popolamento delle proprietà e tassonomie dei percorsi! Interruzione setup."
-    exit 1
-fi
-print_success "Proprietà e tassonomie dei percorsi popolate"
-
-# Migrazione media per Hiking Routes
-print_step "Migrazione media per Hiking Routes..."
-if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
-    print_error "Errore durante la migrazione dei media! Interruzione setup."
-    exit 1
-fi
-print_success "Migrazione media per Hiking Routes completata"
-
-print_success "=== FASE 4 COMPLETATA: Apps e Layer configurati ==="
 
 # FASE 5: SETUP ELASTICSEARCH
 print_step "=== FASE 5: SETUP ELASTICSEARCH ==="
@@ -408,76 +338,42 @@ print_success "Indicizzazione iniziale completata"
 
 print_success "=== FASE 5 COMPLETATA: Elasticsearch configurato ==="
 
-# FASE 6: VERIFICA SERVIZI FINALI
-print_step "=== FASE 6: VERIFICA SERVIZI FINALI ==="
+# FASE 6: IMPORT APP 26
+# print_step "=== FASE 6: IMPORT APP 26 ==="
+# print_step "🎯 App 26: Import + layer + associazione hiking routes + proprietà + media"
 
-# Verifica che Laravel serve e Horizon siano ancora attivi
-print_step "Verifica servizi Laravel..."
-if ! curl -f -s http://localhost:8008 &> /dev/null; then
-    print_step "Riavvio Laravel serve..."
-    docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan serve --host 0.0.0.0"
-    wait_for_service "Laravel artisan serve" "http://localhost:8008" 30
-else
-    print_success "Laravel serve attivo"
+# if ! ./scripts/setup-app26-custom.sh; then
+#     print_error "Setup App 26 fallito! Interruzione setup."
+#     exit 1
+# fi
+# print_success "=== FASE 6 COMPLETATA: App 26 configurata con customizzazioni ==="
+
+# FASE 7: IMPORT APP 20
+print_step "=== FASE 7: IMPORT APP 20 ==="
+print_step "🎯 App 20: Import generico"
+
+if ! ./scripts/setup-app-generic.sh 20; then
+    print_error "Setup App 20 fallito! Interruzione setup."
+    exit 1
 fi
+print_success "=== FASE 7 COMPLETATA: App 20 configurata ==="
 
-if docker exec php81-osm2cai2 php artisan horizon:status | grep -q "running"; then
-    print_success "Horizon attivo"
-else
-    print_step "Riavvio Horizon..."
-    docker exec -d php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
-    sleep 3
-fi
+# FASE 8: IMPORT APP 58
+# print_step "=== FASE 8: IMPORT APP 58 ==="
+# print_step "🎯 App 58: Import generico"
 
-# Test servizi
-print_step "Test finale servizi..."
+# if ! ./scripts/setup-app-generic.sh 58; then
+#     print_error "Setup App 58 fallito! Interruzione setup."
+#     exit 1
+# fi
+# print_success "=== FASE 8 COMPLETATA: App 58 configurata ==="
 
-# Test Laravel
-print_step "Verifica accesso all'applicazione Laravel..."
-if curl -f -s http://localhost:8008 &> /dev/null; then
-    print_success "Laravel attivo su http://localhost:8008"
-else
-    print_error "Laravel non è accessibile su http://localhost:8008!"
-    print_error "Verifica che il server sia stato avviato correttamente."
+# FASE 9: VERIFICA SERVIZI FINALI
+print_step "=== FASE 9: VERIFICA SERVIZI FINALI ==="
+
+if ! ./scripts/verify-final-services.sh; then
+    print_error "Verifica servizi finali fallita!"
     exit 1
 fi
 
-# Test API Elasticsearch
-if curl -f -s "http://localhost:8008/api/v2/elasticsearch?app=geohub_app_1" &> /dev/null; then
-    print_success "API Elasticsearch funzionante"
-else
-    print_warning "API Elasticsearch potrebbe richiedere configurazione aggiuntiva"
-fi
-
-print_success "=== FASE 6 COMPLETATA: Servizi avviati ==="
-
-echo ""
-echo "🎉 Setup Link WMPackage to OSM2CAI2 Completato!"
-echo "======================================"
-echo ""
-echo "📋 Servizi Disponibili:"
-echo "   • Applicazione: http://localhost:8008"
-echo "   • Nova Admin: http://localhost:8008/nova"
-echo "   • MinIO Console: http://localhost:9003 (minioadmin/minioadmin)"
-echo "   • MailPit: http://localhost:8025"
-echo "   • Elasticsearch: http://localhost:9200"
-echo "   • PostgreSQL: localhost:5508"
-echo ""
-echo "🔧 Comandi Utili:"
-echo "   • Accesso container PHP: docker exec -u 0 -it php81-osm2cai2 bash"
-echo "   • Dashboard Horizon: http://localhost:8008/horizon"
-echo "   • Riavvio Horizon: docker exec php81-osm2cai2 php artisan horizon:terminate"
-echo "   • Status Horizon: docker exec php81-osm2cai2 php artisan horizon:status"
-echo "   • Log Laravel: docker exec php81-osm2cai2 tail -f storage/logs/laravel.log"
-echo "   • Test MinIO: ./scripts/test-minio-laravel.sh"
-echo "   • Fix alias Elasticsearch: docker exec php81-osm2cai2 ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh"
-echo "   • Reinstalla Xdebug: ./docker/configs/phpfpm/init-xdebug.sh"
-echo ""
-echo "🛑 Per fermare tutto:"
-echo "   docker-compose down && docker-compose -f docker-compose.develop.yml down"
-echo ""
-echo "📚 Note:"
-echo "   • Lo script applica sempre le migrazioni senza rollback automatico"
-echo "   • Per gestione avanzata delle migrazioni eseguire manualmente gli script specifici"
-echo ""
-print_success "Ambiente di sviluppo pronto per l'uso!" 
+print_success "=== FASE 9 COMPLETATA: Verifica servizi completata ===" 

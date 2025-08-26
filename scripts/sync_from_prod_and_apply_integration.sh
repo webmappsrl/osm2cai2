@@ -129,8 +129,88 @@ fi
 
 print_success "=== FASE 2 COMPLETATA ==="
 
-# FASE 3: Applicazione Integrazione WMPackage Produzione
-print_step "=== FASE 3: APPLICAZIONE INTEGRAZIONE WMPACKAGE PRODUZIONE ==="
+# Carica le variabili dal file .env per le fasi successive
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+    PHP_CONTAINER="php81-${APP_NAME}"
+    POSTGRES_CONTAINER="postgres-${APP_NAME}"
+else
+    print_error "File .env non trovato per le fasi successive"
+    exit 1
+fi
+
+# FASE 2.5: Esecuzione Migrazioni
+print_step "=== FASE 2.5: ESECUZIONE MIGRAZIONI ==="
+
+print_step "Eseguendo migrazioni Laravel..."
+if docker exec "$PHP_CONTAINER" php artisan migrate; then
+    print_success "Migrazioni completate con successo"
+else
+    print_error "Errore durante l'esecuzione delle migrazioni"
+    exit 1
+fi
+
+print_success "=== FASE 2.5 COMPLETATA ==="
+
+# FASE 3: IMPORT APP SPECIFICHE
+print_step "=== FASE 3: IMPORT APP SPECIFICHE ==="
+
+# FASE 3A: IMPORT APP 26 CON CUSTOMIZZAZIONI
+print_step "=== FASE 3A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
+print_step "🎯 App 26: Import + layer + associazione hiking routes + proprietà + media"
+
+# Import App 26
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/01-import-app-from-geohub.sh" 26; then
+    print_error "Import App 26 fallito! Interruzione setup."
+    exit 1
+fi
+
+# Setup layer per App 26
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/02-create-layers-app26.sh"; then
+    print_error "Setup layer App 26 fallito! Interruzione setup."
+    exit 1
+fi
+
+# Associazione hiking routes per App 26
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/03-associate-routes-app26.sh"; then
+    print_error "Associazione routes App 26 fallita! Interruzione setup."
+    exit 1
+fi
+
+# Proprietà e media per App 26
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
+    print_error "Setup proprietà e media App 26 fallito! Interruzione setup."
+    exit 1
+fi
+
+print_success "=== FASE 3A COMPLETATA: App 26 configurata con customizzazioni ==="
+
+# FASE 3B: IMPORT APP 20
+print_step "=== FASE 3B: IMPORT APP 20 ==="
+print_step "🎯 App 20: Import generico"
+
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/01-import-app-from-geohub.sh" 20; then
+    print_error "Import App 20 fallito! Interruzione setup."
+    exit 1
+fi
+print_success "=== FASE 3B COMPLETATA: App 20 configurata ==="
+
+# FASE 3C: IMPORT APP 58
+print_step "=== FASE 3C: IMPORT APP 58 ==="
+print_step "🎯 App 58: Import generico"
+
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/01-import-app-from-geohub.sh" 58; then
+    print_error "Import App 58 fallito! Interruzione setup."
+    exit 1
+fi
+print_success "=== FASE 3C COMPLETATA: App 58 configurata ==="
+
+print_success "=== FASE 3 COMPLETATA: Tutte le app importate ==="
+
+# FASE 4: Applicazione Integrazione WMPackage Produzione
+print_step "=== FASE 4: APPLICAZIONE INTEGRAZIONE WMPACKAGE PRODUZIONE ==="
 
 print_step "Eseguendo script di integrazione WMPackage produzione..."
 if bash "$SCRIPT_DIR/wm-package-integration/wm-package-prod-integration.sh"; then
@@ -140,22 +220,10 @@ else
     exit 1
 fi
 
-print_success "=== FASE 3 COMPLETATA ==="
+print_success "=== FASE 4 COMPLETATA ==="
 
-# FASE 4: Verifica Finale
-print_step "=== FASE 4: VERIFICA FINALE ==="
-
-# Carica le variabili dal file .env per la verifica finale
-if [ -f "$PROJECT_ROOT/.env" ]; then
-    set -o allexport
-    source "$PROJECT_ROOT/.env"
-    set +o allexport
-    PHP_CONTAINER="php81_${APP_NAME}"
-    POSTGRES_CONTAINER="postgres_${APP_NAME}"
-else
-    print_error "File .env non trovato per la verifica finale"
-    exit 1
-fi
+# FASE 5: Verifica Finale
+print_step "=== FASE 5: VERIFICA FINALE ==="
 
 # Verifica che i servizi siano attivi
 print_step "Verifica servizi attivi..."
@@ -174,7 +242,7 @@ else
     exit 1
 fi
 
-print_success "=== FASE 4 COMPLETATA ==="
+print_success "=== FASE 5 COMPLETATA ==="
 
 echo ""
 print_success "🎉 SYNC DA PRODUZIONE E INTEGRAZIONE COMPLETATA CON SUCCESSO!"
@@ -183,6 +251,9 @@ echo ""
 print_step "📋 Riepilogo operazioni:"
 print_step "   ✅ Dump scaricato da osm2caiProd"
 print_step "   ✅ Database resettato dal dump"
+print_step "   ✅ App 26 importata con customizzazioni"
+print_step "   ✅ App 20 importata (generico)"
+print_step "   ✅ App 58 importata (generico)"
 print_step "   ✅ Integrazione WMPackage produzione applicata"
 print_step "   ✅ Verifica finale completata"
 echo ""

@@ -15,7 +15,7 @@ handle_error() {
     echo ""
     echo "🔧 Possibili soluzioni:"
     echo "   • Verifica che il container sia attivo: docker ps"
-    echo "   • Controlla i log: docker logs php81-osm2cai2"
+    echo "   • Controlla i log: docker logs $CONTAINER_NAME"
     echo "   • Verifica che i layer esistano nel database"
     exit 1
 }
@@ -23,11 +23,24 @@ handle_error() {
 # Imposta trap per gestire errori
 trap 'handle_error $LINENO' ERR
 
+# Carica le variabili dal file .env se esiste
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../" && pwd)"
+
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+else
+    echo "❌ File .env non trovato nella root del progetto."
+    exit 1
+fi
+
 # Valori di default
 APP_ID="1"
 STATUS=""
 DRY_RUN_FLAG=""
-CONTAINER_NAME="php81-osm2cai2"
+CONTAINER_NAME="php81-${APP_NAME}"
 
 # Funzione di help
 show_help() {

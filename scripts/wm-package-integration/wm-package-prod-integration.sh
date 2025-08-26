@@ -229,8 +229,40 @@ print_success "Migrazioni applicate al database"
 
 # Import App da Geohub
 print_step "Import App da Geohub (seeding iniziale)..."
+
+# FASE 2A: IMPORT APP 26 PRIMA (con customizzazioni specifiche)
+print_step "=== FASE 2A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
+print_step "🎯 App 26: Import SOLO taxonomy_activity + creazione layer + associazione hiking routes"
+
+print_step "Import App da Geohub con ID 26..."
+if ! ./scripts/01-import-app-from-geohub.sh 26 'SI'; then
+    print_error "Import App da Geohub con ID 26 fallito! Interruzione setup."
+    exit 1
+fi
+print_success "Import App da Geohub con ID 26 completato con successo"
+
+# Creazione layer di accatastamento per app 26
+print_step "Creazione layer di accatastamento per app 26..."
+if ! ./scripts/02-create-layers-app26.sh; then
+    print_error "Creazione layer per app 26 fallita! Interruzione setup."
+    exit 1
+fi
+print_success "Layer di accatastamento per app 26 creati"
+
+# Associazione hiking routes ai layer per app 26
+print_step "Associazione hiking routes ai layer per app 26..."
+if ! ./scripts/03-associate-routes-app26.sh; then
+    print_error "Associazione hiking routes per app 26 fallita! Interruzione setup."
+    exit 1
+fi
+print_success "Hiking routes associati ai layer per app 26"
+
+print_success "=== FASE 2A COMPLETATA: App 26 configurata con customizzazioni ==="
+
+# FASE 2B: IMPORT ALTRE APP (20, 58)
+print_step "=== FASE 2B: IMPORT ALTRE APP ==="
 print_warning "I job di importazione verranno inviati alla coda e processati in background da Horizon."
-for APP_ID in 26 20 58; do
+for APP_ID in 20 58; do
     print_step "Import App da Geohub con ID $APP_ID..."
     if ! ./scripts/01-import-app-from-geohub.sh $APP_ID 'SI'; then
         print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
@@ -263,15 +295,8 @@ else
     print_success "Tutte le hiking routes hanno già un'app associata."
 fi
 
-# Creazione layer di accatastamento
-print_step "Creazione layer di accatastamento..."
-docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:create-accatastamento-layers"
-print_success "Layer di accatastamento creati"
-
-# Associazione hiking routes ai layer
-print_step "Associazione hiking routes ai layer..."
-docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:associate-hiking-routes-to-layers"
-print_success "Hiking routes associati ai layer"
+# Nota: Layer e associazione hiking routes sono già stati gestiti per app 26 nella FASE 2A
+print_step "Layer e associazione hiking routes già gestiti per app 26 nella FASE 2A"
 
 # Popolamento proprietà e tassonomie per i percorsi
 print_step "Popolamento proprietà e tassonomie per i percorsi..."
