@@ -4,12 +4,9 @@ namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Filters\OsmFilter;
+use App\Nova\Filters\OsmtagsFilter;
 use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\SourceFilter;
-use App\Nova\Filters\WebsiteFilter;
-use App\Nova\Filters\WikiDataFilter;
-use App\Nova\Filters\WikiMediaFilter;
-use App\Nova\Filters\WikiPediaFilter;
 use App\Services\GeometryService;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
@@ -102,10 +99,10 @@ abstract class OsmfeaturesResource extends AbstractEcResource
         return [
             (new OsmFilter),
             (new ScoreFilter),
-            (new WikiPediaFilter),
-            (new WikiDataFilter),
-            (new WikiMediaFilter),
-            (new WebsiteFilter),
+            (new OsmtagsFilter('wikimedia_commons', 'WikiMedia')),
+            (new OsmtagsFilter('wikipedia', 'Wikipedia')),
+            (new OsmtagsFilter('wikidata', 'Wikidata')),
+            (new OsmtagsFilter('website', 'Website')),
             (new SourceFilter),
         ];
     }
