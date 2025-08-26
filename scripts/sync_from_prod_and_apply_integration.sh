@@ -209,19 +209,6 @@ print_success "=== FASE 3C COMPLETATA: App 58 configurata ==="
 
 print_success "=== FASE 3 COMPLETATA: Tutte le app importate ==="
 
-# FASE 4: Applicazione Integrazione WMPackage Produzione
-print_step "=== FASE 4: APPLICAZIONE INTEGRAZIONE WMPACKAGE PRODUZIONE ==="
-
-print_step "Eseguendo script di integrazione WMPackage produzione..."
-if bash "$SCRIPT_DIR/wm-package-integration/wm-package-prod-integration.sh"; then
-    print_success "Integrazione WMPackage produzione completata con successo"
-else
-    print_error "Errore durante l'integrazione WMPackage produzione"
-    exit 1
-fi
-
-print_success "=== FASE 4 COMPLETATA ==="
-
 # FASE 5: Verifica Finale
 print_step "=== FASE 5: VERIFICA FINALE ==="
 
@@ -251,10 +238,10 @@ echo ""
 print_step "📋 Riepilogo operazioni:"
 print_step "   ✅ Dump scaricato da osm2caiProd"
 print_step "   ✅ Database resettato dal dump"
+print_step "   ✅ Migrazioni applicate"
 print_step "   ✅ App 26 importata con customizzazioni"
 print_step "   ✅ App 20 importata (generico)"
 print_step "   ✅ App 58 importata (generico)"
-print_step "   ✅ Integrazione WMPackage produzione applicata"
 print_step "   ✅ Verifica finale completata"
 echo ""
 print_step "🌐 L'applicazione dovrebbe essere accessibile su: http://127.0.0.1:8008"
