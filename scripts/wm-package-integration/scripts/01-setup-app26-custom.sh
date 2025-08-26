@@ -87,10 +87,10 @@ if ! ./scripts/02-create-layers-app26.sh; then
 fi
 print_success "Layer di accatastamento per app 26 creati"
 
-# FASE 3: ASSOCIAZIONE TUTTE LE HIKING ROUTES ALLA PRIMA APP
-print_step "=== FASE 3: ASSOCIAZIONE TUTTE LE HIKING ROUTES ALLA PRIMA APP ==="
+# FASE 3: AGGIORNAMENTO APP_ID PER HIKING ROUTES ESISTENTI
+print_step "=== FASE 3: AGGIORNAMENTO APP_ID PER HIKING ROUTES ESISTENTI ==="
 
-print_step "Associazione di tutte le hiking routes senza app_id alla prima app..."
+print_step "Aggiornamento app_id per hiking routes esistenti prima del sync delle app generiche..."
 FIRST_APP_ID=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
 ROUTES_WITHOUT_APP=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
 
