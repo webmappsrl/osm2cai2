@@ -233,7 +233,7 @@ return [
             'supervisor-1' => [
                 'connection' => 'redis',
                 'queue' => ['default'],
-                'maxProcesses' => 10,
+                'maxProcesses' => 20, // Aumentato da 10 a 20 per geohub-import
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
@@ -241,7 +241,7 @@ return [
                 'connection' => 'redis',
                 'queue' => ['geometric-computations'],
                 'balance' => 'simple',
-                'maxProcesses' => 1,
+                'maxProcesses' => 10, // Aumentato da 1 a 5
                 'memory' => 256,
                 'tries' => 1,
                 'timeout' => 300,
