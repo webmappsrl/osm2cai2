@@ -16,6 +16,13 @@ return new class extends Migration
             $table->integer('app_id')->nullable();
             $table->bigInteger('osmid')->nullable();
         });
+
+        // Aggiungi indici dopo aver creato le colonne
+        Schema::table('ec_pois', function (Blueprint $table) {
+            $table->index('osmid');
+            $table->index('app_id');
+            $table->spatialIndex('geometry');
+        });
     }
 
     /**
@@ -23,6 +30,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('ec_pois', function (Blueprint $table) {
+            $table->dropIndex(['osmid']);
+            $table->dropIndex(['app_id']);
+            $table->dropSpatialIndex(['geometry']);
+        });
+
         Schema::table('ec_pois', function (Blueprint $table) {
             $table->dropColumn(['properties', 'app_id', 'osmid']);
         });
