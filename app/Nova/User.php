@@ -187,7 +187,7 @@ class User extends AbstractUserResource
      *
      * @return array
      */
-    public function filters(NovaRequest $request)
+    public function filters(NovaRequest $request): array
     {
         return [
             new UserTypeFilter,
