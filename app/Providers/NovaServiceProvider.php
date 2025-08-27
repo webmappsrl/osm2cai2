@@ -42,6 +42,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
@@ -127,7 +128,35 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuSection::make(__('Unità Territoriali'), [
                         MenuItem::resource(Club::class),
                         MenuItem::resource(Municipality::class, __('Comuni')),
-                        MenuItem::resource(Sector::class, __('Settori')),
+                        (function () {
+                            $user = Auth::user();
+                            $defaultItem = MenuItem::resource(Sector::class, __('Settori'));
+                            if (! $user) {
+                                return $defaultItem;
+                            }
+                            if (! $user->managedClub) {
+                                return $defaultItem;
+                            }
+                            $regionId = optional($user->managedClub->region)->id;
+                            if (! $regionId) {
+                                return $defaultItem;
+                            }
+                            $novaRequest = NovaRequest::createFrom(request());
+                            $availableFilters = collect((new Sector)->filters($novaRequest))
+                                ->map(function ($filter) {
+                                    return [get_class($filter) => ''];
+                                })
+                                ->toArray();
+                            foreach ($availableFilters as &$filter) {
+                                if (key($filter) === \App\Nova\Filters\RegionFilter::class) {
+                                    $filter[\App\Nova\Filters\RegionFilter::class] = $regionId;
+                                }
+                            }
+                            $encoded = base64_encode(json_encode($availableFilters));
+                            $url = trim(Nova::path(), '/').'/resources/sectors?sectors_filter='.$encoded;
+
+                            return MenuItem::link(__('Settori'), $url);
+                        })(),
                         MenuItem::resource(Area::class, __('Aree')),
                         MenuItem::resource(Province::class, __('Province')),
                         MenuItem::resource(Region::class, __('Regioni')),
@@ -235,7 +264,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         }
 
         /** @var \App\Models\User $loggedInUser */
-
         if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Administrator')) {
             $dashboards[] = new Utenti;
             $dashboards[] = new Percorribilità;
