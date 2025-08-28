@@ -17,7 +17,7 @@ return new class extends Migration
         });
 
         // Use chunkById to avoid memory issues with large datasets.
-        HikingRoute::query()->chunkById(200, function ($hikingRoutes) {
+        HikingRoute::query()->from('hiking_routes')->chunkById(200, function ($hikingRoutes) {
             foreach ($hikingRoutes as $hikingRoute) {
                 $hikingRoute->name = $this->computeName($hikingRoute);
                 $hikingRoute->saveQuietly();
