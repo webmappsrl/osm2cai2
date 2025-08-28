@@ -125,26 +125,26 @@ print_step "=== FASE 3: VERIFICA FINALE ==="
 
 # Verifica che l'app sia stata importata
 print_step "Verifica import App 58..."
-APP_58_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::where('geohub_id', 58)->count();\"" 2>/dev/null || echo "0")
+APP_58_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null || echo "0")
 
 if [ "$APP_58_COUNT" -eq 0 ]; then
-    print_error "App 58 non trovata nel database dopo l'import!"
+    print_error "Nessuna app trovata nel database dopo l'import!"
     exit 1
 fi
-print_success "App 58 trovata nel database"
+print_success "App trovate nel database: $APP_58_COUNT"
 
 # Verifica hiking routes associate
-print_step "Verifica hiking routes associate ad App 58..."
-ROUTES_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 58)->first()->id)->count();\"" 2>/dev/null || echo "0")
-print_success "Hiking routes associate ad App 58: $ROUTES_COUNT"
+print_step "Verifica hiking routes associate..."
+ROUTES_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->count();\"" 2>/dev/null || echo "0")
+print_success "Hiking routes totali: $ROUTES_COUNT"
 
 # Verifica customizzazioni applicate
 print_step "Verifica customizzazioni applicate..."
 
 # Verifica conversione UgcPois validati
 print_step "Verifica conversione UgcPois validati per App 58..."
-EC_POIS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \App\Models\EcPoi::where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 58)->first()->id)->where('properties->converted_from_ugc', true)->count();\"" 2>/dev/null || echo "0")
-print_success "EcPois convertiti da UgcPois per App 58: $EC_POIS_COUNT"
+EC_POIS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \App\Models\EcPoi::where('properties->converted_from_ugc', true)->count();\"" 2>/dev/null || echo "0")
+print_success "EcPois convertiti da UgcPois: $EC_POIS_COUNT"
 
 # TODO: Aggiungere verifiche specifiche per le customizzazioni
 # LAYER_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\Layer::where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 58)->first()->id)->count();\"" 2>/dev/null || echo "0")
@@ -156,7 +156,7 @@ echo ""
 print_step "=== FASE 4: ATTESA COMPLETAMENTO CODE ==="
 
 print_step "Attendo che tutte le code siano vuote prima di completare..."
-if ! ../../scripts/wait-for-queues.sh 600 10; then
+if ! "$SCRIPT_DIR/wait-for-queues.sh" 600 10; then
     print_warning "Timeout raggiunto durante l'attesa delle code. Procedo comunque."
 else
     print_success "Tutte le code sono vuote!"

@@ -90,7 +90,7 @@ for model in "${MODELS[@]}"; do
         echo \$count;
     " 2>/dev/null | grep -E '^[0-9]+$' | tail -n 1)
     
-    if [ "$empty_count" -gt 0 ]; then
+    if [ -n "$empty_count" ] && [ "$empty_count" -gt 0 ]; then
         print_warning "Trovati $empty_count record con properties vuoti in $model"
         
         # Fix dei record con properties vuoti
@@ -180,7 +180,7 @@ for model in "${MODELS[@]}"; do
         echo \$count;
     " 2>/dev/null | grep -E '^[0-9]+$' | tail -n 1)
     
-    if [ "$null_count" -gt 0 ]; then
+    if [ -n "$null_count" ] && [ "$null_count" -gt 0 ]; then
         print_error "ATTENZIONE: Ancora $null_count record con properties null in $model"
         total_null=$((total_null + null_count))
     else

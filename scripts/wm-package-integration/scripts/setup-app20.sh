@@ -71,7 +71,7 @@ print_step "Utilizzo container: ${PHP_CONTAINER}"
 print_step "=== FASE 1: IMPORT APP 20 GENERICO ==="
 
 print_step "Eseguendo setup generico per App 20..."
-if ! ./scripts/setup-app-generic.sh 20; then
+if ! "$SCRIPT_DIR/setup-app-generic.sh" 20; then
     print_error "Setup generico App 20 fallito!"
     exit 1
 fi
@@ -101,7 +101,7 @@ echo ""
 print_step "=== FASE 3: ATTESA COMPLETAMENTO CODE ==="
 
 print_step "Attendo che tutte le code siano vuote prima di completare..."
-if ! ../../scripts/wait-for-queues.sh 600 10; then
+if ! "$SCRIPT_DIR/wait-for-queues.sh" 600 10; then
     print_warning "Timeout raggiunto durante l'attesa delle code. Procedo comunque."
 else
     print_success "Tutte le code sono vuote!"

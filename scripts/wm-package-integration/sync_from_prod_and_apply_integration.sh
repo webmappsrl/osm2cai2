@@ -129,7 +129,7 @@ import_app() {
     print_step "=== FASE: IMPORT APP $app_id ==="
     print_step "🎯 App $app_id: $script_name"
     
-    if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/$script_name"; then
+    if ! bash "$SCRIPT_DIR/scripts/$script_name"; then
         print_error "Setup App $app_id fallito! Interruzione setup."
         exit 1
     fi
@@ -197,7 +197,7 @@ trap 'handle_error $LINENO' ERR
 
 # Determina la directory root del progetto
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 
 # Verifica prerequisiti
 print_step "Verifica prerequisiti..."
@@ -265,7 +265,7 @@ print_success "=== FASE 1 COMPLETATA ==="
 print_step "=== FASE 2: RESET DATABASE DAL DUMP ==="
 
 print_step "Eseguendo script di reset database (modalità automatica)..."
-if bash "$SCRIPT_DIR/wm-package-integration/scripts/06-reset-database-from-dump.sh" --auto; then
+if bash "$SCRIPT_DIR/scripts/06-reset-database-from-dump.sh" --auto; then
     print_success "Reset database completato con successo"
 else
     print_error "Errore durante il reset del database"
@@ -304,7 +304,7 @@ print_step "=== FASE 3: FIX CAMPI TRANSLATABLE NULL ==="
 
 # Fix dei campi translatable null prima degli import delle app
 print_step "Fix dei campi translatable null nei modelli..."
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/fix-translatable-fields.sh"; then
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/fix-translatable-fields.sh"; then
     print_error "Errore durante il fix dei campi translatable! Interruzione setup."
     exit 1
 fi

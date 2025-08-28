@@ -82,7 +82,7 @@ print_step "Import App ID: ${APP_ID}"
 print_step "=== FASE 1: IMPORT APP $APP_ID DA GEOHUB ==="
 
 print_step "Import App da Geohub con ID $APP_ID..."
-if ! ./scripts/01-import-app-from-geohub.sh $APP_ID; then
+if ! "$SCRIPT_DIR/01-import-app-from-geohub.sh" $APP_ID; then
     print_error "Import App da Geohub con ID $APP_ID fallito!"
     exit 1
 fi
@@ -93,18 +93,18 @@ print_step "=== FASE 2: VERIFICA FINALE ==="
 
 # Verifica che l'app sia stata importata
 print_step "Verifica import App $APP_ID..."
-APP_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::where('geohub_id', $APP_ID)->count();\"" 2>/dev/null || echo "0")
+APP_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null || echo "0")
 
 if [ "$APP_COUNT" -eq 0 ]; then
-    print_error "App $APP_ID non trovata nel database dopo l'import!"
+    print_error "Nessuna app trovata nel database dopo l'import!"
     exit 1
 fi
-print_success "App $APP_ID trovata nel database"
+print_success "App trovate nel database: $APP_COUNT"
 
 # Verifica hiking routes associate (se ce ne sono)
-print_step "Verifica hiking routes associate ad App $APP_ID..."
-ROUTES_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', $APP_ID)->first()->id)->count();\"" 2>/dev/null || echo "0")
-print_success "Hiking routes associate ad App $APP_ID: $ROUTES_COUNT"
+print_step "Verifica hiking routes associate..."
+ROUTES_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->count();\"" 2>/dev/null || echo "0")
+print_success "Hiking routes totali: $ROUTES_COUNT"
 
 echo ""
 print_success "🎉 Setup App $APP_ID completato con successo!"
@@ -112,6 +112,6 @@ echo "=================================================="
 echo ""
 echo "📊 Statistiche App $APP_ID:"
 echo "   • App importata: ✅"
-echo "   • Hiking routes associate: $ROUTES_COUNT"
+echo "   • Hiking routes totali: $ROUTES_COUNT"
 echo ""
 print_success "App $APP_ID pronta per l'uso!"

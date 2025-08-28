@@ -35,8 +35,8 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
             $this->info('🔍 DRY RUN MODE - No changes will be made');
         }
 
-        // Trova l'app acquasorgente (ID 58)
-        $acquasorgenteApp = App::where('name', 'Acquasorgente')->first();
+        // Trova l'app acquasorgente
+        $acquasorgenteApp = App::where('sku', '"it.webmapp.acquasorgente"')->first();
         
         if (!$acquasorgenteApp) {
             $this->error('App Acquasorgente non trovata!');

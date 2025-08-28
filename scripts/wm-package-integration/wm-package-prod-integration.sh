@@ -235,7 +235,7 @@ print_step "=== FASE 2A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
 print_step "🎯 App 26: Import SOLO taxonomy_activity + creazione layer + associazione hiking routes"
 
 print_step "Import App da Geohub con ID 26..."
-if ! ./scripts/01-import-app-from-geohub.sh 26 'SI'; then
+if ! "$SCRIPT_DIR/scripts/01-import-app-from-geohub.sh" 26 'SI'; then
     print_error "Import App da Geohub con ID 26 fallito! Interruzione setup."
     exit 1
 fi
@@ -243,7 +243,7 @@ print_success "Import App da Geohub con ID 26 completato con successo"
 
 # Creazione layer di accatastamento per app 26
 print_step "Creazione layer di accatastamento per app 26..."
-if ! ./scripts/02-create-layers-app26.sh; then
+if ! "$SCRIPT_DIR/scripts/02-create-layers-app26.sh"; then
     print_error "Creazione layer per app 26 fallita! Interruzione setup."
     exit 1
 fi
@@ -251,7 +251,7 @@ print_success "Layer di accatastamento per app 26 creati"
 
 # Associazione hiking routes ai layer per app 26
 print_step "Associazione hiking routes ai layer per app 26..."
-if ! ./scripts/03-associate-routes-app26.sh; then
+if ! "$SCRIPT_DIR/scripts/03-associate-routes-app26.sh"; then
     print_error "Associazione hiking routes per app 26 fallita! Interruzione setup."
     exit 1
 fi
@@ -264,7 +264,7 @@ print_step "=== FASE 2B: IMPORT ALTRE APP ==="
 print_warning "I job di importazione verranno inviati alla coda e processati in background da Horizon."
 for APP_ID in 20 58; do
     print_step "Import App da Geohub con ID $APP_ID..."
-    if ! ./scripts/01-import-app-from-geohub.sh $APP_ID 'SI'; then
+    if ! "$SCRIPT_DIR/scripts/01-import-app-from-geohub.sh" $APP_ID 'SI'; then
         print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
         exit 1
     fi

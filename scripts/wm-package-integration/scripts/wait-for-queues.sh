@@ -12,24 +12,7 @@ INTERVAL=${2:-5}   # Default: 5 secondi
 
 # Determina la directory root del progetto e carica .env
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../" && pwd)"
-
-# Carica le variabili dal file .env
-if [ -f "$PROJECT_ROOT/.env" ]; then
-    set -o allexport
-    source "$PROJECT_ROOT/.env"
-    set +o allexport
-else
-    print_error "File .env non trovato nella root del progetto."
-    exit 1
-fi
-
-# Definisci il nome del container Redis
-if [ -z "$APP_NAME" ]; then
-    print_error "La variabile APP_NAME non è definita nel file .env."
-    exit 1
-fi
-REDIS_CONTAINER="redis-${APP_NAME}"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../" && pwd)"
 
 # Colori per output
 RED='\033[0;31m'
@@ -54,6 +37,23 @@ print_warning() {
 print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
+
+# Carica le variabili dal file .env
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+else
+    print_error "File .env non trovato nella root del progetto."
+    exit 1
+fi
+
+# Definisci il nome del container Redis
+if [ -z "$APP_NAME" ]; then
+    print_error "La variabile APP_NAME non è definita nel file .env."
+    exit 1
+fi
+REDIS_CONTAINER="redis-${APP_NAME}"
 
 print_info "Attendo che le code Laravel siano vuote..."
 print_info "Timeout: ${TIMEOUT}s, Intervallo controllo: ${INTERVAL}s"

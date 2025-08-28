@@ -109,7 +109,7 @@ import_app() {
     print_step "=== FASE: IMPORT APP $app_id ==="
     print_step "🎯 App $app_id: $script_name $script_args"
     
-    if ! bash scripts/"$script_name" $script_args; then
+    if ! bash "$SCRIPT_DIR/scripts/$script_name" $script_args; then
         print_error "Setup App $app_id fallito! Interruzione setup."
         exit 1
     fi
@@ -225,14 +225,14 @@ if [ -f "/var/www/html/osm2cai2/.env" ]; then
     cd /var/www/html/osm2cai2
     
     print_step "=== CONFIGURAZIONE SCOUT/ELASTICSEARCH ==="
-    if ! ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh; then
+    if ! ./scripts/04-enable-scout-automatic-indexing.sh; then
         print_error "Errore durante la configurazione di Scout/Elasticsearch!"
         exit 1
     fi
     
     # Fix alias se necessario
     print_step "=== FIX ALIAS ELASTICSEARCH ==="
-    if ! ./scripts/wm-package-integration/scripts/05-fix-elasticsearch-alias.sh; then
+    if ! ./scripts/05-fix-elasticsearch-alias.sh; then
         print_warning "Fix alias completato con avvertimenti, ma procediamo..."
     fi
     
@@ -422,7 +422,7 @@ print_step "=== FASE 3: CONFIGURAZIONE SERVIZI ==="
 
 # Setup bucket MinIO
 print_step "Setup bucket MinIO..."
-docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/setup-minio-bucket.sh"
+docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/setup-minio-bucket.sh"
 
 print_success "=== FASE 3 COMPLETATA: Servizi configurati ==="
 
@@ -466,7 +466,7 @@ print_step "=== FASE 5: FIX CAMPI TRANSLATABLE NULL ==="
 
 # Fix dei campi translatable null prima degli import delle app
 print_step "Fix dei campi translatable null nei modelli..."
-if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/fix-translatable-fields.sh"; then
+if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/fix-translatable-fields.sh"; then
     print_error "Errore durante il fix dei campi translatable! Interruzione setup."
     exit 1
 fi

@@ -78,7 +78,7 @@ print_step "Utilizzo container: ${PHP_CONTAINER}"
 print_step "=== FASE 1: IMPORT APP 26 DA GEOHUB ==="
 
 print_step "Import App da Geohub con ID 26..."
-if ! ./scripts/01-import-app-from-geohub.sh 26; then
+if ! "$SCRIPT_DIR/01-import-app-from-geohub.sh" 26; then
     print_error "Import App da Geohub con ID 26 fallito!"
     exit 1
 fi
@@ -88,7 +88,7 @@ print_success "Import App da Geohub con ID 26 completato con successo"
 print_step "=== FASE 2: CREAZIONE LAYER DI ACCATASTAMENTO ==="
 
 print_step "Creazione layer di accatastamento per app 26..."
-if ! ./scripts/02-create-layers-app26.sh; then
+if ! "$SCRIPT_DIR/02-create-layers-app26.sh"; then
     print_error "Creazione layer per app 26 fallita!"
     exit 1
 fi
@@ -116,7 +116,7 @@ fi
 print_step "=== FASE 4: ASSOCIAZIONE HIKING ROUTES AI LAYER DI ACCATASTAMENTO ==="
 
 print_step "Associazione hiking routes ai layer per app 26..."
-if ! ./scripts/03-associate-routes-app26.sh; then
+if ! "$SCRIPT_DIR/03-associate-routes-app26.sh"; then
     print_error "Associazione hiking routes per app 26 fallita!"
     exit 1
 fi
@@ -174,7 +174,7 @@ print_success "Hiking routes associate ad App 26: $ROUTES_COUNT"
 print_step "=== FASE 8: ATTESA COMPLETAMENTO CODE ==="
 
 print_step "Attendo che tutte le code siano vuote prima di completare..."
-if ! ../../scripts/wait-for-queues.sh 600 10; then
+if ! "$SCRIPT_DIR/wait-for-queues.sh" 600 10; then
     print_warning "Timeout raggiunto durante l'attesa delle code. Procedo comunque."
 else
     print_success "Tutte le code sono vuote!"
