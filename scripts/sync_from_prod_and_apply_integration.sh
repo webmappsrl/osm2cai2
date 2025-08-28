@@ -9,10 +9,21 @@ echo "=========================================================="
 echo "📅 Avviato: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "🤖 Modalità: Automatica (Cronjob)"
 echo ""
-echo "📁 Script per le app utilizzati:"
-echo "   • setup-app26.sh (App 26 - customizzazioni complete)"
-echo "   • setup-app20.sh (App 20 - import generico + verifiche)"
-echo "   • setup-app58.sh (App 58 - import generico + customizzazioni)"
+echo "📋 USAGE:"
+echo "   $0                    # Importa tutte le app di default (26, 20, 58)"
+echo "   $0 --help             # Mostra questo help"
+echo "   $0 --apps 26 20       # Importa solo le app specificate"
+echo "   $0 -a 26 20           # Forma abbreviata"
+echo ""
+echo "📁 App disponibili:"
+echo "   • App 26: setup-app26.sh (customizzazioni complete)"
+echo "   • App 20: setup-app20.sh (import generico + verifiche)"
+echo "   • App 58: setup-app58.sh (import generico + customizzazioni)"
+echo ""
+echo "📝 Esempi:"
+echo "   $0                    # Importa tutte le app"
+echo "   $0 --apps 26          # Importa solo App 26"
+echo "   $0 --apps 20 58       # Importa App 20 e 58"
 echo ""
 
 # Colori per output
@@ -39,18 +50,147 @@ print_error() {
     echo -e "${RED}❌${NC} $1"
 }
 
+# Configurazione app disponibili (compatibile con bash 3.2)
+APP_IDS=("26" "20" "58")
+APP_SCRIPTS=("setup-app26.sh" "setup-app20.sh" "setup-app58.sh")
+
+# App di default da importare (tutte)
+DEFAULT_APPS=("26" "20" "58")
+
+# Funzione per ottenere la configurazione di un'app
+get_app_config() {
+    local app_id="$1"
+    for i in "${!APP_IDS[@]}"; do
+        if [[ "${APP_IDS[$i]}" == "$app_id" ]]; then
+            echo "${APP_SCRIPTS[$i]}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Funzione per verificare se un'app esiste
+app_exists() {
+    local app_id="$1"
+    for id in "${APP_IDS[@]}"; do
+        if [[ "$id" == "$app_id" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Funzione per mostrare l'help
+show_help() {
+    echo "🔄 Sync da Produzione e Applicazione Integrazione WMPackage"
+    echo "=========================================================="
+    echo ""
+    echo "📋 USAGE:"
+    echo "   $0                    # Importa tutte le app di default (26, 20, 58)"
+    echo "   $0 --help             # Mostra questo help"
+    echo "   $0 --apps 26 20       # Importa solo le app specificate"
+    echo "   $0 -a 26 20           # Forma abbreviata"
+    echo ""
+    echo "📁 App disponibili:"
+    echo "   • App 26: setup-app26.sh (customizzazioni complete)"
+    echo "   • App 20: setup-app20.sh (import generico + verifiche)"
+    echo "   • App 58: setup-app58.sh (import generico + customizzazioni)"
+    echo ""
+    echo "📝 Esempi:"
+    echo "   $0                    # Importa tutte le app"
+    echo "   $0 --apps 26          # Importa solo App 26"
+    echo "   $0 --apps 20 58       # Importa App 20 e 58"
+    echo ""
+}
+
+# Funzione per validare gli ID delle app
+validate_app_ids() {
+    local app_ids=("$@")
+    
+    for app_id in "${app_ids[@]}"; do
+        if ! app_exists "$app_id"; then
+            print_error "ID app non valido: $app_id"
+            echo ""
+            echo "App disponibili:"
+            for id in "${APP_IDS[@]}"; do
+                local config=$(get_app_config "$id")
+                echo "   • App $id: $config"
+            done
+            exit 1
+        fi
+    done
+}
+
+# Funzione per importare una singola app
+import_app() {
+    local app_id="$1"
+    local script_name=$(get_app_config "$app_id")
+    
+    print_step "=== FASE: IMPORT APP $app_id ==="
+    print_step "🎯 App $app_id: $script_name"
+    
+    if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/$script_name"; then
+        print_error "Setup App $app_id fallito! Interruzione setup."
+        exit 1
+    fi
+    print_success "=== FASE COMPLETATA: App $app_id configurata ==="
+}
+
 # Funzione per gestire errori
 handle_error() {
     print_error "ERRORE: Script interrotto alla riga $1"
     print_error "Ultimo comando: $BASH_COMMAND"
     print_error ""
     print_error "📞 Per assistenza controlla:"
-print_error "• Connessione SSH a osm2caiProd"
-print_error "• File dump in storage/app/backups/"
-print_error "• Stato container: docker ps -a"
-print_error "• Verifica: ssh osm2caiProd 'ls -la html/osm2cai2/storage/backups/'"
+    print_error "• Connessione SSH a osm2caiProd"
+    print_error "• File dump in storage/app/backups/"
+    print_error "• Stato container: docker ps -a"
+    print_error "• Verifica: ssh osm2caiProd 'ls -la html/osm2cai2/storage/backups/'"
     exit 1
 }
+
+# Parsing dei parametri
+APPS_TO_IMPORT=()
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        --apps|-a)
+            shift
+            while [[ $# -gt 0 && ! $1 =~ ^-- ]]; do
+                APPS_TO_IMPORT+=("$1")
+                shift
+            done
+            ;;
+        *)
+            print_error "Parametro non riconosciuto: $1"
+            echo ""
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Se non sono state specificate app, usa quelle di default
+if [ ${#APPS_TO_IMPORT[@]} -eq 0 ]; then
+    APPS_TO_IMPORT=("${DEFAULT_APPS[@]}")
+    print_step "Nessuna app specificata, importando tutte le app di default: ${APPS_TO_IMPORT[*]}"
+else
+    # Valida gli ID delle app forniti
+    validate_app_ids "${APPS_TO_IMPORT[@]}"
+    print_step "App da importare: ${APPS_TO_IMPORT[*]}"
+fi
+
+echo ""
+echo "📁 Script per le app che verranno utilizzati:"
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    config=$(get_app_config "$app_id")
+    echo "   • $config (App $app_id)"
+done
+echo ""
 
 # Imposta trap per gestire errori
 trap 'handle_error $LINENO' ERR
@@ -159,40 +299,27 @@ fi
 
 print_success "=== FASE 2.5 COMPLETATA ==="
 
-# FASE 3: IMPORT APP SPECIFICHE
-print_step "=== FASE 3: IMPORT APP SPECIFICHE ==="
+# FASE 3: FIX CAMPI TRANSLATABLE
+print_step "=== FASE 3: FIX CAMPI TRANSLATABLE NULL ==="
 
-# FASE 3A: IMPORT APP 26 CON CUSTOMIZZAZIONI
-print_step "=== FASE 3A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
-print_step "🎯 App 26: Import + layer + associazione hiking routes + proprietà + media (customizzazioni complete)"
-
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/setup-app26.sh"; then
-    print_error "Setup App 26 fallito! Interruzione setup."
+# Fix dei campi translatable null prima degli import delle app
+print_step "Fix dei campi translatable null nei modelli..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/fix-translatable-fields.sh"; then
+    print_error "Errore durante il fix dei campi translatable! Interruzione setup."
     exit 1
 fi
-print_success "=== FASE 3A COMPLETATA: App 26 configurata con customizzazioni complete ==="
+print_success "Campi translatable fixati"
 
-# FASE 3B: IMPORT APP 20
-print_step "=== FASE 3B: IMPORT APP 20 ==="
-print_step "🎯 App 20: Import generico con verifiche"
+print_success "=== FASE 3 COMPLETATA: Campi translatable fixati ==="
 
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/setup-app20.sh"; then
-    print_error "Setup App 20 fallito! Interruzione setup."
-    exit 1
-fi
-print_success "=== FASE 3B COMPLETATA: App 20 configurata con verifiche ==="
+# FASE 4: IMPORT APP SPECIFICATE
+print_step "=== FASE 4: IMPORT APP SPECIFICATE ==="
 
-# FASE 3C: IMPORT APP 58
-print_step "=== FASE 3C: IMPORT APP 58 ==="
-print_step "🎯 App 58: Import generico + customizzazioni specifiche"
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    import_app "$app_id"
+done
 
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/setup-app58.sh"; then
-    print_error "Setup App 58 fallito! Interruzione setup."
-    exit 1
-fi
-print_success "=== FASE 3C COMPLETATA: App 58 configurata con customizzazioni ==="
-
-print_success "=== FASE 3 COMPLETATA: Tutte le app importate ==="
+print_success "=== FASE 4 COMPLETATA: Tutte le app specificate importate ==="
 
 # FASE 5: Verifica Finale
 print_step "=== FASE 5: VERIFICA FINALE ==="
@@ -224,15 +351,17 @@ print_step "📋 Riepilogo operazioni:"
 print_step "   ✅ Dump scaricato da osm2caiProd"
 print_step "   ✅ Database resettato dal dump"
 print_step "   ✅ Migrazioni applicate"
-print_step "   ✅ App 26 configurata con customizzazioni complete"
-print_step "   ✅ App 20 configurata con verifiche"
-print_step "   ✅ App 58 configurata con customizzazioni"
+print_step "   ✅ Campi translatable fixati"
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    print_step "   ✅ App $app_id configurata"
+done
 print_step "   ✅ Verifica finale completata"
 echo ""
 print_step "📁 Script utilizzati per le app:"
-print_step "   • setup-app26.sh (App 26 - customizzazioni complete)"
-print_step "   • setup-app20.sh (App 20 - import generico + verifiche)"
-print_step "   • setup-app58.sh (App 58 - import generico + customizzazioni)"
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    config=$(get_app_config "$app_id")
+    print_step "   • $config (App $app_id)"
+done
 echo ""
 print_step "🌐 L'applicazione dovrebbe essere accessibile su: http://127.0.0.1:8008"
 print_step "📊 Horizon dovrebbe essere attivo per la gestione delle code"
