@@ -7,6 +7,11 @@ set -o pipefail
 echo "🚀 Setup Link WMPackage to OSM2CAI2 - Ambiente di Sviluppo"
 echo "=========================================================="
 echo ""
+echo "📁 Script per le app utilizzati:"
+echo "   • setup-app26.sh (App 26 - customizzazioni complete, modalità locale)"
+echo "   • setup-app20.sh (App 20 - import generico + verifiche)"
+echo "   • setup-app58.sh (App 58 - import generico + customizzazioni)"
+echo ""
 
 # Script non richiede più parametri
 
@@ -339,34 +344,34 @@ print_success "Indicizzazione iniziale completata"
 print_success "=== FASE 5 COMPLETATA: Elasticsearch configurato ==="
 
 # FASE 6: IMPORT APP 26
-# print_step "=== FASE 6: IMPORT APP 26 ==="
-# print_step "🎯 App 26: Import + layer + associazione hiking routes + proprietà + media"
+print_step "=== FASE 6: IMPORT APP 26 ==="
+print_step "🎯 App 26: Import + layer + associazione hiking routes + proprietà (modalità locale - media esclusi)"
 
-# if ! ./scripts/setup-app26-custom.sh; then
-#     print_error "Setup App 26 fallito! Interruzione setup."
-#     exit 1
-# fi
-# print_success "=== FASE 6 COMPLETATA: App 26 configurata con customizzazioni ==="
+if ! bash scripts/setup-app26.sh local; then
+    print_error "Setup App 26 fallito! Interruzione setup."
+    exit 1
+fi
+print_success "=== FASE 6 COMPLETATA: App 26 configurata con customizzazioni (modalità locale) ==="
 
 # FASE 7: IMPORT APP 20
 print_step "=== FASE 7: IMPORT APP 20 ==="
-print_step "🎯 App 20: Import generico"
+print_step "🎯 App 20: Import generico con verifiche"
 
-if ! ./scripts/setup-app-generic.sh 20; then
+if ! bash scripts/setup-app20.sh; then
     print_error "Setup App 20 fallito! Interruzione setup."
     exit 1
 fi
-print_success "=== FASE 7 COMPLETATA: App 20 configurata ==="
+print_success "=== FASE 7 COMPLETATA: App 20 configurata con verifiche ==="
 
 # FASE 8: IMPORT APP 58
-# print_step "=== FASE 8: IMPORT APP 58 ==="
-# print_step "🎯 App 58: Import generico"
+print_step "=== FASE 8: IMPORT APP 58 ==="
+print_step "🎯 App 58: Import generico + customizzazioni specifiche"
 
-# if ! ./scripts/setup-app-generic.sh 58; then
-#     print_error "Setup App 58 fallito! Interruzione setup."
-#     exit 1
-# fi
-# print_success "=== FASE 8 COMPLETATA: App 58 configurata ==="
+if ! bash scripts/setup-app58.sh; then
+    print_error "Setup App 58 fallito! Interruzione setup."
+    exit 1
+fi
+print_success "=== FASE 8 COMPLETATA: App 58 configurata con customizzazioni ==="
 
 # FASE 9: VERIFICA SERVIZI FINALI
 print_step "=== FASE 9: VERIFICA SERVIZI FINALI ==="
@@ -376,4 +381,28 @@ if ! ./scripts/verify-final-services.sh; then
     exit 1
 fi
 
-print_success "=== FASE 9 COMPLETATA: Verifica servizi completata ===" 
+print_success "=== FASE 9 COMPLETATA: Verifica servizi completata ==="
+
+echo ""
+print_success "🎉 SETUP AMBIENTE DI SVILUPPO COMPLETATO CON SUCCESSO!"
+echo "=============================================================="
+echo ""
+print_step "📋 Riepilogo operazioni completate:"
+print_step "   ✅ Ambiente Docker configurato e avviato"
+print_step "   ✅ Database resettato e migrazioni applicate"
+print_step "   ✅ Servizi (MinIO, Elasticsearch) configurati"
+print_step "   ✅ Elasticsearch indicizzato"
+print_step "   ✅ App 26 configurata con customizzazioni (modalità locale)"
+print_step "   ✅ App 20 configurata con verifiche"
+print_step "   ✅ App 58 configurata con customizzazioni"
+print_step "   ✅ Verifica servizi finali completata"
+echo ""
+print_step "🌐 L'applicazione è accessibile su: http://127.0.0.1:8008"
+print_step "📊 Horizon è attivo per la gestione delle code"
+print_step "🔍 Elasticsearch è pronto per le ricerche"
+echo ""
+print_step "📁 Script utilizzati per le app:"
+print_step "   • setup-app26.sh (App 26 - customizzazioni complete)"
+print_step "   • setup-app20.sh (App 20 - import generico + verifiche)"
+print_step "   • setup-app58.sh (App 58 - import generico + customizzazioni)"
+echo "" 

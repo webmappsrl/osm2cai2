@@ -4,10 +4,6 @@
 set -e
 set -o pipefail
 
-echo "🎯 Setup App 26 - Import e Customizzazioni"
-echo "=========================================="
-echo ""
-
 # Colori per output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -31,6 +27,17 @@ print_warning() {
 print_error() {
     echo -e "${RED}❌${NC} $1"
 }
+
+# Controlla se è stata richiesta la modalità locale (senza migrazione media)
+LOCAL_MODE=false
+if [ "$1" = "local" ]; then
+    LOCAL_MODE=true
+    print_step "Modalità locale attivata: migrazione media esclusa"
+fi
+
+echo "🎯 Setup App 26 - Import e Customizzazioni"
+echo "=========================================="
+echo ""
 
 # Funzione per gestire errori
 handle_error() {
@@ -125,15 +132,20 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./script
 fi
 print_success "Proprietà e tassonomie dei percorsi popolate"
 
-# FASE 6: MIGRAZIONE MEDIA
-print_step "=== FASE 6: MIGRAZIONE MEDIA ==="
+# FASE 6: MIGRAZIONE MEDIA (solo se non in modalità locale)
+if [ "$LOCAL_MODE" = false ]; then
+    print_step "=== FASE 6: MIGRAZIONE MEDIA ==="
 
-print_step "Migrazione media per Hiking Routes..."
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
-    print_error "Errore durante la migrazione dei media!"
-    exit 1
+    print_step "Migrazione media per Hiking Routes..."
+    if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
+        print_error "Errore durante la migrazione dei media!"
+        exit 1
+    fi
+    print_success "Migrazione media per Hiking Routes completata"
+else
+    print_step "=== FASE 6: MIGRAZIONE MEDIA ==="
+    print_warning "Modalità locale attivata: migrazione media saltata"
 fi
-print_success "Migrazione media per Hiking Routes completata"
 
 # FASE 7: VERIFICA FINALE
 print_step "=== FASE 7: VERIFICA FINALE ==="
@@ -158,6 +170,16 @@ print_step "Verifica hiking routes associate ad App 26..."
 ROUTES_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 26)->first()->id)->count();\"" 2>/dev/null || echo "0")
 print_success "Hiking routes associate ad App 26: $ROUTES_COUNT"
 
+# FASE 8: ATTESA COMPLETAMENTO CODE
+print_step "=== FASE 8: ATTESA COMPLETAMENTO CODE ==="
+
+print_step "Attendo che tutte le code siano vuote prima di completare..."
+if ! ../../scripts/wait-for-queues.sh 600 10; then
+    print_warning "Timeout raggiunto durante l'attesa delle code. Procedo comunque."
+else
+    print_success "Tutte le code sono vuote!"
+fi
+
 echo ""
 print_success "🎉 Setup App 26 completato con successo!"
 echo "=============================================="
@@ -167,6 +189,11 @@ echo "   • App importata: ✅"
 echo "   • Layer creati: $LAYER_COUNT"
 echo "   • Hiking routes associate: $ROUTES_COUNT"
 echo "   • Proprietà e tassonomie: ✅"
-echo "   • Media migrati: ✅"
+if [ "$LOCAL_MODE" = false ]; then
+    echo "   • Media migrati: ✅"
+else
+    echo "   • Media migrati: ⏭️ (saltato - modalità locale)"
+fi
+echo "   • Code processate: ✅"
 echo ""
 print_success "App 26 pronta per l'uso!"

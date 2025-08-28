@@ -27,9 +27,9 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}🚀 Populating Hiking Routes properties from osmfeatures_data...${NC}"
-docker exec "$CONTAINER_NAME" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:populate-properties --model=HikingRoute"
+php artisan osm2cai:populate-properties --model=HikingRoute
 echo -e "${GREEN}✅ Hiking Routes properties population command dispatched successfully.${NC}"
 
 echo -e "\n${BLUE}🚀 Dispatching jobs to get taxonomy wheres for Hiking Routes...${NC}"
-docker exec "$CONTAINER_NAME" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:get-taxonomy-where-from-osmfeatures"
+php artisan osm2cai:get-taxonomy-where-from-osmfeatures
 echo -e "${GREEN}✅ Jobs for taxonomy wheres dispatched successfully.${NC}" 

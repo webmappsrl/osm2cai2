@@ -9,6 +9,11 @@ echo "=========================================================="
 echo "📅 Avviato: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "🤖 Modalità: Automatica (Cronjob)"
 echo ""
+echo "📁 Script per le app utilizzati:"
+echo "   • setup-app26.sh (App 26 - customizzazioni complete)"
+echo "   • setup-app20.sh (App 20 - import generico + verifiche)"
+echo "   • setup-app58.sh (App 58 - import generico + customizzazioni)"
+echo ""
 
 # Colori per output
 RED='\033[0;31m'
@@ -159,53 +164,33 @@ print_step "=== FASE 3: IMPORT APP SPECIFICHE ==="
 
 # FASE 3A: IMPORT APP 26 CON CUSTOMIZZAZIONI
 print_step "=== FASE 3A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
-print_step "🎯 App 26: Import + layer + associazione hiking routes + proprietà + media"
+print_step "🎯 App 26: Import + layer + associazione hiking routes + proprietà + media (customizzazioni complete)"
 
-# Import App 26
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/01-import-app-from-geohub.sh" 26; then
-    print_error "Import App 26 fallito! Interruzione setup."
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/setup-app26.sh"; then
+    print_error "Setup App 26 fallito! Interruzione setup."
     exit 1
 fi
-
-# Setup layer per App 26
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/02-create-layers-app26.sh"; then
-    print_error "Setup layer App 26 fallito! Interruzione setup."
-    exit 1
-fi
-
-# Associazione hiking routes per App 26
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/03-associate-routes-app26.sh"; then
-    print_error "Associazione routes App 26 fallita! Interruzione setup."
-    exit 1
-fi
-
-# Proprietà e media per App 26
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
-    print_error "Setup proprietà e media App 26 fallito! Interruzione setup."
-    exit 1
-fi
-
-print_success "=== FASE 3A COMPLETATA: App 26 configurata con customizzazioni ==="
+print_success "=== FASE 3A COMPLETATA: App 26 configurata con customizzazioni complete ==="
 
 # FASE 3B: IMPORT APP 20
 print_step "=== FASE 3B: IMPORT APP 20 ==="
-print_step "🎯 App 20: Import generico"
+print_step "🎯 App 20: Import generico con verifiche"
 
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/01-import-app-from-geohub.sh" 20; then
-    print_error "Import App 20 fallito! Interruzione setup."
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/setup-app20.sh"; then
+    print_error "Setup App 20 fallito! Interruzione setup."
     exit 1
 fi
-print_success "=== FASE 3B COMPLETATA: App 20 configurata ==="
+print_success "=== FASE 3B COMPLETATA: App 20 configurata con verifiche ==="
 
 # FASE 3C: IMPORT APP 58
 print_step "=== FASE 3C: IMPORT APP 58 ==="
-print_step "🎯 App 58: Import generico"
+print_step "🎯 App 58: Import generico + customizzazioni specifiche"
 
-if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/01-import-app-from-geohub.sh" 58; then
-    print_error "Import App 58 fallito! Interruzione setup."
+if ! bash "$SCRIPT_DIR/wm-package-integration/scripts/setup-app58.sh"; then
+    print_error "Setup App 58 fallito! Interruzione setup."
     exit 1
 fi
-print_success "=== FASE 3C COMPLETATA: App 58 configurata ==="
+print_success "=== FASE 3C COMPLETATA: App 58 configurata con customizzazioni ==="
 
 print_success "=== FASE 3 COMPLETATA: Tutte le app importate ==="
 
@@ -239,10 +224,15 @@ print_step "📋 Riepilogo operazioni:"
 print_step "   ✅ Dump scaricato da osm2caiProd"
 print_step "   ✅ Database resettato dal dump"
 print_step "   ✅ Migrazioni applicate"
-print_step "   ✅ App 26 importata con customizzazioni"
-print_step "   ✅ App 20 importata (generico)"
-print_step "   ✅ App 58 importata (generico)"
+print_step "   ✅ App 26 configurata con customizzazioni complete"
+print_step "   ✅ App 20 configurata con verifiche"
+print_step "   ✅ App 58 configurata con customizzazioni"
 print_step "   ✅ Verifica finale completata"
+echo ""
+print_step "📁 Script utilizzati per le app:"
+print_step "   • setup-app26.sh (App 26 - customizzazioni complete)"
+print_step "   • setup-app20.sh (App 20 - import generico + verifiche)"
+print_step "   • setup-app58.sh (App 58 - import generico + customizzazioni)"
 echo ""
 print_step "🌐 L'applicazione dovrebbe essere accessibile su: http://127.0.0.1:8008"
 print_step "📊 Horizon dovrebbe essere attivo per la gestione delle code"
