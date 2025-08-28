@@ -10,13 +10,18 @@ use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use App\Models\Region;
+use App\Models\MountainGroups;
+use App\Models\Club;
+use App\Models\CaiHut;
+use App\Models\HikingRoute;
+use App\Models\Municipality;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
-
-class EcPoi extends Model implements OsmfeaturesSyncableInterface
+use Wm\WmPackage\Models\EcPoi as WmEcPoi;
+class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
 {
     use AwsCacheable, HasFactory, OsmfeaturesGeometryUpdateTrait, OsmfeaturesImportableTrait, SpatialDataTrait, TagsMappingTrait;
 
@@ -30,6 +35,9 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         'score',
         'user_id',
         'tags',
+        'properties',
+        'app_id',
+        'osmid',
     ];
 
     protected $casts = [
@@ -37,8 +45,13 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_data' => 'json',
     ];
 
+    /**
+     * Boot the model and set default values for translatable fields
+     */
     protected static function booted()
     {
+        parent::booted();
+        
         static::saved(function ($ecPoi) {
             if ($ecPoi->isDirty('geometry')) {
                 CalculateIntersectionsJob::dispatch($ecPoi, Club::class)->onQueue('geometric-computations');
@@ -48,6 +61,27 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
             }
         });
     }
+
+    /**
+     * Set the properties attribute
+     */
+    public function setPropertiesAttribute($value)
+    {
+        $this->attributes['properties'] = is_null($value) ? '[]' : json_encode($value);
+    }
+
+    /**
+     * Get the properties attribute
+     */
+    public function getPropertiesAttribute($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+        return is_string($value) ? json_decode($value, true) : $value;
+    }
+
+
 
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.
@@ -106,10 +140,8 @@ class EcPoi extends Model implements OsmfeaturesSyncableInterface
         }
     }
 
-    public function User()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // Rimuovo il metodo User() perché è già definito nella classe padre come user()
+    // Se hai bisogno di personalizzare la relazione, usa un nome diverso
 
     public function region()
     {

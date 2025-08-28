@@ -33,7 +33,7 @@ alwaysApply: true
 
 ### Container PHP-FPM (`phpfpm`)
 - **Image**: `wm-phpfpm:8.4-fpm`
-- **Container name**: `php81_${APP_NAME}` (solitamente `php81_osm2cai2`)
+- **Container name**: `php81-${APP_NAME}` (solitamente `php81-osm2cai2`)
 - **PHP Version**: 8.4-fpm
 - **Working directory**: `/var/www/html/${DOCKER_PROJECT_DIR_NAME}`
 - **User**: `www-data` (id: 33)
@@ -43,13 +43,13 @@ alwaysApply: true
 
 ### Container Database (`db`)
 - **Image**: `postgis/postgis:16-3.4`
-- **Container name**: `postgres_${APP_NAME}`
+- **Container name**: `postgres-${APP_NAME}`
 - **Porta**: `${DOCKER_PSQL_PORT}:5432` (default: 5508)
 - **Extensions**: PostGIS attivo
 
 ### Container Redis (`redis`)
 - **Image**: `redis:latest`
-- **Container name**: `redis_${APP_NAME}`
+- **Container name**: `redis-${APP_NAME}`
 - **Porta**: `6379:6379`
 
 ## Comandi Essenziali
@@ -57,19 +57,19 @@ alwaysApply: true
 ### Accesso ai Container
 ```bash
 # Container PHP (utente www-data)
-docker exec -it php81_osm2cai2 bash
+docker exec -it php81-osm2cai2 bash
 
 # Container PHP (utente root per permessi)
-docker exec -u 0 -it php81_osm2cai2 bash
+docker exec -u 0 -it php81-osm2cai2 bash
 
 # Container PostgreSQL
-docker exec -it postgres_osm2cai2 bash
+docker exec -it postgres-osm2cai2 bash
 ```
 
 ### Comandi Laravel nel Container
 ```bash
 # Sempre nel container PHP
-docker exec -it php81_osm2cai2 bash
+docker exec -it php81-osm2cai2 bash
 php artisan [comando]
 composer [comando]
 npm [comando]
@@ -85,7 +85,7 @@ php artisan serve --host 0.0.0.0
 ### Gestione Permessi
 ```bash
 # Per problemi di permessi (come utente root)
-docker exec -u 0 -it php81_osm2cai2 bash
+docker exec -u 0 -it php81-osm2cai2 bash
 chown -R 33 storage/
 chown -R 33 bootstrap/cache/
 ```
@@ -146,12 +146,12 @@ Eseguire automaticamente e in sequenza i seguenti comandi:
 
 3. **Avvio Laravel serve nel container PHP** (in background):
    ```bash
-   docker exec -d php81_osm2cai2 php artisan serve --host 0.0.0.0
+   docker exec -d php81-osm2cai2 php artisan serve --host 0.0.0.0
    ```
 
 4. **Avvio Horizon nel container PHP** (in background):
    ```bash
-   docker exec -d php81_osm2cai2 php artisan horizon
+   docker exec -d php81-osm2cai2 php artisan horizon
    ```
 
 ### Risultato atteso:

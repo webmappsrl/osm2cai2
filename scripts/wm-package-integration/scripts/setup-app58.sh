@@ -71,7 +71,8 @@ print_step "Utilizzo container: ${PHP_CONTAINER}"
 print_step "=== FASE 1: IMPORT APP 58 GENERICO ==="
 
 print_step "Eseguendo setup generico per App 58..."
-if ! ./scripts/setup-app-generic.sh 58; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! "$SCRIPT_DIR/setup-app-generic.sh" 58; then
     print_error "Setup generico App 58 fallito!"
     exit 1
 fi
@@ -89,6 +90,14 @@ print_step "=== FASE 2: CUSTOMIZZAZIONI SPECIFICHE APP 58 ==="
 # - Configurazione tassonomie particolari
 
 print_step "Applicando customizzazioni specifiche per App 58..."
+
+# Conversione UgcPois validati con form_id "water" a EcPois
+print_step "Conversione UgcPois validati con form_id 'water' a EcPois..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan app:convert-validated-water-ugc-pois-to-ec-pois"; then
+    print_error "Conversione UgcPois validati per App 58 fallita!"
+    exit 1
+fi
+print_success "Conversione UgcPois validati per App 58 completata"
 
 # Esempio di customizzazione (da personalizzare secondo le esigenze):
 print_step "Configurazione layer personalizzati per App 58..."
@@ -131,6 +140,12 @@ print_success "Hiking routes associate ad App 58: $ROUTES_COUNT"
 
 # Verifica customizzazioni applicate
 print_step "Verifica customizzazioni applicate..."
+
+# Verifica conversione UgcPois validati
+print_step "Verifica conversione UgcPois validati per App 58..."
+EC_POIS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \App\Models\EcPoi::where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 58)->first()->id)->where('properties->converted_from_ugc', true)->count();\"" 2>/dev/null || echo "0")
+print_success "EcPois convertiti da UgcPois per App 58: $EC_POIS_COUNT"
+
 # TODO: Aggiungere verifiche specifiche per le customizzazioni
 # LAYER_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\Layer::where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 58)->first()->id)->count();\"" 2>/dev/null || echo "0")
 # print_success "Layer personalizzati per App 58: $LAYER_COUNT"
@@ -154,6 +169,7 @@ echo ""
 echo "📊 Statistiche App 58:"
 echo "   • App importata: ✅"
 echo "   • Hiking routes associate: $ROUTES_COUNT"
+echo "   • EcPois convertiti da UgcPois: $EC_POIS_COUNT"
 echo "   • Customizzazioni applicate: ✅"
 echo "   • Setup generico: ✅"
 echo "   • Code processate: ✅"

@@ -18,6 +18,7 @@ use App\Nova\Dashboards\SALMiturAbruzzo;
 use App\Nova\Dashboards\SectorsDashboard;
 use App\Nova\Dashboards\Utenti;
 use App\Nova\EcPoi;
+use App\Nova\EnrichPoi;
 use App\Nova\EcTrack;
 use App\Nova\GeologicalSite;
 use App\Nova\HikingRoute;
@@ -33,6 +34,7 @@ use App\Nova\Sector;
 use App\Nova\Sign;
 use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
+use App\Nova\TaxonomyPoiType;
 use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
@@ -69,9 +71,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make(__('MOBILE'), [
                     MenuItem::resource(App::class),
                     MenuItem::resource(NovaUser::class),
-                    MenuItem::resource(Layer::class),
-                    MenuItem::resource(EcTrack::class),
-                    MenuItem::resource(TaxonomyActivity::class),
+                    MenuSection::make(__('Editorial content'), [
+                        MenuItem::resource(Layer::class),
+                        MenuItem::resource(EcTrack::class),
+                        MenuItem::resource(EcPoi::class),
+                    ])->icon('none')->collapsable(),
+                    MenuSection::make(__('Taxonomies'), [
+                        MenuItem::resource(TaxonomyPoiType::class),
+                        MenuItem::resource(TaxonomyActivity::class),
+                    ])->icon('none')->collapsable(),
                 ])->icon('globe')->collapsable(),
                 MenuGroup::make('', [
                     MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')
@@ -136,7 +144,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Arricchimenti
                 MenuSection::make(__('Arricchimenti'), [
-                    MenuItem::resource(EcPoi::class, __('Punti di interesse')),
+                    MenuItem::resource(EnrichPoi::class, __('Punti di interesse')),
                     MenuItem::resource(MountainGroups::class, __('Gruppi Montuosi')),
                     MenuItem::resource(CaiHut::class, __('Rifugi')),
                     MenuItem::resource(NaturalSpring::class, __('Acqua Sorgente')),
