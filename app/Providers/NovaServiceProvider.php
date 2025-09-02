@@ -80,6 +80,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(TaxonomyPoiType::class),
                         MenuItem::resource(TaxonomyActivity::class),
                     ])->icon('none')->collapsable(),
+                    MenuSection::make(__('Files'), [
+                        MenuItem::externalLink(__('Icons'), route('icons.upload.show'))->openInNewTab(),
+                    ])->collapsable(),
                 ])->icon('globe')->collapsable(),
                 MenuGroup::make('', [
                     MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')
