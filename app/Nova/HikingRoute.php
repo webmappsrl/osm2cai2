@@ -639,13 +639,13 @@ class HikingRoute extends OsmfeaturesResource
         }
 
         try {
-            \Log::info("HikingRoute getPOITabFields() called for ID: " . ($this->model()->id ?? 'N/A'));
+            \Log::info('HikingRoute getPOITabFields() called for ID: '.($this->model()->id ?? 'N/A'));
             $pois = $this->model()->getElementsInBuffer(new EcPoi, 10000);
-            \Log::info("HikingRoute getPOITabFields() found " . count($pois) . " POIs");
+            \Log::info('HikingRoute getPOITabFields() found '.count($pois).' POIs');
         } catch (\Exception $e) {
-            \Log::error("HikingRoute getPOITabFields() error: " . $e->getMessage(), [
+            \Log::error('HikingRoute getPOITabFields() error: '.$e->getMessage(), [
                 'hiking_route_id' => $this->model()->id ?? 'N/A',
-                'exception' => $e
+                'exception' => $e,
             ]);
             $pois = collect([]); // Return empty collection on error
         }
