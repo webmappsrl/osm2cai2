@@ -5,6 +5,7 @@ use App\Http\Controllers\HikingRouteLoScarponeExportController;
 use App\Http\Controllers\MigrationCheck;
 use App\Http\Controllers\MiturAbruzzoController;
 use App\Models\HikingRoute;
+use App\Models\Poles;
 use Illuminate\Support\Facades\Route;
 
 /*
