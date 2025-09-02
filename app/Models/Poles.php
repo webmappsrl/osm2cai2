@@ -11,8 +11,9 @@ use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Wm\WmPackage\Models\Abstracts\GeometryModel;
 
-class Poles extends Model implements OsmfeaturesSyncableInterface
+class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 {
     use HasFactory, OsmfeaturesSyncableTrait, SpatialDataTrait, FeatureCollectionMapTrait;
 
