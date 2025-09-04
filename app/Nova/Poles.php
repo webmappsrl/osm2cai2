@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap;
 
 class Poles extends OsmfeaturesResource
 {
