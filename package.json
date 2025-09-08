@@ -7,7 +7,9 @@
         "test:e2e": "cypress run",
         "cypress:open": "cypress open",
         "build-icon-select": "cd wm-package/nova-components/IconSelect && npm run dev",
-        "build-icon-select-prod": "cd wm-package/nova-components/IconSelect && npm run prod"
+        "build-icon-select-prod": "cd wm-package/nova-components/IconSelect && npm run prod",
+        "build-IconSelect": "cd nova-components/IconSelect && npm run dev",
+        "build-IconSelect-prod": "cd nova-components/IconSelect && npm run prod"
     },
     "devDependencies": {
         "axios": "^1.1.2",
