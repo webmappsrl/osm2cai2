@@ -83,7 +83,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuSection::make(__('Files'), [
                         MenuItem::externalLink(__('Icons'), route('icons.upload.show'))->openInNewTab(),
                     ])->collapsable(),
-                ])->icon('globe')->collapsable(),
+                ])->icon('globe')->collapsable()->canSee(function () {
+                    return optional(Auth::user())->hasRole('Administrator');
+                }),
                 MenuGroup::make('', [
                     MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')
                         ->canSee(function () {
