@@ -12402,7 +12402,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-code_formatting",
+            "version": "dev-wmpackage-integration",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -12438,7 +12438,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-code_formatting",
+            "version": "dev-wmpackage-integration",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -12519,11 +12519,11 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-develop",
+            "version": "dev-wmintegrations",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
-                "reference": "17f0d33973c759a2a164b3340c28784eb45f7479"
+                "reference": "aab0cbb1873feb6114afa10b1a47043d7d3a944d"
             },
             "require": {
                 "chillerlan/php-qrcode": "^5.0",
@@ -12592,7 +12592,8 @@
                 "psr-4": {
                     "Wm\\WmPackage\\": "src",
                     "Wm\\WmPackage\\Database\\Factories\\": "database/factories/",
-                    "Wm\\WmPackage\\Http\\Controllers\\": "src/Http/Controllers"
+                    "Wm\\WmPackage\\Http\\Controllers\\": "src/Http/Controllers",
+                    "Wm\\WmPackage\\Nova\\Fields\\IconSelect\\": "src/Nova/Fields/IconSelect/src/"
                 },
                 "classmap": [
                     "src/Exceptions/"
