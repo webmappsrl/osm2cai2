@@ -36,7 +36,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
         }
 
         // Trova l'app acquasorgente
-        $acquasorgenteApp = App::where('sku', '"it.webmapp.acquasorgente"')->first();
+        $acquasorgenteApp = App::where('sku', 'it.webmapp.acquasorgente')->first();
         
         if (!$acquasorgenteApp) {
             $this->error('App Acquasorgente non trovata!');
