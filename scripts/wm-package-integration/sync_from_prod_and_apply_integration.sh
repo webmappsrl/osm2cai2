@@ -90,6 +90,9 @@ show_help() {
     echo "   $0 --help             # Mostra questo help"
     echo "   $0 --apps 26 20       # Importa solo le app specificate"
     echo "   $0 -a 26 20           # Forma abbreviata"
+    echo "   $0 --sync             # Sincronizza dump da produzione prima del setup"
+    echo "   $0 -s                 # Forma abbreviata per sync"
+    echo "   $0 --sync --apps 26   # Sync + import solo App 26"
     echo ""
     echo "📁 App disponibili:"
     echo "   • App 26: setup-app26.sh (customizzazioni complete)"
@@ -100,6 +103,8 @@ show_help() {
     echo "   $0                    # Importa tutte le app"
     echo "   $0 --apps 26          # Importa solo App 26"
     echo "   $0 --apps 20 58       # Importa App 20 e 58"
+    echo "   $0 --sync             # Sync da produzione + importa tutte le app"
+    echo "   $0 --sync --apps 26   # Sync da produzione + importa solo App 26"
     echo ""
 }
 
@@ -151,6 +156,7 @@ handle_error() {
 
 # Parsing dei parametri
 APPS_TO_IMPORT=()
+SYNC_FROM_PROD=false  # Default: no sync, usa dump locale esistente
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -164,6 +170,10 @@ while [[ $# -gt 0 ]]; do
                 APPS_TO_IMPORT+=("$1")
                 shift
             done
+            ;;
+        --sync|-s)
+            SYNC_FROM_PROD=true
+            shift
             ;;
         *)
             print_error "Parametro non riconosciuto: $1"
@@ -214,52 +224,41 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
-# Controlla se rsync è disponibile
-if ! command -v rsync &> /dev/null; then
-    print_error "rsync non è installato!"
-    exit 1
-fi
 
 print_success "Prerequisiti verificati"
 
 # Log automatico per cronjob
 echo ""
-print_warning "⚠️  ATTENZIONE: Questa operazione:"
-print_warning "   • Scaricherà il dump da produzione (~600MB)"
-print_warning "   • Cancellerà TUTTI i dati nel database locale"
-print_warning "   • Applicherà l'integrazione WMPackage di produzione"
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_warning "⚠️  ATTENZIONE: Questa operazione:"
+    print_warning "   • Scaricherà il dump da produzione (~600MB)"
+    print_warning "   • Cancellerà TUTTI i dati nel database locale"
+    print_warning "   • Applicherà l'integrazione WMPackage di produzione"
+else
+    print_warning "⚠️  ATTENZIONE: Questa operazione:"
+    print_warning "   • Utilizzerà il dump locale esistente (se disponibile)"
+    print_warning "   • Cancellerà TUTTI i dati nel database locale"
+    print_warning "   • Applicherà l'integrazione WMPackage"
+fi
 echo ""
 print_step "🤖 Modalità automatica (cronjob) - procedo senza conferma utente"
 echo ""
 
-# FASE 1: Download Dump da Produzione
-print_step "=== FASE 1: DOWNLOAD DUMP DA PRODUZIONE ==="
-
-# Crea directory backups se non esiste
-mkdir -p "$PROJECT_ROOT/storage/app/backups"
-
-print_step "Scaricando dump da osm2caiProd..."
-print_step "Dimensione file remoto: $(ssh osm2caiProd "du -h html/osm2cai2/storage/backups/last_dump.sql.gz" 2>/dev/null | cut -f1 || echo "non disponibile")"
-print_warning "⚠️  File di ~600MB - il download potrebbe richiedere alcuni minuti"
-print_step "⏱️  Timeout impostato a 10 minuti, velocità limitata a 5MB/s per stabilità"
-
-if rsync -avz --progress --timeout=600 --partial --bwlimit=5000 osm2caiProd:html/osm2cai2/storage/backups/last_dump.sql.gz "$PROJECT_ROOT/storage/app/backups/dump.sql.gz"; then
-    print_success "Dump scaricato con successo"
-    print_step "Dimensione dump scaricato: $(du -h $PROJECT_ROOT/storage/app/backups/dump.sql.gz | cut -f1)"
+# FASE 1: Download Dump da Produzione (se richiesto)
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_step "=== FASE 1: DOWNLOAD DUMP DA PRODUZIONE ==="
     
-    # Verifica integrità del file (controlla che non sia vuoto)
-    if [ -s "$PROJECT_ROOT/storage/app/backups/dump.sql.gz" ]; then
-        print_success "File scaricato correttamente (non vuoto)"
-    else
-        print_error "File scaricato è vuoto o corrotto"
+    if ! bash "$SCRIPT_DIR/scripts/sync-dump-from-production.sh"; then
+        print_error "Errore durante il sync del dump da produzione! Interruzione setup."
         exit 1
     fi
+    
+    print_success "=== FASE 1 COMPLETATA ==="
 else
-    print_error "Errore durante il download del dump da produzione"
-    exit 1
+    print_step "=== FASE 1: SYNC DA PRODUZIONE SALTATO ==="
+    print_step "Utilizzando dump locale esistente (se disponibile)"
+    print_success "=== FASE 1 COMPLETATA ==="
 fi
-
-print_success "=== FASE 1 COMPLETATA ==="
 
 # FASE 2: Reset Database dal Dump
 print_step "=== FASE 2: RESET DATABASE DAL DUMP ==="
@@ -348,7 +347,11 @@ print_success "🎉 SYNC DA PRODUZIONE E INTEGRAZIONE COMPLETATA CON SUCCESSO!"
 echo "📅 Completato: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 print_step "📋 Riepilogo operazioni:"
-print_step "   ✅ Dump scaricato da osm2caiProd"
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_step "   ✅ Dump scaricato da osm2caiProd"
+else
+    print_step "   ✅ Dump locale utilizzato (sync saltato)"
+fi
 print_step "   ✅ Database resettato dal dump"
 print_step "   ✅ Migrazioni applicate"
 print_step "   ✅ Campi translatable fixati"

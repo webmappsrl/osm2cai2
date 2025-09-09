@@ -68,6 +68,9 @@ show_help() {
     echo "   $0 --help             # Mostra questo help"
     echo "   $0 --apps 26 20       # Importa solo le app specificate"
     echo "   $0 -a 26 20           # Forma abbreviata"
+    echo "   $0 --sync             # Sincronizza dump da produzione prima del setup"
+    echo "   $0 -s                 # Forma abbreviata per sync"
+    echo "   $0 --sync --apps 26   # Sync + import solo App 26"
     echo ""
     echo "📁 App disponibili:"
     echo "   • App 26: setup-app26.sh (customizzazioni complete, modalità locale)"
@@ -78,6 +81,8 @@ show_help() {
     echo "   $0                    # Importa tutte le app"
     echo "   $0 --apps 26          # Importa solo App 26"
     echo "   $0 --apps 20 58       # Importa App 20 e 58"
+    echo "   $0 --sync             # Sync da produzione + importa tutte le app"
+    echo "   $0 --sync --apps 26   # Sync da produzione + importa solo App 26"
     echo ""
 }
 
@@ -116,8 +121,10 @@ import_app() {
     print_success "=== FASE COMPLETATA: App $app_id configurata ==="
 }
 
+
 # Parsing dei parametri
 APPS_TO_IMPORT=()
+SYNC_FROM_PROD=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -131,6 +138,10 @@ while [[ $# -gt 0 ]]; do
                 APPS_TO_IMPORT+=("$1")
                 shift
             done
+            ;;
+        --sync|-s)
+            SYNC_FROM_PROD=true
+            shift
             ;;
         *)
             print_error "Parametro non riconosciuto: $1"
@@ -253,7 +264,18 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
+
 print_success "Prerequisiti verificati"
+
+# Messaggio informativo per sync da produzione
+if [ "$SYNC_FROM_PROD" = true ]; then
+    echo ""
+    print_warning "⚠️  MODALITÀ SYNC DA PRODUZIONE ATTIVATA:"
+    print_warning "   • Scaricherà il dump da produzione (~600MB)"
+    print_warning "   • Cancellerà TUTTI i dati nel database locale"
+    print_warning "   • Applicherà l'integrazione WMPackage di produzione"
+    echo ""
+fi
 
 # FASE 1: SETUP AMBIENTE DOCKER
 print_step "=== FASE 1: SETUP AMBIENTE DOCKER ==="
@@ -396,6 +418,16 @@ fi
 
 print_success "Laravel serve e Horizon avviati e verificati (necessari per import)"
 
+# FASE 1.5: SYNC DA PRODUZIONE (se richiesto)
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_step "=== FASE 1.5: SYNC DUMP DA PRODUZIONE ==="
+    if ! bash "$SCRIPT_DIR/scripts/sync-dump-from-production.sh"; then
+        print_error "Errore durante il sync del dump da produzione! Interruzione setup."
+        exit 1
+    fi
+    print_success "=== FASE 1.5 COMPLETATA: Dump da produzione sincronizzato ==="
+fi
+
 # FASE 2: RESET DATABASE
 print_step "=== FASE 2: RESET DATABASE ==="
 
@@ -498,6 +530,9 @@ print_success "🎉 SETUP AMBIENTE DI SVILUPPO COMPLETATO CON SUCCESSO!"
 echo "=============================================================="
 echo ""
 print_step "📋 Riepilogo operazioni completate:"
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_step "   ✅ Dump scaricato da produzione"
+fi
 print_step "   ✅ Ambiente Docker configurato e avviato"
 print_step "   ✅ Database resettato e migrazioni applicate"
 print_step "   ✅ Servizi (MinIO, Elasticsearch) configurati"
