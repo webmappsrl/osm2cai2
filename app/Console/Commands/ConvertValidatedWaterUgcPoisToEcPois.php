@@ -22,7 +22,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
      *
      * @var string
      */
-    protected $description = 'Convert validated UgcPois with form_id "water" to EcPois and associate them with acquasorgente app';
+    protected $description = 'Convert validated UgcPois with form_id "water" to EcPois and associate them with osm2cai app';
 
     /**
      * Execute the console command.
@@ -35,15 +35,15 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
             $this->info('🔍 DRY RUN MODE - No changes will be made');
         }
 
-        // Trova l'app acquasorgente
-        $acquasorgenteApp = App::where('sku', 'it.webmapp.acquasorgente')->first();
+        // Trova l'app osm2cai
+        $osm2caiApp = App::where('sku', 'it.webmapp.osm2cai')->first();
         
-        if (!$acquasorgenteApp) {
-            $this->error('App Acquasorgente non trovata!');
+        if (!$osm2caiApp) {
+            $this->error('App OSM2CAI non trovata!');
             return 1;
         }
         
-        $acquasorgenteAppId = $acquasorgenteApp->id;
+        $osm2caiAppId = $osm2caiApp->id;
 
         // Trova tutti gli UgcPoi con form_id 'water' e validated 'valid'
         $waterUgcPois = UgcPoi::where('form_id', 'water')
@@ -73,29 +73,74 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
             if (!$isDryRun) {
                 try {
                     DB::beginTransaction();
+                    
+                    // Ottieni le properties esistenti dell'UgcPoi
+                    $ugcProperties = [];
+                    if ($ugcPoi->properties) {
+                        $ugcProperties = is_string($ugcPoi->properties) ? json_decode($ugcPoi->properties, true) : $ugcPoi->properties;
+                        if (!is_array($ugcProperties)) {
+                            $ugcProperties = [];
+                        }
+                    }
+                    
+                    // Ottieni anche il raw_data se presente
+                    if ($ugcPoi->raw_data) {
+                        $rawData = is_string($ugcPoi->raw_data) ? json_decode($ugcPoi->raw_data, true) : $ugcPoi->raw_data;
+                        if (is_array($rawData)) {
+                            $ugcProperties = array_merge($ugcProperties, $rawData);
+                        }
+                    }
+                    
+                    // Prepara le properties finali con informazioni UGC strutturate
+                    $properties = $ugcProperties;
+                    
+                    // Assicurati che description e excerpt abbiano la struttura translatable corretta
+                    if (!isset($properties['description']) || !is_array($properties['description'])) {
+                        $properties['description'] = [
+                            'it' => $properties['description'] ?? 'Sorgente d\'acqua naturale',
+                        ];
+                    }
+                    
+                    if (!isset($properties['excerpt']) || !is_array($properties['excerpt'])) {
+                        $properties['excerpt'] = [
+                            'it' => $properties['excerpt'] ?? 'Sorgente d\'acqua potabile',
+                        ];
+                    }
+                    
+                    // Aggiungi le informazioni UGC dentro l'attributo 'ugc'
+                    $properties['ugc'] = [
+                        'ugc_poi_id' => $ugcPoi->id,
+                        'ugc_user_id' => $ugcPoi->user_id, // ID dell'utente proprietario dell'UgcPoi
+                        'converted_from_ugc' => true,
+                        'conversion_date' => now()->toISOString(),
+                    ];
 
                     // Crea il nuovo EcPoi
                     $ecPoi = EcPoi::create([
                         'name' => $ugcPoi->name ?? 'Sorgente d\'acqua',
                         'geometry' => $ugcPoi->geometry,
-                        'properties' => json_encode([
-                            'ugc_poi_id' => $ugcPoi->id,
-                            'ugc_user_id' => $ugcPoi->user_id, // ID dell'utente proprietario dell'UgcPoi
-                            'form_id' => $ugcPoi->form_id,
-                            'description' => $ugcPoi->description,
-                            'raw_data' => $ugcPoi->raw_data,
-                            'converted_from_ugc' => true,
-                            'conversion_date' => now()->toISOString(),
-                        ]),
-                        'app_id' => $acquasorgenteAppId,
-                        'user_id' => $acquasorgenteApp->user_id, // Usiamo l'utente detentore dell'app
+                        'properties' => $properties,
+                        'app_id' => $osm2caiAppId,
+                        'user_id' => $osm2caiApp->user_id, // Usiamo l'utente detentore dell'app
                         'type' => 'natural_spring',
                         'score' => 1,
                     ]);
+                    
 
                     DB::commit();
                     
                     $this->line("✅ Converted UgcPoi ID {$ugcPoi->id} to EcPoi ID {$ecPoi->id}");
+                    
+                    // Log dettagliato delle properties dell'EcPoi creato
+                    $this->line("📋 EcPoi Properties:");
+                    $this->line("   - ID: {$ecPoi->id}");
+                    $this->line("   - Name: {$ecPoi->name}");
+                    $this->line("   - Type: {$ecPoi->type}");
+                    $this->line("   - App ID: {$ecPoi->app_id}");
+                    $this->line("   - User ID: {$ecPoi->user_id}");
+                    $this->line("   - Score: {$ecPoi->score}");
+                    $this->line("   - Geometry: " . ($ecPoi->geometry ? 'Present' : 'Missing'));
+                    
                     $convertedCount++;
                     
                 } catch (\Exception $e) {
