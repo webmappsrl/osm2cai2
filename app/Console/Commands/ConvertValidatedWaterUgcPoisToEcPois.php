@@ -22,7 +22,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
      *
      * @var string
      */
-    protected $description = 'Convert validated UgcPois with form_id "water" to EcPois and associate them with osm2cai app';
+    protected $description = 'Convert validated UgcPois with form_id "water" to EcPois and associate them with acquasorgente app';
 
     /**
      * Execute the console command.
@@ -35,15 +35,15 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
             $this->info('🔍 DRY RUN MODE - No changes will be made');
         }
 
-        // Trova l'app osm2cai
-        $osm2caiApp = App::where('sku', 'it.webmapp.osm2cai')->first();
+        // Trova l'app acquasorgente
+        $acquasorgenteApp = App::where('sku', 'it.webmapp.acquasorgente')->first();
         
-        if (!$osm2caiApp) {
-            $this->error('App OSM2CAI non trovata!');
+        if (!$acquasorgenteApp) {
+            $this->error('App Acquasorgente non trovata!');
             return 1;
         }
         
-        $osm2caiAppId = $osm2caiApp->id;
+        $acquasorgenteAppId = $acquasorgenteApp->id;
 
         // Trova tutti gli UgcPoi con form_id 'water' e validated 'valid'
         $waterUgcPois = UgcPoi::where('form_id', 'water')
@@ -111,7 +111,6 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $properties['ugc'] = [
                         'ugc_poi_id' => $ugcPoi->id,
                         'ugc_user_id' => $ugcPoi->user_id, // ID dell'utente proprietario dell'UgcPoi
-                        'converted_from_ugc' => true,
                         'conversion_date' => now()->toISOString(),
                     ];
 
@@ -120,8 +119,8 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                         'name' => $ugcPoi->name ?? 'Sorgente d\'acqua',
                         'geometry' => $ugcPoi->geometry,
                         'properties' => $properties,
-                        'app_id' => $osm2caiAppId,
-                        'user_id' => $osm2caiApp->user_id, // Usiamo l'utente detentore dell'app
+                        'app_id' => $acquasorgenteAppId,
+                        'user_id' => $acquasorgenteApp->user_id, // Usiamo l'utente detentore dell'app
                         'type' => 'natural_spring',
                         'score' => 1,
                     ]);

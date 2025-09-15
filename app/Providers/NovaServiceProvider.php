@@ -76,6 +76,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(EcTrack::class),
                         MenuItem::resource(EcPoi::class),
                     ])->icon('none')->collapsable(),
+                    MenuSection::make(__('User Generated Content'), [
+                        MenuItem::resource(UgcPoi::class),
+                        MenuItem::resource(UgcTrack::class),
+                    ])->icon('none')->collapsable(),
                     MenuSection::make(__('Taxonomies'), [
                         MenuItem::resource(TaxonomyPoiType::class),
                         MenuItem::resource(TaxonomyActivity::class),

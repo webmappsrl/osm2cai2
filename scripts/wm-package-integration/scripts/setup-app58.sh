@@ -143,7 +143,7 @@ print_step "Verifica customizzazioni applicate..."
 
 # Verifica conversione UgcPois validati
 print_step "Verifica conversione UgcPois validati per App 58..."
-EC_POIS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \App\Models\EcPoi::where('properties->converted_from_ugc', true)->count();\"" 2>/dev/null || echo "0")
+EC_POIS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \App\Models\EcPoi::where('properties->ugc', true)->count();\"" 2>/dev/null || echo "0")
 print_success "EcPois convertiti da UgcPois: $EC_POIS_COUNT"
 
 # TODO: Aggiungere verifiche specifiche per le customizzazioni

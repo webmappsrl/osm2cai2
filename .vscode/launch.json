@@ -9,7 +9,7 @@
             "name": "Listen for Xdebug",
             "type": "php",
             "request": "launch",
-            "port": 9400,
+            "port": 9010,
             "pathMappings": {
                 "/var/www/html/osm2cai2": "${workspaceRoot}"
             }
