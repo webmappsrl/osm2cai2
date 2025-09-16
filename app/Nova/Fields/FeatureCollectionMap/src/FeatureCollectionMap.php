@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Nova\Fields;
+namespace App\Nova\Fields\FeatureCollectionMap\src;
 
 use Laravel\Nova\Fields\Text;
 
@@ -40,13 +40,10 @@ class FeatureCollectionMap extends Text
      */
     protected function generateMapHtml($resource)
     {
-        // Genera l'URL per il GeoJSON dinamico basato sull'ID del record
-        $geojsonUrl = url("/widget/feature-collection-map-url/{$resource->id}");
-        
         return <<<HTML
             <div style="min-height: 400px; position: relative;background: white;">
                 <iframe 
-                    src="/widget/feature-collection-map?geojson={$geojsonUrl}"
+                    src="/nova-vendor/feature-collection-map/widget?geojson={$resource->id}"
                     style="width: 100%; height: 500px; border: none; border-radius: 4px;"
                     frameborder="0"
                     allowfullscreen>
@@ -80,8 +77,7 @@ class FeatureCollectionMap extends Text
     public function height($height = 500)
     {
         $this->resolveUsing(function ($value, $resource) use ($height) {
-            $geojsonUrl = url("/widget/feature-collection-map-url/{$resource->id}");
-            return $this->generateMapHtmlWithUrl($resource, $geojsonUrl, $height);
+            return $this->generateMapHtmlWithUrl($resource, $resource->id, $height);
         })->asHtml();
 
         return $this;
@@ -97,10 +93,15 @@ class FeatureCollectionMap extends Text
      */
     protected function generateMapHtmlWithUrl($resource, $geojsonUrl, $height = 500)
     {
+        // Se geojsonUrl è un URL completo, estraiamo solo l'ID
+        if (filter_var($geojsonUrl, FILTER_VALIDATE_URL)) {
+            $geojsonUrl = basename(parse_url($geojsonUrl, PHP_URL_PATH));
+        }
+        
         return <<<HTML
             <div style="min-height: 400px; position: relative;background: white;">
                 <iframe 
-                    src="/widget/feature-collection-map?geojson={$geojsonUrl}"
+                    src="{$geojsonUrl}"
                     style="width: 100%; height: {$height}px; border: none; border-radius: 4px;"
                     frameborder="0"
                     allowfullscreen>

@@ -19,6 +19,7 @@ use App\Nova\Actions\UploadValidationRawDataAction;
 use App\Nova\Cards\LinksCard;
 use App\Nova\Cards\Osm2caiStatusCard;
 use App\Nova\Cards\RefCard;
+use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 use App\Nova\Filters\AreaFilter;
 use App\Nova\Filters\CaiHutsHRFilter;
 use App\Nova\Filters\CorrectGeometryFilter;
@@ -471,21 +472,7 @@ class HikingRoute extends OsmfeaturesResource
                     </ul>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-            Text::make(__('geometry'), function () {
-                // Genera l'URL per il GeoJSON dinamico basato sull'ID del record
-                $geojsonUrl = url("/widget/feature-collection-map-url/{$this->id}");
-                
-                return <<<HTML
-                        <div style="min-height: 400px; position: relative;background: white;">
-                            <iframe 
-                                src="/widget/feature-collection-map?geojson={$geojsonUrl}"
-                                style="width: 100%; height: 500px; border: none; border-radius: 4px;"
-                                frameborder="0"
-                                allowfullscreen>
-                            </iframe>
-                        </div>
-                    HTML;
-            })->asHtml()->onlyOnDetail(),
+            FeatureCollectionMap::make(__('geometry')),
         ];
 
         return $fields;
