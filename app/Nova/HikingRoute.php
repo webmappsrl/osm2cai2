@@ -675,11 +675,20 @@ class HikingRoute extends OsmfeaturesResource
                     $tagList .= '</ul>';
                 }
 
+                // Controlli per osm_id e osm_type
+                $osmId = '';
+                $osmType = '';
+                if ($poi->osmfeatures_data && 
+                    isset($poi->osmfeatures_data['properties'])) {
+                    $osmId = $poi->osmfeatures_data['properties']['osm_id'] ?? '';
+                    $osmType = $poi->osmfeatures_data['properties']['osm_type'] ?? '';
+                }
+
                 $tableRows[] = "<tr style='border-bottom:1px solid #eee; transition: background 0.2s;' onmouseover=\"this.style.background='#f5f5f5'\" onmouseout=\"this.style.background='white'\">
             <td style='padding:12px; border-right:1px solid #eee;'><a style='text-decoration: none; color: #2697bc; font-weight: bold; transition: color 0.2s;' href='/resources/ec-pois/{$poi->id}' onmouseover=\"this.style.color='#1a7594'\" onmouseout=\"this.style.color='#2697bc'\">{$poi->name}</a></td>
-            <td style='padding:12px; border-right:1px solid #eee;'><code style='background:#f8f8f8; padding:2px 6px; border-radius:3px;'>{$poi->osmfeatures_data['properties']['osm_id']}</code></td>
+            <td style='padding:12px; border-right:1px solid #eee;'><code style='background:#f8f8f8; padding:2px 6px; border-radius:3px;'>{$osmId}</code></td>
             <td style='padding:12px; border-right:1px solid #eee;'>{$tagList}</td>
-            <td style='padding:12px; text-align:center;'><span style='background:#e3f2fd; color:#1976d2; padding:4px 8px; border-radius:4px; font-size:0.9em;'>{$poi->osmfeatures_data['properties']['osm_type']}</span></td>
+            <td style='padding:12px; text-align:center;'><span style='background:#e3f2fd; color:#1976d2; padding:4px 8px; border-radius:4px; font-size:0.9em;'>{$osmType}</span></td>
         </tr>";
             }
 
