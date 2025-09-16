@@ -70,6 +70,11 @@ class HikingRoute extends EcTrack
         $this->descriptionService = app(HikingRouteDescriptionService::class);
     }
 
+    public function getLayerRelationName(): string
+    {
+        return 'ecTracks';
+    }
+
     protected static function booted()
     {
         parent::booted();

@@ -8,14 +8,15 @@ use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\Text;
+use Wm\WmPackage\Nova\Fields\LayerFeatures\LayerFeatures;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\Layer as WmNovaLayer;
+use App\Models\HikingRoute;
 
 class Layer extends WmNovaLayer
 {
-    public static $with = ['appOwner', 'associatedApps'];
+    public static $with = [];
 
     /**
      * The model the resource corresponds to.
@@ -49,12 +50,12 @@ class Layer extends WmNovaLayer
                 return $this->rank ?? 0;
             })->onlyOnIndex()->sortable(),
             BelongsTo::make(__('App'), 'appOwner', \Wm\WmPackage\Nova\App::class),
-            BelongsTo::make('Owner', 'layerOwner', User::class)->nullable(),
+            BelongsTo::make('Owner', 'layerOwner', User::class)
+                ->nullable()
+                ->searchable(),
             Images::make(__('Image'), 'default'),
             PropertiesPanel::makeWithModel(__('Properties'), 'properties', $this, true)->collapsible(),
-            Panel::make('Ec Tracks', [
-                // LayerFeatures::make('ecTracks', $this->resource, HikingRoute::class)->hideWhenCreating(),
-            ]),
+            LayerFeatures::make('tracks', $this->resource, HikingRoute::class)->hideWhenCreating()->withMeta(['model_class' => HikingRoute::class])
         ];
     }
 }

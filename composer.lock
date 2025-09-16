@@ -12523,7 +12523,7 @@
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
-                "reference": "aab0cbb1873feb6114afa10b1a47043d7d3a944d"
+                "reference": "fd91c073b0daaf9b224f09e42044dfa7c71e999e"
             },
             "require": {
                 "chillerlan/php-qrcode": "^5.0",
@@ -12593,7 +12593,8 @@
                     "Wm\\WmPackage\\": "src",
                     "Wm\\WmPackage\\Database\\Factories\\": "database/factories/",
                     "Wm\\WmPackage\\Http\\Controllers\\": "src/Http/Controllers",
-                    "Wm\\WmPackage\\Nova\\Fields\\IconSelect\\": "src/Nova/Fields/IconSelect/src/"
+                    "Wm\\WmPackage\\Nova\\Fields\\IconSelect\\": "src/Nova/Fields/IconSelect/src/",
+                    "Wm\\WmPackage\\Nova\\Fields\\LayerFeatures\\": "src/Nova/Fields/LayerFeatures/src/"
                 },
                 "classmap": [
                     "src/Exceptions/"
