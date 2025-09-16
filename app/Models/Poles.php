@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
