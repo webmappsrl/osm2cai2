@@ -38,7 +38,14 @@ class Poles extends OsmfeaturesResource
      */
     public function fields(NovaRequest $request): array
     {
-        return array_merge(parent::fields($request), [
+        $parentFields = collect(parent::fields($request))
+            ->reject(function ($field) {
+                return property_exists($field, 'attribute') && $field->attribute === 'geometry';
+            })
+            ->values()
+            ->all();
+
+        return array_merge($parentFields, [
             Text::make('Ref', 'ref')->sortable(),
             FeatureCollectionMap::make(__('geometry')),
         ]);

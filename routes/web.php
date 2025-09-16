@@ -70,4 +70,22 @@ Route::get('hiking-route-map/{id}', function ($id) {
 // Route del widget spostata in FeatureCollectionMapRoutes
 
 // GeoJSON endpoint for hiking route feature collection
+Route::get('widget/feature-collection-map-url/{model}/{id}', function ($model, $id) {
+    $geojson = null;
+    switch ($model) {
+        case 'hiking-route':
+            $hikingRoute = HikingRoute::findOrFail($id);
+            $geojson = $hikingRoute->getFeatureCollectionMap();
+            break;
+        case 'poles':
+            $pole = Poles::findOrFail($id);
+            $geojson = $pole->getFeatureCollectionMap();
+            break;
+        default:
+            $geojson = null;
+            break;
+    }
+
+    return response()->json($geojson);
+})->name('widget.feature-collection-map-url');
 // Route del FeatureCollectionMap ora registrate tramite FieldServiceProvider
