@@ -129,7 +129,7 @@ elif docker exec "${PHP_CONTAINER}" bash -c "cd /var/www/html/osm2cai2 && php ar
         print_step "🎯 App 26 detected: Import configurato per importare SOLO taxonomy_activity"
         print_step "⚠️  Skipperò: ec_poi, ec_track, layer, ec_media"
     else
-        IMPORT_CMD="wm:import-from-geohub app $APP_ID --dependencies=taxonomy_activity,ec_track,layer,ec_media"
+        IMPORT_CMD="wm:import-from-geohub app $APP_ID --dependencies=taxonomy_activity,taxonomy_poi_types,ec_track,layer,ec_media"
         print_step "Utilizzo comando: wm:import-from-geohub"
         print_step "🔄 App $APP_ID: Import standard (tutte le dipendenze)"
     fi
@@ -167,14 +167,14 @@ sleep 10
 # Verifica se l'app è stata creata o se è già presente
 for i in {1..8}; do
     NEW_APP_COUNT=$(docker exec "${PHP_CONTAINER}" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::count();\"" 2>/dev/null | tail -1 || echo "0")
-    
+
     # Verifica se esiste un'app con l'ID richiesto o se il numero è aumentato
     APP_EXISTS=$(docker exec "${PHP_CONTAINER}" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::where('geohub_id', $APP_ID)->exists() ? 'YES' : 'NO';\"" 2>/dev/null | tail -1 || echo "NO")
-    
+
     if [ "$NEW_APP_COUNT" -gt "$APP_COUNT" ] || [ "$APP_EXISTS" == "YES" ]; then
         print_success "✨ Import completato! App presente nel database"
         print_success "Numero totale app: $NEW_APP_COUNT"
-        
+
         # Mostra dettagli app
         print_step "Dettagli app importata:"
         docker exec "${PHP_CONTAINER}" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
@@ -187,7 +187,7 @@ for i in {1..8}; do
                 if (isset(\\\$app->geohub_id)) echo 'Geohub ID: ' . \\\$app->geohub_id . PHP_EOL;
             }
         \"" 2>/dev/null || true
-        
+
         break
     else
         print_step "Attesa processamento... ($i/8 - ${i}0 secondi)"
@@ -210,7 +210,7 @@ if [ "$NEW_APP_COUNT" -eq "$APP_COUNT" ] && [ "$APP_EXISTS_FINAL" == "NO" ]; the
     print_warning "• Stato Horizon: http://localhost:8008/horizon"
     print_warning "• Log Laravel: docker exec ${PHP_CONTAINER} tail -f storage/logs/laravel.log"
     print_warning "• App nel database: docker exec ${PHP_CONTAINER} php artisan tinker --execute=\"\Wm\WmPackage\Models\App::all()->pluck('name', 'id')\""
-    
+
     # Non interrompere lo script, ma continua con un warning
     print_warning "Continuando con il setup..."
 else
@@ -254,4 +254,4 @@ else
 fi
 echo ""
 
-print_success "Script import completato!" 
+print_success "Script import completato!"
