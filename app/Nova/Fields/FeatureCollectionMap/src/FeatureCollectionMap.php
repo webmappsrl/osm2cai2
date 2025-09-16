@@ -40,10 +40,14 @@ class FeatureCollectionMap extends Text
      */
     protected function generateMapHtml($resource)
     {
+        // Converti il nome della classe in kebab-case (slug)
+        $className = class_basename(get_class($resource));
+        $slug = \Illuminate\Support\Str::kebab($className);
+        
         return <<<HTML
             <div style="min-height: 400px; position: relative;background: white;">
                 <iframe 
-                    src="/nova-vendor/feature-collection-map/widget?geojson={$resource->id}"
+                    src="/nova-vendor/feature-collection-map/widget/{$slug}/{$resource->id}"
                     style="width: 100%; height: 500px; border: none; border-radius: 4px;"
                     frameborder="0"
                     allowfullscreen>
@@ -93,6 +97,10 @@ class FeatureCollectionMap extends Text
      */
     protected function generateMapHtmlWithUrl($resource, $geojsonUrl, $height = 500)
     {
+        // Converti il nome della classe in kebab-case (slug)
+        $className = class_basename(get_class($resource));
+        $slug = \Illuminate\Support\Str::kebab($className);
+        
         // Se geojsonUrl è un URL completo, estraiamo solo l'ID
         if (filter_var($geojsonUrl, FILTER_VALIDATE_URL)) {
             $geojsonUrl = basename(parse_url($geojsonUrl, PHP_URL_PATH));
@@ -101,7 +109,7 @@ class FeatureCollectionMap extends Text
         return <<<HTML
             <div style="min-height: 400px; position: relative;background: white;">
                 <iframe 
-                    src="{$geojsonUrl}"
+                    src="/nova-vendor/feature-collection-map/widget/{$slug}/{$geojsonUrl}"
                     style="width: 100%; height: {$height}px; border: none; border-radius: 4px;"
                     frameborder="0"
                     allowfullscreen>
