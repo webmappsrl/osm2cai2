@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
+use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
@@ -12,7 +13,7 @@ use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 
 class Poles extends Model implements OsmfeaturesSyncableInterface
 {
-    use HasFactory,  OsmfeaturesSyncableTrait;
+    use HasFactory, OsmfeaturesSyncableTrait, SpatialDataTrait, FeatureCollectionMapTrait;
 
     protected $fillable = [
         'name',
@@ -101,5 +102,67 @@ class Poles extends Model implements OsmfeaturesSyncableInterface
             'score' => $properties['score'],
             'geometry' => $geometry,
         ]);
+    }
+
+    /**
+     * Get pole as GeoJSON feature collection for map widget
+     *
+     * @return array GeoJSON feature collection
+     */
+    public function getFeatureCollectionMap($properties = []): array
+    {
+        // Aggiungi features aggiuntive per hiking routes e personalizza la feature principale
+        $this->addAdditionalFeaturesForPoles();
+        
+        // Properties di default per il polo principale
+        $defaultProperties = [
+            'tooltip' => $this->ref,                              // Riferimento del polo
+            'pointStrokeColor' => 'rgb(255, 255, 255)',          // Colore bordo punto
+            'pointStrokeWidth' => 2,                             // Spessore bordo punto
+            'pointFillColor' => 'rgba(255, 0, 0, 0.8)',          // Colore riempimento punto
+            'pointRadius' => 6,                                  // Raggio del punto
+        ];
+        
+        // Merge con eventuali properties passate dall'esterno
+        $mergedProperties = array_merge($defaultProperties, $properties);
+        
+        // Chiama il metodo del trait invece di se stesso
+        return $this->getFeatureCollectionMapFromTrait($mergedProperties);
+    }
+
+    public function getHikingRoutesWithBuffer(float $bufferDistance = 10)
+    {
+        $geojson = DB::table('poles')
+            ->where('id', $this->id)
+            ->value(DB::raw('ST_AsGeoJSON(geometry)'));
+
+        return HikingRoute::select('hiking_routes.*')
+            ->whereRaw(
+                'ST_DWithin(hiking_routes.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                [$geojson, $bufferDistance]
+            )
+            ->get();
+    }
+
+    protected function addAdditionalFeaturesForPoles(): void
+    {
+        // Pulisce features precedenti per evitare duplicati
+        $this->clearAdditionalFeaturesForMap();
+        
+        $hikingRoutes = $this->getHikingRoutesWithBuffer();
+
+        $checkedHikingRouteFeatures = $hikingRoutes->map(function ($route) {
+            $routeProperties = [
+                'tooltip' => $route->name.' (ufficiale)',         // Nome del percorso
+                'link' => url('/resources/hiking-routes/'.$route->id), // Link di navigazione
+                'strokeColor' => 'blue',                          // Colore della linea
+                'strokeWidth' => 6,                               // Spessore della linea
+            ];
+
+            return $this->getFeatureMap($route->geometry_raw_data, $routeProperties);
+        })->toArray();
+
+        // Aggiungi tutte le features degli hiking routes
+        $this->addFeaturesForMap($checkedHikingRouteFeatures);
     }
 }

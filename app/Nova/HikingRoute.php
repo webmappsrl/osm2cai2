@@ -660,7 +660,12 @@ class HikingRoute extends OsmfeaturesResource
         if (count($pois) > 0) {
             $tableRows = [];
             foreach ($pois as $poi) {
-                $tags = $poi->osmfeatures_data['properties']['osm_tags'];
+                $tags = null;
+                if ($poi->osmfeatures_data && 
+                    isset($poi->osmfeatures_data['properties']) && 
+                    isset($poi->osmfeatures_data['properties']['osm_tags'])) {
+                    $tags = $poi->osmfeatures_data['properties']['osm_tags'];
+                }
                 $tagList = '';
                 if ($tags) {
                     $tagList = '<ul style="list-style:none; padding:0; margin:0;">';

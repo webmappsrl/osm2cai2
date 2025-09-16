@@ -6,6 +6,7 @@ use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyEcPoisJob;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Jobs\CheckNearbyNaturalSpringsJob;
+use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 use App\Observers\HikingRouteObserver;
 use App\Services\HikingRouteDescriptionService;
 use App\Traits\AwsCacheable;
@@ -29,6 +30,7 @@ class HikingRoute extends EcTrack
     use OsmfeaturesSyncableTrait;
     use SpatialDataTrait;
     use TagsMappingTrait;
+    use FeatureCollectionMapTrait;
 
     protected $table = 'hiking_routes';
 
@@ -354,7 +356,7 @@ class HikingRoute extends EcTrack
 
     public function getFeatureCollectionMap(): array
     {
-        $geojson = parent::getFeatureCollectionMap();
+        $geojson = $this->getFeatureCollectionMapFromTrait();
         $properties = [     
             'strokeColor' => 'red',
             'strokeWidth' => 2,

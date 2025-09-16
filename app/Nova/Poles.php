@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap as SrcFeatureCollectionMap;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -39,6 +40,7 @@ class Poles extends OsmfeaturesResource
     {
         return array_merge(parent::fields($request), [
             Text::make('Ref', 'ref')->sortable(),
+            SrcFeatureCollectionMap::make(__('geometry')),
         ]);
     }
 }
