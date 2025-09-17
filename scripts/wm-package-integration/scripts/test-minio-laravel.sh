@@ -16,7 +16,7 @@ fi
 echo ""
 echo "📁 Test Laravel Storage con MinIO..."
 
-docker exec -u 0 -it php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
+docker exec -u 0 php81_osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
 echo 'Test scrittura file su S3...' . PHP_EOL;
 try {
     Storage::disk('s3')->put('test-laravel.txt', 'Hello from Laravel! ' . date('Y-m-d H:i:s'));

@@ -143,7 +143,7 @@ echo "   ➜ $ARTISAN_COMMAND"
 echo ""
 
 # Esegui il comando nel container
-docker exec -u 0 -it "$CONTAINER_NAME" bash -c "cd /var/www/html/osm2cai2 && $ARTISAN_COMMAND"
+docker exec -u 0 "$CONTAINER_NAME" bash -c "cd /var/www/html/osm2cai2 && $ARTISAN_COMMAND"
 
 EXIT_CODE=$?
 
