@@ -139,6 +139,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
             ->value(DB::raw('ST_AsGeoJSON(geometry)'));
 
         return HikingRoute::select('hiking_routes.*')
+            ->where('app_id', 1)
             ->whereRaw(
                 'ST_DWithin(hiking_routes.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
                 [$geojson, $bufferDistance]
