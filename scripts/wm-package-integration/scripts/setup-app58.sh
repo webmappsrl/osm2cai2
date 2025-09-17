@@ -112,14 +112,6 @@ print_step "Associazione hiking routes specifiche per App 58..."
 #     exit 1
 # fi
 
-# Creazione taxonomy_poi_types "Punto acqua" e associazione a tutti gli ec_pois
-print_step "Creazione della taxonomy_poi_types 'Punto acqua' e associazione a tutti gli ec_pois per App 58..."
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan app:create-water-poi-type-taxonomy"; then
-    print_error "Creazione taxonomy_poi_types per App 58 fallita!"
-    exit 1
-fi
-print_success "Taxonomy POI Type 'Punto acqua' creata e associata a tutti gli ec_pois"
-
 print_step "Setup proprietà personalizzate per App 58..."
 # if ! ./scripts/10-hiking-routes-properties-app58.sh; then
 #     print_error "Setup proprietà personalizzate per App 58 fallito!"
