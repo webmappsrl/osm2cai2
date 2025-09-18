@@ -105,18 +105,13 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                         ];
                     }
 
-                    if (! isset($properties['excerpt']) || ! is_array($properties['excerpt'])) {
-                        $properties['excerpt'] = [
-                            'it' => $properties['excerpt'] ?? 'Sorgente d\'acqua potabile',
-                        ];
-                    }
-
                     // Aggiungi le informazioni UGC dentro l'attributo 'ugc'
                     $properties['ugc'] = [
                         'ugc_poi_id' => $ugcPoi->id,
                         'ugc_user_id' => $ugcPoi->user_id, // ID dell'utente proprietario dell'UgcPoi
                         'conversion_date' => now()->toISOString(),
                     ];
+                    unset($properties['uuid']);
 
                     // Crea il nuovo EcPoi
                     $ecPoi = EcPoi::create([
