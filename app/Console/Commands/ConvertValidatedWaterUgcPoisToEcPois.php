@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\EcPoi;
 use App\Models\UgcPoi;
-use Wm\WmPackage\Models\TaxonomyPoiType;
-use Wm\WmPackage\Models\App;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Wm\WmPackage\Models\App;
+use Wm\WmPackage\Models\TaxonomyPoiType;
 
 class ConvertValidatedWaterUgcPoisToEcPois extends Command
 {
@@ -39,8 +39,9 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
         // Trova l'app acquasorgente
         $acquasorgenteApp = App::where('sku', 'it.webmapp.acquasorgente')->first();
 
-        if (!$acquasorgenteApp) {
+        if (! $acquasorgenteApp) {
             $this->error('App Acquasorgente non trovata!');
+
             return 1;
         }
 
@@ -55,6 +56,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
         if ($waterUgcPois->isEmpty()) {
             $this->warn('No validated water UgcPois found to convert');
+
             return 0;
         }
 
@@ -72,7 +74,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                 continue;
             }
 
-            if (!$isDryRun) {
+            if (! $isDryRun) {
                 try {
                     DB::beginTransaction();
 
@@ -80,7 +82,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $ugcProperties = [];
                     if ($ugcPoi->properties) {
                         $ugcProperties = is_string($ugcPoi->properties) ? json_decode($ugcPoi->properties, true) : $ugcPoi->properties;
-                        if (!is_array($ugcProperties)) {
+                        if (! is_array($ugcProperties)) {
                             $ugcProperties = [];
                         }
                     }
@@ -97,13 +99,13 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $properties = $ugcProperties;
 
                     // Assicurati che description e excerpt abbiano la struttura translatable corretta
-                    if (!isset($properties['description']) || !is_array($properties['description'])) {
+                    if (! isset($properties['description']) || ! is_array($properties['description'])) {
                         $properties['description'] = [
                             'it' => $properties['description'] ?? 'Sorgente d\'acqua naturale',
                         ];
                     }
 
-                    if (!isset($properties['excerpt']) || !is_array($properties['excerpt'])) {
+                    if (! isset($properties['excerpt']) || ! is_array($properties['excerpt'])) {
                         $properties['excerpt'] = [
                             'it' => $properties['excerpt'] ?? 'Sorgente d\'acqua potabile',
                         ];
@@ -130,26 +132,24 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     // Associa la taxonomy_poi_type "Punto acqua" all'EcPoi
                     $ecPoi->taxonomyPoiTypes()->attach($taxonomyPoiType->id);
 
-
                     DB::commit();
 
                     $this->line("✅ Converted UgcPoi ID {$ugcPoi->id} to EcPoi ID {$ecPoi->id}");
 
                     // Log dettagliato delle properties dell'EcPoi creato
-                    $this->line("📋 EcPoi Properties:");
+                    $this->line('📋 EcPoi Properties:');
                     $this->line("   - ID: {$ecPoi->id}");
                     $this->line("   - Name: {$ecPoi->name}");
                     $this->line("   - Type: {$ecPoi->type}");
                     $this->line("   - App ID: {$ecPoi->app_id}");
                     $this->line("   - User ID: {$ecPoi->user_id}");
                     $this->line("   - Score: {$ecPoi->score}");
-                    $this->line("   - Geometry: " . ($ecPoi->geometry ? 'Present' : 'Missing'));
+                    $this->line('   - Geometry: '.($ecPoi->geometry ? 'Present' : 'Missing'));
 
                     $convertedCount++;
-
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    $this->error("❌ Error converting UgcPoi ID {$ugcPoi->id}: " . $e->getMessage());
+                    $this->error("❌ Error converting UgcPoi ID {$ugcPoi->id}: ".$e->getMessage());
                 }
             } else {
                 $this->line("🔄 Would convert UgcPoi ID {$ugcPoi->id} to EcPoi");
@@ -158,15 +158,15 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
         }
 
         $this->newLine();
-        $this->info("📊 Conversion Summary:");
+        $this->info('📊 Conversion Summary:');
         $this->info("   - Total validated water UgcPois: {$waterUgcPois->count()}");
         $this->info("   - Converted: {$convertedCount}");
         $this->info("   - Skipped (already exists): {$skippedCount}");
 
         if ($isDryRun) {
-            $this->info("   - Mode: DRY RUN (no actual changes made)");
+            $this->info('   - Mode: DRY RUN (no actual changes made)');
         } else {
-            $this->info("   - Mode: LIVE (changes applied)");
+            $this->info('   - Mode: LIVE (changes applied)');
         }
 
         return 0;
@@ -174,7 +174,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
     public function createTaxonomyPoiTypeIfNotExists(): TaxonomyPoiType
     {
-        $taxonomyPoiType = TaxonomyPoiType::where('indentifier', 'water-point')->first();
+        $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-point')->first();
         if (! $taxonomyPoiType) {
             $taxonomyPoiType = TaxonomyPoiType::create([
                 'name' => ['it' => 'Punto acqua', 'en' => 'Water point'],
