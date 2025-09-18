@@ -98,13 +98,6 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     // Prepara le properties finali con informazioni UGC strutturate
                     $properties = $ugcProperties;
 
-                    // Assicurati che description e excerpt abbiano la struttura translatable corretta
-                    if (! isset($properties['description']) || ! is_array($properties['description'])) {
-                        $properties['description'] = [
-                            'it' => $properties['description'] ?? 'Sorgente d\'acqua naturale',
-                        ];
-                    }
-
                     // Aggiungi le informazioni UGC dentro l'attributo 'ugc'
                     $properties['ugc'] = [
                         'ugc_poi_id' => $ugcPoi->id,
@@ -112,6 +105,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                         'conversion_date' => now()->toISOString(),
                     ];
                     unset($properties['uuid']);
+                    $properties['form']['index'] = 0;
 
                     // Crea il nuovo EcPoi
                     $ecPoi = EcPoi::create([
