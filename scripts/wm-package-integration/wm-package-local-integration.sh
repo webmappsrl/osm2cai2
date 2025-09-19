@@ -537,6 +537,94 @@ done
 
 print_success "=== FASE 6 COMPLETATA: Tutte le app specificate importate ==="
 
+# FASE 6.5: PROCESSAMENTO ICONE AWS E GEOJSON POI
+print_step "=== FASE 6.5: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
+
+print_info "🚀 Avvio processamento di tutte le app per icone AWS e geojson POI"
+
+# Recupera tutte le app dal database
+print_info "📋 Recupero lista delle app dal database..."
+apps=$(php artisan tinker --execute="
+\$apps = \Wm\WmPackage\Models\App::all(['id', 'name']);
+foreach(\$apps as \$app) {
+    echo \$app->id . '|' . \$app->name . PHP_EOL;
+}
+")
+
+if [ -z "$apps" ]; then
+    print_error "Nessuna app trovata nel database!"
+    exit 1
+fi
+
+# Conta le app
+app_count=$(echo "$apps" | wc -l)
+print_info "📊 Trovate $app_count app da processare"
+
+# Processa ogni app
+success_count=0
+error_count=0
+
+# Crea un array temporaneo per le app
+temp_file=$(mktemp)
+echo "$apps" > "$temp_file"
+
+while IFS='|' read -r app_id app_name; do
+    if [ -z "$app_id" ] || [ -z "$app_name" ]; then
+        continue
+    fi
+    
+    print_info ""
+    print_info "🔄 Processando App ID: $app_id - Nome: $app_name"
+    print_info "------------------------------------------------"
+    
+    # 1. Genera icone AWS
+    print_info "📱 Generazione icone AWS per App $app_id..."
+    if php artisan tinker --execute="
+        try {
+            \$service = new \Wm\WmPackage\Services\AppIconsService();
+            \$icons = \$service->writeIconsOnAws($app_id);
+            echo 'SUCCESS: ' . count(\$icons) . ' icone generate' . PHP_EOL;
+        } catch (Exception \$e) {
+            echo 'ERROR: ' . \$e->getMessage() . PHP_EOL;
+            exit(1);
+        }
+    " 2>/dev/null; then
+        print_success "✅ Icone AWS generate per App $app_id"
+    else
+        print_error "❌ Errore nella generazione icone AWS per App $app_id"
+        error_count=$((error_count + 1))
+        continue
+    fi
+    
+    # 2. Genera file geojson POI
+    print_info "🗺️  Generazione file pois.geojson per App $app_id..."
+    if php artisan app:build-pois-geojson "$app_id" 2>/dev/null; then
+        print_success "✅ File pois.geojson generato per App $app_id"
+    else
+        print_error "❌ Errore nella generazione pois.geojson per App $app_id"
+        error_count=$((error_count + 1))
+        continue
+    fi
+    
+    print_success "🎉 App $app_id ($app_name) processata con successo!"
+    success_count=$((success_count + 1))
+done < "$temp_file"
+
+# Rimuovi file temporaneo
+rm "$temp_file"
+
+print_info ""
+print_info "================================================================"
+print_info "📊 RIEPILOGO PROCESSAMENTO ICONE E GEOJSON"
+print_info "================================================================"
+print_success "✅ App processate con successo: $success_count"
+if [ $error_count -gt 0 ]; then
+    print_error "❌ App con errori: $error_count"
+else
+    print_success "🎉 Tutte le app sono state processate senza errori!"
+fi
+
+print_success "=== FASE 6.5 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
 
 # FASE 7: VERIFICA SERVIZI FINALI
 print_step "=== FASE 7: VERIFICA SERVIZI FINALI ==="
@@ -565,6 +653,7 @@ print_step "   ✅ Campi translatable fixati"
 for app_id in "${APPS_TO_IMPORT[@]}"; do
     print_step "   ✅ App $app_id configurata"
 done
+print_step "   ✅ Icone AWS e file geojson POI generati per tutte le app"
 print_step "   ✅ Verifica servizi finali completata"
 echo ""
 print_step "🌐 L'applicazione è accessibile su: http://127.0.0.1:8008"
