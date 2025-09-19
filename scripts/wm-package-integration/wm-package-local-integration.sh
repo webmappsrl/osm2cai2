@@ -449,6 +449,28 @@ print_success "Migrazioni applicate al database"
 
 print_success "=== FASE 2 COMPLETATA: Database resettato e migrazioni applicate ==="
 
+# FASE 2.5: INIZIALIZZAZIONE APP MODELS
+print_step "=== FASE 2.5: INIZIALIZZAZIONE APP MODELS ==="
+
+# Inizializza i modelli app per tutte le app (26, 20, 58) senza dipendenze
+print_step "Inizializzazione modelli app (senza dipendenze)..."
+if ! bash "$SCRIPT_DIR/scripts/init-apps.sh"; then
+    print_error "Errore durante l'inizializzazione dei modelli app! Interruzione setup."
+    exit 1
+fi
+print_success "Modelli app inizializzati (ID creati per tutte le app)"
+
+print_success "=== FASE 2.5 COMPLETATA: Modelli app inizializzati ==="
+
+
+# Migrazione UGC Media to Media (dopo import app)
+print_step "Migrazione UGC Media to Media..."
+if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:migrate-ugc-media-to-media --force"; then
+    print_error "Errore durante la migrazione UGC Media to Media! Interruzione setup."
+    exit 1
+fi
+print_success "UGC Media migrato al sistema Media"
+
 # FASE 3: CONFIGURAZIONE SERVIZI
 print_step "=== FASE 3: CONFIGURAZIONE SERVIZI ==="
 
@@ -515,6 +537,7 @@ done
 
 print_success "=== FASE 6 COMPLETATA: Tutte le app specificate importate ==="
 
+
 # FASE 7: VERIFICA SERVIZI FINALI
 print_step "=== FASE 7: VERIFICA SERVIZI FINALI ==="
 
@@ -535,6 +558,7 @@ if [ "$SYNC_FROM_PROD" = true ]; then
 fi
 print_step "   ✅ Ambiente Docker configurato e avviato"
 print_step "   ✅ Database resettato e migrazioni applicate"
+print_step "   ✅ Modelli app inizializzati (ID creati per tutte le app)"
 print_step "   ✅ Servizi (MinIO, Elasticsearch) configurati"
 print_step "   ✅ Elasticsearch indicizzato"
 print_step "   ✅ Campi translatable fixati"

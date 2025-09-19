@@ -6,7 +6,10 @@ use App\Models\EcPoi;
 use App\Models\UgcPoi;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Wm\WmPackage\Models\App;
+use Wm\WmPackage\Models\Media;
 use Wm\WmPackage\Models\TaxonomyPoiType;
 
 class ConvertValidatedWaterUgcPoisToEcPois extends Command
@@ -66,7 +69,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
         foreach ($waterUgcPois as $ugcPoi) {
             // Controlla se esiste già un EcPoi per questo UgcPoi
-            $existingEcPoi = EcPoi::where('properties->ugc_poi_id', $ugcPoi->id)->first();
+            $existingEcPoi = EcPoi::where('properties->ugc->ugc_poi_id', $ugcPoi->id)->first();
 
             if ($existingEcPoi) {
                 $this->line("⏭️  Skipping UgcPoi ID {$ugcPoi->id} - EcPoi already exists (ID: {$existingEcPoi->id})");
@@ -121,6 +124,82 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     // Associa la taxonomy_poi_type "Punto acqua" all'EcPoi
                     $ecPoi->taxonomyPoiTypes()->attach($taxonomyPoiType->id);
 
+                    $medias = $ugcPoi->media;
+                    if ($medias->count() > 0) {
+                        foreach ($medias as $media) {
+                            try {
+                                $sourceDisk = Storage::disk($media->disk);
+                                $sourcePath = $media->getPath();
+                                $fileContent = null;
+                                $sourceType = '';
+
+                                // Determina la fonte del contenuto del file
+                                if ($sourceDisk->exists($sourcePath)) {
+                                    // Leggi il contenuto del file originale
+                                    $fileContent = $sourceDisk->get($sourcePath);
+                                    $sourceType = 'local file';
+                                } else {
+                                    $this->warn("⚠️  Source file not found: {$sourcePath} - Checking for relative_url");
+                                    
+                                    // Controlla se esiste un relative_url nelle properties del media
+                                    $relativeUrl = null;
+                                    
+                                    // Controlla nelle custom_properties del media
+                                    if ($media->custom_properties) {
+                                        $customProps = is_string($media->custom_properties) ? json_decode($media->custom_properties, true) : $media->custom_properties;
+                                        $relativeUrl = $customProps['relative_url'] ?? null;
+                                    }
+                                    
+                                    // Se non trovato, controlla nelle properties dell'UgcPoi
+                                    if (!$relativeUrl && isset($properties['media'])) {
+                                        foreach ($properties['media'] as $mediaItem) {
+                                            if (isset($mediaItem['relative_url'])) {
+                                                $relativeUrl = $mediaItem['relative_url'];
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Se trovato un relative_url, scarica l'immagine
+                                    if ($relativeUrl) {
+                                        $this->line("📥 Downloading image from URL: {$relativeUrl}");
+                                        
+                                        $fileContent = file_get_contents($relativeUrl);
+                                        if ($fileContent === false) {
+                                            throw new \Exception("Failed to download image from URL");
+                                        }
+                                        $sourceType = 'downloaded from URL';
+                                    } else {
+                                        $this->warn("⚠️  No relative_url found in media properties - Skipping media duplication");
+                                        continue;
+                                    }
+                                }
+
+                                // Se abbiamo il contenuto del file, procedi con la duplicazione
+                                if ($fileContent !== null) {
+                                    // Crea una copia del record del database
+                                    $duplicatedMedia = $media->replicate();
+                                    $duplicatedMedia->uuid = (string) Str::uuid();
+                                    $duplicatedMedia->model()->associate($ecPoi);
+
+                                    // Salva il nuovo record del media
+                                    $duplicatedMedia->save();
+
+                                    // Ottieni il nuovo path per il file duplicato
+                                    $newPath = $duplicatedMedia->getPath();
+
+                                    // Scrivi il file fisico nella nuova posizione
+                                    $sourceDisk->put($newPath, $fileContent);
+
+                                    $this->line("📁 Copied media file from {$sourceType}: {$media->file_name} -> {$duplicatedMedia->file_name}");
+                                }
+                            } catch (\Exception $e) {
+                                $this->error("❌ Error copying media {$media->id}: ".$e->getMessage());
+                                // Continua con il prossimo media anche se questo fallisce
+                            }
+                        }
+                    }
+
                     DB::commit();
 
                     $this->line("✅ Converted UgcPoi ID {$ugcPoi->id} to EcPoi ID {$ecPoi->id}");
@@ -134,6 +213,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $this->line("   - User ID: {$ecPoi->user_id}");
                     $this->line("   - Score: {$ecPoi->score}");
                     $this->line('   - Geometry: '.($ecPoi->geometry ? 'Present' : 'Missing'));
+                    $this->line("   - Media count: {$ecPoi->media->count()}");
 
                     $convertedCount++;
                 } catch (\Exception $e) {
@@ -179,5 +259,23 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
         }
 
         return $taxonomyPoiType;
+    }
+
+    /**
+     * Guess MIME type from file extension
+     */
+    private function guessMimeTypeFromExtension(string $extension): string
+    {
+        $mimeTypes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'bmp' => 'image/bmp',
+            'svg' => 'image/svg+xml',
+        ];
+
+        return $mimeTypes[strtolower($extension)] ?? 'image/jpeg';
     }
 }
