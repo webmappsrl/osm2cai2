@@ -298,6 +298,27 @@ fi
 
 print_success "=== FASE 2.5 COMPLETATA ==="
 
+# FASE 2.6: INIZIALIZZAZIONE APP MODELS
+print_step "=== FASE 2.6: INIZIALIZZAZIONE APP MODELS ==="
+
+# Inizializza i modelli app per tutte le app (26, 20, 58) senza dipendenze
+print_step "Inizializzazione modelli app (senza dipendenze)..."
+if ! bash "$SCRIPT_DIR/scripts/init-apps.sh"; then
+    print_error "Errore durante l'inizializzazione dei modelli app! Interruzione setup."
+    exit 1
+fi
+print_success "Modelli app inizializzati (ID creati per tutte le app)"
+
+print_success "=== FASE 2.6 COMPLETATA: Modelli app inizializzati ==="
+
+# Migrazione UGC Media to Media (dopo init app)
+print_step "Migrazione UGC Media to Media..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:migrate-ugc-media-to-media --force"; then
+    print_error "Errore durante la migrazione UGC Media to Media! Interruzione setup."
+    exit 1
+fi
+print_success "UGC Media migrato al sistema Media"
+
 # FASE 3: FIX CAMPI TRANSLATABLE
 print_step "=== FASE 3: FIX CAMPI TRANSLATABLE NULL ==="
 
@@ -319,6 +340,19 @@ for app_id in "${APPS_TO_IMPORT[@]}"; do
 done
 
 print_success "=== FASE 4 COMPLETATA: Tutte le app specificate importate ==="
+
+# FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI
+print_step "=== FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
+
+# Esegue lo script dedicato per il processamento di tutte le app
+print_step "Esecuzione script processamento icone AWS e geojson POI..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/process-all-apps-icons-and-geojson.sh"; then
+    print_error "Errore durante il processamento delle icone AWS e geojson POI! Interruzione setup."
+    exit 1
+fi
+print_success "Processamento icone AWS e geojson POI completato"
+
+print_success "=== FASE 4.5 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
 
 # FASE 5: Verifica Finale
 print_step "=== FASE 5: VERIFICA FINALE ==="
@@ -354,10 +388,13 @@ else
 fi
 print_step "   ✅ Database resettato dal dump"
 print_step "   ✅ Migrazioni applicate"
+print_step "   ✅ Modelli app inizializzati (ID creati per tutte le app)"
+print_step "   ✅ UGC Media migrato al sistema Media"
 print_step "   ✅ Campi translatable fixati"
 for app_id in "${APPS_TO_IMPORT[@]}"; do
     print_step "   ✅ App $app_id configurata"
 done
+print_step "   ✅ Icone AWS e file geojson POI generati per tutte le app"
 print_step "   ✅ Verifica finale completata"
 echo ""
 print_step "📁 Script utilizzati per le app:"
