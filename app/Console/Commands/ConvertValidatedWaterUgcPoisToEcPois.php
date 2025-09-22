@@ -129,50 +129,45 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                         foreach ($medias as $media) {
                             try {
                                 $sourceDisk = Storage::disk($media->disk);
-                                $sourcePath = $media->getPath();
                                 $fileContent = null;
                                 $sourceType = '';
 
-                                // Determina la fonte del contenuto del file
-                                if ($sourceDisk->exists($sourcePath)) {
-                                    // Leggi il contenuto del file originale
-                                    $fileContent = $sourceDisk->get($sourcePath);
-                                    $sourceType = 'local file';
+                                // Controlla se esiste un relative_url nelle properties del media
+                                $relativeUrl = null;
+
+                                // Controlla nelle custom_properties del media
+                                if ($media->custom_properties) {
+                                    $customProps = is_string($media->custom_properties) ? json_decode($media->custom_properties, true) : $media->custom_properties;
+                                    $relativeUrl = $customProps['relative_url'] ?? null;
+                                }
+
+                                // Se non trovato, controlla nelle properties dell'UgcPoi
+                                if (! $relativeUrl && isset($properties['media'])) {
+                                    foreach ($properties['media'] as $mediaItem) {
+                                        if (isset($mediaItem['relative_url'])) {
+                                            $relativeUrl = $mediaItem['relative_url'];
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // Se trovato un relative_url, scarica l'immagine
+                                if ($relativeUrl) {
+                                    // Se l'URL non contiene geohub.webmapp.it, aggiungi il prefisso osm2cai.cai.it
+                                    if (strpos($relativeUrl, 'geohub.webmapp.it') === false) {
+                                        $relativeUrl = 'https://osm2cai.cai.it/storage/'.ltrim($relativeUrl, '/');
+                                    }
+
+                                    $this->line("📥 Downloading image from URL: {$relativeUrl}");
+
+                                    $fileContent = file_get_contents($relativeUrl);
+                                    if ($fileContent === false) {
+                                        throw new \Exception('Failed to download image from URL');
+                                    }
+                                    $sourceType = 'downloaded from URL';
                                 } else {
-                                    $this->warn("⚠️  Source file not found: {$sourcePath} - Checking for relative_url");
-                                    
-                                    // Controlla se esiste un relative_url nelle properties del media
-                                    $relativeUrl = null;
-                                    
-                                    // Controlla nelle custom_properties del media
-                                    if ($media->custom_properties) {
-                                        $customProps = is_string($media->custom_properties) ? json_decode($media->custom_properties, true) : $media->custom_properties;
-                                        $relativeUrl = $customProps['relative_url'] ?? null;
-                                    }
-                                    
-                                    // Se non trovato, controlla nelle properties dell'UgcPoi
-                                    if (!$relativeUrl && isset($properties['media'])) {
-                                        foreach ($properties['media'] as $mediaItem) {
-                                            if (isset($mediaItem['relative_url'])) {
-                                                $relativeUrl = $mediaItem['relative_url'];
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    
-                                    // Se trovato un relative_url, scarica l'immagine
-                                    if ($relativeUrl) {
-                                        $this->line("📥 Downloading image from URL: {$relativeUrl}");
-                                        
-                                        $fileContent = file_get_contents($relativeUrl);
-                                        if ($fileContent === false) {
-                                            throw new \Exception("Failed to download image from URL");
-                                        }
-                                        $sourceType = 'downloaded from URL';
-                                    } else {
-                                        $this->warn("⚠️  No relative_url found in media properties - Skipping media duplication");
-                                        continue;
-                                    }
+                                    $this->warn('⚠️  No relative_url found in media properties - Skipping media duplication');
+                                    continue;
                                 }
 
                                 // Se abbiamo il contenuto del file, procedi con la duplicazione
