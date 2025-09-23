@@ -13,6 +13,7 @@ use Wm\WmPackage\Nova\Fields\LayerFeatures\LayerFeatures;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\Layer as WmNovaLayer;
 use App\Models\HikingRoute;
+use Laravel\Nova\Fields\MorphToMany;
 
 class Layer extends WmNovaLayer
 {
@@ -54,6 +55,7 @@ class Layer extends WmNovaLayer
                 ->nullable()
                 ->searchable(),
             Images::make(__('Image'), 'default'),
+            MorphToMany::make(__('Activities'), 'taxonomyActivities', TaxonomyActivity::class),
             PropertiesPanel::makeWithModel(__('Properties'), 'properties', $this, true)->collapsible(),
             LayerFeatures::make('tracks', $this->resource, HikingRoute::class)->hideWhenCreating()->withMeta(['model_class' => HikingRoute::class])
         ];
