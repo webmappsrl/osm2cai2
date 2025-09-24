@@ -24,12 +24,16 @@ class Layer extends WmLayer
         foreach ($hikingRoutes as $hikingRoute) {
             $geometry = json_decode($hikingRoute->geometry, true);
 
+            $nameData = json_decode($hikingRoute->name, true);
+            $currentLocale = app()->getLocale();
+            $hikingRouteName = $nameData[$currentLocale] ?? $nameData['it'] ?? 'Nome non disponibile';
+
             if ($geometry) {
                 $routeFeature = [
                     'type' => 'Feature',
                     'geometry' => $geometry,
                     'properties' => [
-                        'tooltip' => $hikingRoute->name.' (hiking route)',
+                        'tooltip' => $hikingRouteName,
                         'link' => url('/resources/hiking-routes/'.$hikingRoute->id),
                         'strokeColor' => 'red',
                         'strokeWidth' => 2,
