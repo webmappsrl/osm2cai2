@@ -2,18 +2,19 @@
 
 namespace App\Nova;
 
+use App\Models\HikingRoute;
+use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\WmPackage\Nova\Fields\LayerFeatures\LayerFeatures;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\Layer as WmNovaLayer;
-use App\Models\HikingRoute;
-use Laravel\Nova\Fields\MorphToMany;
 
 class Layer extends WmNovaLayer
 {
@@ -56,8 +57,9 @@ class Layer extends WmNovaLayer
                 ->searchable(),
             Images::make(__('Image'), 'default'),
             MorphToMany::make(__('Activities'), 'taxonomyActivities', TaxonomyActivity::class),
+            FeatureCollectionMap::make(__('geometry'))->onlyOnDetail(),
             PropertiesPanel::makeWithModel(__('Properties'), 'properties', $this, true)->collapsible(),
-            LayerFeatures::make('tracks', $this->resource, HikingRoute::class)->hideWhenCreating()->withMeta(['model_class' => HikingRoute::class])
+            LayerFeatures::make('tracks', $this->resource, HikingRoute::class)->hideWhenCreating()->withMeta(['model_class' => HikingRoute::class]),
         ];
     }
 }
