@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d096a6e03ebcae79a45c274d25e2ef2",
+    "content-hash": "95fef502e435b20280d982c70937f526",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -343,6 +343,65 @@
                 "source": "https://github.com/Bacon/BaconQrCode/tree/v3.0.1"
             },
             "time": "2024-10-01T13:55:55+00:00"
+        },
+        {
+            "name": "badinansoft/nova-language-switch",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/badinansoft/nova-language-switch.git",
+                "reference": "96dc24932b73a9c74971163bb86535a689cadd49"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/badinansoft/nova-language-switch/zipball/96dc24932b73a9c74971163bb86535a689cadd49",
+                "reference": "96dc24932b73a9c74971163bb86535a689cadd49",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0|^5.0",
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Badinansoft\\LanguageSwitch\\ToolServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Badinansoft\\LanguageSwitch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Shahab Zebari",
+                    "email": "me@shahabzebari.net",
+                    "homepage": "https://shahabzebari.net",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel Nova package to switch language in your application",
+            "homepage": "https://github.com/badinansoft/nova-language-switch",
+            "keywords": [
+                "i18n",
+                "language",
+                "laravel",
+                "nova",
+                "switch",
+                "translation"
+            ],
+            "support": {
+                "issues": "https://github.com/badinansoft/nova-language-switch/issues",
+                "source": "https://github.com/badinansoft/nova-language-switch/tree/3.0.0"
+            },
+            "time": "2025-01-25T15:47:30+00:00"
         },
         {
             "name": "brick/math",
@@ -12037,7 +12096,7 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-main",
+            "version": "dev-13286258addf1cb737f4157bbb1a6323c83674fe",
             "dist": {
                 "type": "path",
                 "url": "./wm-osmfeatures",
@@ -12402,7 +12461,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-wmpackage-integration",
+            "version": "dev-OC_6293",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -12438,7 +12497,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-wmpackage-integration",
+            "version": "dev-OC_6293",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -12519,11 +12578,11 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-wmintegrations",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
-                "reference": "fd91c073b0daaf9b224f09e42044dfa7c71e999e"
+                "reference": "bd70132410a0394d49c4db39abe8a5025e7d8c5c"
             },
             "require": {
                 "chillerlan/php-qrcode": "^5.0",

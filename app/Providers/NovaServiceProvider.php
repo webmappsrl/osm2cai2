@@ -18,8 +18,8 @@ use App\Nova\Dashboards\SALMiturAbruzzo;
 use App\Nova\Dashboards\SectorsDashboard;
 use App\Nova\Dashboards\Utenti;
 use App\Nova\EcPoi;
-use App\Nova\EnrichPoi;
 use App\Nova\EcTrack;
+use App\Nova\EnrichPoi;
 use App\Nova\GeologicalSite;
 use App\Nova\HikingRoute;
 use App\Nova\Itinerary;
@@ -252,7 +252,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         }
 
         /** @var \App\Models\User $loggedInUser */
-
         if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Administrator')) {
             $dashboards[] = new Utenti;
             $dashboards[] = new Percorribilità;
@@ -287,6 +286,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         return [
             \Vyuldashev\NovaPermission\NovaPermissionTool::make(),
+            new \Badinansoft\LanguageSwitch\LanguageSwitch,
         ];
     }
 
