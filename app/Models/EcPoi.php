@@ -48,10 +48,18 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
     /**
      * Boot the model and set default values for translatable fields
      */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // TODO: Laravel non eredita automaticamente gli observer dalla classe padre
+        static::observe(\Wm\WmPackage\Observers\EcPoiObserver::class);
+    }
+
     protected static function booted()
     {
         parent::booted();
-        
+
         static::saved(function ($ecPoi) {
             if ($ecPoi->isDirty('geometry')) {
                 CalculateIntersectionsJob::dispatch($ecPoi, Club::class)->onQueue('geometric-computations');
@@ -78,10 +86,9 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
         if (is_null($value)) {
             return [];
         }
+
         return is_string($value) ? json_decode($value, true) : $value;
     }
-
-
 
     /**
      * Returns the OSMFeatures API endpoint for listing features for the model.

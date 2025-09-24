@@ -89,7 +89,7 @@ show_help() {
 # Funzione per validare gli ID delle app
 validate_app_ids() {
     local app_ids=("$@")
-    
+
     for app_id in "${app_ids[@]}"; do
         if ! app_exists "$app_id"; then
             print_error "ID app non valido: $app_id"
@@ -110,10 +110,10 @@ import_app() {
     local script_config=$(get_app_config "$app_id")
     local script_name=$(echo "$script_config" | cut -d' ' -f1)
     local script_args=$(echo "$script_config" | cut -d' ' -f2-)
-    
+
     print_step "=== FASE: IMPORT APP $app_id ==="
     print_step "🎯 App $app_id: $script_name $script_args"
-    
+
     if ! bash "$SCRIPT_DIR/scripts/$script_name" $script_args; then
         print_error "Setup App $app_id fallito! Interruzione setup."
         exit 1
@@ -190,7 +190,7 @@ wait_for_service() {
     local service_name="$1"
     local health_url="$2"
     local timeout="$3"
-    
+
     print_step "Attesa che $service_name sia completamente pronto..."
     local elapsed=0
     while ! curl -f -s "$health_url" &> /dev/null; do
@@ -231,22 +231,22 @@ print_step "Verifica prerequisiti..."
 if [ -f "/var/www/html/osm2cai2/.env" ]; then
     print_warning "Esecuzione dal container Docker rilevata"
     print_step "Saltando controlli host e passando direttamente alla configurazione..."
-    
+
     # Salta alla configurazione Scout/Elasticsearch
     cd /var/www/html/osm2cai2
-    
+
     print_step "=== CONFIGURAZIONE SCOUT/ELASTICSEARCH ==="
     if ! ./scripts/04-enable-scout-automatic-indexing.sh; then
         print_error "Errore durante la configurazione di Scout/Elasticsearch!"
         exit 1
     fi
-    
+
     # Fix alias se necessario
     print_step "=== FIX ALIAS ELASTICSEARCH ==="
     if ! ./scripts/05-fix-elasticsearch-alias.sh; then
         print_warning "Fix alias completato con avvertimenti, ma procediamo..."
     fi
-    
+
     print_success "🎉 Setup completato dal container!"
     print_step "📊 Test API: curl \"http://localhost:8008/api/v2/elasticsearch?app=geohub_app_1\""
     exit 0
@@ -291,7 +291,7 @@ docker-compose -f docker-compose.develop.yml down -v --remove-orphans 2>/dev/nul
 # Lista dei container specifici OSM2CAI2 da verificare/pulire
 OSM2CAI_CONTAINERS=(
     "php81-osm2cai2"
-    "postgres-osm2cai2" 
+    "postgres-osm2cai2"
     "elasticsearch-osm2cai2"
     "minio-osm2cai2"
     "mailpit-osm2cai2"
@@ -309,7 +309,7 @@ done
 # Rimuove solo i volumi specifici di OSM2CAI2 (se esistono e non sono utilizzati)
 OSM2CAI_VOLUMES=(
     "osm2cai2_postgres_data"
-    "osm2cai2_elasticsearch_data" 
+    "osm2cai2_elasticsearch_data"
     "osm2cai2_minio_data"
 )
 
@@ -572,11 +572,11 @@ while IFS='|' read -r app_id app_name; do
     if [ -z "$app_id" ] || [ -z "$app_name" ]; then
         continue
     fi
-    
+
     print_info ""
     print_info "🔄 Processando App ID: $app_id - Nome: $app_name"
     print_info "------------------------------------------------"
-    
+
     # 1. Genera icone AWS
     print_info "📱 Generazione icone AWS per App $app_id..."
     if php artisan tinker --execute="
@@ -595,17 +595,17 @@ while IFS='|' read -r app_id app_name; do
         error_count=$((error_count + 1))
         continue
     fi
-    
+
     # 2. Genera file geojson POI
     print_info "🗺️  Generazione file pois.geojson per App $app_id..."
-    if php artisan app:build-pois-geojson "$app_id" 2>/dev/null; then
+    if php artisan wm:build-pois-geojson "$app_id" 2>/dev/null; then
         print_success "✅ File pois.geojson generato per App $app_id"
     else
         print_error "❌ Errore nella generazione pois.geojson per App $app_id"
         error_count=$((error_count + 1))
         continue
     fi
-    
+
     print_success "🎉 App $app_id ($app_name) processata con successo!"
     success_count=$((success_count + 1))
 done < "$temp_file"
@@ -665,4 +665,4 @@ for app_id in "${APPS_TO_IMPORT[@]}"; do
     config=$(get_app_config "$app_id")
     print_step "   • $config (App $app_id)"
 done
-echo "" 
+echo ""
