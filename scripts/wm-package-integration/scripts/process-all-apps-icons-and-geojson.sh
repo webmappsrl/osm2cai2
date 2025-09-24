@@ -69,11 +69,11 @@ while IFS='|' read -r app_id app_name; do
     if [ -z "$app_id" ] || [ -z "$app_name" ]; then
         continue
     fi
-    
+
     print_info ""
     print_info "🔄 Processando App ID: $app_id - Nome: $app_name"
     print_info "------------------------------------------------"
-    
+
     # 1. Genera icone AWS
     print_info "📱 Generazione icone AWS per App $app_id..."
     if php artisan tinker --execute="
@@ -92,17 +92,17 @@ while IFS='|' read -r app_id app_name; do
         error_count=$((error_count + 1))
         continue
     fi
-    
+
     # 2. Genera file geojson POI
     print_info "🗺️  Generazione file pois.geojson per App $app_id..."
-    if php artisan app:build-pois-geojson "$app_id" 2>/dev/null; then
+    if php artisan wm:build-pois-geojson "$app_id" 2>/dev/null; then
         print_success "✅ File pois.geojson generato per App $app_id"
     else
         print_error "❌ Errore nella generazione pois.geojson per App $app_id"
         error_count=$((error_count + 1))
         continue
     fi
-    
+
     print_success "🎉 App $app_id ($app_name) processata con successo!"
     success_count=$((success_count + 1))
 done < "$temp_file"
