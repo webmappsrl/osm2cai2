@@ -2,6 +2,10 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/backups/
+/storage/logs/
+/storage/json/
+/storage/media-library/
 /vendor
 .env
 .env.backup
@@ -16,5 +20,4 @@ yarn-error.log
 docker-compose.yml
 /tests/stubs
 .php-cs-fixer.cache
-storage/backups/
 .env copy
