@@ -16,6 +16,10 @@ print_step() {
     echo -e "${BLUE}➜${NC} $1"
 }
 
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
 print_success() {
     echo -e "${GREEN}✅${NC} $1"
 }
@@ -544,12 +548,25 @@ print_info "🚀 Avvio processamento di tutte le app per icone AWS e geojson POI
 
 # Recupera tutte le app dal database
 print_info "📋 Recupero lista delle app dal database..."
-apps=$(php artisan tinker --execute="
-\$apps = \Wm\WmPackage\Models\App::all(['id', 'name']);
+# Creiamo un file temporaneo per il comando tinker
+temp_tinker_file=$(mktemp)
+cat > "$temp_tinker_file" << 'EOF'
+$apps = \Wm\WmPackage\Models\App::all(['id', 'name']);
+foreach($apps as $app) {
+    echo $app->id . '|' . $app->name . PHP_EOL;
+}
+EOF
+
+apps=$(docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan tinker < /tmp/tinker_script.php" 2>/dev/null || docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && cat > /tmp/tinker_script.php << 'TINKER_EOF'
+\$apps = \\Wm\\WmPackage\\Models\\App::all(['id', 'name']);
 foreach(\$apps as \$app) {
     echo \$app->id . '|' . \$app->name . PHP_EOL;
 }
-")
+TINKER_EOF
+php artisan tinker < /tmp/tinker_script.php")
+
+# Pulizia file temporaneo
+rm -f "$temp_tinker_file"
 
 if [ -z "$apps" ]; then
     print_error "Nessuna app trovata nel database!"
@@ -579,16 +596,17 @@ while IFS='|' read -r app_id app_name; do
 
     # 1. Genera icone AWS
     print_info "📱 Generazione icone AWS per App $app_id..."
-    if php artisan tinker --execute="
+    if docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && cat > /tmp/icons_script.php << 'ICONS_EOF'
         try {
-            \$service = new \Wm\WmPackage\Services\AppIconsService();
-            \$icons = \$service->writeIconsOnAws($app_id);
-            echo 'SUCCESS: ' . count(\$icons) . ' icone generate' . PHP_EOL;
-        } catch (Exception \$e) {
-            echo 'ERROR: ' . \$e->getMessage() . PHP_EOL;
+            \\\$service = new \\Wm\\WmPackage\\Services\\AppIconsService();
+            \\\$icons = \\\$service->writeIconsOnAws($app_id);
+            echo 'SUCCESS: ' . count(\\\$icons) . ' icone generate' . PHP_EOL;
+        } catch (Exception \\\$e) {
+            echo 'ERROR: ' . \\\$e->getMessage() . PHP_EOL;
             exit(1);
         }
-    " 2>/dev/null; then
+ICONS_EOF
+php artisan tinker < /tmp/icons_script.php" 2>/dev/null; then
         print_success "✅ Icone AWS generate per App $app_id"
     else
         print_error "❌ Errore nella generazione icone AWS per App $app_id"
@@ -598,7 +616,7 @@ while IFS='|' read -r app_id app_name; do
 
     # 2. Genera file geojson POI
     print_info "🗺️  Generazione file pois.geojson per App $app_id..."
-    if php artisan wm:build-pois-geojson "$app_id" 2>/dev/null; then
+    if docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan wm:build-pois-geojson $app_id" 2>/dev/null; then
         print_success "✅ File pois.geojson generato per App $app_id"
     else
         print_error "❌ Errore nella generazione pois.geojson per App $app_id"
