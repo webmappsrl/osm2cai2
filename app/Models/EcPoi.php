@@ -52,7 +52,7 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
     {
         parent::boot();
 
-        // Registra l'observer del wm-package
+        // TODO: Laravel non eredita automaticamente gli observer dalla classe padre
         static::observe(\Wm\WmPackage\Observers\EcPoiObserver::class);
     }
 
@@ -86,7 +86,7 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
         if (is_null($value)) {
             return [];
         }
-        
+
         return is_string($value) ? json_decode($value, true) : $value;
     }
 
