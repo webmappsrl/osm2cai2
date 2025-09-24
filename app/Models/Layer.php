@@ -24,9 +24,11 @@ class Layer extends WmLayer
         foreach ($hikingRoutes as $hikingRoute) {
             $geometry = json_decode($hikingRoute->geometry, true);
 
+            // Decodifica il JSON del nome e estrai la traduzione italiana o la prima disponibile
             $nameData = json_decode($hikingRoute->name, true);
-            $currentLocale = app()->getLocale();
-            $hikingRouteName = $nameData[$currentLocale] ?? $nameData['it'] ?? 'Nome non disponibile';
+
+            // Priorità: 1) Italiano, 2) Prima disponibile, 3) Nome non disponibile
+            $hikingRouteName = $nameData['it'] ?? (is_array($nameData) && ! empty($nameData) ? reset($nameData) : 'Nome non disponibile');
 
             if ($geometry) {
                 $routeFeature = [
