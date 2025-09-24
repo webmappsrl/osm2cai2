@@ -99,6 +99,14 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php arti
 fi
 print_success "Conversione UgcPois validati per App 58 completata"
 
+# Conversione suggeriti a EcPois
+print_step "Conversione suggeriti a EcPois..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan app:convert-suggested-to-ec-pois"; then
+    print_error "Conversione suggeriti a EcPois fallita!"
+    exit 1
+fi
+print_success "Conversione suggeriti a EcPois completata"
+
 # Esempio di customizzazione (da personalizzare secondo le esigenze):
 print_step "Configurazione layer personalizzati per App 58..."
 # if ! ./scripts/02-create-layers-app58.sh; then
@@ -146,6 +154,11 @@ print_step "Verifica conversione UgcPois validati per App 58..."
 EC_POIS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \App\Models\EcPoi::where('properties->ugc', true)->count();\"" 2>/dev/null || echo "0")
 print_success "EcPois convertiti da UgcPois: $EC_POIS_COUNT"
 
+# Verifica conversione suggeriti a EcPois
+print_step "Verifica conversione suggeriti a EcPois..."
+SUGGESTED_POIS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \App\Models\EcPoi::where('properties->suggested', true)->count();\"" 2>/dev/null || echo "0")
+print_success "EcPois convertiti da suggeriti: $SUGGESTED_POIS_COUNT"
+
 # TODO: Aggiungere verifiche specifiche per le customizzazioni
 # LAYER_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\Layer::where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 58)->first()->id)->count();\"" 2>/dev/null || echo "0")
 # print_success "Layer personalizzati per App 58: $LAYER_COUNT"
@@ -170,6 +183,7 @@ echo "📊 Statistiche App 58:"
 echo "   • App importata: ✅"
 echo "   • Hiking routes associate: $ROUTES_COUNT"
 echo "   • EcPois convertiti da UgcPois: $EC_POIS_COUNT"
+echo "   • EcPois convertiti da suggeriti: $SUGGESTED_POIS_COUNT"
 echo "   • Customizzazioni applicate: ✅"
 echo "   • Setup generico: ✅"
 echo "   • Code processate: ✅"
