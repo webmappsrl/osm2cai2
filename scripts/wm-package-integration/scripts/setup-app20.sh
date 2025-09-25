@@ -82,7 +82,7 @@ print_step "=== FASE 2: VERIFICA FINALE ==="
 
 # Verifica che l'app sia stata importata
 print_step "Verifica import App 20..."
-APP_20_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::where('geohub_id', 20)->count();\"" 2>/dev/null || echo "0")
+APP_20_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::where('sku', 'it.webmapp.sicai')->count();\"" 2>/dev/null || echo "0")
 
 if [ "$APP_20_COUNT" -eq 0 ]; then
     print_error "App 20 non trovata nel database dopo l'import!"
