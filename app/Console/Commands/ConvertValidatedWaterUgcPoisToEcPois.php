@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Wm\WmPackage\Models\App;
-use Wm\WmPackage\Models\Media;
 use Wm\WmPackage\Models\TaxonomyPoiType;
 
 class ConvertValidatedWaterUgcPoisToEcPois extends Command
@@ -74,13 +73,16 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
         $convertedCount = 0;
         $skippedCount = 0;
         $taxonomyPoiType = $this->createTaxonomyPoiTypeIfNotExists();
+        $totalCount = $waterUgcPois->count();
+        $currentIndex = 0;
 
         foreach ($waterUgcPois as $ugcPoi) {
+            $currentIndex++;
             // Controlla se esiste già un EcPoi per questo UgcPoi
             $existingEcPoi = EcPoi::where('properties->ugc->ugc_poi_id', $ugcPoi->id)->first();
 
             if ($existingEcPoi) {
-                $this->line("⏭️  Skipping UgcPoi ID {$ugcPoi->id} - EcPoi already exists (ID: {$existingEcPoi->id})");
+                $this->line("({$currentIndex}/{$totalCount}) ⏭️  Skipping UgcPoi ID {$ugcPoi->id} - EcPoi already exists (ID: {$existingEcPoi->id})");
                 $skippedCount++;
                 continue;
             }
@@ -159,27 +161,13 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                     }
                                 }
 
-                                // Se trovato un relative_url, scarica l'immagine
+                                // Se trovato un relative_url, procedi con la duplicazione
                                 if ($relativeUrl) {
                                     // Se l'URL non contiene geohub.webmapp.it, aggiungi il prefisso osm2cai.cai.it
                                     if (strpos($relativeUrl, 'geohub.webmapp.it') === false) {
                                         $relativeUrl = 'https://osm2cai.cai.it/storage/'.ltrim($relativeUrl, '/');
                                     }
 
-                                    $this->line("📥 Downloading image from URL: {$relativeUrl}");
-
-                                    $fileContent = file_get_contents($relativeUrl);
-                                    if ($fileContent === false) {
-                                        throw new \Exception('Failed to download image from URL');
-                                    }
-                                    $sourceType = 'downloaded from URL';
-                                } else {
-                                    $this->warn('⚠️  No relative_url found in media properties - Skipping media duplication');
-                                    continue;
-                                }
-
-                                // Se abbiamo il contenuto del file, procedi con la duplicazione
-                                if ($fileContent !== null) {
                                     // Crea una copia del record del database
                                     $duplicatedMedia = $media->replicate();
                                     $duplicatedMedia->uuid = (string) Str::uuid();
@@ -191,10 +179,25 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                     // Ottieni il nuovo path per il file duplicato
                                     $newPath = $duplicatedMedia->getPath();
 
-                                    // Scrivi il file fisico nella nuova posizione
-                                    $sourceDisk->put($newPath, $fileContent);
+                                    // Controlla se il file esiste già nella destinazione PRIMA di scaricarlo
+                                    if ($sourceDisk->exists($newPath)) {
+                                        $this->line("⏭️  Media file already exists, skipping: {$duplicatedMedia->file_name}");
+                                    } else {
+                                        $this->line("📥 Downloading image from URL: {$relativeUrl}");
 
-                                    $this->line("📁 Copied media file from {$sourceType}: {$media->file_name} -> {$duplicatedMedia->file_name}");
+                                        $fileContent = file_get_contents($relativeUrl);
+                                        if ($fileContent === false) {
+                                            throw new \Exception('Failed to download image from URL');
+                                        }
+                                        $sourceType = 'downloaded from URL';
+
+                                        // Scrivi il file fisico nella nuova posizione
+                                        $sourceDisk->put($newPath, $fileContent);
+                                        $this->line("📁 Copied media file from {$sourceType}: {$media->file_name} -> {$duplicatedMedia->file_name}");
+                                    }
+                                } else {
+                                    $this->warn('⚠️  No relative_url found in media properties - Skipping media duplication');
+                                    continue;
                                 }
                             } catch (\Exception $e) {
                                 $this->error("❌ Error copying media {$media->id}: ".$e->getMessage());
@@ -205,18 +208,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
                     DB::commit();
 
-                    $this->line("✅ Converted UgcPoi ID {$ugcPoi->id} to EcPoi ID {$ecPoi->id}");
-
-                    // Log dettagliato delle properties dell'EcPoi creato
-                    $this->line('📋 EcPoi Properties:');
-                    $this->line("   - ID: {$ecPoi->id}");
-                    $this->line("   - Name: {$ecPoi->name}");
-                    $this->line("   - Type: {$ecPoi->type}");
-                    $this->line("   - App ID: {$ecPoi->app_id}");
-                    $this->line("   - User ID: {$ecPoi->user_id}");
-                    $this->line("   - Score: {$ecPoi->score}");
-                    $this->line('   - Geometry: '.($ecPoi->geometry ? 'Present' : 'Missing'));
-                    $this->line("   - Media count: {$ecPoi->media->count()}");
+                    $this->line("({$currentIndex}/{$totalCount}) ✅ Converted UgcPoi ID {$ugcPoi->id} to EcPoi ID {$ecPoi->id}");
 
                     $convertedCount++;
                 } catch (\Exception $e) {
@@ -224,7 +216,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $this->error("❌ Error converting UgcPoi ID {$ugcPoi->id}: ".$e->getMessage());
                 }
             } else {
-                $this->line("🔄 Would convert UgcPoi ID {$ugcPoi->id} to EcPoi");
+                $this->line("({$currentIndex}/{$totalCount}) 🔄 Would convert UgcPoi ID {$ugcPoi->id} to EcPoi");
                 $convertedCount++;
             }
         }

@@ -132,15 +132,6 @@ class ConvertSuggestedToEcPois extends Command
 
                         $this->line("✅ Converted suggested POI ID {$feature['properties']['id']} to EcPoi ID {$ecPoi->id}");
 
-                        // Log dettagliato delle properties dell'EcPoi creato
-                        $this->line('📋 EcPoi Properties:');
-                        $this->line("   - ID: {$ecPoi->id}");
-                        $this->line("   - Name: {$ecPoi->name}");
-                        $this->line("   - Type: {$ecPoi->type}");
-                        $this->line("   - App ID: {$ecPoi->app_id}");
-                        $this->line("   - User ID: {$ecPoi->user_id}");
-                        $this->line("   - Score: {$ecPoi->score}");
-                        $this->line('   - Geometry: '.($ecPoi->geometry ? 'Present' : 'Missing'));
                     } catch (\Exception $e) {
                         DB::rollBack();
                         $this->error('❌ Error converting suggested POIs: '.$e->getMessage());
