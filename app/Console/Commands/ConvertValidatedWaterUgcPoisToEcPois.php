@@ -63,6 +63,14 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
             return 0;
         }
 
+        // TODO: chiamo save quietly e poi creo una custom chein di jobs
+        // Salva l'event dispatcher originale
+        $originalDispatcher = EcPoi::getEventDispatcher();
+
+        // Crea un nuovo dispatcher senza l'EcPoiObserver per non chiamare $app->buildPoisGeojson() ad ogni poi
+        $newDispatcher = new \Illuminate\Events\Dispatcher;
+        EcPoi::setEventDispatcher($newDispatcher);
+
         $convertedCount = 0;
         $skippedCount = 0;
         $taxonomyPoiType = $this->createTaxonomyPoiTypeIfNotExists();
@@ -233,6 +241,9 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
             $this->info('   - Mode: LIVE (changes applied)');
         }
 
+        // Ripristina l'event dispatcher originale
+        EcPoi::setEventDispatcher($originalDispatcher);
+
         return 0;
     }
 
@@ -241,14 +252,10 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
         $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-point')->first();
         if (! $taxonomyPoiType) {
             $taxonomyPoiType = TaxonomyPoiType::create([
-                'name' => ['it' => 'Punto acqua', 'en' => 'Water point'],
+                'name' => ['it' => 'Monitoraggio acqua', 'en' => 'Water monitoring'],
                 'description' => [],
                 'excerpt' => [],
-                'identifier' => 'water-point',
-                'properties' => [
-                    'name' => ['it' => 'Punto acqua'],
-                    'geohub_id' => 370,
-                ],
+                'identifier' => 'water-monitoring',
                 'icon' => 'txn-water',
             ]);
         }
