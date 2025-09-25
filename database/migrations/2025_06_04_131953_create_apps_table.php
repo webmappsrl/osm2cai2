@@ -99,7 +99,7 @@ return new class extends Migration
             $table->json('available_languages')->nullable();
 
             // ==================== MAP TAB ====================
-            $table->string('tiles_label')->default('{"it":"Tipo di mapppa","en":"Map type"}');
+            $table->string('tiles_label')->default('{"it":"Tipo di mappa","en":"Map type"}');
             $table->json('tiles')->default('["{\\"webmapp\\":\\"https:\\/\\/api.webmapp.it\\/tiles\\/{z}\\/{x}\\/{y}.png\\"}"]');
             $table->string('data_label')->default('{"it":"Dati","en":"Data"}');
             $table->string('pois_data_label')->default('{"it":"Punti di interesse","en":"Points of interest"}');
