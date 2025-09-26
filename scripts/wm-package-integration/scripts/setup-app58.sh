@@ -67,6 +67,13 @@ PHP_CONTAINER="php81-${APP_NAME}"
 
 print_step "Utilizzo container: ${PHP_CONTAINER}"
 
+# Controlla se è stata richiesta la modalità locale (senza migrazione media)
+LOCAL_MODE=false
+if [ "$1" = "local" ]; then
+    LOCAL_MODE=true
+    print_step "Modalità locale attivata: migrazione media esclusa"
+fi
+
 # FASE 1: IMPORT APP 58 GENERICO
 print_step "=== FASE 1: IMPORT APP 58 GENERICO ==="
 
@@ -93,9 +100,16 @@ print_step "Applicando customizzazioni specifiche per App 58..."
 
 # Conversione UgcPois validati con form_id "water" a EcPois
 print_step "Conversione UgcPois validati con form_id 'water' a EcPois..."
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan app:convert-validated-water-ugc-pois-to-ec-pois"; then
-    print_error "Conversione UgcPois validati per App 58 fallita!"
-    exit 1
+if [ "$LOCAL_MODE" = true ]; then
+    if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan app:convert-validated-water-ugc-pois-to-ec-pois --skip-media"; then
+        print_error "Conversione UgcPois validati per App 58 fallita!"
+        exit 1
+    fi
+else
+    if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan app:convert-validated-water-ugc-pois-to-ec-pois"; then
+        print_error "Conversione UgcPois validati per App 58 fallita!"
+        exit 1
+    fi
 fi
 print_success "Conversione UgcPois validati per App 58 completata"
 

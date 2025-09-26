@@ -92,8 +92,13 @@ print_success "App 20 trovata nel database"
 
 # Verifica hiking routes associate
 print_step "Verifica hiking routes associate ad App 20..."
-ROUTES_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->where('app_id', \Wm\WmPackage\Models\App::where('geohub_id', 20)->first()->id)->count();\"" 2>/dev/null || echo "0")
+ROUTES_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->where('app_id', \Wm\WmPackage\Models\App::where('sku', 'it.webmapp.sicai)->first()->id)->count();\"" 2>/dev/null || echo "0")
 print_success "Hiking routes associate ad App 20: $ROUTES_COUNT"
+
+# Verifica relazioni tassonomie
+print_step "Verifica relazioni tassonomie create..."
+TAXONOMY_RELATIONS_COUNT=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('taxonomy_activityables')->where('taxonomy_activityable_type', 'App\\\\Models\\\\HikingRoute')->count();\"" 2>/dev/null || echo "0")
+print_success "Relazioni tassonomie create: $TAXONOMY_RELATIONS_COUNT"
 
 echo ""
 
@@ -114,6 +119,7 @@ echo ""
 echo "📊 Statistiche App 20:"
 echo "   • App importata: ✅"
 echo "   • Hiking routes associate: $ROUTES_COUNT"
+echo "   • Relazioni tassonomie create: $TAXONOMY_RELATIONS_COUNT"
 echo "   • Setup generico: ✅"
 echo "   • Code processate: ✅"
 echo ""

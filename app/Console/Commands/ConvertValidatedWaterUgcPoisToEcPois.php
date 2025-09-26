@@ -18,7 +18,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
      *
      * @var string
      */
-    protected $signature = 'app:convert-validated-water-ugc-pois-to-ec-pois {--dry-run : Show what would be converted without actually doing it}';
+    protected $signature = 'app:convert-validated-water-ugc-pois-to-ec-pois {--dry-run : Show what would be converted without actually doing it} {--skip-media : Skip downloading and copying media files}';
 
     /**
      * The console command description.
@@ -33,9 +33,14 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
+        $skipMedia = $this->option('skip-media');
 
         if ($isDryRun) {
             $this->info('🔍 DRY RUN MODE - No changes will be made');
+        }
+
+        if ($skipMedia) {
+            $this->info('📷 SKIP MEDIA MODE - Media files will not be downloaded or copied');
         }
 
         // Trova l'app acquasorgente
@@ -140,7 +145,10 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
                     $medias = $ugcPoi->media;
                     if ($medias->count() > 0) {
-                        foreach ($medias as $media) {
+                        if ($skipMedia) {
+                            $this->line("📷 Skipping {$medias->count()} media files (--skip-media option)");
+                        } else {
+                            foreach ($medias as $media) {
                             try {
                                 $sourceDisk = Storage::disk($media->disk);
                                 $fileContent = null;
@@ -208,6 +216,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                 // Continua con il prossimo media anche se questo fallisce
                             }
                         }
+                        }
                     }
 
                     DB::commit();
@@ -235,6 +244,12 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
             $this->info('   - Mode: DRY RUN (no actual changes made)');
         } else {
             $this->info('   - Mode: LIVE (changes applied)');
+        }
+
+        if ($skipMedia) {
+            $this->info('   - Media: SKIPPED (--skip-media option)');
+        } else {
+            $this->info('   - Media: PROCESSED');
         }
 
         // Ripristina l'event dispatcher originale

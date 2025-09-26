@@ -34,7 +34,7 @@ print_error() {
 
 # Configurazione app disponibili (compatibile con bash 3.2)
 APP_IDS=("26" "20" "58")
-APP_SCRIPTS=("setup-app26.sh local" "setup-app20.sh" "setup-app58.sh")
+APP_SCRIPTS=("setup-app26.sh local" "setup-app20.sh" "setup-app58.sh local")
 
 # App di default da importare (tutte)
 DEFAULT_APPS=("26" "20" "58")
