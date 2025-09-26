@@ -120,9 +120,13 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     unset($properties['uuid']);
                     $properties['form']['index'] = 0;
 
+                    // name preso da properties form
+                    $name = isset($properties['form']['title']) ? $properties['form']['title'] : $ugcPoi->name;
+                    $name = $name ?? 'Sorgente d\'acqua';
+
                     // Crea il nuovo EcPoi
                     $ecPoi = EcPoi::create([
-                        'name' => $ugcPoi->name ?? 'Sorgente d\'acqua',
+                        'name' => $name,
                         'geometry' => $ugcPoi->geometry,
                         'properties' => $properties,
                         'app_id' => $acquasorgenteAppId,
@@ -241,7 +245,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
     public function createTaxonomyPoiTypeIfNotExists(): TaxonomyPoiType
     {
-        $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-point')->first();
+        $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-monitoring')->first();
         if (! $taxonomyPoiType) {
             $taxonomyPoiType = TaxonomyPoiType::create([
                 'name' => ['it' => 'Monitoraggio acqua', 'en' => 'Water monitoring'],
