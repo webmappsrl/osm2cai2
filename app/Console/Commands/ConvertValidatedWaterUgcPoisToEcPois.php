@@ -120,9 +120,13 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     unset($properties['uuid']);
                     $properties['form']['index'] = 0;
 
+                    // name preso da properties form
+                    $name = isset($properties['form']['title']) ? $properties['form']['title'] : $ugcPoi->name;
+                    $name = $name ?? 'Sorgente d\'acqua';
+
                     // Crea il nuovo EcPoi
                     $ecPoi = EcPoi::create([
-                        'name' => $ugcPoi->name ?? 'Sorgente d\'acqua',
+                        'name' => $name,
                         'geometry' => $ugcPoi->geometry,
                         'properties' => $properties,
                         'app_id' => $acquasorgenteAppId,

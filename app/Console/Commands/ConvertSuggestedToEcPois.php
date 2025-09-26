@@ -110,8 +110,8 @@ class ConvertSuggestedToEcPois extends Command
                         ];
                         // TODO: modificare la descricione con un html custom e migliorato
                         $properties['description'] = isset($properties['popup']['html']) ? ['it' => $properties['popup']['html']] : [];
-
-                        $name = $properties['name'] ?? 'No name';
+                        // name ec-poi costruito con ref e name del suggerito
+                        $name = $properties['name'] ? $properties['sent_ref'].' - '.$properties['name'] : $properties['sent_ref'];
 
                         // Converti la geometria GeoJSON in formato WKB
                         $geometry = GeometryComputationService::make()->convertTo3DGeometry($feature['geometry']);
@@ -131,7 +131,6 @@ class ConvertSuggestedToEcPois extends Command
                         DB::commit();
 
                         $this->line("✅ Converted suggested POI ID {$feature['properties']['id']} to EcPoi ID {$ecPoi->id}");
-
                     } catch (\Exception $e) {
                         DB::rollBack();
                         $this->error('❌ Error converting suggested POIs: '.$e->getMessage());
