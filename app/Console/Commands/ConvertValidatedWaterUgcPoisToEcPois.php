@@ -245,7 +245,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
     public function createTaxonomyPoiTypeIfNotExists(): TaxonomyPoiType
     {
-        $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-point')->first();
+        $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-monitoring')->first();
         if (! $taxonomyPoiType) {
             $taxonomyPoiType = TaxonomyPoiType::create([
                 'name' => ['it' => 'Monitoraggio acqua', 'en' => 'Water monitoring'],
