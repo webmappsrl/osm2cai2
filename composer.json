@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.4.0",
         "abordage/nova-html-card": "^1.1.1",
+        "badinansoft/nova-language-switch": "^3.0",
         "cweagans/composer-patches": "^1.7",
         "darkaonline/l5-swagger": "^8.6",
         "ebess/advanced-nova-media-library": "^5.0",
