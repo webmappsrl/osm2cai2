@@ -4,8 +4,26 @@
 set -e
 set -o pipefail
 
-echo "🚀 Setup Link WMPackage to OSM2CAI2 - Ambiente di Produzione"
+echo "🔄 Sync da Produzione e Applicazione Integrazione WMPackage"
 echo "=========================================================="
+echo "📅 Avviato: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "🤖 Modalità: Automatica (Cronjob)"
+echo ""
+echo "📋 USAGE:"
+echo "   $0                    # Importa tutte le app di default (26, 20, 58)"
+echo "   $0 --help             # Mostra questo help"
+echo "   $0 --apps 26 20       # Importa solo le app specificate"
+echo "   $0 -a 26 20           # Forma abbreviata"
+echo ""
+echo "📁 App disponibili:"
+echo "   • App 26: setup-app26.sh (customizzazioni complete)"
+echo "   • App 20: setup-app20.sh (import generico + verifiche)"
+echo "   • App 58: setup-app58.sh (import generico + customizzazioni)"
+echo ""
+echo "📝 Esempi:"
+echo "   $0                    # Importa tutte le app"
+echo "   $0 --apps 26          # Importa solo App 26"
+echo "   $0 --apps 20 58       # Importa App 20 e 58"
 echo ""
 
 # Colori per output
@@ -32,357 +50,476 @@ print_error() {
     echo -e "${RED}❌${NC} $1"
 }
 
+# Configurazione app disponibili (compatibile con bash 3.2)
+APP_IDS=("26" "20" "58")
+APP_SCRIPTS=("setup-app26.sh" "setup-app20.sh" "setup-app58.sh")
+
+# App di default da importare (tutte)
+DEFAULT_APPS=("26" "20" "58")
+
+# Funzione per ottenere la configurazione di un'app
+get_app_config() {
+    local app_id="$1"
+    for i in "${!APP_IDS[@]}"; do
+        if [[ "${APP_IDS[$i]}" == "$app_id" ]]; then
+            echo "${APP_SCRIPTS[$i]}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Funzione per verificare se un'app esiste
+app_exists() {
+    local app_id="$1"
+    for id in "${APP_IDS[@]}"; do
+        if [[ "$id" == "$app_id" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Funzione per mostrare l'help
+show_help() {
+    echo "🔄 Sync da Produzione e Applicazione Integrazione WMPackage"
+    echo "=========================================================="
+    echo ""
+    echo "📋 USAGE:"
+    echo "   $0                    # Importa tutte le app di default (26, 20, 58)"
+    echo "   $0 --help             # Mostra questo help"
+    echo "   $0 --apps 26 20       # Importa solo le app specificate"
+    echo "   $0 -a 26 20           # Forma abbreviata"
+    echo "   $0 --sync             # Sincronizza dump da produzione prima del setup"
+    echo "   $0 -s                 # Forma abbreviata per sync"
+    echo "   $0 --sync --apps 26   # Sync + import solo App 26"
+    echo ""
+    echo "📁 App disponibili:"
+    echo "   • App 26: setup-app26.sh (customizzazioni complete)"
+    echo "   • App 20: setup-app20.sh (import generico + verifiche)"
+    echo "   • App 58: setup-app58.sh (import generico + customizzazioni)"
+    echo ""
+    echo "📝 Esempi:"
+    echo "   $0                    # Importa tutte le app"
+    echo "   $0 --apps 26          # Importa solo App 26"
+    echo "   $0 --apps 20 58       # Importa App 20 e 58"
+    echo "   $0 --sync             # Sync da produzione + importa tutte le app"
+    echo "   $0 --sync --apps 26   # Sync da produzione + importa solo App 26"
+    echo ""
+}
+
+# Funzione per validare gli ID delle app
+validate_app_ids() {
+    local app_ids=("$@")
+    
+    for app_id in "${app_ids[@]}"; do
+        if ! app_exists "$app_id"; then
+            print_error "ID app non valido: $app_id"
+            echo ""
+            echo "App disponibili:"
+            for id in "${APP_IDS[@]}"; do
+                local config=$(get_app_config "$id")
+                echo "   • App $id: $config"
+            done
+            exit 1
+        fi
+    done
+}
+
+# Funzione per importare una singola app
+import_app() {
+    local app_id="$1"
+    local script_name=$(get_app_config "$app_id")
+    
+    print_step "=== FASE: IMPORT APP $app_id ==="
+    print_step "🎯 App $app_id: $script_name"
+    
+    if ! bash "$SCRIPT_DIR/scripts/$script_name"; then
+        print_error "Setup App $app_id fallito! Interruzione setup."
+        exit 1
+    fi
+    print_success "=== FASE COMPLETATA: App $app_id configurata ==="
+}
+
 # Funzione per gestire errori
 handle_error() {
     print_error "ERRORE: Script interrotto alla riga $1"
     print_error "Ultimo comando: $BASH_COMMAND"
     print_error ""
     print_error "📞 Per assistenza controlla:"
-    print_error "• Log container: docker-compose logs"
+    print_error "• Connessione SSH a osm2caiProd"
+    print_error "• File dump in storage/app/backups/"
     print_error "• Stato container: docker ps -a"
-    print_error "• Log Laravel: docker exec ${PHP_CONTAINER} tail -f storage/logs/laravel.log"
+    print_error "• Verifica: ssh osm2caiProd 'ls -la html/osm2cai2/storage/backups/'"
     exit 1
 }
+
+# Parsing dei parametri
+APPS_TO_IMPORT=()
+SYNC_FROM_PROD=false  # Default: no sync, usa dump locale esistente
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        --apps|-a)
+            shift
+            while [[ $# -gt 0 && ! $1 =~ ^-- ]]; do
+                APPS_TO_IMPORT+=("$1")
+                shift
+            done
+            ;;
+        --sync|-s)
+            SYNC_FROM_PROD=true
+            shift
+            ;;
+        *)
+            print_error "Parametro non riconosciuto: $1"
+            echo ""
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Se non sono state specificate app, usa quelle di default
+if [ ${#APPS_TO_IMPORT[@]} -eq 0 ]; then
+    APPS_TO_IMPORT=("${DEFAULT_APPS[@]}")
+    print_step "Nessuna app specificata, importando tutte le app di default: ${APPS_TO_IMPORT[*]}"
+else
+    # Valida gli ID delle app forniti
+    validate_app_ids "${APPS_TO_IMPORT[@]}"
+    print_step "App da importare: ${APPS_TO_IMPORT[*]}"
+fi
+
+echo ""
+echo "📁 Script per le app che verranno utilizzati:"
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    config=$(get_app_config "$app_id")
+    echo "   • $config (App $app_id)"
+done
+echo ""
 
 # Imposta trap per gestire errori
 trap 'handle_error $LINENO' ERR
 
-# Funzioni di attesa per i servizi
-wait_for_service() {
-    local service_name="$1"
-    local health_url="$2"
-    local timeout="$3"
-    
-    print_step "Attesa che $service_name sia completamente pronto..."
-    local elapsed=0
-    while ! curl -f -s "$health_url" &> /dev/null; do
-        if [ $elapsed -ge $timeout ]; then
-            print_warning "Timeout: $service_name non è diventato pronto in $timeout secondi (continuo comunque)"
-            return 1
-        fi
-        sleep 3
-        elapsed=$((elapsed + 3))
-        print_step "Attendo $service_name... ($elapsed/$timeout secondi)"
-    done
-    print_success "$service_name pronto e funzionante"
-    return 0
-}
-
-wait_for_postgres() {
-    local container_name="$1"
-    local timeout="$2"
-
-    print_step "Attesa che PostgreSQL sia completamente pronto..."
-    local elapsed=0
-    while ! docker exec "$container_name" pg_isready -h db -p 5432 &> /dev/null; do
-        if [ $elapsed -ge $timeout ]; then
-            print_error "Timeout: PostgreSQL non è diventato pronto in $timeout secondi"
-            exit 1
-        fi
-        sleep 2
-        elapsed=$((elapsed + 2))
-        print_step "Attendo PostgreSQL... ($elapsed/$timeout secondi)"
-    done
-    print_success "PostgreSQL pronto e funzionante"
-}
-
-# Determina la directory root del progetto e ci si sposta
+# Determina la directory root del progetto
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
-cd "$PROJECT_ROOT"
 
-# Carica le variabili dal file .env se esiste
-if [ -f .env ]; then
-    print_step "Caricamento delle variabili dal file .env..."
-    # Esporta le variabili per renderle disponibili allo script
-    set -o allexport
-    source .env
-    set +o allexport
-    print_success "Variabili d'ambiente caricate."
-else
-    print_error "File .env non trovato. Impossibile continuare senza configurazione."
-    exit 1
-fi
-
-# Definisci i nomi dei container utilizzando le variabili d'ambiente
-if [ -z "$APP_NAME" ]; then
-    print_error "La variabile APP_NAME non è definita nel file .env."
-    exit 1
-fi
-PHP_CONTAINER="php81_${APP_NAME}"
-POSTGRES_CONTAINER="postgres_${APP_NAME}"
-
-print_step "Utilizzo dei nomi container: ${PHP_CONTAINER}, ${POSTGRES_CONTAINER}"
-
-print_step "=== FASE 0: VERIFICA PREREQUISITI HOST ==="
+# Verifica prerequisiti
+print_step "Verifica prerequisiti..."
 
 # Controlla se Docker è installato
 if ! command -v docker &> /dev/null; then
-    print_error "Docker non è installato! Eseguire lo script dal sistema host, non da un container."
+    print_error "Docker non è installato!"
     exit 1
 fi
 
-# Rileva il comando Docker Compose corretto (V1 o V2)
-print_step "Rilevamento del comando Docker Compose..."
-if command -v docker-compose &> /dev/null; then
-    COMPOSE_CMD="docker-compose"
-    print_success "Trovato Docker Compose V1 ('docker-compose')"
-elif docker compose version &> /dev/null; then
-    COMPOSE_CMD="docker compose"
-    print_success "Trovato Docker Compose V2 ('docker compose')"
-else
-    print_error "Docker Compose non trovato. Né 'docker-compose' né 'docker compose' sono disponibili."
+# Controlla se Docker Compose è installato
+if ! docker compose version &> /dev/null; then
+    print_error "Docker Compose non è installato!"
     exit 1
 fi
 
-# Verifica file .env
-print_step "Verifica file .env..."
-if [ ! -f "$PROJECT_ROOT/.env" ]; then
-    print_error "File .env non trovato nella root del progetto! Configurare .env prima di eseguire lo script."
-    exit 1
-else
-    print_success "File .env trovato nella root del progetto"
-fi
 
-# Verifica file docker-compose.yml e crealo se non esiste
-print_step "Verifica file docker-compose.yml..."
-if [ ! -f "$PROJECT_ROOT/docker-compose.yml" ]; then
-    print_warning "File docker-compose.yml non trovato. Lo copio da docker-compose.yml.example."
-    if [ -f "$PROJECT_ROOT/docker-compose.yml.example" ]; then
-        cp "$PROJECT_ROOT/docker-compose.yml.example" "$PROJECT_ROOT/docker-compose.yml"
-        print_success "File docker-compose.yml creato con successo."
-    else
-        print_error "File docker-compose.yml.example non trovato! Impossibile creare docker-compose.yml."
-        exit 1
-    fi
-else
-    print_success "File docker-compose.yml trovato."
-fi
 
 print_success "Prerequisiti verificati"
 
-# FASE 0.5: DOWNLOAD DATABASE BACKUP (PRIMA DI TOCCARE I CONTAINER)
-print_step "=== FASE 0.5: DOWNLOAD ULTIMO BACKUP DATABASE (se l'ambiente esistente è attivo) ==="
-# Controlla se il container PHP è in esecuzione
-if ${COMPOSE_CMD} ps -q phpfpm | grep -q .; then
-    print_step "Container 'phpfpm' trovato. Eseguo il download dell'ultimo backup del database... (potrebbe richiedere tempo)"
-    if docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan wm:download-db-backup --latest"; then
-        print_success "Backup del database scaricato con successo. Si troverà in storage/backups/last_dump.sql.gz"
-    else
-        print_warning "Tentativo di download del backup fallito. Questo potrebbe essere normale se l'ambiente non è completamente configurato. Continuo..."
-    fi
+# FASE 0: AGGIORNAMENTO DOCKER-COMPOSE.YML
+print_step "=== FASE 0: AGGIORNAMENTO DOCKER-COMPOSE.YML ==="
+
+print_step "Aggiornamento file docker-compose.yml con configurazione WMPackage..."
+
+# Backup del file docker-compose.yml esistente
+if [ -f "$PROJECT_ROOT/docker-compose.yml" ]; then
+    cp "$PROJECT_ROOT/docker-compose.yml" "$PROJECT_ROOT/docker-compose.yml.backup"
+    print_step "   ✅ Backup creato: docker-compose.yml.backup"
+fi
+
+# Crea il nuovo file docker-compose.yml
+cat > "$PROJECT_ROOT/docker-compose.yml" << 'EOF'
+version: "3.8"
+services:
+  phpfpm:
+    extra_hosts:
+        - host.docker.internal:host-gateway
+    # user: root
+    build: ./docker/configs/phpfpm
+    restart: always
+    container_name: "php81-${APP_NAME}"
+    image: wm-phpfpm:8.4-fpm
+    ports:
+      - ${DOCKER_PHP_PORT}:9000
+      - ${DOCKER_SERVE_PORT}:8000
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    working_dir: '/var/www/html/${DOCKER_PROJECT_DIR_NAME}'
+    depends_on:
+      - db
+      - redis
+    networks:
+      - laravel
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: "postgres-${APP_NAME}"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?err}
+      POSTGRES_USER_PASSWORD: ${DB_PASSWORD:?err}
+      POSTGRES_USER: ${DB_USERNAME:?err}
+      POSTGRES_DB: ${DB_DATABASE:?err}
+    volumes:
+      - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
+    ports:
+      - ${DOCKER_PSQL_PORT}:5432
+    networks:
+      - laravel
+  redis:
+    image: redis:latest
+    container_name: "redis-${APP_NAME}"
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - laravel
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
+    container_name: "elasticsearch-${APP_NAME}"
+    restart: always
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "./docker/volumes/elasticsearch/data:/usr/share/elasticsearch/data"
+    networks:
+      - laravel
+networks:
+  laravel:
+    driver: bridge
+EOF
+
+print_success "File docker-compose.yml aggiornato con successo"
+
+# Avvio dei container Docker
+print_step "Avvio container Docker..."
+if docker compose up -d; then
+    print_success "Container Docker avviati con successo"
 else
-    print_warning "Container 'phpfpm' non trovato. Salto il download preliminare del backup."
+    print_error "Errore durante l'avvio dei container Docker"
+    exit 1
 fi
 
-# FASE 1: SETUP AMBIENTE DOCKER
-print_step "=== FASE 1: SETUP AMBIENTE DOCKER ==="
+# Attesa che i container siano pronti
+print_step "Attesa che i container siano pronti..."
+sleep 5
 
-# Ricrea i container di produzione
-print_step "Fermo e rimuovo i container di produzione esistenti..."
-${COMPOSE_CMD} -f docker-compose.yml down -v --remove-orphans 2>/dev/null || true
+print_success "=== FASE 0 COMPLETATA: Docker-compose.yml aggiornato e container avviati ==="
 
-print_step "Avvio container di produzione (solo docker-compose.yml)..."
-${COMPOSE_CMD} -f docker-compose.yml up -d
-
-# Torna alla directory degli script
-cd "$SCRIPT_DIR"
-
-# Attesa che i servizi principali siano pronti
-wait_for_postgres "$POSTGRES_CONTAINER" 90
-wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
-
-# Installazione dipendenze Composer
-print_step "Installazione dipendenze Composer per la produzione..."
-docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && composer install --no-dev --optimize-autoloader"
-print_success "Dipendenze Composer installate"
-
-# Ottimizzazione Laravel per la produzione
-print_step "Ottimizzazione cache Laravel per la produzione..."
-docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan config:cache"
-docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan route:cache"
-docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan view:cache"
-print_success "Cache di configurazione, rotte e viste generate"
-
-# Avvio Horizon (gestito da Supervisor in produzione)
-print_step "Avvio Horizon..."
-if docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon:status | grep -q 'Horizon is running'"; then
-    print_success "Horizon è già in esecuzione (gestione affidata a Supervisor)"
+# Log automatico per cronjob
+echo ""
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_warning "⚠️  ATTENZIONE: Questa operazione:"
+    print_warning "   • Scaricherà il dump da produzione (~600MB)"
+    print_warning "   • Cancellerà TUTTI i dati nel database locale"
+    print_warning "   • Applicherà l'integrazione WMPackage di produzione"
 else
-    docker exec -d "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
-    sleep 3
-    print_success "Comando di avvio Horizon inviato"
+    print_warning "⚠️  ATTENZIONE: Questa operazione:"
+    print_warning "   • Utilizzerà il dump locale esistente (se disponibile)"
+    print_warning "   • Cancellerà TUTTI i dati nel database locale"
+    print_warning "   • Applicherà l'integrazione WMPackage"
 fi
+echo ""
+print_step "🤖 Modalità automatica (cronjob) - procedo senza conferma utente"
+echo ""
 
-print_success "=== FASE 1 COMPLETATA: Ambiente Docker e Laravel pronti per la produzione ==="
-
-# FASE 2: DATABASE E MIGRAZIONI
-print_step "=== FASE 2: DATABASE, MIGRAZIONI E SEED INIZIALE ==="
-
-# Applicazione Migrazioni
-print_step "Applicazione migrazioni al database..."
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan migrate --force"; then
-    print_error "Errore durante l'applicazione delle migrazioni! Interruzione setup."
-    exit 1
-fi
-print_success "Migrazioni applicate al database"
-
-# Import App da Geohub
-print_step "Import App da Geohub (seeding iniziale)..."
-
-# FASE 2A: IMPORT APP 26 PRIMA (con customizzazioni specifiche)
-print_step "=== FASE 2A: IMPORT APP 26 CON CUSTOMIZZAZIONI ==="
-print_step "🎯 App 26: Import SOLO taxonomy_activity + creazione layer + associazione hiking routes"
-
-print_step "Import App da Geohub con ID 26..."
-if ! "$SCRIPT_DIR/scripts/01-import-app-from-geohub.sh" 26 'SI'; then
-    print_error "Import App da Geohub con ID 26 fallito! Interruzione setup."
-    exit 1
-fi
-print_success "Import App da Geohub con ID 26 completato con successo"
-
-# Creazione layer di accatastamento per app 26
-print_step "Creazione layer di accatastamento per app 26..."
-if ! "$SCRIPT_DIR/scripts/02-create-layers-app26.sh"; then
-    print_error "Creazione layer per app 26 fallita! Interruzione setup."
-    exit 1
-fi
-print_success "Layer di accatastamento per app 26 creati"
-
-# Associazione hiking routes ai layer per app 26
-print_step "Associazione hiking routes ai layer per app 26..."
-if ! "$SCRIPT_DIR/scripts/03-associate-routes-app26.sh"; then
-    print_error "Associazione hiking routes per app 26 fallita! Interruzione setup."
-    exit 1
-fi
-print_success "Hiking routes associati ai layer per app 26"
-
-print_success "=== FASE 2A COMPLETATA: App 26 configurata con customizzazioni ==="
-
-# FASE 2B: IMPORT ALTRE APP (20, 58)
-print_step "=== FASE 2B: IMPORT ALTRE APP ==="
-print_warning "I job di importazione verranno inviati alla coda e processati in background da Horizon."
-for APP_ID in 20 58; do
-    print_step "Import App da Geohub con ID $APP_ID..."
-    if ! "$SCRIPT_DIR/scripts/01-import-app-from-geohub.sh" $APP_ID 'SI'; then
-        print_error "Import App da Geohub con ID $APP_ID fallito! Interruzione setup."
+# FASE 1: Download Dump da Produzione (se richiesto)
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_step "=== FASE 1: DOWNLOAD DUMP DA PRODUZIONE ==="
+    
+    if ! bash "$SCRIPT_DIR/scripts/sync-dump-from-production.sh"; then
+        print_error "Errore durante il sync del dump da produzione! Interruzione setup."
         exit 1
     fi
-    print_success "Import App da Geohub con ID $APP_ID completato con successo"
+    
+    print_success "=== FASE 1 COMPLETATA ==="
+else
+    print_step "=== FASE 1: SYNC DA PRODUZIONE SALTATO ==="
+    print_step "Utilizzando dump locale esistente (se disponibile)"
+    print_success "=== FASE 1 COMPLETATA ==="
+fi
+
+# FASE 2: Reset Database dal Dump
+print_step "=== FASE 2: RESET DATABASE DAL DUMP ==="
+
+print_step "Eseguendo script di reset database (modalità automatica)..."
+if bash "$SCRIPT_DIR/scripts/06-reset-database-from-dump.sh" --auto; then
+    print_success "Reset database completato con successo"
+else
+    print_error "Errore durante il reset del database"
+    exit 1
+fi
+
+print_success "=== FASE 2 COMPLETATA ==="
+
+# Carica le variabili dal file .env per le fasi successive
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+    PHP_CONTAINER="php81-${APP_NAME}"
+    POSTGRES_CONTAINER="postgres-${APP_NAME}"
+else
+    print_error "File .env non trovato per le fasi successive"
+    exit 1
+fi
+
+# FASE 2.4: AGGIORNAMENTO FILE .ENV
+print_step "=== FASE 2.4: AGGIORNAMENTO FILE .ENV ==="
+
+print_step "Eseguendo script di aggiornamento variabili d'ambiente..."
+if bash "$SCRIPT_DIR/scripts/update-env-variables.sh"; then
+    print_success "Variabili d'ambiente aggiornate con successo"
+else
+    print_error "Errore durante l'aggiornamento delle variabili d'ambiente"
+    exit 1
+fi
+
+print_success "=== FASE 2.4 COMPLETATA: File .env aggiornato ==="
+
+# FASE 2.5: Esecuzione Migrazioni
+print_step "=== FASE 2.5: ESECUZIONE MIGRAZIONI ==="
+
+print_step "Eseguendo migrazioni Laravel..."
+if docker exec "$PHP_CONTAINER" php artisan migrate; then
+    print_success "Migrazioni completate con successo"
+else
+    print_error "Errore durante l'esecuzione delle migrazioni"
+    exit 1
+fi
+
+print_success "=== FASE 2.5 COMPLETATA ==="
+
+# FASE 2.6: INIZIALIZZAZIONE APP MODELS
+print_step "=== FASE 2.6: INIZIALIZZAZIONE APP MODELS ==="
+
+# Inizializza i modelli app per tutte le app (26, 20, 58) senza dipendenze
+print_step "Inizializzazione modelli app (senza dipendenze)..."
+if ! bash "$SCRIPT_DIR/scripts/init-apps.sh"; then
+    print_error "Errore durante l'inizializzazione dei modelli app! Interruzione setup."
+    exit 1
+fi
+print_success "Modelli app inizializzati (ID creati per tutte le app)"
+
+print_success "=== FASE 2.6 COMPLETATA: Modelli app inizializzati ==="
+
+# Migrazione UGC Media to Media (dopo init app)
+print_step "Migrazione UGC Media to Media..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:migrate-ugc-media-to-media --force"; then
+    print_error "Errore durante la migrazione UGC Media to Media! Interruzione setup."
+    exit 1
+fi
+print_success "UGC Media migrato al sistema Media"
+
+# FASE 3: FIX CAMPI TRANSLATABLE
+print_step "=== FASE 3: FIX CAMPI TRANSLATABLE NULL ==="
+
+# Fix dei campi translatable null prima degli import delle app
+print_step "Fix dei campi translatable null nei modelli..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/fix-translatable-fields.sh"; then
+    print_error "Errore durante il fix dei campi translatable! Interruzione setup."
+    exit 1
+fi
+print_success "Campi translatable fixati"
+
+print_success "=== FASE 3 COMPLETATA: Campi translatable fixati ==="
+
+# FASE 4: IMPORT APP SPECIFICATE
+print_step "=== FASE 4: IMPORT APP SPECIFICATE ==="
+
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    import_app "$app_id"
 done
 
-print_success "Tutti i job di importazione sono stati inviati alla coda."
-print_step "Attendi qualche minuto e controlla Horizon per vedere il progresso"
-sleep 10 # Breve attesa per dare tempo ai job di essere inviati
+print_success "=== FASE 4 COMPLETATA: Tutte le app specificate importate ==="
 
-print_success "=== FASE 2 COMPLETATA: Database configurato e popolato ==="
+# FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI
+print_step "=== FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
 
-# FASE 3: CONFIGURAZIONE APPS E LAYER
-print_step "=== FASE 3: CONFIGURAZIONE APPS E LAYER ==="
+# Esegue lo script dedicato per il processamento di tutte le app
+print_step "Esecuzione script processamento icone AWS e geojson POI..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/process-all-apps-icons-and-geojson.sh"; then
+    print_error "Errore durante il processamento delle icone AWS e geojson POI! Interruzione setup."
+    exit 1
+fi
+print_success "Processamento icone AWS e geojson POI completato"
 
-# Verifica/Creazione App di default e associazione hiking routes
-print_step "Verifica App di default e associazione hiking routes..."
-ROUTES_WITHOUT_APP=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo DB::table('hiking_routes')->whereNull('app_id')->count();\"" 2>/dev/null || echo "0")
-if [ "$ROUTES_WITHOUT_APP" -gt 0 ]; then
-    FIRST_APP_ID=$(docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"echo \Wm\WmPackage\Models\App::first()->id ?? 1;\"" 2>/dev/null || echo "1")
-    print_step "Assegnazione app_id=$FIRST_APP_ID a $ROUTES_WITHOUT_APP hiking routes senza app..."
-    docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan tinker --execute=\"
-        \\\$count = DB::table('hiking_routes')->whereNull('app_id')->update(['app_id' => $FIRST_APP_ID]);
-        echo 'Aggiornate ' . \\\$count . ' hiking routes con app_id=$FIRST_APP_ID';
-    \""
-    print_success "Hiking routes associate all'app di default"
+print_success "=== FASE 4.5 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
+
+# FASE 5: Verifica Finale
+print_step "=== FASE 5: VERIFICA FINALE ==="
+
+# Verifica che i servizi siano attivi
+print_step "Verifica servizi attivi..."
+if docker ps | grep -q "$PHP_CONTAINER" && docker ps | grep -q "$POSTGRES_CONTAINER"; then
+    print_success "Container attivi"
 else
-    print_success "Tutte le hiking routes hanno già un'app associata."
+    print_warning "Alcuni container potrebbero non essere attivi"
 fi
 
-# Nota: Layer e associazione hiking routes sono già stati gestiti per app 26 nella FASE 2A
-print_step "Layer e associazione hiking routes già gestiti per app 26 nella FASE 2A"
-
-# Popolamento proprietà e tassonomie per i percorsi
-print_step "Popolamento proprietà e tassonomie per i percorsi..."
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/10-hiking-routes-properties-and-taxonomy.sh"; then
-    print_error "Errore durante il popolamento delle proprietà e tassonomie dei percorsi! Interruzione setup."
-    exit 1
-fi
-print_success "Proprietà e tassonomie dei percorsi popolate"
-
-# Migrazione media per Hiking Routes
-print_step "Migrazione media per Hiking Routes..."
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/09-migrate-hiking-route-media.sh full"; then
-    print_error "Errore durante la migrazione dei media! Interruzione setup."
-    exit 1
-fi
-print_success "Migrazione media per Hiking Routes completata"
-
-print_success "=== FASE 3 COMPLETATA: Apps e Layer configurati ==="
-
-# FASE 4: SETUP ELASTICSEARCH
-print_step "=== FASE 4: SETUP ELASTICSEARCH ==="
-
-# Setup Elasticsearch
-print_step "Setup Elasticsearch e indicizzazione..."
-
-# Cancellazione indici esistenti (per setup iniziale pulito)
-print_warning "Pulizia indici Elasticsearch esistenti... Questa operazione è distruttiva!"
-if docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/07-delete-all-elasticsearch-indices.sh --force"; then
-    print_success "Indici Elasticsearch puliti (o nessun indice trovato)"
+# Test connessione database
+print_step "Test connessione database finale..."
+if docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d osm2cai2 -c "SELECT 1;" &> /dev/null; then
+    print_success "Database funzionante"
 else
-    print_warning "Errore durante la pulizia degli indici Elasticsearch (continuo comunque)"
-fi
-
-# Abilita indicizzazione automatica Scout
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/04-enable-scout-automatic-indexing.sh"; then
-    print_error "Errore durante la configurazione di Scout/Elasticsearch! Interruzione setup."
+    print_error "Problema connessione database"
     exit 1
 fi
 
-# Pulisci cache configurazione
-print_step "Pulizia cache configurazione..."
-docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear"
-print_success "Cache configurazione pulita"
+print_success "=== FASE 5 COMPLETATA ==="
 
-# Indicizzazione iniziale
-print_step "Avvio indicizzazione iniziale (può richiedere diversi minuti)..."
-if ! docker exec "$PHP_CONTAINER" bash -c 'cd /var/www/html/osm2cai2 && php -d max_execution_time=3600 -d memory_limit=2G artisan scout:import-ectrack'; then
-    print_error "Errore durante l'indicizzazione iniziale! Interruzione setup."
-    exit 1
-fi
-print_success "Indicizzazione iniziale completata"
-
-print_success "=== FASE 4 COMPLETATA: Elasticsearch configurato ==="
-
-# FASE 5: VERIFICA SERVIZI FINALI
-print_step "=== FASE 5: VERIFICA SERVIZI FINALI ==="
-
-# Verifica che Horizon sia attivo
-print_step "Verifica stato di Horizon..."
-if docker exec "$PHP_CONTAINER" php artisan horizon:status | grep -q "running"; then
-    print_success "Horizon attivo e in esecuzione"
+echo ""
+print_success "🎉 SYNC DA PRODUZIONE E INTEGRAZIONE COMPLETATA CON SUCCESSO!"
+echo "📅 Completato: $(date '+%Y-%m-%d %H:%M:%S')"
+echo ""
+print_step "📋 Riepilogo operazioni:"
+if [ "$SYNC_FROM_PROD" = true ]; then
+    print_step "   ✅ Dump scaricato da osm2caiProd"
 else
-    print_warning "Horizon non risulta attivo. Potrebbe essere necessario un controllo manuale del Supervisor."
-    print_step "Tentativo di riavvio di Horizon..."
-    docker exec -d "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan horizon"
-    sleep 3
+    print_step "   ✅ Dump locale utilizzato (sync saltato)"
 fi
-
+print_step "   ✅ Docker-compose.yml aggiornato e container avviati"
+print_step "   ✅ Database resettato dal dump"
+print_step "   ✅ File .env aggiornato con variabili WMPackage"
+print_step "   ✅ Migrazioni applicate"
+print_step "   ✅ Modelli app inizializzati (ID creati per tutte le app)"
+print_step "   ✅ UGC Media migrato al sistema Media"
+print_step "   ✅ Campi translatable fixati"
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    print_step "   ✅ App $app_id configurata"
+done
+print_step "   ✅ Icone AWS e file geojson POI generati per tutte le app"
+print_step "   ✅ Verifica finale completata"
 echo ""
-echo "🎉 Setup di Produzione per WMPackage to OSM2CAI2 Completato!"
-echo "=========================================================="
+print_step "📁 Script utilizzati per le app:"
+for app_id in "${APPS_TO_IMPORT[@]}"; do
+    config=$(get_app_config "$app_id")
+    print_step "   • $config (App $app_id)"
+done
 echo ""
-echo "📋 Servizi Docker Attivi:"
-echo "   • phpfpm"
-echo "   • db (PostgreSQL)"
-echo "   • redis"
-echo "   • elasticsearch"
-echo ""
-echo "🔧 Comandi Utili:"
-echo "   • Accesso container PHP (root): docker exec -u 0 ${PHP_CONTAINER} bash"
-echo "   • Accesso container PHP (www-data): docker exec -it ${PHP_CONTAINER} bash"
-echo "   • Status Horizon: docker exec ${PHP_CONTAINER} php artisan horizon:status"
-echo "   • Riavvio Horizon (via Supervisor): docker exec ${PHP_CONTAINER} php artisan horizon:terminate"
-echo "   • Log Laravel: docker exec ${PHP_CONTAINER} tail -f storage/logs/laravel.log"
-echo ""
-echo "🛑 Per fermare tutto:"
-echo "   ${COMPOSE_CMD} down"
-echo ""
-print_success "Ambiente di produzione pronto!" 
+print_step "🌐 L'applicazione dovrebbe essere accessibile su: http://127.0.0.1:8008"
+print_step "📊 Horizon dovrebbe essere attivo per la gestione delle code"
+echo "" 
