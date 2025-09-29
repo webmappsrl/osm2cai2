@@ -624,7 +624,7 @@ class HikingRoute extends OsmfeaturesResource
 
                 return $user
                     ? '<a style="color:blue;" href="'.url('/resources/users/'.$user->id).'" target="_blank">'.$user->name.'</a>'
-                    : 'No user';
+                    : __('No User');
             })->hideFromIndex()->asHtml(),
             Code::make(__('Accessibility History'), 'issues_chronology')
                 ->json()
@@ -661,8 +661,8 @@ class HikingRoute extends OsmfeaturesResource
             $tableRows = [];
             foreach ($pois as $poi) {
                 $tags = null;
-                if ($poi->osmfeatures_data && 
-                    isset($poi->osmfeatures_data['properties']) && 
+                if ($poi->osmfeatures_data &&
+                    isset($poi->osmfeatures_data['properties']) &&
                     isset($poi->osmfeatures_data['properties']['osm_tags'])) {
                     $tags = $poi->osmfeatures_data['properties']['osm_tags'];
                 }
@@ -678,7 +678,7 @@ class HikingRoute extends OsmfeaturesResource
                 // Controlli per osm_id e osm_type
                 $osmId = '';
                 $osmType = '';
-                if ($poi->osmfeatures_data && 
+                if ($poi->osmfeatures_data &&
                     isset($poi->osmfeatures_data['properties'])) {
                     $osmId = $poi->osmfeatures_data['properties']['osm_id'] ?? '';
                     $osmType = $poi->osmfeatures_data['properties']['osm_type'] ?? '';

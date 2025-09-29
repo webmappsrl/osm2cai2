@@ -30,7 +30,7 @@ class Itinerary extends Resource
 
     public static function label()
     {
-        return __('Itinerari');
+        return __('Itineraries');
     }
 
     /**
@@ -51,7 +51,7 @@ class Itinerary extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make(__('Nome'), 'name')->sortable()->rules('required', 'max:255'),
+            Text::make(__('Name'), 'name')->sortable()->rules('required', 'max:255'),
             Text::make(__('Numero Tappe'), function () {
                 return $this->hikingRoutes()->count();
             })->hideWhenCreating()->hideWhenUpdating(),
@@ -66,7 +66,7 @@ class Itinerary extends Resource
 
                 return round($totalKm, 2);
             })->hideWhenCreating()->hideWhenUpdating(),
-            BelongsToMany::make(__('Itinerari'), 'hikingRoutes', HikingRoute::class)->searchable(),
+            BelongsToMany::make(__('Itineraries'), 'hikingRoutes', HikingRoute::class)->searchable(),
         ];
     }
 

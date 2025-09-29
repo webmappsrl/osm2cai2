@@ -54,7 +54,7 @@ class HikingRoutesStatusLens extends Lens
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make('Regioni', function () {
+            Text::make(__('Regions'), function () {
                 $val = 'ND';
                 if (Arr::accessible($this->regions)) {
                     if (count($this->regions) > 0) {
@@ -64,7 +64,7 @@ class HikingRoutesStatusLens extends Lens
 
                 return $val;
             })->onlyOnIndex(),
-            Text::make('Province', function () {
+            Text::make(__('Provinces'), function () {
                 $val = 'ND';
                 if (Arr::accessible($this->provinces)) {
                     if (count($this->provinces) > 0) {
@@ -74,7 +74,7 @@ class HikingRoutesStatusLens extends Lens
 
                 return $val;
             })->onlyOnIndex(),
-            Text::make('Aree', function () {
+            Text::make(__('Areas'), function () {
                 $val = 'ND';
                 if (Arr::accessible($this->areas)) {
                     if (count($this->areas) > 0) {
@@ -84,7 +84,7 @@ class HikingRoutesStatusLens extends Lens
 
                 return $val;
             })->onlyOnIndex(),
-            Text::make('Settori', function () {
+            Text::make(__('Sectors'), function () {
                 $val = 'ND';
                 if (Arr::accessible($this->sectors)) {
                     if (count($this->sectors) > 0) {
@@ -94,11 +94,11 @@ class HikingRoutesStatusLens extends Lens
 
                 return $val;
             })->onlyOnIndex(),
-            Text::make('REF', 'ref')->onlyOnIndex(),
-            Text::make('Cod. REI', 'ref_REI')->onlyOnIndex(),
-            Text::make('Ultima ricognizione', 'survey_date')->onlyOnIndex(),
-            Number::make('STATO', 'osm2cai_status')->sortable()->onlyOnIndex(),
-            Number::make('OSMID', 'relation_id')->onlyOnIndex(),
+            Text::make(__('REF'), 'ref')->onlyOnIndex(),
+            Text::make(__('Cod. REI'), 'ref_REI')->onlyOnIndex(),
+            Text::make(__('Last Survey'), 'survey_date')->onlyOnIndex(),
+            Number::make(__('STATUS'), 'osm2cai_status')->sortable()->onlyOnIndex(),
+            Number::make(__('OSMID'), 'relation_id')->onlyOnIndex(),
 
         ];
     }

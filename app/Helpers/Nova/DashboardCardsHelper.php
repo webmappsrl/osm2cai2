@@ -736,7 +736,7 @@ class DashboardCardsHelper
         // Headings
         $sectorsCard->header([
             new Cell($childrenTable),
-            new Cell(__('Nome')),
+            new Cell(__('Name')),
             new Cell(__('#1')),
             new Cell(__('#2')),
             new Cell(__('#3')),
@@ -971,8 +971,8 @@ class DashboardCardsHelper
 
         // Headings
         $sectorsCard->header([
-            new Cell(__('Settore')),
-            new Cell(__('Nome')),
+            new Cell(__('Sector')),
+            new Cell(__('Name')),
             new Cell(__('#1')),
             new Cell(__('#2')),
             new Cell(__('#3')),
