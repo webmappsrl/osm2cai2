@@ -10,6 +10,13 @@ class Layer extends WmLayer
 {
     use FeatureCollectionMapTrait;
 
+    protected static function boot()
+    {
+        parent::boot();
+        // Registra l'observer anche nel modello dell'applicazione
+        Layer::observe(\Wm\WmPackage\Observers\LayerObserver::class);
+    }
+
     /**
      * Get feature collection map for layer with all associated hiking routes
      *
@@ -36,7 +43,7 @@ class Layer extends WmLayer
                     'geometry' => $geometry,
                     'properties' => [
                         'tooltip' => $hikingRouteName,
-                        'link' => url('/resources/hiking-routes/'.$hikingRoute->id),
+                        'link' => url('/resources/hiking-routes/' . $hikingRoute->id),
                         'strokeColor' => 'red',
                         'strokeWidth' => 2,
                     ],
