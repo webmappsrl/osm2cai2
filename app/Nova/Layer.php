@@ -52,14 +52,14 @@ class Layer extends WmNovaLayer
                 return $this->rank ?? 0;
             })->onlyOnIndex()->sortable(),
             BelongsTo::make(__('App'), 'appOwner', \Wm\WmPackage\Nova\App::class),
-            BelongsTo::make('Owner', 'layerOwner', User::class)
+            BelongsTo::make(__('Owner'), 'layerOwner', User::class)
                 ->nullable()
                 ->searchable(),
             Images::make(__('Image'), 'default'),
             MorphToMany::make(__('Activities'), 'taxonomyActivities', TaxonomyActivity::class),
             FeatureCollectionMap::make(__('geometry'))->onlyOnDetail(),
             PropertiesPanel::makeWithModel(__('Properties'), 'properties', $this, true)->collapsible(),
-            LayerFeatures::make('tracks', $this->resource, HikingRoute::class)->hideWhenCreating()->withMeta(['model_class' => HikingRoute::class]),
+            LayerFeatures::make(__('tracks'), $this->resource, HikingRoute::class)->hideWhenCreating()->withMeta(['model_class' => HikingRoute::class]),
         ];
     }
 }

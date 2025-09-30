@@ -42,7 +42,7 @@ class EnrichPoi extends OsmfeaturesResource
 
     public static function label(): string
     {
-        $label = 'Punti di Interesse';
+        $label = 'Points of Interest';
 
         return __($label);
     }
@@ -113,7 +113,6 @@ class EnrichPoi extends OsmfeaturesResource
             'osmfeatures_data.properties.score' => 'Score',
         ];
     }
-
 
     public static function indexQuery(NovaRequest $request, $query)
     {

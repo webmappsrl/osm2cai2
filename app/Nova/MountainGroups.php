@@ -55,13 +55,13 @@ class MountainGroups extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make(__('Nome'), 'name')->sortable(),
-            Textarea::make(__('Descrizione'), 'description')->hideFromIndex(),
+            Text::make(__('Name'), 'name')->sortable(),
+            Textarea::make(__('Description'), 'description')->hideFromIndex(),
             MapMultiPolygon::make(__('Geometry'))->withMeta([
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
-            BelongsToMany::make(__('Regioni'), 'regions', Region::class)
+            BelongsToMany::make(__('Regions'), 'regions', Region::class)
                 ->searchable(),
             Text::make(__('POI Generico'), function () {
                 return $this->ecPois->count();

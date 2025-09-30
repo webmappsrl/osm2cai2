@@ -55,7 +55,7 @@ class Itinerary extends Resource
             Text::make(__('Numero Tappe'), function () {
                 return $this->hikingRoutes()->count();
             })->hideWhenCreating()->hideWhenUpdating(),
-            Text::make(__('KM Totali'), function () {
+            Text::make(__('Total KM'), function () {
                 $hikingRoutes = $this->hikingRoutes()->get();
                 $totalKm = 0;
                 foreach ($hikingRoutes as $route) {

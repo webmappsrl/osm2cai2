@@ -30,8 +30,6 @@ class SourceSurvey extends AbstractValidationResource
 
     /**
      * Gets the fields for the resource.
-     *
-     * @return array
      */
     public function fields(Request $request): array
     {
@@ -63,7 +61,7 @@ class SourceSurvey extends AbstractValidationResource
                 return $this->model()->calculateFlowRate();
             })
             ->readonly()
-            ->help(__('Questo dato è calcolato automaticamente in base ai dati inseriti'));
+            ->help(__('This data is calculated automatically based on the data entered'));
 
         // Field for flow rate validation
         $waterFlowRateValidatedField = Select::make(__('Flow Rate Validation'), 'water_flow_rate_validated')
@@ -105,8 +103,6 @@ class SourceSurvey extends AbstractValidationResource
 
     /**
      * Defines the filters available for the resource.
-     *
-     * @return array
      */
     public function filters(Request $request): array
     {

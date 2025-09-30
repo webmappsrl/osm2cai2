@@ -11,7 +11,7 @@ class Sign extends AbstractValidationResource
 
     public static function getLabel(): string
     {
-        return 'Segni dell\'uomo';
+        return __('Traces of human activity'); // Segni dell'uomo
     }
 
     public static function getAuthorizationMethod(): string

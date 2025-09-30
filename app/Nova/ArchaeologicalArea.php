@@ -11,6 +11,6 @@ class ArchaeologicalArea extends AbstractValidationResource
 
     public static function getLabel(): string
     {
-        return 'Aree Archeologiche';
+        return __('Archaeological Areas');
     }
 }

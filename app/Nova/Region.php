@@ -49,7 +49,7 @@ class Region extends Resource
 
     public static function label()
     {
-        return 'Regioni';
+        return __('Regions');
     }
 
     private static $indexDefaultOrder = [
@@ -105,15 +105,15 @@ class Region extends Resource
         });
 
         return [
-            Text::make('Region', 'name')->sortable(),
+            Text::make(__('Region'), 'name')->sortable(),
             Text::make(__('CAI Code'), 'code')->sortable(),
             Number::make(__('# Province'), function () use ($stats) {
                 return $stats['provinces'];
             }),
-            Number::make(__('# Aree'), function () use ($stats) {
+            Number::make(__('# Areas'), function () use ($stats) {
                 return $stats['areas'];
             }),
-            Number::make(__('# Settori'), function () use ($stats) {
+            Number::make(__('# Sectors'), function () use ($stats) {
                 return $stats['sectors'];
             }),
             Number::make(__('# 4'), function () use ($stats) {
@@ -136,10 +136,10 @@ class Region extends Resource
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),
-            Text::make('Osmfeatures ID', function () {
+            Text::make(__('Osmfeatures ID'), function () {
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml()->hideFromIndex(),
-            DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->hideFromIndex(),
+            DateTime::make(__('Osmfeatures updated at'), 'osmfeatures_updated_at')->hideFromIndex(),
         ];
     }
 
