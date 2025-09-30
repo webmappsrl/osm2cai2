@@ -19,7 +19,7 @@ class AreaFilter extends Filter
 
     public function __construct()
     {
-        $this->name = 'Area';
+        $this->name = __('Area');
     }
 
     /**

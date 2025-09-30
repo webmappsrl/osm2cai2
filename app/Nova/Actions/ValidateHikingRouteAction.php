@@ -34,23 +34,23 @@ class ValidateHikingRouteAction extends Action
         $date = Carbon::now();
 
         if (! $user || $user == null) {
-            return Action::danger('User info is not available');
+            return Action::danger(__('User info is not available'));
         }
 
         $model = $models->first();
         if (! $user->canManageHikingRoute($model)) {
-            return Action::danger('You are not authorized to validate this hiking route');
+            return Action::danger(__('You are not authorized to validate this hiking route'));
         }
         if ($model->osm2cai_status != 3) {
-            return Action::danger('The SDA is not 3!');
+            return Action::danger(__('The SDA is not 3!'));
         }
 
         if (! $model->geometry_raw_data) {
-            return Action::danger('Upload a Geometry file first!');
+            return Action::danger(__('Upload a Geometry file first!'));
         }
 
         if (! $model->is_geometry_correct) {
-            return Action::danger('Geometry is not correct');
+            return Action::danger(__('Geometry is not correct'));
         }
 
         $this->validateSDA($model, $user, $date);

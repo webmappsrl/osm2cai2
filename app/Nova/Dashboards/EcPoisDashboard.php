@@ -19,7 +19,7 @@ class EcPoisDashboard extends Dashboard
 
     public function label()
     {
-        return 'POIS';
+        return __('POIS');
     }
 
     /**

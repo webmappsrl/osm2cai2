@@ -16,7 +16,7 @@ class SectorsDashboard extends Dashboard
 
     public function label()
     {
-        return 'Riepilogo settori';
+        return __('Sectors Summary');
     }
 
     public function cards()

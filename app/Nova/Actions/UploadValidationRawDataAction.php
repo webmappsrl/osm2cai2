@@ -40,11 +40,11 @@ class UploadValidationRawDataAction extends Action
         $model = $models->first();
 
         if ($model->osm2cai_status > 3) {
-            return Action::danger('To upload the detected track of the route, the route must have a registration status less than or equal to 3; if necessary proceed first with REVERT VALIDATION');
+            return Action::danger(__('To upload the detected track of the route, the route must have a registration status less than or equal to 3; if necessary proceed first with REVERT VALIDATION'));
         }
 
         if (! auth()->user()->canManageHikingRoute($model)) {
-            return Action::danger('You are not authorized to perform this action');
+            return Action::danger(__('You are not authorized to perform this action'));
         }
 
         return $this->processGeometryUpload($fields, $model);
@@ -53,7 +53,7 @@ class UploadValidationRawDataAction extends Action
     private function processGeometryUpload($fields, $model)
     {
         if (! $fields->geometry) {
-            return Action::danger('Unable to update geometry. Please enter a valid file.');
+            return Action::danger(__('Unable to update geometry. Please enter a valid file.'));
         }
 
         $file = $fields->geometry;
@@ -61,7 +61,7 @@ class UploadValidationRawDataAction extends Action
         $allowedExtensions = ['gpx', 'kml', 'geojson'];
 
         if (! in_array(strtolower($extension), $allowedExtensions)) {
-            return Action::danger('Invalid file type. Please upload a GPX, KML, or GeoJSON file.');
+            return Action::danger(__('Invalid file type. Please upload a GPX, KML, or GeoJSON file.'));
         }
 
         $path = $file->storeAs(
@@ -76,18 +76,18 @@ class UploadValidationRawDataAction extends Action
             if (! $geom) {
                 Storage::disk('local')->delete($path);
 
-                return Action::danger('Unable to update geometry. The uploaded file does not contain a valid geometry or could not be processed.');
+                return Action::danger(__('Unable to update geometry. The uploaded file does not contain a valid geometry or could not be processed.'));
             }
 
             $model->geometry_raw_data = $geom;
             $model->save();
 
-            return Action::message('File uploaded and geometry updated successfully!');
+            return Action::message(__('File uploaded and geometry updated successfully!'));
         } catch (\Exception $e) {
             Log::error("Error processing geometry upload for HikingRoute ID {$model->id}: ".$e->getMessage());
             Storage::disk('local')->delete($path);
 
-            return Action::danger('An error occurred while processing the file. Please check the logs.');
+            return Action::danger(__('An error occurred while processing the file. Please check the logs.'));
         }
     }
 
