@@ -10,10 +10,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Spatie\MediaLibrary\Conversions\ConversionCollection;
-use Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\TaxonomyPoiType;
 
@@ -311,34 +307,11 @@ trait UgcCommonModelTrait
 
         foreach ($medias as $media) {
             try {
-                $sourceDisk = Storage::disk($media->disk);
-                $sourcePath = $media->getPath();
-
-                if (! $sourceDisk->exists($sourcePath)) {
-                    continue;
-                }
-
-                // Leggi il contenuto del file originale
-                $fileContent = $sourceDisk->get($sourcePath);
-
-                // Crea una copia del record del database
-                $duplicatedMedia = $media->replicate();
-                $duplicatedMedia->uuid = (string) Str::uuid();
-                $duplicatedMedia->model()->associate($ecPoi);
-                $duplicatedMedia->save();
-
-                // Ottieni il nuovo path per il file duplicato
-                $newPath = $duplicatedMedia->getPath();
-
-                // Scrivi il file fisico nella nuova posizione
-                $sourceDisk->put($newPath, $fileContent);
-
-                // Forza la generazione delle thumbnail
-                $conversions = ConversionCollection::createForMedia($duplicatedMedia);
-                dispatch(new PerformConversionsJob($conversions, $duplicatedMedia));
+                // Usa il metodo copy() di MediaLibrary che gestisce automaticamente
+                // la copia del file fisico e la generazione delle thumbnail
+                $media->copy($ecPoi);
             } catch (\Exception $e) {
                 Log::error('Error copying media {$media->id}: '.$e->getMessage());
-                // Continua con il prossimo media anche se questo fallisce
             }
         }
     }
