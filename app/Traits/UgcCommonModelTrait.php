@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\Conversions\ConversionCollection;
+use Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\TaxonomyPoiType;
 
@@ -330,6 +332,10 @@ trait UgcCommonModelTrait
 
                 // Scrivi il file fisico nella nuova posizione
                 $sourceDisk->put($newPath, $fileContent);
+
+                // Forza la generazione delle thumbnail
+                $conversions = ConversionCollection::createForMedia($duplicatedMedia);
+                dispatch(new PerformConversionsJob($conversions, $duplicatedMedia));
             } catch (\Exception $e) {
                 Log::error('Error copying media {$media->id}: '.$e->getMessage());
                 // Continua con il prossimo media anche se questo fallisce
