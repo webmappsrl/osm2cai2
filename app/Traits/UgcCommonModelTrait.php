@@ -289,7 +289,7 @@ trait UgcCommonModelTrait
      */
     private function attachTaxonomyToEcPoi(EcPoi $ecPoi): void
     {
-        $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-point')->first();
+        $taxonomyPoiType = TaxonomyPoiType::where('identifier', 'water-monitoring')->first();
 
         if ($taxonomyPoiType) {
             $ecPoi->taxonomyPoiTypes()->attach($taxonomyPoiType->id);
