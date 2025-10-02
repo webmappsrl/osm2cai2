@@ -57,7 +57,7 @@ class Layer extends WmNovaLayer
                 ->searchable(),
             Images::make(__('Image'), 'default'),
             MorphToMany::make(__('Activities'), 'taxonomyActivities', TaxonomyActivity::class),
-            FeatureCollectionMap::make(__('geometry'))->onlyOnDetail(),
+            FeatureCollectionMap::make(__('Geometry'), 'geometry')->onlyOnDetail(),
             PropertiesPanel::makeWithModel(__('Properties'), 'properties', $this, true)->collapsible(),
             LayerFeatures::make(__('tracks'), $this->resource, HikingRoute::class)->hideWhenCreating()->withMeta(['model_class' => HikingRoute::class]),
         ];

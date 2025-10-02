@@ -34,7 +34,7 @@ abstract class OsmfeaturesResource extends AbstractEcResource
         // if geometry type is point return MapPoint::make, if is multipolygon return MapMultiPolygon if is multilinestring return MapMultiLineString
         switch ($geometryType) {
             case 'Point':
-                $geometryField = MapPoint::make('geometry')->withMeta([
+                $geometryField = MapPoint::make(__('Geometry'), 'geometry')->withMeta([
                     'center' => [42, 10],
                     'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                     'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
@@ -45,7 +45,7 @@ abstract class OsmfeaturesResource extends AbstractEcResource
                 ])->hideFromIndex();
                 break;
             case 'MultiPolygon':
-                $geometryField = MapMultiPolygon::make('Geometry')->withMeta([
+                $geometryField = MapMultiPolygon::make(__('Geometry'), 'geometry')->withMeta([
                     'center' => ['42.795977075', '10.326813853'],
                     'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                 ])->hideFromIndex();
@@ -53,7 +53,7 @@ abstract class OsmfeaturesResource extends AbstractEcResource
             default:
                 $centroid = $this->getCentroid();
                 $geojson = $this->getGeojsonForMapView();
-                $geometryField = Osm2caiMapMultiLinestring::make('geometry')->withMeta([
+                $geometryField = Osm2caiMapMultiLinestring::make(__('Geometry'), 'geometry')->withMeta([
                     'center' => $centroid ?? [42, 10],
                     'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                     'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',

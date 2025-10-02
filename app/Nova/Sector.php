@@ -103,10 +103,10 @@ class Sector extends Resource
             BelongsToMany::make(__('Referenti Sentieristica'), 'moderators', User::class)
                 ->searchable(),
             BelongsTo::make(__('Area'))->onlyOnForms(),
-            File::make('Geometry')->store(function (Request $request, $model) {
+            File::make(__('Geometry'), 'geometry')->store(function (Request $request, $model) {
                 return $model->fileToGeometry($request->geometry->get());
             })->onlyOnForms()->hideWhenUpdating()->required(),
-            MapMultiPolygon::make('geometry')->withMeta([
+            MapMultiPolygon::make(__('Geometry'), 'geometry')->withMeta([
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->onlyOnDetail(),
