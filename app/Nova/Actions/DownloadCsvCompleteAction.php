@@ -13,9 +13,11 @@ class DownloadCsvCompleteAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
+    public $name;
+
     public function __construct()
     {
-        $this->name = __('Download routes csv');
+        $this->name = __('Download routes CSV');
     }
 
     public $showOnDetail = true;

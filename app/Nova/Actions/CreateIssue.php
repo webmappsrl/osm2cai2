@@ -18,6 +18,8 @@ class CreateIssue extends Action
 {
     use InteractsWithQueue, Queueable;
 
+    public $name;
+
     public $model;
 
     public function __construct($model = null)
@@ -28,7 +30,7 @@ class CreateIssue extends Action
             $this->model = HikingRoute::find($resourceId);
         }
 
-        $this->name = __('ACCESSIBILITY ISSUE');
+        $this->name = __('Accessibility Issue');
     }
 
     /**

@@ -15,7 +15,7 @@ class AddRegionFavoritePublicationDateToHikingRouteAction extends Action
 
     public function __construct()
     {
-        $this->name = __('LOSCARPONE PUBLICATION DATE');
+        $this->name = __('Loscarpone Publication Date');
     }
 
     /**

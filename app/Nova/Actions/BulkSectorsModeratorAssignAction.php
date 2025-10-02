@@ -14,7 +14,12 @@ class BulkSectorsModeratorAssignAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = 'Associa Referente Sentieristica';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Associa Referente Sentieristica');
+    }
 
     /**
      * Perform the action on the given models.
@@ -30,7 +35,7 @@ class BulkSectorsModeratorAssignAction extends Action
             }
         });
 
-        return Action::message('Referenti Sentieristica assegnati correttamente!');
+        return Action::message(__('Referenti Sentieristica assegnati correttamente!'));
     }
 
     /**

@@ -21,13 +21,14 @@ class UploadValidationRawDataAction extends Action
 
     public $showOnIndex = false;
 
-    public $name = 'UPLOAD GPX/KML/GEOJSON';
+    public $name;
 
     public $HR;
 
     public function __construct($HR = null)
     {
         $this->HR = HikingRoute::find($HR);
+        $this->name = __('Upload GPX/KML/GEOJSON');
     }
 
     /**

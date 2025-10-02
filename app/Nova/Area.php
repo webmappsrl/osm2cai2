@@ -115,7 +115,7 @@ class Area extends Resource
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => implode(', ', $managers),
-                        'label' => 'Responsabili di settore',
+                        'label' => __('Sector Managers'),
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -125,7 +125,7 @@ class Area extends Resource
                     ->width('1/4')
                     ->view('nova.cards.area-sal-card', [
                         'value' => number_format($sal * 100, 2),
-                        'label' => 'SAL',
+                        'label' => __('SAL'),
                         'backgroundColor' => Osm2caiHelper::getSalColor($sal),
                     ])
                     ->center()
@@ -136,7 +136,7 @@ class Area extends Resource
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => $tot[3] + $tot[4],
-                        'label' => 'Numero percorsi sda 3/4',
+                        'label' => __('Number of sda 3/4 routes'),
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -146,7 +146,7 @@ class Area extends Resource
                     ->width('1/4')
                     ->view('nova.cards.area-stats-card', [
                         'value' => $area->num_expected,
-                        'label' => 'Numero percorsi attesi',
+                        'label' => __('Expected number of routes'),
                     ])
                     ->center()
                     ->withBasicStyles()

@@ -16,7 +16,7 @@ class PercorsiFavoriti extends Dashboard
 
     public function label()
     {
-        return 'Percorsi Favoriti';
+        return __('Percorsi Favoriti');
     }
 
     /**

@@ -13,7 +13,12 @@ class DownloadFeatureCollection extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = 'Download GeoJSON';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Download GeoJSON');
+    }
 
     /**
      * Perform the action on the given models.

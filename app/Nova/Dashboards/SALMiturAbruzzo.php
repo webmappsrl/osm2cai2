@@ -16,7 +16,7 @@ class SALMiturAbruzzo extends Dashboard
 
     public function label()
     {
-        return 'Riepilogo MITUR-Abruzzo';
+        return __('Riepilogo MITUR-Abruzzo');
     }
 
     /**

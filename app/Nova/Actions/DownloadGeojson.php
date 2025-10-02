@@ -13,7 +13,7 @@ class DownloadGeojson extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = 'Download GeoJSON';
+    public $name;
 
     public $showOnDetail = true;
 
@@ -22,6 +22,11 @@ class DownloadGeojson extends Action
     public $showOnTableRow = true;
 
     public $withoutConfirmation = true;
+
+    public function __construct()
+    {
+        $this->name = __('Download GeoJSON');
+    }
 
     /**
      * Perform the action on the given models.

@@ -17,7 +17,12 @@ class OsmSyncHikingRouteAction extends Action
 
     public $showOnDetail = true;
 
-    public $name = 'SYNC WITH OSM DATA';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Sync with OSM Data');
+    }
 
     /**
      * Perform the action on the given models.

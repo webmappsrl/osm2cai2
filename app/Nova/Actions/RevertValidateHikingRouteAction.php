@@ -19,7 +19,7 @@ class RevertValidateHikingRouteAction extends Action
 
     public function __construct()
     {
-        $this->name = 'REVERT VALIDATION';
+        $this->name = __('Revert Validation');
     }
 
     /**
@@ -32,17 +32,17 @@ class RevertValidateHikingRouteAction extends Action
         $user = auth()->user();
 
         if (! $user || $user == null) {
-            return Action::danger('User information not available');
+            return Action::danger(__('User information not available'));
         }
 
         $model = $models->first();
 
         if ($model->osm2cai_status != 4) {
-            return Action::danger('The SDA is not 4!');
+            return Action::danger(__('The SDA is not 4!'));
         }
 
         if (! $user->canManageHikingRoute($model)) {
-            return Action::danger('You are not authorized to revert the validation of this hiking route');
+            return Action::danger(__('You are not authorized to revert the validation of this hiking route'));
         }
 
         $this->revertValidation($model);

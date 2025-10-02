@@ -20,6 +20,8 @@ class UploadAndAssociateUgcMedia extends Action
 
     public $showOnTableRow = true;
 
+    public $name;
+
     public function __construct()
     {
         $this->name = __('Upload Image');
