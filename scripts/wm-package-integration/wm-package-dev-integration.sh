@@ -227,6 +227,111 @@ fi
 
 print_success "Prerequisiti verificati"
 
+# PULIZIA SELETTIVA AMBIENTE OSM2CAI2
+print_step "Pulizia selettiva ambiente OSM2CAI2..."
+
+# Ferma solo i container di OSM2CAI2 tramite docker-compose
+print_step "Fermando container OSM2CAI2..."
+docker-compose down -v --remove-orphans 2>/dev/null || true
+docker-compose -f docker-compose.develop.yml down -v --remove-orphans 2>/dev/null || true
+
+# Lista dei container specifici OSM2CAI2 da verificare/pulire
+OSM2CAI_CONTAINERS=(
+    "php81-osm2cai2"
+    "postgres-osm2cai2"
+    "elasticsearch-osm2cai2"
+    "minio-osm2cai2"
+    "mailpit-osm2cai2"
+)
+
+# Verifica e ferma eventuali container OSM2CAI2 rimasti attivi
+for container in "${OSM2CAI_CONTAINERS[@]}"; do
+    if docker ps -q -f name="^${container}$" | grep -q .; then
+        print_step "Fermando container rimasto attivo: $container"
+        docker stop "$container" 2>/dev/null || true
+        docker rm "$container" 2>/dev/null || true
+    fi
+done
+
+# Rimuove solo i volumi specifici di OSM2CAI2 (se esistono e non sono utilizzati)
+OSM2CAI_VOLUMES=(
+    "osm2cai2_postgres_data"
+    "osm2cai2_elasticsearch_data"
+    "osm2cai2_minio_data"
+)
+
+for volume in "${OSM2CAI_VOLUMES[@]}"; do
+    if docker volume ls -q | grep -q "^${volume}$"; then
+        if ! docker ps -a --filter "volume=${volume}" --format "table {{.Names}}" | grep -q -v "NAMES"; then
+            print_step "Rimuovendo volume non utilizzato: $volume"
+            docker volume rm "$volume" 2>/dev/null || true
+        fi
+    fi
+done
+
+print_success "Pulizia selettiva completata (solo container OSM2CAI2)"
+
+# Creazione directory per volumi Docker
+print_step "Creazione directory per volumi Docker..."
+mkdir -p "$PROJECT_ROOT/docker/volumes/minio/data"
+mkdir -p "$PROJECT_ROOT/docker/volumes/postgresql/data"
+mkdir -p "$PROJECT_ROOT/docker/volumes/elasticsearch/data"
+print_success "Directory volumi create"
+
+# Avvio container
+print_step "Avvio tutti i container (base + sviluppo)..."
+cd "$PROJECT_ROOT"
+docker-compose -f docker-compose.yml -f docker-compose.develop.yml up -d
+
+# Torna alla directory degli script
+cd "$SCRIPT_DIR"
+
+# Funzioni di attesa per i servizi, per eliminare gli sleep "magici"
+wait_for_service() {
+    local service_name="$1"
+    local health_url="$2"
+    local timeout="$3"
+
+    print_step "Attesa che $service_name sia completamente pronto..."
+    local elapsed=0
+    while ! curl -f -s "$health_url" &> /dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            print_warning "Timeout: $service_name non è diventato pronto in $timeout secondi (continuo comunque)"
+            return 1
+        fi
+        sleep 3
+        elapsed=$((elapsed + 3))
+        print_step "Attendo $service_name... ($elapsed/$timeout secondi)"
+    done
+    print_success "$service_name pronto e funzionante"
+    return 0
+}
+
+wait_for_postgres() {
+    local container_name="$1"
+    local timeout="$2"
+
+    print_step "Attesa che PostgreSQL sia completamente pronto..."
+    local elapsed=0
+    while ! docker exec "$container_name" pg_isready -h localhost -p 5432 &> /dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            print_error "Timeout: PostgreSQL non è diventato pronto in $timeout secondi"
+            exit 1
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        print_step "Attendo PostgreSQL... ($elapsed/$timeout secondi)"
+    done
+    print_success "PostgreSQL pronto e funzionante"
+}
+
+# Attesa che i servizi principali siano pronti
+wait_for_postgres "postgres-osm2cai2" 90
+wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
+wait_for_service "MinIO" "http://localhost:9003/minio/health/live" 90
+
+print_success "Tutti i servizi sono pronti e funzionanti"
+
 # Log automatico per cronjob
 echo ""
 if [ "$SYNC_FROM_PROD" = true ]; then
@@ -319,6 +424,15 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php arti
 fi
 print_success "UGC Media migrato al sistema Media"
 
+# FASE 2.7: CONFIGURAZIONE SERVIZI
+print_step "=== FASE 2.7: CONFIGURAZIONE SERVIZI ==="
+
+# Setup bucket MinIO
+print_step "Setup bucket MinIO..."
+docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/setup-minio-bucket.sh"
+
+print_success "=== FASE 2.7 COMPLETATA: Servizi configurati ==="
+
 # FASE 3: FIX CAMPI TRANSLATABLE
 print_step "=== FASE 3: FIX CAMPI TRANSLATABLE NULL ==="
 
@@ -390,6 +504,7 @@ print_step "   ✅ Database resettato dal dump"
 print_step "   ✅ Migrazioni applicate"
 print_step "   ✅ Modelli app inizializzati (ID creati per tutte le app)"
 print_step "   ✅ UGC Media migrato al sistema Media"
+print_step "   ✅ Servizi (MinIO) configurati"
 print_step "   ✅ Campi translatable fixati"
 for app_id in "${APPS_TO_IMPORT[@]}"; do
     print_step "   ✅ App $app_id configurata"
