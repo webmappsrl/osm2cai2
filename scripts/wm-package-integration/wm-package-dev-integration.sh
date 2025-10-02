@@ -237,11 +237,11 @@ docker-compose -f docker-compose.develop.yml down -v --remove-orphans 2>/dev/nul
 
 # Lista dei container specifici OSM2CAI2 da verificare/pulire
 OSM2CAI_CONTAINERS=(
-    "php81-osm2cai2"
-    "postgres-osm2cai2"
-    "elasticsearch-osm2cai2"
-    "minio-osm2cai2"
-    "mailpit-osm2cai2"
+    "php81-${APP_NAME}"
+    "postgres-${APP_NAME}"
+    "elasticsearch-${APP_NAME}"
+    "minio-${APP_NAME}"
+    "mailpit-${APP_NAME}"
 )
 
 # Verifica e ferma eventuali container OSM2CAI2 rimasti attivi
@@ -255,9 +255,9 @@ done
 
 # Rimuove solo i volumi specifici di OSM2CAI2 (se esistono e non sono utilizzati)
 OSM2CAI_VOLUMES=(
-    "osm2cai2_postgres_data"
-    "osm2cai2_elasticsearch_data"
-    "osm2cai2_minio_data"
+    "${APP_NAME}_postgres_data"
+    "${APP_NAME}_elasticsearch_data"
+    "${APP_NAME}_minio_data"
 )
 
 for volume in "${OSM2CAI_VOLUMES[@]}"; do
@@ -312,10 +312,24 @@ wait_for_postgres() {
     local timeout="$2"
 
     print_step "Attesa che PostgreSQL sia completamente pronto..."
+    print_step "Container PostgreSQL: $container_name"
+    
+    # Verifica che il container esista
+    if ! docker ps -q -f name="^${container_name}$" | grep -q .; then
+        print_error "Container PostgreSQL '$container_name' non trovato!"
+        print_error "Container attivi:"
+        docker ps --format "table {{.Names}}\t{{.Status}}" | grep postgres || true
+        exit 1
+    fi
+    
     local elapsed=0
     while ! docker exec "$container_name" pg_isready -h localhost -p 5432 &> /dev/null; do
         if [ $elapsed -ge $timeout ]; then
             print_error "Timeout: PostgreSQL non è diventato pronto in $timeout secondi"
+            print_error "Stato container:"
+            docker ps -f name="^${container_name}$" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            print_error "Log container (ultime 10 righe):"
+            docker logs --tail 10 "$container_name" 2>&1 || true
             exit 1
         fi
         sleep 2
@@ -325,8 +339,20 @@ wait_for_postgres() {
     print_success "PostgreSQL pronto e funzionante"
 }
 
+# Carica le variabili dal file .env PRIMA di attendere i servizi
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+    PHP_CONTAINER="php81-${APP_NAME}"
+    POSTGRES_CONTAINER="postgres-${APP_NAME}"
+else
+    print_error "File .env non trovato"
+    exit 1
+fi
+
 # Attesa che i servizi principali siano pronti
-wait_for_postgres "postgres-osm2cai2" 90
+wait_for_postgres "postgres-${APP_NAME}" 90
 wait_for_service "Elasticsearch" "http://localhost:9200/_cluster/health" 90
 wait_for_service "MinIO" "http://localhost:9003/minio/health/live" 90
 
@@ -377,18 +403,6 @@ else
 fi
 
 print_success "=== FASE 2 COMPLETATA ==="
-
-# Carica le variabili dal file .env per le fasi successive
-if [ -f "$PROJECT_ROOT/.env" ]; then
-    set -o allexport
-    source "$PROJECT_ROOT/.env"
-    set +o allexport
-    PHP_CONTAINER="php81-${APP_NAME}"
-    POSTGRES_CONTAINER="postgres-${APP_NAME}"
-else
-    print_error "File .env non trovato per le fasi successive"
-    exit 1
-fi
 
 # FASE 2.5: Esecuzione Migrazioni
 print_step "=== FASE 2.5: ESECUZIONE MIGRAZIONI ==="
@@ -481,7 +495,7 @@ fi
 
 # Test connessione database
 print_step "Test connessione database finale..."
-if docker exec "$POSTGRES_CONTAINER" psql -U osm2cai2 -d osm2cai2 -c "SELECT 1;" &> /dev/null; then
+if docker exec "$POSTGRES_CONTAINER" psql -U ${APP_NAME} -d ${APP_NAME} -c "SELECT 1;" &> /dev/null; then
     print_success "Database funzionante"
 else
     print_error "Problema connessione database"

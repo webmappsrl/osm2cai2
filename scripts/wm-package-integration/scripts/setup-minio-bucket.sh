@@ -3,8 +3,16 @@
 echo "🪣 Configurazione Bucket MinIO per OSM2CAI2"
 echo "==========================================="
 
-BUCKET_NAME=${AWS_BUCKET:-osm2cai2-bucket}
-MINIO_HOST="http://minio-osm2cai2:9000"
+# Legge APP_NAME dal file .env
+if [ -f ".env" ]; then
+    APP_NAME=$(grep "^APP_NAME=" .env | cut -d'=' -f2 | tr -d ' ')
+else
+    echo "⚠️  File .env non trovato, uso valore di default"
+    APP_NAME="osm2cai2"
+fi
+
+BUCKET_NAME=${AWS_BUCKET:-${APP_NAME}-bucket}
+MINIO_HOST="http://minio-${APP_NAME}:9000"
 MINIO_USER=${MINIO_ROOT_USER:-minioadmin}
 MINIO_PASS=${MINIO_ROOT_PASSWORD:-minioadmin}
 
@@ -66,7 +74,7 @@ echo "📝 Configurazione Laravel (.env):"
 echo "   AWS_ACCESS_KEY_ID=$MINIO_USER"
 echo "   AWS_SECRET_ACCESS_KEY=$MINIO_PASS"
 echo "   AWS_BUCKET=$BUCKET_NAME"
-echo "   AWS_ENDPOINT=http://minio_osm2cai2:9003"
+echo "   AWS_ENDPOINT=http://minio-${APP_NAME}:9000"
 echo "   AWS_URL=http://localhost:9002"
 echo "   AWS_USE_PATH_STYLE_ENDPOINT=true"
 echo ""
