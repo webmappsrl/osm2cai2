@@ -82,7 +82,7 @@ class Club extends Resource
         return [
             ID::make()->sortable()
                 ->hideFromIndex(),
-            Text::make('Nome', 'name')
+            Text::make(__('Name'), 'name')
                 ->sortable()
                 ->rules('required', 'max:255')
                 ->displayUsing(function ($name, $a, $b) {
@@ -92,19 +92,19 @@ class Club extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            Text::make('CAI code', 'cai_code')
+            Text::make(__('CAI code'), 'cai_code')
                 ->sortable()
                 ->rules('required', 'max:255'),
-            BelongsTo::make('Region', 'region', Region::class)
+            BelongsTo::make(__('Region'), 'region', Region::class)
                 ->searchable(),
-            Text::make('Club\'s managers', function () {
+            Text::make(__('Club\'s managers'), function () {
                 return $this->formatUserList($this->managerUsers()->get(), null, false);
             })->asHtml(),
-            Text::make('Club\'s members', function () {
+            Text::make(__('Club\'s members'), function () {
                 return $this->formatUserList($this->users()->get(), null, true);
             })->asHtml()
                 ->onlyOnDetail(),
-            BelongsToMany::make('Club\'s hiking routes', 'hikingRoutes', HikingRoute::class)
+            BelongsToMany::make(__('Club\'s hiking routes'), 'hikingRoutes', HikingRoute::class)
                 ->help(__('Only national referents can add hiking routes to the club')),
             Text::make('SDA1', function () use ($hikingRoutesSDA1) {
                 return $hikingRoutesSDA1->count();

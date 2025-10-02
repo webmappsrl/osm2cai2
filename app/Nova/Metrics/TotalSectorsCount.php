@@ -15,7 +15,7 @@ class TotalSectorsCount extends Value
      */
     public function name()
     {
-        return 'Numero Settori';
+        return __('Total Number of Sectors'); // Numero Settori
     }
 
     /**

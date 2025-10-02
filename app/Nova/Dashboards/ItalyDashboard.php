@@ -20,7 +20,7 @@ class ItalyDashboard extends Dashboard
 
     public function label()
     {
-        return 'Riepilogo nazionale';
+        return __('National Summary');
     }
 
     public function cards()

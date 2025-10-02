@@ -11,6 +11,6 @@ class GeologicalSite extends AbstractValidationResource
 
     public static function getLabel(): string
     {
-        return 'Siti Geologici';
+        return __('Geological Sites');
     }
 }

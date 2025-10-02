@@ -30,18 +30,17 @@ class OsmSyncHikingRouteAction extends Action
         $service = app(OsmService::class);
 
         foreach ($models as $model) {
-
             if (! $user->canManageHikingRoute($model)) {
-                return Action::danger('You are not authorized to perform this action');
+                return Action::danger(__('You are not authorized to perform this action'));
             }
 
             if ($model->osm2cai_status > 3) {
-                return Action::danger('"Forcing the synchronization with OpenStreetMap is only possible if the route has an OSM2CAI status less than or equal to 3; if necessary, proceed first with REVERT VALIDATION"');
+                return Action::danger(__('Forcing the synchronization with OpenStreetMap is only possible if the route has an OSM2CAI status less than or equal to 3; if necessary, proceed first with REVERT VALIDATION'));
             }
 
             // Ensure osmfeatures_data and osm_id exist
             if (! isset($model->osmfeatures_data['properties']['osm_id'])) {
-                return Action::danger('Hiking Route model '.$model->id.' does not have a valid osm_id in osmfeatures_data.');
+                return Action::danger(__('Hiking Route model :id does not have a valid osm_id in osmfeatures_data.', ['id' => $model->id]));
             }
 
             $service->updateHikingRouteModelWithOsmData($model);

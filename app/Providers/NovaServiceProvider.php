@@ -91,7 +91,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     return optional(Auth::user())->hasRole('Administrator');
                 }),
                 MenuGroup::make('', [
-                    MenuItem::link(__('Riepilogo nazionale'), '/dashboards/italy-dashboard')
+                    MenuItem::link(__('National Summary'), '/dashboards/italy-dashboard')
                         ->canSee(function () {
                             return true;
                         }),
@@ -106,7 +106,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             return true;
                         }),
 
-                    MenuItem::link(__('Riepilogo utenti'), '/dashboards/utenti')
+                    MenuItem::link(__('Users Summary'), '/dashboards/utenti')
                         ->canSee(function () {
                             return optional(Auth::user())->hasRole('Administrator');
                         }),
@@ -121,12 +121,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
                         }),
 
-                    MenuItem::link(__('Riepilogo Acqua Sorgente'), '/dashboards/acqua-sorgente')
+                    MenuItem::link(__('Acqua Sorgente Summary'), '/dashboards/acqua-sorgente')
                         ->canSee(function () {
                             return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
                         }),
 
-                    MenuItem::link(__('Riepilogo Settori'), '/dashboards/settori')
+                    MenuItem::link(__('Sectors Summary'), '/dashboards/settori')
                         ->canSee(function () {
                             return optional(Auth::user())->hasRole('Regional Referent');
                         }),
@@ -135,27 +135,27 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Rete Escursionistica
                 MenuSection::make(__('Rete Escursionistica'), [
                     MenuSection::make(__('Sentieri'), [
-                        MenuItem::resource(HikingRoute::class, __('Percorsi')),
-                        MenuItem::resource(Itinerary::class, __('Itinerari')),
+                        MenuItem::resource(HikingRoute::class, __('Hiking Routes')),
+                        MenuItem::resource(Itinerary::class, __('Itineraries')),
                     ])->icon('none')->collapsable(),
-                    MenuSection::make(__('Luoghi'), [
+                    MenuSection::make(__('Places'), [
                         MenuItem::resource(Poles::class, __('Poles')),
                     ])->icon('none')->collapsable(),
                     MenuSection::make(__('Unità Territoriali'), [
                         MenuItem::resource(Club::class),
-                        MenuItem::resource(Municipality::class, __('Comuni')),
-                        MenuItem::resource(Sector::class, __('Settori')),
-                        MenuItem::resource(Area::class, __('Aree')),
-                        MenuItem::resource(Province::class, __('Province')),
-                        MenuItem::resource(Region::class, __('Regioni')),
+                        MenuItem::resource(Municipality::class, __('Municipalities')),
+                        MenuItem::resource(Sector::class, __('Sectors')),
+                        MenuItem::resource(Area::class, __('Areas')),
+                        MenuItem::resource(Province::class, __('Provinces')),
+                        MenuItem::resource(Region::class, __('Regions')),
                     ])->icon('none')->collapsable(),
                 ])->icon('globe')->collapsable(),
 
                 // Arricchimenti
                 MenuSection::make(__('Arricchimenti'), [
                     MenuItem::resource(EnrichPoi::class, __('Punti di interesse')),
-                    MenuItem::resource(MountainGroups::class, __('Gruppi Montuosi')),
-                    MenuItem::resource(CaiHut::class, __('Rifugi')),
+                    MenuItem::resource(MountainGroups::class, __('Mountain Groups')),
+                    MenuItem::resource(CaiHut::class, __('Huts')),
                     MenuItem::resource(NaturalSpring::class, __('Acqua Sorgente')),
                 ])->icon('database')->collapsable(),
 

@@ -83,13 +83,13 @@ class Sector extends Resource
             Text::make(__('Codice'), 'name')->sortable()->hideWhenUpdating()->required(),
             Text::make(__('Name'), 'human_name')
                 ->sortable()
-                ->help('Modifica il nome del settore')->required()
+                ->help(__('Edit Sector Name'))->required()
                 ->rules('max:254'),
             Text::make(__('Code'), 'code')->sortable()->required()->rules('max:1'),
-            Text::make(__('Responsabili'), function () {
+            Text::make(__('Sector Managers'), function () {
                 return $this->moderators->pluck('name')->implode(', ');
             })->onlyOnIndex(),
-            Number::make(__('Numero Atteso'), 'num_expected')->required(),
+            Number::make(__('Expected Number'), 'num_expected')->required(),
             Text::make(__('Full code'), 'full_code')->readonly(),
             Text::make(__('Region'), 'area_id', function () {
                 return $this->area->province->region->name ?? '';
@@ -100,9 +100,9 @@ class Sector extends Resource
             Text::make(__('Area'), 'area_id', function () {
                 return $this->area->name ?? '';
             })->hideWhenUpdating()->hideWhenCreating(),
-            BelongsToMany::make('Referenti Sentieristica', 'moderators', User::class)
+            BelongsToMany::make(__('Referenti Sentieristica'), 'moderators', User::class)
                 ->searchable(),
-            BelongsTo::make('Area')->onlyOnForms(),
+            BelongsTo::make(__('Area'))->onlyOnForms(),
             File::make('Geometry')->store(function (Request $request, $model) {
                 return $model->fileToGeometry($request->geometry->get());
             })->onlyOnForms()->hideWhenUpdating()->required(),

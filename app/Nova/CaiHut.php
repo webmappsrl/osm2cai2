@@ -30,7 +30,7 @@ class CaiHut extends Resource
 
     public static function label()
     {
-        $label = 'Rifugi';
+        $label = 'Huts';
 
         return __($label);
     }

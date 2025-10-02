@@ -25,7 +25,7 @@ class GenerateItineraryEdgesAction extends Action
             $model->save();
         }
 
-        return Action::message('Edges generated successfully!');
+        return Action::message(__('Edges generated successfully!'));
     }
 
     /**

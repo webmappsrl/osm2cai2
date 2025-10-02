@@ -46,7 +46,7 @@ class UgcMedia extends Resource
 
     public static function label()
     {
-        $label = 'Immagini';
+        $label = 'Images';
 
         return __($label);
     }
@@ -60,19 +60,19 @@ class UgcMedia extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            DateTime::make('Updated At')
+            DateTime::make(__('Updated At'))
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
-            Text::make('Geohub ID', 'geohub_id')
+            Text::make(__('Geohub ID'), 'geohub_id')
                 ->onlyOnDetail(),
-            Text::make('Nome', 'name')
+            Text::make(__('Name'), 'name')
                 ->sortable(),
-            Textarea::make('Descrizione', 'description'),
-            BelongsTo::make('User', 'user')
+            Textarea::make(__('Description'), 'description'),
+            BelongsTo::make(__('User'), 'user')
                 ->searchable()
                 ->sortable()
                 ->nullable(),
-            Text::make('Media', function () {
+            Text::make(__('Media'), function () {
                 if ($this->model() instanceof \App\Models\UgcMedia) {
                     $url = $this->getUrl();
                     if (! $url) {
@@ -86,19 +86,19 @@ class UgcMedia extends Resource
                         HTML;
                 }
             })->asHtml(),
-            BelongsTo::make('Ugc Poi', 'ugcPoi')
+            BelongsTo::make(__('Ugc Poi'), 'ugcPoi')
                 ->searchable()
                 ->sortable()
                 ->nullable()
                 ->hideFromIndex(),
-            BelongsTo::make('Ugc Track', 'ugcTrack')
+            BelongsTo::make(__('Ugc Track'), 'ugcTrack')
                 ->searchable()
                 ->sortable()
                 ->nullable()
                 ->hideFromIndex(),
-            Text::make('Tassonomie Where', 'taxonomy_wheres')
+            Text::make(__('Tassonomie Where'), 'taxonomy_wheres')
                 ->sortable(),
-            Text::make('Relative URL', 'relative_url')
+            Text::make(__('Relative URL'), 'relative_url')
                 ->hideFromIndex()
                 ->displayUsing(function ($value) {
                     $url = $this->getUrl();
@@ -110,7 +110,7 @@ class UgcMedia extends Resource
                 })
                 ->asHtml()
                 ->required(),
-            MapPoint::make('Map', 'geometry')->withMeta([
+            MapPoint::make(__('Map'), 'geometry')->withMeta([
                 'center' => [43.7125, 10.4013],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                 'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',

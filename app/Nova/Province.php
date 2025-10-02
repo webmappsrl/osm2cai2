@@ -40,7 +40,7 @@ class Province extends Resource
 
     public static function label()
     {
-        return 'Province';
+        return __('Province');
     }
 
     /**
@@ -94,11 +94,11 @@ class Province extends Resource
 
         return [
             ID::make()->sortable(),
-            Text::make('Name', 'name')->sortable(),
-            Text::make('Code', function () use ($code) {
+            Text::make(__('Name'), 'name')->sortable(),
+            Text::make(__('Code'), function () use ($code) {
                 return $code;
             })->sortable(),
-            Text::make('Full Code', function () use ($code) {
+            Text::make(__('Full Code'), function () use ($code) {
                 // if code is not null, add the region code
                 if ($code) {
                     $code = $this->region ? $this->region->code.'.'.$code : $code;
@@ -106,19 +106,19 @@ class Province extends Resource
 
                 return $code;
             })->sortable(),
-            Number::make('Areas', function () use ($areasCount) {
+            Number::make(__('Areas'), function () use ($areasCount) {
                 return $areasCount;
             })->sortable(),
-            Number::make('Sectors', function () use ($sectorsCount) {
+            Number::make(__('Sectors'), function () use ($sectorsCount) {
                 return $sectorsCount;
             })->sortable(),
-            BelongsTo::make('Region', 'region', Region::class),
-            DateTime::make('Created At', 'created_at')->hideFromIndex(),
-            DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
-            Text::make('Osmfeatures ID', function () {
+            BelongsTo::make(__('Region'), 'region', Region::class),
+            DateTime::make(__('Created At'), 'created_at')->hideFromIndex(),
+            DateTime::make(__('Updated At'), 'updated_at')->hideFromIndex(),
+            Text::make(__('Osmfeatures ID'), function () {
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml(),
-            DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
+            DateTime::make(__('Osmfeatures updated at'), 'osmfeatures_updated_at')->sortable(),
         ];
     }
 
@@ -154,7 +154,7 @@ class Province extends Resource
                     ->width('1/4')
                     ->view('nova.cards.province-stats-card', [
                         'value' => $province->manager,
-                        'label' => 'Responsabili di settore',
+                        'label' => __('Sector Managers'), // Responsabili di settore
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -164,7 +164,7 @@ class Province extends Resource
                     ->width('1/4')
                     ->view('nova.cards.province-sal-card', [
                         'value' => number_format($sal * 100, 2),
-                        'label' => 'SAL',
+                        'label' => __('SAL'), // SAL
                         'backgroundColor' => Osm2caiHelper::getSalColor($sal),
                     ])
                     ->center()
@@ -175,7 +175,7 @@ class Province extends Resource
                     ->width('1/4')
                     ->view('nova.cards.province-stats-card', [
                         'value' => $numbers[3] + $numbers[4],
-                        'label' => 'Numero percorsi sda 3/4',
+                        'label' => __('Number of sda 3/4 routes'), // Numero percorsi sda 3/4
                     ])
                     ->center()
                     ->withBasicStyles()
@@ -185,7 +185,7 @@ class Province extends Resource
                     ->width('1/4')
                     ->view('nova.cards.province-stats-card', [
                         'value' => $province->num_expected,
-                        'label' => 'Numero percorsi attesi',
+                        'label' => __('Expected number of routes'), // Numero percorsi attesi
                     ])
                     ->center()
                     ->withBasicStyles()

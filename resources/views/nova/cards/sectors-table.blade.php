@@ -1,8 +1,8 @@
 <table class="table-auto w-full text-center">
     <thead>
         <tr>
-            <th class="px-4 py-2">{{ __('Settore') }}</th>
-            <th class="px-4 py-2">{{ __('Nome') }}</th>
+            <th class="px-4 py-2">{{ __('Sector') }}</th>
+            <th class="px-4 py-2">{{ __('Name') }}</th>
             <th class="px-4 py-2">{{ __('#1') }}</th>
             <th class="px-4 py-2">{{ __('#2') }}</th>
             <th class="px-4 py-2">{{ __('#3') }}</th>

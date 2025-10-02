@@ -64,19 +64,19 @@ abstract class OsmfeaturesResource extends AbstractEcResource
         }
         $fields = [
             ID::make()->sortable(),
-            Text::make('Name', 'name')->sortable(),
-            DateTime::make('Created At', 'created_at')->hideFromIndex(),
-            DateTime::make('Updated At', 'updated_at')->hideFromIndex(),
-            Text::make('Osmfeatures ID', function () {
+            Text::make(__('Name'), 'name')->sortable(),
+            DateTime::make(__('Created At'), 'created_at')->hideFromIndex(),
+            DateTime::make(__('Updated At'), 'updated_at')->hideFromIndex(),
+            Text::make(__('Osmfeatures ID'), function () {
                 if (! $this->osmfeatures_id) {
                     return '';
                 }
 
                 return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
             })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
-            Text::make('OSM Type', 'osmfeatures_data->properties->osm_type'),
-            DateTime::make('Osmfeatures updated at', 'osmfeatures_updated_at')->sortable(),
-            Code::make('Osmfeatures Data', 'osmfeatures_data')
+            Text::make(__('OSM Type'), 'osmfeatures_data->properties->osm_type'),
+            DateTime::make(__('Osmfeatures updated at'), 'osmfeatures_updated_at')->sortable(),
+            Code::make(__('Osmfeatures Data'), 'osmfeatures_data')
                 ->json()
                 ->language('php')
                 ->resolveUsing(function ($value) {

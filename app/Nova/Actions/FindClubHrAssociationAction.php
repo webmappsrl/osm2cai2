@@ -39,7 +39,7 @@ class FindClubHrAssociationAction extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         if ($models->count() !== 1) {
-            return Action::danger('This action can only be executed on one resource at a time.');
+            return Action::danger(__('This action can only be executed on one resource at a time.'));
         }
 
         $model = $models->first();
@@ -48,7 +48,7 @@ class FindClubHrAssociationAction extends Action
         // Dispatch the job to associate clubs to hiking routes
         SyncClubHikingRouteRelationJob::dispatch($modelType, $model->id);
 
-        return Action::message('Association process has been started for this '.$modelType);
+        return Action::message(__('Association process has been started for this :modelType', ['modelType' => $modelType]));
     }
 
     /**
