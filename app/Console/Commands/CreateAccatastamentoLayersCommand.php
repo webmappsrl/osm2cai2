@@ -33,24 +33,28 @@ class CreateAccatastamentoLayersCommand extends Command
             'color' => '#F2C511', // Giallo
             'description' => ['it' => 'Sentieri con stato di accatastamento 1', 'en' => 'Trails with cadastral state 1'],
             'rank' => 1,
+            'feature_image' => 'https://ecmedia.s3.eu-central-1.amazonaws.com/EcMedia/6487.png',
         ],
         2 => [
             'name' => ['it' => 'Stato Accatastamento 2', 'en' => 'Cadastral State 2'],
             'color' => '#8E43AD', // Viola
             'description' => ['it' => 'Sentieri con stato di accatastamento 2', 'en' => 'Trails with cadastral state 2'],
             'rank' => 2,
+            'feature_image' => 'https://ecmedia.s3.eu-central-1.amazonaws.com/EcMedia/6488.png',
         ],
         3 => [
             'name' => ['it' => 'Stato Accatastamento 3', 'en' => 'Cadastral State 3'],
             'color' => '#2980B9', // Blu
             'description' => ['it' => 'Sentieri con stato di accatastamento 3', 'en' => 'Trails with cadastral state 3'],
             'rank' => 3,
+            'feature_image' => 'https://ecmedia.s3.eu-central-1.amazonaws.com/EcMedia/6489.png',
         ],
         4 => [
             'name' => ['it' => 'Stato Accatastamento 4', 'en' => 'Cadastral State 4'],
             'color' => '#27AF60', // Verde
             'description' => ['it' => 'Sentieri con stato di accatastamento 4', 'en' => 'Trails with cadastral state 4'],
             'rank' => 4,
+            'feature_image' => 'https://ecmedia.s3.eu-central-1.amazonaws.com/EcMedia/6490.png',
         ],
     ];
 
@@ -159,6 +163,9 @@ class CreateAccatastamentoLayersCommand extends Command
                 'properties' => $properties,
             ]);
 
+            // Aggiungo il media per il layer esistente
+            $this->handleFeatureImage($existingLayer, $config);
+
             $name = is_array($existingLayer->name) ? $existingLayer->name['it'] ?? $existingLayer->name['en'] : $existingLayer->name;
             $this->info("🔄 Aggiornato layer per stato {$status}: {$name} (ID: {$existingLayer->id})");
 
@@ -174,9 +181,39 @@ class CreateAccatastamentoLayersCommand extends Command
         $layer->properties = $properties;
         $layer->save();
 
+        // Aggiungo il media per il nuovo layer
+        $this->handleFeatureImage($layer, $config);
+
         $name = is_array($layer->name) ? $layer->name['it'] ?? $layer->name['en'] : $layer->name;
         $this->info("✅ Creato layer per stato {$status}: {$name} (ID: {$layer->id})");
 
         return ['action' => 'created', 'layer' => $layer];
+    }
+
+    /**
+     * Gestisce l'aggiunta del media tramite feature_image del config
+     */
+    private function handleFeatureImage(Layer $layer, array $config): void
+    {
+        if (! isset($config['feature_image']) || empty($config['feature_image'])) {
+            return;
+        }
+
+        $featureImageUrl = $config['feature_image'];
+        $layerName = is_array($layer->name) ? $layer->name['it'] ?? $layer->name['en'] : $layer->name;
+
+        try {
+            // Cancella tutti i media esistenti nella collezione 'default'
+            $existingMedia = $layer->getMedia('default');
+            if ($existingMedia->isNotEmpty()) {
+                $layer->clearMediaCollection('default');
+            }
+
+            // Aggiungi il nuovo media dal URL
+            $layer->addMediaFromUrl($featureImageUrl)
+                ->toMediaCollection('default');
+        } catch (\Exception $e) {
+            $this->error("❌ Errore nell'aggiunta del media per layer {$layerName}: ".$e->getMessage());
+        }
     }
 }
