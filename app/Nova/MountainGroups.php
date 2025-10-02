@@ -32,7 +32,7 @@ class MountainGroups extends Resource
 
     public static function label()
     {
-        return __('Gruppi Montuosi');
+        return __('Mountain Groups');
     }
 
     /**

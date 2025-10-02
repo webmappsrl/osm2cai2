@@ -50,7 +50,7 @@ class BulkSectorsModeratorAssignAction extends Action
         })->all();
 
         return [
-            Select::make('User')->searchable()->options(
+            Select::make(__('User'))->searchable()->options(
                 $users
             ),
         ];
