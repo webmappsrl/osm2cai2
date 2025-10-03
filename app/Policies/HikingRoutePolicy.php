@@ -4,9 +4,24 @@ namespace App\Policies;
 
 use App\Models\HikingRoute;
 use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class HikingRoutePolicy
 {
+    use HandlesAuthorization;
+
+    /**
+     * Perform pre-authorization checks.
+     *
+     * @param  string  $ability
+     * @return void|bool
+     */
+    public function before(User $user, $ability)
+    {
+        if ($user->hasRole('Administrator')) {
+            return true;
+        }
+    }
     /**
      * Determine whether the user can view any models.
      */

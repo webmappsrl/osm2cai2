@@ -14,6 +14,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        \App\Models\HikingRoute::class => \App\Policies\HikingRoutePolicy::class,
         \Wm\WmPackage\Models\TaxonomyPoiType::class => \Wm\WmPackage\Policies\TaxonomyPoiTypePolicy::class,
         \Wm\WmPackage\Models\TaxonomyActivity::class => \Wm\WmPackage\Policies\TaxonomyActivityPolicy::class,
     ];
