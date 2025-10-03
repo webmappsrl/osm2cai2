@@ -1,16 +1,4 @@
----
-description: Docker Environment Rules per osm2cai2 - Regole per l'ambiente dockerizzato Laravel
-globs: 
-  - "docker-compose.yml"
-  - "docker-compose.*.yml"
-  - "Dockerfile*"
-  - "docker/**/*"
-  - ".env*"
-  - "scripts/**/*"
-alwaysApply: true
----
-
-# REGOLA FOCUS ASSOLUTO - IMPERATIVA
+# Docker Environment Rules per osm2cai2
 
 ## MANTENERE SEMPRE IL FOCUS SULLA DOMANDA DELL'UTENTE
 1. **NON DEVIARE MAI** dalla domanda specifica dell'utente per risolvere errori non correlati
@@ -52,6 +40,62 @@ alwaysApply: true
 - **Container name**: `redis-${APP_NAME}`
 - **Porta**: `6379:6379`
 
+### Container Elasticsearch (`elasticsearch`)
+- **Image**: `elasticsearch:8.11.0`
+- **Container name**: `elasticsearch-${APP_NAME}`
+- **Porta**: `9200:9200`
+
+### Container MinIO (`minio`)
+- **Image**: `minio/minio:latest`
+- **Container name**: `minio-${APP_NAME}`
+- **Porta**: `9003:9000`
+- **Console**: `9004:9001`
+
+### Container MailPit (`mailpit`)
+- **Image**: `axllent/mailpit:latest`
+- **Container name**: `mailpit-${APP_NAME}`
+- **Porta**: `8025:8025`
+
+## Pattern di Naming dei Container
+
+### Regola Generale
+Tutti i container seguono il pattern: `{SERVICE}-{APP_NAME}`
+
+Dove:
+- `{SERVICE}` = nome del servizio (php81, postgres, elasticsearch, minio, mailpit, redis)
+- `{APP_NAME}` = nome dell'applicazione (osm2cai2)
+
+### Esempi di Container Names
+```bash
+# Container PHP
+php81-osm2cai2
+
+# Container Database
+postgres-osm2cai2
+
+# Container Redis
+redis-osm2cai2
+
+# Container Elasticsearch
+elasticsearch-osm2cai2
+
+# Container MinIO
+minio-osm2cai2
+
+# Container MailPit
+mailpit-osm2cai2
+```
+
+### Variabili Ambiente per Container Names
+```bash
+APP_NAME=osm2cai2
+DOCKER_PROJECT_DIR_NAME=osm2cai2
+DOCKER_PHP_PORT=9108
+DOCKER_PSQL_PORT=5508
+DOCKER_SERVE_PORT=8008 # solo locale
+DB_HOST=db # sempre "db" (nome container)
+```
+
 ## Comandi Essenziali
 
 ### Accesso ai Container
@@ -64,6 +108,18 @@ docker exec -u 0 -it php81-osm2cai2 bash
 
 # Container PostgreSQL
 docker exec -it postgres-osm2cai2 bash
+
+# Container Redis
+docker exec -it redis-osm2cai2 bash
+
+# Container Elasticsearch
+docker exec -it elasticsearch-osm2cai2 bash
+
+# Container MinIO
+docker exec -it minio-osm2cai2 bash
+
+# Container MailPit
+docker exec -it mailpit-osm2cai2 bash
 ```
 
 ### Comandi Laravel nel Container
@@ -182,3 +238,45 @@ DOCKER_PSQL_PORT=5508
 DOCKER_SERVE_PORT=8008 # solo locale
 DB_HOST=db # sempre "db" (nome container)
 ```
+
+## Pattern di Naming per Scripts
+Gli script di integrazione utilizzano array di container names:
+```bash
+OSM2CAI_CONTAINERS=(
+    "php81-${APP_NAME}"
+    "postgres-${APP_NAME}"
+    "elasticsearch-${APP_NAME}"
+    "minio-${APP_NAME}"
+    "mailpit-${APP_NAME}"
+)
+```
+
+Questo pattern garantisce consistenza e facilità di manutenzione.
+
+## Mapping Modelli ecTrack
+
+### Regola per ecTrack
+Nel progetto osm2cai2, **ecTrack** rappresenta il modello generico per i percorsi escursionistici.
+
+### Configurazione Modello
+- **Variabile ambiente**: `EC_TRACK_MODEL`
+- **Valore di default**: `Wm\WmPackage\Models\EcTrack`
+- **Nel progetto osm2cai2**: `App\Models\HikingRoute` (estende EcTrack)
+
+### Mapping Specifico per osm2cai2
+```bash
+# Nel file .env del progetto
+EC_TRACK_MODEL=App\Models\HikingRoute
+```
+
+### Relazione con Layer
+- **Nome relazione**: `ecTracks` (definito in `getLayerRelationName()`)
+- **Tabella**: `hiking_routes` (override della tabella di default `ec_tracks`)
+- **Classe base**: `Wm\WmPackage\Models\EcTrack`
+- **Classe specifica**: `App\Models\HikingRoute`
+
+### Note Importanti
+- Quando si fa riferimento a "ecTrack" nel codice, si intende sempre il modello configurato tramite `EC_TRACK_MODEL`
+- Nel contesto di osm2cai2, ecTrack = HikingRoute
+- La relazione con i layer utilizza sempre il nome `ecTracks` indipendentemente dal modello specifico
+- Il modello deve estendere `Wm\WmPackage\Models\EcTrack` per mantenere la compatibilità
