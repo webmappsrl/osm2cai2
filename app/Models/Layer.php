@@ -27,6 +27,8 @@ class Layer extends WmLayer
         $this->clearAdditionalFeaturesForMap();
 
         $hikingRoutes = DB::select($this->getOptimizedHikingRoutes(), [$this->id, HikingRoute::class]);
+        // Nova resource name
+        $novaResourceName = $this->getNovaResourceName();
 
         foreach ($hikingRoutes as $hikingRoute) {
             $geometry = json_decode($hikingRoute->geometry, true);
@@ -43,7 +45,7 @@ class Layer extends WmLayer
                     'geometry' => $geometry,
                     'properties' => [
                         'tooltip' => $hikingRouteName,
-                        'link' => url('/resources/hiking-routes/' . $hikingRoute->id),
+                        'link' => url('/resources/'.$novaResourceName.'/'.$hikingRoute->id),
                         'strokeColor' => 'red',
                         'strokeWidth' => 2,
                     ],
@@ -76,5 +78,17 @@ class Layer extends WmLayer
     ";
 
         return $sql;
+    }
+
+    /**
+     * Get the Nova resource name based on app_id
+     */
+    private function getNovaResourceName(): string
+    {
+        $resourceClass = $this->app_id == 1
+            ? \App\Nova\HikingRoute::class
+            : \App\Nova\EcTrack::class;
+
+        return $resourceClass::uriKey();
     }
 }
