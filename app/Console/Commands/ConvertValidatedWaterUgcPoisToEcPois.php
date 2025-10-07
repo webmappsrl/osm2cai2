@@ -149,73 +149,73 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                             $this->line("📷 Skipping {$medias->count()} media files (--skip-media option)");
                         } else {
                             foreach ($medias as $media) {
-                            try {
-                                $sourceDisk = Storage::disk($media->disk);
-                                $fileContent = null;
-                                $sourceType = '';
+                                try {
+                                    $sourceDisk = Storage::disk($media->disk);
+                                    $fileContent = null;
+                                    $sourceType = '';
 
-                                // Controlla se esiste un relative_url nelle properties del media
-                                $relativeUrl = null;
+                                    // Controlla se esiste un relative_url nelle properties del media
+                                    $relativeUrl = null;
 
-                                // Controlla nelle custom_properties del media
-                                if ($media->custom_properties) {
-                                    $customProps = is_string($media->custom_properties) ? json_decode($media->custom_properties, true) : $media->custom_properties;
-                                    $relativeUrl = $customProps['relative_url'] ?? null;
-                                }
+                                    // Controlla nelle custom_properties del media
+                                    if ($media->custom_properties) {
+                                        $customProps = is_string($media->custom_properties) ? json_decode($media->custom_properties, true) : $media->custom_properties;
+                                        $relativeUrl = $customProps['relative_url'] ?? null;
+                                    }
 
-                                // Se non trovato, controlla nelle properties dell'UgcPoi
-                                if (! $relativeUrl && isset($properties['media'])) {
-                                    foreach ($properties['media'] as $mediaItem) {
-                                        if (isset($mediaItem['relative_url'])) {
-                                            $relativeUrl = $mediaItem['relative_url'];
-                                            break;
+                                    // Se non trovato, controlla nelle properties dell'UgcPoi
+                                    if (! $relativeUrl && isset($properties['media'])) {
+                                        foreach ($properties['media'] as $mediaItem) {
+                                            if (isset($mediaItem['relative_url'])) {
+                                                $relativeUrl = $mediaItem['relative_url'];
+                                                break;
+                                            }
                                         }
                                     }
-                                }
 
-                                // Se trovato un relative_url, procedi con la duplicazione
-                                if ($relativeUrl) {
-                                    // Se l'URL non contiene geohub.webmapp.it, aggiungi il prefisso osm2cai.cai.it
-                                    if (strpos($relativeUrl, 'geohub.webmapp.it') === false) {
-                                        $relativeUrl = 'https://osm2cai.cai.it/storage/'.ltrim($relativeUrl, '/');
-                                    }
+                                    // Se trovato un relative_url, procedi con la duplicazione
+                                    if ($relativeUrl) {
+                                        // Se l'URL non contiene geohub.webmapp.it, aggiungi il prefisso osm2cai.cai.it
+                                        if (strpos($relativeUrl, 'geohub.webmapp.it') === false) {
+                                            $relativeUrl = 'https://osm2cai.cai.it/storage/'.ltrim($relativeUrl, '/');
+                                        }
 
-                                    // Crea una copia del record del database
-                                    $duplicatedMedia = $media->replicate();
-                                    $duplicatedMedia->uuid = (string) Str::uuid();
-                                    $duplicatedMedia->model()->associate($ecPoi);
+                                        // Crea una copia del record del database
+                                        $duplicatedMedia = $media->replicate();
+                                        $duplicatedMedia->uuid = (string) Str::uuid();
+                                        $duplicatedMedia->model()->associate($ecPoi);
 
-                                    // Salva il nuovo record del media
-                                    $duplicatedMedia->save();
+                                        // Salva il nuovo record del media
+                                        $duplicatedMedia->save();
 
-                                    // Ottieni il nuovo path per il file duplicato
-                                    $newPath = $duplicatedMedia->getPath();
+                                        // Ottieni il nuovo path per il file duplicato
+                                        $newPath = $duplicatedMedia->getPath();
 
-                                    // Controlla se il file esiste già nella destinazione PRIMA di scaricarlo
-                                    if ($sourceDisk->exists($newPath)) {
-                                        $this->line("⏭️  Media file already exists, skipping: {$duplicatedMedia->file_name}");
+                                        // Controlla se il file esiste già nella destinazione PRIMA di scaricarlo
+                                        if ($sourceDisk->exists($newPath)) {
+                                            $this->line("⏭️  Media file already exists, skipping: {$duplicatedMedia->file_name}");
+                                        } else {
+                                            $this->line("📥 Downloading image from URL: {$relativeUrl}");
+
+                                            $fileContent = file_get_contents($relativeUrl);
+                                            if ($fileContent === false) {
+                                                throw new \Exception('Failed to download image from URL');
+                                            }
+                                            $sourceType = 'downloaded from URL';
+
+                                            // Scrivi il file fisico nella nuova posizione
+                                            $sourceDisk->put($newPath, $fileContent);
+                                            $this->line("📁 Copied media file from {$sourceType}: {$media->file_name} -> {$duplicatedMedia->file_name}");
+                                        }
                                     } else {
-                                        $this->line("📥 Downloading image from URL: {$relativeUrl}");
-
-                                        $fileContent = file_get_contents($relativeUrl);
-                                        if ($fileContent === false) {
-                                            throw new \Exception('Failed to download image from URL');
-                                        }
-                                        $sourceType = 'downloaded from URL';
-
-                                        // Scrivi il file fisico nella nuova posizione
-                                        $sourceDisk->put($newPath, $fileContent);
-                                        $this->line("📁 Copied media file from {$sourceType}: {$media->file_name} -> {$duplicatedMedia->file_name}");
+                                        $this->warn('⚠️  No relative_url found in media properties - Skipping media duplication');
+                                        continue;
                                     }
-                                } else {
-                                    $this->warn('⚠️  No relative_url found in media properties - Skipping media duplication');
-                                    continue;
+                                } catch (\Exception $e) {
+                                    $this->error("❌ Error copying media {$media->id}: ".$e->getMessage());
+                                    // Continua con il prossimo media anche se questo fallisce
                                 }
-                            } catch (\Exception $e) {
-                                $this->error("❌ Error copying media {$media->id}: ".$e->getMessage());
-                                // Continua con il prossimo media anche se questo fallisce
                             }
-                        }
                         }
                     }
 
