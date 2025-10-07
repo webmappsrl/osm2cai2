@@ -7,7 +7,6 @@ use App\Models\UgcPoi;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\TaxonomyPoiType;
 
@@ -66,14 +65,6 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
             return 0;
         }
-
-        // TODO: chiamo save quietly e poi creo una custom chein di jobs
-        // Salva l'event dispatcher originale
-        $originalDispatcher = EcPoi::getEventDispatcher();
-
-        // Crea un nuovo dispatcher senza l'EcPoiObserver per non chiamare $app->buildPoisGeojson() ad ogni poi
-        $newDispatcher = new \Illuminate\Events\Dispatcher;
-        EcPoi::setEventDispatcher($newDispatcher);
 
         $convertedCount = 0;
         $skippedCount = 0;
@@ -180,32 +171,26 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                             $relativeUrl = 'https://osm2cai.cai.it/storage/'.ltrim($relativeUrl, '/');
                                         }
 
-                                        // Crea una copia del record del database
-                                        $duplicatedMedia = $media->replicate();
-                                        $duplicatedMedia->uuid = (string) Str::uuid();
-                                        $duplicatedMedia->model()->associate($ecPoi);
+                                        // Controlla se il file esiste già nel sourceDisk
+                                        $originalPath = $media->getPath();
 
-                                        // Salva il nuovo record del media
-                                        $duplicatedMedia->save();
-
-                                        // Ottieni il nuovo path per il file duplicato
-                                        $newPath = $duplicatedMedia->getPath();
-
-                                        // Controlla se il file esiste già nella destinazione PRIMA di scaricarlo
-                                        if ($sourceDisk->exists($newPath)) {
-                                            $this->line("⏭️  Media file already exists, skipping: {$duplicatedMedia->file_name}");
+                                        if ($sourceDisk->exists($originalPath)) {
+                                            // Se il file esiste, usa copy()
+                                            $duplicatedMedia = $media->copy($ecPoi);
+                                            $this->line("✅ Media file copied: {$media->file_name} -> {$duplicatedMedia->file_name}");
                                         } else {
-                                            $this->line("📥 Downloading image from URL: {$relativeUrl}");
+                                            // Se il file non esiste, scarica da URL usando addMediaFromUrl()
+                                            try {
+                                                $duplicatedMedia = $ecPoi->addMediaFromUrl($relativeUrl)
+                                                    ->usingName($media->name)
+                                                    ->usingFileName($media->file_name)
+                                                    ->toMediaCollection($media->collection_name);
 
-                                            $fileContent = file_get_contents($relativeUrl);
-                                            if ($fileContent === false) {
-                                                throw new \Exception('Failed to download image from URL');
+                                                $this->line("✅ Media file downloaded and saved with APP_ID {$ecPoi->app_id}: {$duplicatedMedia->file_name}");
+                                            } catch (\Exception $e) {
+                                                $this->error("❌ Error downloading media from URL {$relativeUrl}: ".$e->getMessage());
+                                                continue;
                                             }
-                                            $sourceType = 'downloaded from URL';
-
-                                            // Scrivi il file fisico nella nuova posizione
-                                            $sourceDisk->put($newPath, $fileContent);
-                                            $this->line("📁 Copied media file from {$sourceType}: {$media->file_name} -> {$duplicatedMedia->file_name}");
                                         }
                                     } else {
                                         $this->warn('⚠️  No relative_url found in media properties - Skipping media duplication');
@@ -251,9 +236,6 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
         } else {
             $this->info('   - Media: PROCESSED');
         }
-
-        // Ripristina l'event dispatcher originale
-        EcPoi::setEventDispatcher($originalDispatcher);
 
         return 0;
     }
