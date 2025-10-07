@@ -182,7 +182,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                             // Se il file non esiste, scarica da URL usando addMediaFromUrl()
                                             try {
                                                 $duplicatedMedia = $ecPoi->addMediaFromUrl($relativeUrl)
-                                                    ->usingName($media->name)
+                                                    ->usingName($media->name ?? $media->file_name)
                                                     ->usingFileName($media->file_name)
                                                     ->toMediaCollection($media->collection_name);
 
