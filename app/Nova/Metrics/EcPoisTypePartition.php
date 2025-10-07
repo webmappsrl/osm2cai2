@@ -10,7 +10,10 @@ use Laravel\Nova\Metrics\PartitionResult;
 
 class EcPoisTypePartition extends Partition
 {
-    public $name = 'Distribuzione per campo type';
+    public function __construct()
+    {
+        $this->name = __('Distribuzione per campo type');
+    }
 
     public $width = '1/2';
 

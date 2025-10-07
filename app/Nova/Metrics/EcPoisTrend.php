@@ -17,7 +17,10 @@ use Laravel\Nova\Nova;
 
 class EcPoisTrend extends Trend
 {
-    public $name = 'Distribuzione temporale nuovi POI';
+    public function __construct()
+    {
+        $this->name = __('Distribuzione temporale nuovi POI');
+    }
 
     public $width = '1/2';
 

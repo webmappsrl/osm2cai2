@@ -15,7 +15,10 @@ class IssueStatusFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Accessibility Status';
+    public function __construct()
+    {
+        $this->name = __('Accessibility Status');
+    }
 
     /**
      * Apply the filter to the given query.

@@ -14,7 +14,10 @@ class RegionFavoriteHikingRouteFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Favorite Region';
+    public function __construct()
+    {
+        $this->name = __('Favorite Region');
+    }
 
     /**
      * Apply the filter to the given query.
@@ -35,6 +38,9 @@ class RegionFavoriteHikingRouteFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return ['Yes' => true, 'No' => false];
+        return [
+            __('Yes') => true,
+            __('No') => false,
+        ];
     }
 }

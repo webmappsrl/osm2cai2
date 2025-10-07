@@ -17,7 +17,10 @@ use Laravel\Nova\Lenses\Lens;
 
 class HikingRoutesStatusLens extends Lens
 {
-    public $name = 'SDA0';
+    public function __construct()
+    {
+        $this->name = __('SDA0');
+    }
 
     public static $sda = 0;
 

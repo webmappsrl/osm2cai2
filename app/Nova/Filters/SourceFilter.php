@@ -7,7 +7,10 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 class SourceFilter extends BooleanFilter
 {
-    public $name = 'Source';
+    public function __construct()
+    {
+        $this->name = __('Source');
+    }
 
     /**
      * Apply the filter to the given query.
@@ -51,8 +54,8 @@ class SourceFilter extends BooleanFilter
     public function options(NovaRequest $request)
     {
         return [
-            'Yes' => 'has_source',
-            'No' => 'no_source',
+            __('Yes') => 'has_source',
+            __('No') => 'no_source',
         ];
     }
 }

@@ -14,7 +14,10 @@ class UgcFormIdFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Form ID';
+    public function __construct()
+    {
+        $this->name = __('Form ID');
+    }
 
     /**
      * Apply the filter to the given query.

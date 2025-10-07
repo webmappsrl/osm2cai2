@@ -8,7 +8,10 @@ use Laravel\Nova\Metrics\Value;
 
 class HikingRoutesNumberStatus3ByMyRegionValueMetric extends Value
 {
-    public $name = '#percorsi (status 3)';
+    public function __construct()
+    {
+        $this->name = __('#hiking-routes (status 3)');
+    }
 
     /**
      * Calculate the value of the metric.

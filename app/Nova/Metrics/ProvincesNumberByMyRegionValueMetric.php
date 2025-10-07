@@ -8,7 +8,10 @@ use Laravel\Nova\Metrics\Value;
 
 class ProvincesNumberByMyRegionValueMetric extends Value
 {
-    public $name = '#province';
+    public function __construct()
+    {
+        $this->name = __('#provinces');
+    }
 
     /**
      * Calculate the value of the metric.

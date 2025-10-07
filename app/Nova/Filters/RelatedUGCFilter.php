@@ -8,7 +8,10 @@ use Laravel\Nova\Filters\BooleanFilter;
 
 class RelatedUGCFilter extends BooleanFilter
 {
-    public $name = 'Related UGC';
+    public function __construct()
+    {
+        $this->name = __('Related UGC');
+    }
 
     /**
      * Apply the filter to the given query.

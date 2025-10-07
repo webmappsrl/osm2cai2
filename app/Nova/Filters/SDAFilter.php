@@ -14,7 +14,10 @@ class SDAFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'SDA';
+    public function __construct()
+    {
+        $this->name = __('SDA');
+    }
 
     /**
      * Apply the filter to the given query.
@@ -36,10 +39,10 @@ class SDAFilter extends Filter
     public function options(NovaRequest $request)
     {
         return [
-            'SDA1' => 1,
-            'SDA2' => 2,
-            'SDA3' => 3,
-            'SDA4' => 4,
+            __('SDA1') => 1,
+            __('SDA2') => 2,
+            __('SDA3') => 3,
+            __('SDA4') => 4,
         ];
     }
 }

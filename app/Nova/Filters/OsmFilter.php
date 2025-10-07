@@ -34,9 +34,9 @@ class OsmFilter extends Filter
     public function options(NovaRequest $request)
     {
         return [
-            'Node' => 'N',
-            'Way' => 'W',
-            'Relation' => 'R',
+            __('Node') => 'N',
+            __('Way') => 'W',
+            __('Relation') => 'R',
         ];
     }
 }

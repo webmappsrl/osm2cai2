@@ -14,7 +14,10 @@ class CaiHutsHRFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'CAI Huts';
+    public function __construct()
+    {
+        $this->name = __('CAI Huts');
+    }
 
     /**
      * Apply the filter to the given query.
@@ -40,8 +43,8 @@ class CaiHutsHRFilter extends Filter
     public function options(NovaRequest $request)
     {
         return [
-            'With Cai Huts' => 'with_cai_huts',
-            'Without Cai Huts' => 'without_cai_huts',
+            __('With Cai Huts') => 'with_cai_huts',
+            __('Without Cai Huts') => 'without_cai_huts',
         ];
     }
 }

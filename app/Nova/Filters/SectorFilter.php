@@ -15,7 +15,10 @@ class SectorFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Sector';
+    public function __construct()
+    {
+        $this->name = __('Sector');
+    }
 
     /**
      * Apply the filter to the given query.

@@ -15,7 +15,10 @@ class RegionFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Region';
+    public function __construct()
+    {
+        $this->name = __('Region');
+    }
 
     /**
      * Apply the filter to the given query.
