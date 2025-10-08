@@ -101,7 +101,7 @@ return [
     |
     */
 
-    'ttl' => env('JWT_TTL', 60 * 24), // 1 day
+    'ttl' => env('JWT_TTL', null), // 1 day
 
     /*
     |--------------------------------------------------------------------------
@@ -150,7 +150,7 @@ return [
     'required_claims' => [
         'iss',
         'iat',
-        'exp',
+        // 'exp',
         'nbf',
         'sub',
         'jti',
