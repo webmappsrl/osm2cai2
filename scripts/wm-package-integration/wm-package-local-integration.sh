@@ -541,6 +541,18 @@ done
 
 print_success "=== FASE 6 COMPLETATA: Tutte le app specificate importate ==="
 
+# FASE 6.1: AGGIORNAMENTO ID LAYER NELLA CONFIG_HOME
+print_step "=== FASE 6.1: AGGIORNAMENTO ID LAYER NELLA CONFIG_HOME ==="
+
+print_step "Aggiornamento ID layer nella conf_home delle app..."
+if ! docker exec php81-osm2cai2 bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:update-layer-ids-config-home"; then
+    print_error "Errore durante l'aggiornamento degli ID layer nella conf_home! Interruzione setup."
+    exit 1
+fi
+print_success "ID layer nella conf_home aggiornati per tutte le app"
+
+print_success "=== FASE 6.1 COMPLETATA: ID layer nella conf_home aggiornati ==="
+
 # FASE 6.5: PROCESSAMENTO ICONE AWS E GEOJSON POI
 print_step "=== FASE 6.5: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
 
@@ -664,6 +676,7 @@ print_step "   ✅ Campi translatable fixati"
 for app_id in "${APPS_TO_IMPORT[@]}"; do
     print_step "   ✅ App $app_id configurata"
 done
+print_step "   ✅ ID layer nella conf_home aggiornati per tutte le app"
 print_step "   ✅ Icone AWS e file geojson POI generati per tutte le app"
 print_step "   ✅ Verifica servizi finali completata"
 echo ""

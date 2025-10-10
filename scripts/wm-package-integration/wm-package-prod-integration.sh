@@ -111,7 +111,7 @@ show_help() {
 # Funzione per validare gli ID delle app
 validate_app_ids() {
     local app_ids=("$@")
-    
+
     for app_id in "${app_ids[@]}"; do
         if ! app_exists "$app_id"; then
             print_error "ID app non valido: $app_id"
@@ -130,10 +130,10 @@ validate_app_ids() {
 import_app() {
     local app_id="$1"
     local script_name=$(get_app_config "$app_id")
-    
+
     print_step "=== FASE: IMPORT APP $app_id ==="
     print_step "🎯 App $app_id: $script_name"
-    
+
     if ! bash "$SCRIPT_DIR/scripts/$script_name"; then
         print_error "Setup App $app_id fallito! Interruzione setup."
         exit 1
@@ -349,12 +349,12 @@ echo ""
 # FASE 1: Download Dump da Produzione (se richiesto)
 if [ "$SYNC_FROM_PROD" = true ]; then
     print_step "=== FASE 1: DOWNLOAD DUMP DA PRODUZIONE ==="
-    
+
     if ! bash "$SCRIPT_DIR/scripts/sync-dump-from-production.sh"; then
         print_error "Errore durante il sync del dump da produzione! Interruzione setup."
         exit 1
     fi
-    
+
     print_success "=== FASE 1 COMPLETATA ==="
 else
     print_step "=== FASE 1: SYNC DA PRODUZIONE SALTATO ==="
@@ -456,8 +456,20 @@ done
 
 print_success "=== FASE 4 COMPLETATA: Tutte le app specificate importate ==="
 
-# FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI
-print_step "=== FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
+# FASE 5: AGGIORNAMENTO ID LAYER NELLA CONFIG_HOME
+print_step "=== FASE 5: AGGIORNAMENTO ID LAYER NELLA CONFIG_HOME ==="
+
+print_step "Aggiornamento ID layer nella conf_home delle app..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan osm2cai:update-layer-ids-config-home"; then
+    print_error "Errore durante l'aggiornamento degli ID layer nella conf_home! Interruzione setup."
+    exit 1
+fi
+print_success "ID layer nella conf_home aggiornati per tutte le app"
+
+print_success "=== FASE 5 COMPLETATA: ID layer nella conf_home aggiornati ==="
+
+# FASE 6: PROCESSAMENTO ICONE AWS E GEOJSON POI
+print_step "=== FASE 6: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
 
 # Esegue lo script dedicato per il processamento di tutte le app
 print_step "Esecuzione script processamento icone AWS e geojson POI..."
@@ -467,10 +479,10 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./script
 fi
 print_success "Processamento icone AWS e geojson POI completato"
 
-print_success "=== FASE 4.5 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
+print_success "=== FASE 6 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
 
-# FASE 5: Verifica Finale
-print_step "=== FASE 5: VERIFICA FINALE ==="
+# FASE 7: Verifica Finale
+print_step "=== FASE 7: VERIFICA FINALE ==="
 
 # Verifica che i servizi siano attivi
 print_step "Verifica servizi attivi..."
@@ -489,7 +501,7 @@ else
     exit 1
 fi
 
-print_success "=== FASE 5 COMPLETATA ==="
+print_success "=== FASE 7 COMPLETATA ==="
 
 echo ""
 print_success "🎉 SYNC DA PRODUZIONE E INTEGRAZIONE COMPLETATA CON SUCCESSO!"
@@ -511,6 +523,7 @@ print_step "   ✅ Campi translatable fixati"
 for app_id in "${APPS_TO_IMPORT[@]}"; do
     print_step "   ✅ App $app_id configurata"
 done
+print_step "   ✅ ID layer nella conf_home aggiornati per tutte le app"
 print_step "   ✅ Icone AWS e file geojson POI generati per tutte le app"
 print_step "   ✅ Verifica finale completata"
 echo ""
@@ -522,4 +535,4 @@ done
 echo ""
 print_step "🌐 L'applicazione dovrebbe essere accessibile su: http://127.0.0.1:8008"
 print_step "📊 Horizon dovrebbe essere attivo per la gestione delle code"
-echo "" 
+echo ""
