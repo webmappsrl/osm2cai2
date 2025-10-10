@@ -32,4 +32,9 @@ echo -e "${GREEN}✅ Hiking Routes properties population command dispatched succ
 
 echo -e "\n${BLUE}🚀 Dispatching jobs to get taxonomy wheres for Hiking Routes...${NC}"
 php artisan osm2cai:get-taxonomy-where-from-osmfeatures
-echo -e "${GREEN}✅ Jobs for taxonomy wheres dispatched successfully.${NC}" 
+echo -e "${GREEN}✅ Jobs for taxonomy wheres dispatched successfully.${NC}"
+
+echo -e "\n${BLUE}🚀 Assigning hiking taxonomy to all Hiking Routes...${NC}"
+php artisan osm2cai:assign-hiking-taxonomy-to-hiking-routes
+echo -e "${GREEN}✅ Hiking taxonomy assignment completed successfully.${NC}"
+
