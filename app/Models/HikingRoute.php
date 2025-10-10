@@ -25,12 +25,12 @@ use Wm\WmPackage\Models\EcTrack;
 class HikingRoute extends EcTrack
 {
     use AwsCacheable;
+    use FeatureCollectionMapTrait;
     use HasFactory;
     use OsmfeaturesGeometryUpdateTrait;
     use OsmfeaturesSyncableTrait;
     use SpatialDataTrait;
     use TagsMappingTrait;
-    use FeatureCollectionMapTrait;
 
     protected $table = 'hiking_routes';
 
@@ -99,7 +99,6 @@ class HikingRoute extends EcTrack
     {
         return ! is_null($this->geometry) && ($this->osm2cai_status === null || $this->osm2cai_status != 0);
     }
-
 
     /**
      * Override toSearchableArray to handle null geometry gracefully
@@ -357,7 +356,7 @@ class HikingRoute extends EcTrack
     public function getFeatureCollectionMap(): array
     {
         $geojson = $this->getFeatureCollectionMapFromTrait();
-        $properties = [     
+        $properties = [
             'strokeColor' => 'red',
             'strokeWidth' => 2,
         ];
@@ -374,6 +373,7 @@ class HikingRoute extends EcTrack
                 'pointRadius' => 4,
             ];
             $poleFeature['properties'] = $properties;
+
             return $poleFeature;
         })->toArray();
         $checkedGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
@@ -464,10 +464,10 @@ class HikingRoute extends EcTrack
     public function mainSector()
     {
         $sectorId = DB::select('
-        SELECT sector_id 
-        FROM hiking_route_sector 
-        WHERE hiking_route_id = ? 
-        ORDER BY percentage DESC 
+        SELECT sector_id
+        FROM hiking_route_sector
+        WHERE hiking_route_id = ?
+        ORDER BY percentage DESC
         LIMIT 1
     ', [$this->id]);
 
@@ -551,15 +551,15 @@ class HikingRoute extends EcTrack
         ];
 
         $query = <<<SQL
-    SELECT 
-        m.cod_reg as cod_reg, 
-        m.name as comune, 
+    SELECT
+        m.cod_reg as cod_reg,
+        m.name as comune,
         m.pro_com_t as istat
-    FROM 
-        municipalities as m, 
+    FROM
+        municipalities as m,
         hiking_routes as hr
-    WHERE 
-        st_intersects(m.geometry, ST_Transform(ST_StartPoint(hr.geometry), 4326)) 
+    WHERE
+        st_intersects(m.geometry, ST_Transform(ST_StartPoint(hr.geometry), 4326))
         AND hr.id = {$this->id};
 SQL;
 
@@ -608,15 +608,15 @@ SQL;
         ];
 
         $query = <<<SQL
-    SELECT 
-        m.cod_reg as cod_reg, 
-        m.name as comune, 
+    SELECT
+        m.cod_reg as cod_reg,
+        m.name as comune,
         m.pro_com_t as istat
-    FROM 
-        municipalities as m, 
+    FROM
+        municipalities as m,
         hiking_routes as hr
-    WHERE 
-        st_intersects(m.geometry, ST_Transform(ST_Endpoint(ST_LineMerge(hr.geometry)), 4326)) 
+    WHERE
+        st_intersects(m.geometry, ST_Transform(ST_Endpoint(ST_LineMerge(hr.geometry)), 4326))
         AND hr.id = {$this->id};
 SQL;
 
@@ -970,6 +970,62 @@ SQL;
     }
 
     /**
+     * Override the getGeojson method to customize the GeoJSON for HikingRoute
+     *
+     * This method extends the base GeoJSON by adding specific information
+     * for hiking routes such as TDH data, sector information, etc.
+     */
+    public function getGeojson(): array
+    {
+        // Get the base GeoJSON from parent
+        $baseGeojson = parent::getGeojson();
+
+        if ($baseGeojson && $this->app && $this->app->sku === 'it.webmapp.osm2cai') {
+            // Extend properties with specific data for HikingRoute
+            $enhancedGeojson = $this->enhanceHikingRouteProperties($baseGeojson);
+
+            return $enhancedGeojson;
+        }
+
+        return $baseGeojson;
+    }
+
+    /**
+     * Extend GeoJSON properties with specific data for HikingRoute
+     */
+    private function enhanceHikingRouteProperties(array $baseGeojson): array
+    {
+        $osmDataProperties = $this->osmfeatures_data['properties'] ?? [];
+        // Gestisci la descrizione: se è una stringa, mettila in ['it'], altrimenti crea l'array
+        if (isset($baseGeojson['properties']['description'])) {
+            $description = $baseGeojson['properties']['description'];
+            if (is_string($description)) {
+                $baseGeojson['properties']['description'] = ['it' => $description];
+            }
+        } else {
+            $baseGeojson['properties']['description'] = [];
+        }
+        $baseGeojson['properties']['description']['it'] ??= '';
+
+        if ($this->osm2cai_status) {
+            $baseGeojson['properties']['description']['it'] .= <<<HTML
+                <br>Stato di accatastamento: <strong>{$this->osm2cai_status}</strong> ({$this->getSDADescription()})<br>
+                HTML;
+        }
+
+        $baseGeojson['properties']['description']['it'] .= <<<HTML
+            <a href="https://osm2cai.cai.it/resources/hiking-routes/{$this->id}" target="_blank">Modifica questo percorso</a>
+            HTML;
+
+        if (isset($osmDataProperties['website'])) {
+            $host = parse_url($osmDataProperties['website'], PHP_URL_HOST) ?: $osmDataProperties['website'];
+            $baseGeojson['properties']['related_url'][$host] = $osmDataProperties['website'];
+        }
+
+        return $baseGeojson;
+    }
+
+    /**
      * Get poles within a buffer distance from the hiking route geometry.
      *
      * This method retrieves all poles that are within a specified buffer distance
@@ -982,19 +1038,19 @@ SQL;
      * 2. Optionally merge with geometry_raw_data if it exists
      * 3. Find all poles within the specified buffer distance
      *
-     * @param float $bufferDistance The buffer distance in meters (default: 10m)
+     * @param  float  $bufferDistance  The buffer distance in meters (default: 10m)
      * @return \Illuminate\Database\Eloquent\Collection Collection of Poles within the buffer
-     * 
+     *
      * @example
      * // Get poles within 10 meters of the route
      * $poles = $hikingRoute->getPolesWithBuffer();
-     * 
+     *
      * // Get poles within 50 meters of the route
      * $poles = $hikingRoute->getPolesWithBuffer(50);
-     * 
+     *
      * @throws \Illuminate\Database\QueryException If there's an error in the spatial query
-     * 
-     * @see \App\Models\Poles
+     *
+     * @see Poles
      * @see https://postgis.net/docs/ST_DWithin.html
      * @see https://postgis.net/docs/ST_Union.html
      */
@@ -1006,11 +1062,11 @@ SQL;
             ->value(DB::raw('ST_AsGeoJSON(geometry)'));
 
         // Se esiste geometry_raw_data, fai un merge delle geometrie
-        if (!empty($this->geometry_raw_data)) {
+        if (! empty($this->geometry_raw_data)) {
             $mergedGeojson = DB::table('hiking_routes')
                 ->where('id', $this->id)
                 ->value(DB::raw('ST_AsGeoJSON(ST_Union(geometry::geometry, geometry_raw_data))'));
-            
+
             if ($mergedGeojson) {
                 $geojson = $mergedGeojson;
             }
@@ -1022,5 +1078,34 @@ SQL;
                 [$geojson, $bufferDistance]
             )
             ->get();
+    }
+
+    /**
+     * It returns the description of the osm2cai status
+     *
+     * @param  int  $sda  track osm2cai status
+     */
+    private function getSDADescription()
+    {
+        $description = '';
+        switch ($this->osm2cai_status) {
+            case '0':
+                $description = 'Non rilevato, senza scala di difficoltà';
+                break;
+            case '1':
+                $description = 'Percorsi non rilevati, con scala di difficoltà';
+                break;
+            case '2':
+                $description = 'Percorsi rilevati, senza scala di difficoltá';
+                break;
+            case '3':
+                $description = 'Percorsi rilevati, con scala di difficoltá';
+                break;
+            case '4':
+                $description = 'Percorsi importati in INFOMONT';
+                break;
+        }
+
+        return $description;
     }
 }
