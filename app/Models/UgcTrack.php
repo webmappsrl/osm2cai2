@@ -13,14 +13,14 @@ class UgcTrack extends WmUgcTrack
 
     protected $table = 'ugc_tracks';
 
-    protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'metadata', 'app_id'];
+    protected $fillable = ['geohub_id', 'name', 'description', 'geometry', 'user_id', 'updated_at', 'raw_data', 'taxonomy_wheres', 'metadata', 'app_id', 'created_by', 'geohub_app_id', 'properties'];
 
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         $this->initializeUgcCommonModelTrait();
     }
-    
+
     protected static function boot()
     {
         parent::boot();

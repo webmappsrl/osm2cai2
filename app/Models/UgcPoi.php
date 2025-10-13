@@ -27,6 +27,8 @@ class UgcPoi extends WmUgcPoi
         'validator_id',
         'validation_date',
         'note',
+        'created_by',
+        'geohub_app_id',
     ];
 
     public function __construct(array $attributes = [])

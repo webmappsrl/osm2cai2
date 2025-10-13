@@ -6,11 +6,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Wm\WmPackage\Models\UgcPoi;
-use Wm\WmPackage\Models\UgcTrack;
-use Wm\WmPackage\Services\GeometryComputationService;
 use Wm\WmPackage\Http\Controllers\Controller;
+use Wm\WmPackage\Models\UgcTrack;
 
 class WebhookController extends Controller
 {
@@ -24,7 +21,7 @@ class WebhookController extends Controller
             'headers' => $request->headers->all(),
             'body_preview' => substr($request->getContent(), 0, 200),
             'has_files' => $request->hasFile('images'),
-            'files_count' => $request->hasFile('images') ? count($request->allFiles()['images'] ?? []) : 0
+            'files_count' => $request->hasFile('images') ? count($request->allFiles()['images'] ?? []) : 0,
         ]);
 
         // Preserva i dati originali prima di modificare la richiesta
@@ -34,7 +31,7 @@ class WebhookController extends Controller
         Log::info('Webhook: Original data received', [
             'original_data_keys' => array_keys($originalData),
             'action' => $action,
-            'original_data' => $originalData
+            'original_data' => $originalData,
         ]);
 
         // Gestisci il feature che può arrivare come stringa JSON, array o file
@@ -42,7 +39,7 @@ class WebhookController extends Controller
         Log::info('Webhook: Feature received', [
             'feature_type' => gettype($feature),
             'feature_class' => is_object($feature) ? get_class($feature) : 'N/A',
-            'feature_raw' => $feature
+            'feature_raw' => $feature,
         ]);
 
         // Se il feature è un file, leggi il contenuto
@@ -50,15 +47,16 @@ class WebhookController extends Controller
             $featureContent = $feature->get();
             Log::info('Webhook: Feature file content', [
                 'content_length' => strlen($featureContent),
-                'content_preview' => substr($featureContent, 0, 200)
+                'content_preview' => substr($featureContent, 0, 200),
             ]);
 
             $feature = json_decode($featureContent, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::error('Webhook: Error decoding feature file JSON', [
                     'content' => $featureContent,
-                    'json_error' => json_last_error_msg()
+                    'json_error' => json_last_error_msg(),
                 ]);
+
                 return response()->json(['error' => 'Invalid feature JSON in file'], 400);
             }
         } elseif (is_string($feature)) {
@@ -66,8 +64,9 @@ class WebhookController extends Controller
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::error('Webhook: Error decoding feature JSON', [
                     'feature_string' => $feature,
-                    'json_error' => json_last_error_msg()
+                    'json_error' => json_last_error_msg(),
                 ]);
+
                 return response()->json(['error' => 'Invalid feature JSON'], 400);
             }
         }
@@ -75,9 +74,8 @@ class WebhookController extends Controller
         Log::info('Webhook: Feature decoded', [
             'feature_decoded' => $feature,
             'properties' => $feature['properties'] ?? 'N/A',
-            'geometry' => isset($feature['geometry']) ? 'Present' : 'Missing'
+            'geometry' => isset($feature['geometry']) ? 'Present' : 'Missing',
         ]);
-
 
         // Preserva i file se presenti
         if ($request->hasFile('images')) {
@@ -93,10 +91,9 @@ class WebhookController extends Controller
 
             Log::info('Webhook: Processing images for POI', [
                 'images_count' => $imagesCount,
-                'all_files_keys' => array_keys($allFiles)
+                'all_files_keys' => array_keys($allFiles),
             ]);
         }
-
 
         // Map app_id from geohub to osm2cai2 se presente nel feature
         if (isset($feature) && isset($feature['properties']['app_id'])) {
@@ -105,9 +102,15 @@ class WebhookController extends Controller
             Log::info('Webhook: App ID mapping for POI', [
                 'original_app_id' => $originalAppId,
                 'mapped_app_id' => $mappedAppId,
-                'action' => $action
+                'action' => $action,
             ]);
             $feature['properties']['app_id'] = $mappedAppId;
+        }
+
+        // Imposta created_by come 'device' per le chiamate webhook
+        if (isset($feature) && isset($feature['properties'])) {
+            $feature['properties']['created_by'] = 'device';
+            Log::info('Webhook: Set created_by to device for POI');
         }
 
         // Riorganizza la richiesta per il controller del package
@@ -135,13 +138,13 @@ class WebhookController extends Controller
         Log::info('Webhook: Files reorganized', [
             'all_files_keys' => array_keys($allFiles),
             'images_count' => count($imagesArray),
-            'feature_decoded' => $feature
+            'feature_decoded' => $feature,
         ]);
 
         // Crea una nuova richiesta con i dati modificati
         $newRequestData = [
             'action' => $action,
-            'feature' => json_encode($feature)
+            'feature' => json_encode($feature),
         ];
 
         // Crea una nuova richiesta Request
@@ -173,14 +176,14 @@ class WebhookController extends Controller
             'feature_value' => $newRequest->input('feature'),
             'has_files' => $newRequest->hasFile('feature'),
             'files_count' => count($newRequest->allFiles()),
-            'content_type' => $newRequest->header('Content-Type')
+            'content_type' => $newRequest->header('Content-Type'),
         ]);
 
         Log::info('Webhook: Request prepared for controller', [
             'feature_type' => gettype($feature),
             'images_count' => count($imagesArray),
             'has_feature' => isset($feature),
-            'has_images' => !empty($imagesArray)
+            'has_images' => ! empty($imagesArray),
         ]);
         try {
             $controller = app(\Wm\WmPackage\Http\Controllers\Api\UgcPoiController::class);
@@ -190,13 +193,13 @@ class WebhookController extends Controller
                 'action' => $action,
                 'request_all' => $newRequest->all(),
                 'request_has_files' => $newRequest->hasFile('images'),
-                'request_files_count' => count($newRequest->allFiles())
+                'request_files_count' => count($newRequest->allFiles()),
             ]);
 
             // Chiama direttamente il controller store con la nuova richiesta
             $response = $controller->store($newRequest);
 
-            // Dopo la creazione, aggiorna il modello per impostare created_by come 'device' e associare l'utente
+            // Dopo la creazione, associa le immagini e l'utente e imposta created_by
             if ($response->getStatusCode() === 201) {
                 // Estrai l'ID dalla risposta JSON
                 $responseContent = $response->getContent();
@@ -206,27 +209,38 @@ class WebhookController extends Controller
                 if ($ugcPoiId) {
                     $ugcPoi = \App\Models\UgcPoi::find($ugcPoiId);
                     if ($ugcPoi) {
-                        // Imposta created_by come 'device'
-                        $ugcPoi->created_by = 'device';
+                        $needsSave = false;
+
+                        // Imposta created_by come 'device' (se non già impostato)
+                        if (empty($ugcPoi->created_by)) {
+                            $ugcPoi->created_by = 'device';
+                            $needsSave = true;
+                            Log::info('Webhook: Set created_by to device for POI', [
+                                'poi_id' => $ugcPoiId,
+                            ]);
+                        }
 
                         // Associa l'utente basandomi sull'header X-Geohub-User-Email
                         $userEmail = $request->header('X-Geohub-User-Email');
-                        if ($userEmail) {
+                        if ($userEmail && ! $ugcPoi->user_id) {
                             $user = $this->findOrCreateUser($userEmail);
                             if ($user) {
                                 $ugcPoi->user_id = $user->id;
+                                $needsSave = true;
                                 Log::info('Webhook: Associated POI with user', [
                                     'poi_id' => $ugcPoiId,
                                     'user_email' => $userEmail,
-                                    'user_id' => $user->id
+                                    'user_id' => $user->id,
                                 ]);
                             }
                         }
 
-                        $ugcPoi->saveQuietly();
+                        if ($needsSave) {
+                            $ugcPoi->saveQuietly();
+                        }
 
                         // Associa le immagini al POI se presenti
-                        if (!empty($imagesArray)) {
+                        if (! empty($imagesArray)) {
                             foreach ($imagesArray as $image) {
                                 if ($image instanceof \Illuminate\Http\UploadedFile) {
                                     $ugcPoi->addMedia($image)
@@ -235,14 +249,9 @@ class WebhookController extends Controller
                             }
                             Log::info('Webhook: Associated images with POI', [
                                 'poi_id' => $ugcPoiId,
-                                'images_count' => count($imagesArray)
+                                'images_count' => count($imagesArray),
                             ]);
                         }
-
-                        Log::info('Webhook: Updated POI created_by to device', [
-                            'poi_id' => $ugcPoiId,
-                            'action' => $action
-                        ]);
                     }
                 }
             }
@@ -255,6 +264,7 @@ class WebhookController extends Controller
                 'request_all' => $request->all(),
                 'request_content' => $request->getContent(),
             ]);
+
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }
@@ -269,7 +279,7 @@ class WebhookController extends Controller
             'headers' => $request->headers->all(),
             'body_preview' => substr($request->getContent(), 0, 200),
             'has_files' => $request->hasFile('images'),
-            'files_count' => $request->hasFile('images') ? count($request->allFiles()['images'] ?? []) : 0
+            'files_count' => $request->hasFile('images') ? count($request->allFiles()['images'] ?? []) : 0,
         ]);
 
         try {
@@ -284,9 +294,15 @@ class WebhookController extends Controller
                 Log::info('Webhook: App ID mapping for Track', [
                     'original_app_id' => $originalAppId,
                     'mapped_app_id' => $mappedAppId,
-                    'action' => $action
+                    'action' => $action,
                 ]);
                 $feature['properties']['app_id'] = $mappedAppId;
+            }
+
+            // Imposta created_by come 'device' per le chiamate webhook
+            if (isset($feature['properties'])) {
+                $feature['properties']['created_by'] = 'device';
+                Log::info('Webhook: Set created_by to device for Track');
             }
 
             // Modifica direttamente la richiesta originale per preservare i file
@@ -294,14 +310,60 @@ class WebhookController extends Controller
 
             $controller = app(\Wm\WmPackage\Http\Controllers\Api\UgcTrackController::class);
             if ($action === 'create') {
-                return $controller->store($request);
+                $response = $controller->store($request);
+
+                // Dopo la creazione, associa l'utente se necessario
+                if ($response->getStatusCode() === 201) {
+                    $responseContent = $response->getContent();
+                    $responseData = json_decode($responseContent, true);
+                    $ugcTrackId = $responseData['id'] ?? null;
+
+                    if ($ugcTrackId) {
+                        $ugcTrack = \App\Models\UgcTrack::find($ugcTrackId);
+                        if ($ugcTrack) {
+                            $needsSave = false;
+
+                            // Imposta created_by come 'device' (se non già impostato)
+                            if (empty($ugcTrack->created_by)) {
+                                $ugcTrack->created_by = 'device';
+                                $needsSave = true;
+                                Log::info('Webhook: Set created_by to device for Track', [
+                                    'track_id' => $ugcTrackId,
+                                ]);
+                            }
+
+                            // Associa l'utente basandomi sull'header X-Geohub-User-Email
+                            $userEmail = $request->header('X-Geohub-User-Email');
+                            if ($userEmail && ! $ugcTrack->user_id) {
+                                $user = $this->findOrCreateUser($userEmail);
+                                if ($user) {
+                                    $ugcTrack->user_id = $user->id;
+                                    $needsSave = true;
+                                    Log::info('Webhook: Associated Track with user', [
+                                        'track_id' => $ugcTrackId,
+                                        'user_email' => $userEmail,
+                                        'user_id' => $user->id,
+                                    ]);
+                                }
+                            }
+
+                            if ($needsSave) {
+                                $ugcTrack->saveQuietly();
+                            }
+                        }
+                    }
+                }
+
+                return $response;
             } elseif ($action === 'update') {
                 $ugcId = $data['ugc_id'] ?? null;
-                $ugcTrack = $ugcId ? \Wm\WmPackage\Models\UgcTrack::find($ugcId) : null;
-                if (!$ugcTrack) {
+                $ugcTrack = $ugcId ? UgcTrack::find($ugcId) : null;
+                if (! $ugcTrack) {
                     Log::error('Webhook: UGC Track not found', ['ugc_id' => $ugcId]);
+
                     return response()->json(['error' => 'UGC Track not found'], 404);
                 }
+
                 return $controller->update($request, $ugcTrack);
             } else {
                 return response()->json(['error' => 'Invalid or missing action'], 400);
@@ -309,17 +371,15 @@ class WebhookController extends Controller
         } catch (\Exception $e) {
             Log::error('Webhook: UGC Track processing error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }
 
     /**
      * Mappa gli app ID da geohub a osm2cai
-     * 
-     * @param int $originalAppId
-     * @return int
      */
     private function mapAppId(int $originalAppId): int
     {
@@ -335,7 +395,7 @@ class WebhookController extends Controller
             'input_app_id' => $originalAppId,
             'output_app_id' => $mappedAppId,
             'mapping_found' => isset($mapping[$originalAppId]),
-            'mapping_rule' => isset($mapping[$originalAppId]) ? "{$originalAppId} -> {$mappedAppId}" : 'no mapping (using original)'
+            'mapping_rule' => isset($mapping[$originalAppId]) ? "{$originalAppId} -> {$mappedAppId}" : 'no mapping (using original)',
         ]);
 
         return $mappedAppId;
@@ -343,9 +403,6 @@ class WebhookController extends Controller
 
     /**
      * Trova o crea un utente basandomi sull'email
-     * 
-     * @param string $email
-     * @return User|null
      */
     private function findOrCreateUser(string $email): ?User
     {
@@ -356,8 +413,9 @@ class WebhookController extends Controller
             if ($user) {
                 Log::info('Webhook: Found existing user', [
                     'email' => $email,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
                 ]);
+
                 return $user;
             }
 
@@ -373,15 +431,16 @@ class WebhookController extends Controller
 
             Log::info('Webhook: Created new user', [
                 'email' => $email,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return $user;
         } catch (\Exception $e) {
             Log::error('Webhook: Error finding/creating user', [
                 'email' => $email,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
