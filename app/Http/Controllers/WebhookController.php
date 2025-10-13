@@ -199,7 +199,7 @@ class WebhookController extends Controller
             // Chiama direttamente il controller store con la nuova richiesta
             $response = $controller->store($newRequest);
 
-            // Dopo la creazione, associa le immagini e l'utente e imposta created_by
+            // Dopo la creazione, associa le immagini e l'utente se necessario
             if ($response->getStatusCode() === 201) {
                 // Estrai l'ID dalla risposta JSON
                 $responseContent = $response->getContent();
@@ -210,15 +210,6 @@ class WebhookController extends Controller
                     $ugcPoi = \App\Models\UgcPoi::find($ugcPoiId);
                     if ($ugcPoi) {
                         $needsSave = false;
-
-                        // Imposta created_by come 'device' (se non già impostato)
-                        if (empty($ugcPoi->created_by)) {
-                            $ugcPoi->created_by = 'device';
-                            $needsSave = true;
-                            Log::info('Webhook: Set created_by to device for POI', [
-                                'poi_id' => $ugcPoiId,
-                            ]);
-                        }
 
                         // Associa l'utente basandomi sull'header X-Geohub-User-Email
                         $userEmail = $request->header('X-Geohub-User-Email');
@@ -321,34 +312,19 @@ class WebhookController extends Controller
                     if ($ugcTrackId) {
                         $ugcTrack = \App\Models\UgcTrack::find($ugcTrackId);
                         if ($ugcTrack) {
-                            $needsSave = false;
-
-                            // Imposta created_by come 'device' (se non già impostato)
-                            if (empty($ugcTrack->created_by)) {
-                                $ugcTrack->created_by = 'device';
-                                $needsSave = true;
-                                Log::info('Webhook: Set created_by to device for Track', [
-                                    'track_id' => $ugcTrackId,
-                                ]);
-                            }
-
                             // Associa l'utente basandomi sull'header X-Geohub-User-Email
                             $userEmail = $request->header('X-Geohub-User-Email');
                             if ($userEmail && ! $ugcTrack->user_id) {
                                 $user = $this->findOrCreateUser($userEmail);
                                 if ($user) {
                                     $ugcTrack->user_id = $user->id;
-                                    $needsSave = true;
+                                    $ugcTrack->saveQuietly();
                                     Log::info('Webhook: Associated Track with user', [
                                         'track_id' => $ugcTrackId,
                                         'user_email' => $userEmail,
                                         'user_id' => $user->id,
                                     ]);
                                 }
-                            }
-
-                            if ($needsSave) {
-                                $ugcTrack->saveQuietly();
                             }
                         }
                     }
