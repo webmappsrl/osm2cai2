@@ -221,7 +221,7 @@ trait UgcCommonModelTrait
         $userId = $acquasorgenteApp->user_id ?? Auth::user()->id;
 
         return EcPoi::create([
-            'name' => $this->name ?? '',
+            'name' => $this->name ?? $this->properties['name'] ?? '',
             'geometry' => $this->geometry,
             'properties' => $properties,
             'app_id' => $appId,
