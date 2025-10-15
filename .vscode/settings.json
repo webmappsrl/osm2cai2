@@ -4,7 +4,7 @@
     "php.validate.args": [
         "exec",
         "-i",
-        "php81_osm2cai2",
+        "php81-osm2cai2",
         "php"
     ],
     "php.suggest.basic": false,

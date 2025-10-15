@@ -204,6 +204,27 @@ perform_indexing_with_retry() {
             if [ ! -z "$new_index" ]; then
                 wait_for_shards "$new_index" 60
                 configure_index_for_single_node "$new_index"
+
+                # Copia dati dall'indice timestamped all'indice fisso e pulisce
+                print_step "Copia dati da $new_index a hiking_routes e pulizia indici timestamped..."
+
+                # Copia tutti i documenti dall'indice timestamped all'indice fisso
+                curl -s -X POST 'elasticsearch:9200/_reindex' \
+                  -H 'Content-Type: application/json' \
+                  -d "{\"source\":{\"index\":\"$new_index\"},\"dest\":{\"index\":\"hiking_routes\"}}" \
+                  > /dev/null || true
+
+                # Aspetta che la copia sia completata
+                sleep 5
+
+                # Elenca tutti gli indici hiking_routes_* e rimuove tutti (incluso il nuovo)
+                all_indices=$(curl -s 'elasticsearch:9200/_cat/indices/hiking_routes_*?h=index' | awk '{print $1}')
+                for index in $all_indices; do
+                    print_step "Rimozione indice timestamped: $index"
+                    curl -s -X DELETE "elasticsearch:9200/$index" > /dev/null || true
+                done
+
+                print_success "Dati copiati nell'indice fisso e indici timestamped rimossi"
             fi
             
             return 0

@@ -230,7 +230,7 @@ Gli script `02` e `03` gestiscono un sistema di layer colorati per gli stati di 
 
 ## 🔧 Prerequisiti
 
-- **Docker**: Container OSM2CAI2 in esecuzione (`php81_osm2cai2`)
+- **Docker**: Container OSM2CAI2 in esecuzione (`php81-osm2cai2`)
 - **Database**: PostgreSQL con dati OSM2CAI2
 - **Servizi**: Elasticsearch, Redis attivi
 - **App 26**: App Geohub deve esistere per script layer specifici
@@ -264,17 +264,17 @@ GEOHUB_DB_HOST=host.docker.internal
 **Dopo la configurazione:**
 ```bash
 # Pulisci cache configurazione
-docker exec php81_osm2cai2 php artisan config:clear
-docker exec php81_osm2cai2 php artisan config:cache
+docker exec php81-osm2cai2 php artisan config:clear
+docker exec php81-osm2cai2 php artisan config:cache
 
 # Riavvia Horizon
-docker exec php81_osm2cai2 php artisan horizon:terminate
-docker exec -d php81_osm2cai2 php artisan horizon
+docker exec php81-osm2cai2 php artisan horizon:terminate
+docker exec -d php81-osm2cai2 php artisan horizon
 ```
 
 **Test connessione:**
 ```bash
-docker exec php81_osm2cai2 php artisan tinker --execute="try { DB::connection('geohub')->getPdo(); echo 'Connessione geohub OK'; } catch(Exception \$e) { echo 'Errore: ' . \$e->getMessage(); }"
+docker exec php81-osm2cai2 php artisan tinker --execute="try { DB::connection('geohub')->getPdo(); echo 'Connessione geohub OK'; } catch(Exception \$e) { echo 'Errore: ' . \$e->getMessage(); }"
 ```
 
 ## 📊 Workflow Completo Raccomandato
@@ -406,10 +406,10 @@ docker exec php81_osm2cai2 php artisan tinker --execute="try { DB::connection('g
 ### Log e Monitoraggio
 ```bash
 # Log Laravel
-docker exec php81_osm2cai2 tail -f storage/logs/laravel.log
+docker exec php81-osm2cai2 tail -f storage/logs/laravel.log
 
 # Status Horizon
-docker exec php81_osm2cai2 php artisan horizon:status
+docker exec php81-osm2cai2 php artisan horizon:status
 
 # Stato container
 docker ps | grep osm2cai2

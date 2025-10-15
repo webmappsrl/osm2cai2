@@ -517,6 +517,27 @@ if ! docker exec php81-osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php -d max
 fi
 print_success "Indicizzazione iniziale completata"
 
+# Fix alias Elasticsearch per garantire funzionamento API
+print_step "Fix alias Elasticsearch..."
+if [ -f "./scripts/wm-package-integration/scripts/fix-elasticsearch-alias.sh" ]; then
+    if bash ./scripts/wm-package-integration/scripts/fix-elasticsearch-alias.sh; then
+        print_success "Alias Elasticsearch corretto"
+    else
+        print_warning "Fix alias completato con avvertimenti, ma procediamo..."
+    fi
+else
+    print_warning "Script fix alias non trovato, procedo con fix manuale..."
+    
+    # Fix manuale dell'alias
+    LATEST_INDEX=$(docker exec php81-osm2cai2 bash -c "curl -s 'elasticsearch:9200/_cat/indices?v' | grep hiking_routes | sort -k5 -nr | head -1 | awk '{print \$3}'")
+    
+    if [ -n "$LATEST_INDEX" ]; then
+        print_step "Fix manuale alias per indice: $LATEST_INDEX"
+        docker exec php81-osm2cai2 bash -c "curl -X POST 'elasticsearch:9200/_aliases' -H 'Content-Type: application/json' -d '{\"actions\":[{\"remove\":{\"index\":\"*\",\"alias\":\"hiking_routes\"}},{\"add\":{\"index\":\"$LATEST_INDEX\",\"alias\":\"hiking_routes\",\"is_write_index\":true}}]}'"
+        print_success "Alias corretto manualmente"
+    fi
+fi
+
 print_success "=== FASE 4 COMPLETATA: Elasticsearch configurato ==="
 
 # FASE 5: FIX CAMPI TRANSLATABLE

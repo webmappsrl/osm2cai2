@@ -2,6 +2,32 @@
 # Estende docker-compose.yml aggiungendo servizi di sviluppo come MinIO
 
 services:
+  # Estende i servizi da docker-compose.yml
+  phpfpm:
+    extends:
+      file: docker-compose.yml
+      service: phpfpm
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+      - minio
+      - mailpit
+
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+
+  elasticsearch:
+    extends:
+      file: docker-compose.yml
+      service: elasticsearch
   # MinIO - AWS S3 Compatible Object Storage per sviluppo locale
   minio:
     image: minio/minio:latest
@@ -37,26 +63,8 @@ services:
     networks:
       - laravel
 
-  # Elasticsearch - Search and analytics engine
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
-    container_name: "elasticsearch-${APP_NAME}"
-    restart: always
-    environment:
-      - node.name=elasticsearch
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - "./docker/volumes/elasticsearch/data:/usr/share/elasticsearch/data"
-    networks:
-      - laravel
+
+networks:
+  laravel:
+    external: true
+    name: laravel

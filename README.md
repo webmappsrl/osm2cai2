@@ -17,14 +17,14 @@ Important NOTE: remember to checkout the develop branch.
 ```sh
 cd ${instance name}
 bash docker/init-docker.sh
-docker exec -u 0 -it php81_osm2cai2 bash
+docker exec -u 0 -it php81-osm2cai2 bash
 chown -R 33 .
 ```
 
 _Important NOTE_: if you have installed XDEBUG you need to create the xdebug.log file on the docker:
 
 ```bash
-docker exec -u 0 -it php81_osm2cai2 bash
+docker exec -u 0 -it php81-osm2cai2 bash
 touch /var/log/xdebug.log
 chown -R 33 /var/log/
 ```
@@ -92,13 +92,13 @@ MINIO_ROOT_PASSWORD=minioadmin
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin
 AWS_BUCKET=osm2cai2-bucket
-AWS_ENDPOINT=http://minio_osm2cai2:9003
+AWS_ENDPOINT=http://minio-osm2cai2:9003
 AWS_URL=http://localhost:9002
 AWS_USE_PATH_STYLE_ENDPOINT=true
 
 # Email Development  
 MAIL_MAILER=smtp
-MAIL_HOST=mailpit_osm2cai2
+MAIL_HOST=mailpit-osm2cai2
 MAIL_PORT=1025
 ```
 
@@ -149,15 +149,15 @@ Questo permette al container Docker di connettersi al database Geohub in esecuzi
 Dopo aver configurato le variabili, pulisci la cache di configurazione:
 
 ```bash
-docker exec php81_osm2cai2 php artisan config:clear
-docker exec php81_osm2cai2 php artisan config:cache
+docker exec php81-osm2cai2 php artisan config:clear
+docker exec php81-osm2cai2 php artisan config:cache
 ```
 
 E riavvia Horizon per applicare le nuove configurazioni:
 
 ```bash
-docker exec php81_osm2cai2 php artisan horizon:terminate
-docker exec -d php81_osm2cai2 php artisan horizon
+docker exec php81-osm2cai2 php artisan horizon:terminate
+docker exec -d php81-osm2cai2 php artisan horizon
 ```
 
 ### Test Connessione
@@ -165,7 +165,7 @@ docker exec -d php81_osm2cai2 php artisan horizon
 Puoi testare la connessione al database Geohub con:
 
 ```bash
-docker exec php81_osm2cai2 php artisan tinker --execute="try { DB::connection('geohub')->getPdo(); echo 'Connessione geohub OK'; } catch(Exception \$e) { echo 'Errore connessione: ' . \$e->getMessage(); }"
+docker exec php81-osm2cai2 php artisan tinker --execute="try { DB::connection('geohub')->getPdo(); echo 'Connessione geohub OK'; } catch(Exception \$e) { echo 'Errore connessione: ' . \$e->getMessage(); }"
 ```
 
 ### Differenze ambiente produzione locale
