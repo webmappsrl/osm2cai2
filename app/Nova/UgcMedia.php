@@ -68,7 +68,7 @@ class UgcMedia extends Resource
             Text::make(__('Name'), 'name')
                 ->sortable(),
             Textarea::make(__('Description'), 'description'),
-            BelongsTo::make(__('User'), 'user')
+            BelongsTo::make(__('User'), 'user', User::class)
                 ->searchable()
                 ->sortable()
                 ->nullable(),
@@ -86,12 +86,12 @@ class UgcMedia extends Resource
                         HTML;
                 }
             })->asHtml(),
-            BelongsTo::make(__('Ugc Poi'), 'ugcPoi')
+            BelongsTo::make(__('Ugc Poi'), 'ugcPoi', UgcPoi::class)
                 ->searchable()
                 ->sortable()
                 ->nullable()
                 ->hideFromIndex(),
-            BelongsTo::make(__('Ugc Track'), 'ugcTrack')
+            BelongsTo::make(__('Ugc Track'), 'ugcTrack', UgcTrack::class)
                 ->searchable()
                 ->sortable()
                 ->nullable()

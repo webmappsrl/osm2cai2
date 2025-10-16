@@ -54,11 +54,11 @@ class EnrichPoi extends OsmfeaturesResource
     {
         return array_merge(parent::fields($request), [
             Text::make(__('Type'), 'type')->sortable(),
-            BelongsTo::make(__('User'), 'user')->sortable()->filterable()->searchable(),
+            BelongsTo::make(__('User'), 'user', User::class)->sortable()->filterable()->searchable(),
             Text::make(__('Score'), 'score')->displayUsing(function ($value) {
                 return Osm2caiHelper::getScoreAsStars($value);
             })->sortable()->hideWhenCreating()->hideWhenUpdating(),
-            BelongsTo::make(__('Region'), 'region')->sortable()->filterable()->searchable(),
+            BelongsTo::make(__('Region'), 'region', Region::class)->sortable()->filterable()->searchable(),
         ]);
     }
 
