@@ -14,6 +14,8 @@ class DeleteUgcMedia extends Action
 {
     use Queueable;
 
+    public $name;
+
     public $showOnDetail = true;
 
     public $showOnTableRow = true;

@@ -17,7 +17,7 @@ class Percorribilità extends Dashboard
 
     public function label()
     {
-        return 'Riepilogo Percorribilità';
+        return __('Riepilogo Percorribilità');
     }
 
     /**

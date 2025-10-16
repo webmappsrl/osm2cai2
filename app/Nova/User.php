@@ -125,40 +125,40 @@ class User extends AbstractUserResource
         $baseFields = parent::fields($request);
 
         $relationFields = [
-            Text::make('Phone')
+            Text::make(__('Phone'))
                 ->sortable()
                 ->rules('max:255'),
 
-            BelongsToMany::make('Provinces', 'provinces', Province::class),
+            BelongsToMany::make(__('Provinces'), 'provinces', Province::class),
 
-            Text::make('Provinces', function () {
+            Text::make(__('Provinces'), function () {
                 return $this->provinces->pluck('name')->join(', ');
             })->onlyOnIndex(),
 
-            BelongsToMany::make('Areas', 'areas', Area::class),
+            BelongsToMany::make(__('Areas'), 'areas', Area::class),
 
-            Text::make('Areas', function () {
+            Text::make(__('Areas'), function () {
                 return $this->areas->pluck('name')->join(', ');
             })->onlyOnIndex(),
 
-            BelongsToMany::make('Sectors', 'sectors', Sector::class),
+            BelongsToMany::make(__('Sectors'), 'sectors', Sector::class),
 
-            Text::make('Sectors', function () {
+            Text::make(__('Sectors'), function () {
                 return $this->sectors->pluck('name')->join(', ');
             })->onlyOnIndex(),
 
-            BelongsTo::make('Region', 'region', NovaRegion::class)
+            BelongsTo::make(__('Region'), 'region', NovaRegion::class)
                 ->searchable()
                 ->nullable()
                 ->sortable(),
 
-            BelongsTo::make('Club Member', 'club', Club::class)
+            BelongsTo::make(__('Club Member'), 'club', Club::class)
                 ->searchable()
                 ->nullable()
                 ->sortable()
                 ->hideFromIndex(),
 
-            BelongsTo::make('Managed Club', 'managedClub', Club::class)
+            BelongsTo::make(__('Managed Club'), 'managedClub', Club::class)
                 ->searchable()
                 ->nullable()
                 ->sortable(),
@@ -184,8 +184,6 @@ class User extends AbstractUserResource
 
     /**
      * Get the filters available for the resource.
-     *
-     * @return array
      */
     public function filters(NovaRequest $request): array
     {

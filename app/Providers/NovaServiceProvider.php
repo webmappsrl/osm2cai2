@@ -96,7 +96,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             return true;
                         }),
 
-                    MenuItem::link(__('Percorsi Favoriti'), '/dashboards/percorsi-favoriti')
+                    MenuItem::link(__('Favorite Routes Summary'), '/dashboards/percorsi-favoriti')
                         ->canSee(function () {
                             return true;
                         }),
@@ -111,12 +111,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             return optional(Auth::user())->hasRole('Administrator');
                         }),
 
-                    MenuItem::link(__('Riepilogo Percorribilità'), '/dashboards/percorribilità')
+                    MenuItem::link(__('Accessibility Summary'), '/dashboards/percorribilità')
                         ->canSee(function () {
                             return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
                         }),
 
-                    MenuItem::link(__('Riepilogo MITUR-Abruzzo'), '/dashboards/sal-mitur-abruzzo')
+                    MenuItem::link(__('MITUR-Abruzzo Summary'), '/dashboards/sal-mitur-abruzzo')
                         ->canSee(function () {
                             return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
                         }),
@@ -177,8 +177,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Tools
                 MenuSection::make(__('Tools'), [
-                    MenuItem::externalLink(__('Mappa Settori'), 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
-                    MenuItem::externalLink(__('Mappa Percorsi'), 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
+                    MenuItem::externalLink(__('Map of Sectors'), 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
+                    MenuItem::externalLink(__('Map of Routes'), 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
                     MenuItem::externalLink(__('INFOMONT'), 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
                     MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
                     MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),

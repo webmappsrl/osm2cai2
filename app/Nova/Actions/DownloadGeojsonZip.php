@@ -14,7 +14,12 @@ class DownloadGeojsonZip extends Action
 {
     use Queueable;
 
-    public $name = 'Download Geojson';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Download Geojson');
+    }
 
     public function handle(ActionFields $fields, Collection $models)
     {

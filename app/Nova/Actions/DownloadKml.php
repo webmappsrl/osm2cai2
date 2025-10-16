@@ -13,7 +13,7 @@ class DownloadKml extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = 'Download KML';
+    public $name;
 
     public $showOnDetail = true;
 
@@ -22,6 +22,11 @@ class DownloadKml extends Action
     public $showOnTableRow = true;
 
     public $withoutConfirmation = true;
+
+    public function __construct()
+    {
+        $this->name = __('Download KML');
+    }
 
     /**
      * Perform the action on the given models.

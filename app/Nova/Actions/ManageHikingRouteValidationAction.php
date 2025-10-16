@@ -20,7 +20,12 @@ class ManageHikingRouteValidationAction extends Action
 
     public $showOnDetail = true;
 
-    public $name = 'MANAGE VALIDATION';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Manage Validation');
+    }
 
     /**
      * Perform the action on the given models.

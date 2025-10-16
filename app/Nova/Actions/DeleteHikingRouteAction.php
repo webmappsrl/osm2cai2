@@ -16,7 +16,12 @@ class DeleteHikingRouteAction extends DestructiveAction
 
     public $onlyOnDetail = true;
 
-    public $name = 'DELETE';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Delete');
+    }
 
     /**
      * Perform the action on the given models.

@@ -9,7 +9,10 @@ use Laravel\Nova\Metrics\Partition;
 
 class EcPoisScorePartition extends Partition
 {
-    public $name = 'Distribuzione per campo score';
+    public function __construct()
+    {
+        $this->name = __('Distribuzione per campo score');
+    }
 
     public $width = '1/2';
 

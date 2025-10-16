@@ -15,7 +15,10 @@ class ClubFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Club';
+    public function __construct()
+    {
+        $this->name = __('Club');
+    }
 
     /**
      * Apply the filter to the given query.

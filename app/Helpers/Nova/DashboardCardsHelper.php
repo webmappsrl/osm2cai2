@@ -541,7 +541,7 @@ class DashboardCardsHelper
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $region->provinces->count(),
-                    'label' => '#province',
+                    'label' => __('#provinces'),
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -550,7 +550,7 @@ class DashboardCardsHelper
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $data['numAreas'],
-                    'label' => '#aree',
+                    'label' => __('#areas'),
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -559,7 +559,7 @@ class DashboardCardsHelper
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => $data['numSectors'],
-                    'label' => '#settori',
+                    'label' => __('#sectors'),
                 ])
                 ->center()
                 ->withBasicStyles(),
@@ -568,7 +568,7 @@ class DashboardCardsHelper
                 ->width('1/4')
                 ->view('nova.cards.stats-card', [
                     'value' => array_sum($data['numbers']),
-                    'label' => '#tot percorsi',
+                    'label' => __('#tot percorsi'),
                 ])
                 ->center()
                 ->withBasicStyles(),

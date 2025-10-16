@@ -26,9 +26,11 @@ class UploadSectorGeometryAction extends Action
      * @param  Collection  $models
      * @return mixed
      */
+    public $name;
+
     public function __construct()
     {
-        $this->name = __('Aggiorna geometria');
+        $this->name = __('Update Geometry');
     }
 
     public function handle(ActionFields $fields, Collection $models)

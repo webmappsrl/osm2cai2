@@ -24,7 +24,7 @@ class OverpassMap extends Action
             $this->model = HikingRoute::find($resourceId);
         }
 
-        $this->name = __('SEARCH POINTS OF INTEREST');
+        $this->name = __('Search Points of Interest');
     }
 
     /**

@@ -14,7 +14,10 @@ class UgcAppIdFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'App';
+    public function __construct()
+    {
+        $this->name = __('App');
+    }
 
     /**
      * Apply the filter to the given query.
@@ -35,6 +38,11 @@ class UgcAppIdFilter extends Filter
      */
     public function options(Request $request)
     {
-        return ['SICAI' => 'geohub_20', 'App Del Sentierista' => 'geohub_26', 'Acqua Sorgente' => 'geohub_58', 'Osm2cai' => 'osm2cai'];
+        return [
+            __('SICAI') => 'geohub_20',
+            __('App Del Sentierista') => 'geohub_26',
+            __('Acqua Sorgente') => 'geohub_58',
+            __('Osm2cai') => 'osm2cai',
+        ];
     }
 }

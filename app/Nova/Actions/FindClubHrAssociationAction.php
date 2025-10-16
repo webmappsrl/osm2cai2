@@ -15,7 +15,12 @@ class FindClubHrAssociationAction extends Action
     use InteractsWithQueue;
     use Queueable;
 
-    public $name = 'Find Club Hiking Route Association';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Find Club Hiking Route Association');
+    }
 
     /**
      * Indicates if this action can be run without any models.

@@ -7,7 +7,10 @@ use Laravel\Nova\Metrics\Value;
 
 class AreasNumberByMyRegionValueMetric extends Value
 {
-    public $name = '#aree';
+    public function __construct()
+    {
+        $this->name = __('#areas');
+    }
 
     /**
      * Calculate the value of the metric.

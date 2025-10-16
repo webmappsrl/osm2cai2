@@ -13,7 +13,7 @@ class DownloadShape extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = 'Download Shape';
+    public $name;
 
     public $showOnDetail = true;
 
@@ -22,6 +22,11 @@ class DownloadShape extends Action
     public $showOnTableRow = true;
 
     public $withoutConfirmation = true;
+
+    public function __construct()
+    {
+        $this->name = __('Download Shape');
+    }
 
     /**
      * Perform the action on the given models.

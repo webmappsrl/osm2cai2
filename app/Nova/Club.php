@@ -106,41 +106,41 @@ class Club extends Resource
                 ->onlyOnDetail(),
             BelongsToMany::make(__('Club\'s hiking routes'), 'hikingRoutes', HikingRoute::class)
                 ->help(__('Only national referents can add hiking routes to the club')),
-            Text::make('SDA1', function () use ($hikingRoutesSDA1) {
+            Text::make(__('SDA1'), function () use ($hikingRoutesSDA1) {
                 return $hikingRoutesSDA1->count();
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('SDA2', function () use ($hikingRoutesSDA2) {
+            Text::make(__('SDA2'), function () use ($hikingRoutesSDA2) {
                 return $hikingRoutesSDA2->count();
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('SDA3', function () use ($hikingRoutesSDA3) {
+            Text::make(__('SDA3'), function () use ($hikingRoutesSDA3) {
                 return $hikingRoutesSDA3->count();
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('SDA4', function () use ($hikingRoutesSDA4) {
+            Text::make(__('SDA4'), function () use ($hikingRoutesSDA4) {
                 return $hikingRoutesSDA4->count();
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('TOT', function () use ($hikingRoutes) {
+            Text::make(__('TOT'), function () use ($hikingRoutes) {
                 return $hikingRoutes->sum(function ($hikingRoute) {
                     return ($hikingRoute->osm2cai_status < 5 && $hikingRoute->osm2cai_status > 0) ? 1 : 0;
                 });
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('SPS', function () use ($hikingRoutesSPS) {
+            Text::make(__('SPS'), function () use ($hikingRoutesSPS) {
                 return $hikingRoutesSPS->count();
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('SPP', function () use ($hikingRoutesSPP) {
+            Text::make(__('SPP'), function () use ($hikingRoutesSPP) {
                 return $hikingRoutesSPP->count();
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('SPPP', function () use ($hikingRouteSPPP) {
+            Text::make(__('SPPP'), function () use ($hikingRouteSPPP) {
                 return $hikingRouteSPPP->count();
             })->onlyOnIndex()
                 ->sortable(),
-            Text::make('SPNP', function () use ($hikingRoutesSPNP) {
+            Text::make(__('SPNP'), function () use ($hikingRoutesSPNP) {
                 return $hikingRoutesSPNP->count();
             })->onlyOnIndex()
                 ->sortable(),

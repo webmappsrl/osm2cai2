@@ -19,7 +19,7 @@ class AddMembersToClub extends Action
 
     public function __construct()
     {
-        $this->name = __('Add members to club');
+        $this->name = __('Add members to Club');
     }
 
     /**

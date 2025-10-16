@@ -16,7 +16,7 @@ class AcquaSorgente extends Dashboard
 
     public function label()
     {
-        return 'Riepilogo Acqua Sorgente';
+        return __('Acqua Sorgente Summary');
     }
 
     /**

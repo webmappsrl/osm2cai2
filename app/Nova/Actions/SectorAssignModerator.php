@@ -19,9 +19,11 @@ class SectorAssignModerator extends Action
 
     public $showOnIndex = false;
 
+    public $name;
+
     public function __construct()
     {
-        $this->name = __('Assign Moderator');
+        $this->name = __('Assign Sector Moderator');
     }
 
     /**

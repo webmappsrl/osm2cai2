@@ -21,7 +21,12 @@ class ValidateHikingRouteAction extends Action
 
     public $showOnIndex = false;
 
-    public $name = 'VALIDATE';
+    public $name;
+
+    public function __construct()
+    {
+        $this->name = __('Validate');
+    }
 
     /**
      * Perform the action on the given models.

@@ -13,9 +13,11 @@ class DownloadGeojsonCompleteAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
+    public $name;
+
     public function __construct()
     {
-        $this->name = __('Download routes geojson');
+        $this->name = __('Download routes GeoJSON');
     }
 
     public $showOnDetail = true;

@@ -310,9 +310,9 @@ class Sector extends Resource
                 return count(array_intersect($rolesAllowed, $userRoles)) > 0;
             }),
             (new UploadSectorGeometryAction)
-                ->confirmText('Inserire un file con la nuova geometria del settore.')
-                ->confirmButtonText('Aggiorna geometria')
-                ->cancelButtonText('Annulla')
+                ->confirmText(__('Insert a file with the new sector geometry.'))
+                ->confirmButtonText(__('Update Geometry'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
                     return auth()->user()->hasRole('Administrator');
                 })

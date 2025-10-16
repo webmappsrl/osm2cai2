@@ -16,7 +16,7 @@ class Utenti extends Dashboard
 
     public function label()
     {
-        return 'Riepilogo utenti';
+        return __('Users Summary');
     }
 
     /**

@@ -36,7 +36,7 @@ trait UgcCommonFieldsTrait
             ID::make()->sortable(),
 
             // Created by field with platform icons and version
-            Text::make('Created by', 'created_by')
+            Text::make(__('Created by'), 'created_by')
                 ->displayUsing(function ($value) {
                     if ($value === 'device') {
                         $version = $this->properties['device']['appVersion'] ?? null;
@@ -66,20 +66,20 @@ trait UgcCommonFieldsTrait
                 ->hideWhenUpdating(),
 
             // App relationship
-            BelongsTo::make('App', 'app', App::class)
+            BelongsTo::make(__('App'), 'app', App::class)
                 ->readonly(function ($request) {
                     return $request->isUpdateOrUpdateAttachedRequest();
                 }),
 
             // Author relationship
-            BelongsTo::make('Author', 'author', User::class)
+            BelongsTo::make(__('Author'), 'author', User::class)
                 ->filterable()
                 ->searchable()
                 ->hideWhenUpdating()
                 ->hideWhenCreating(),
 
             // Name from properties
-            Text::make('Name', 'properties->name'),
+            Text::make(__('Name'), 'properties->name'),
 
             // Validation Status display with emoji
             Text::make(__('Validation Status'), 'validated')
@@ -143,7 +143,7 @@ trait UgcCommonFieldsTrait
                 ->onlyOnForms(),
 
             // Images
-            Images::make('Image', 'default')->onlyOnDetail(),
+            Images::make(__('Image'), 'default')->onlyOnDetail(),
 
             // Properties panels
             PropertiesPanel::makeWithModel('Form', 'properties->form', $this, true),

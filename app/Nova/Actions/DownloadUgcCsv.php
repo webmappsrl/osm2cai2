@@ -15,7 +15,7 @@ class DownloadUgcCsv extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    public $name = 'Download CSV';
+    public $name;
 
     public $showOnIndex = true;
 
@@ -26,6 +26,7 @@ class DownloadUgcCsv extends Action
     public function __construct($resourceClass)
     {
         $this->resourceClass = $resourceClass;
+        $this->name = __('Download CSV');
     }
 
     /**

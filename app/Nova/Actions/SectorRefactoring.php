@@ -18,7 +18,7 @@ class SectorRefactoring extends Action
 
     public function __construct()
     {
-        $this->name = __('SECTOR REFACTORING');
+        $this->name = __('Sector Refactoring');
     }
 
     /**

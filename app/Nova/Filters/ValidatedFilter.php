@@ -15,7 +15,10 @@ class ValidatedFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Validation status';
+    public function __construct()
+    {
+        $this->name = __('Validation Status');
+    }
 
     /**
      * Apply the filter to the given query.

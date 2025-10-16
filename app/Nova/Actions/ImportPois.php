@@ -23,7 +23,7 @@ class ImportPois extends Action
     public function __construct($model = null)
     {
         $this->model = $model;
-        $this->name = __('IMPORT POIS');
+        $this->name = __('Import POIs');
 
         if (! is_null($resourceId = request('resourceId'))) {
             $this->model = HikingRoute::find($resourceId);

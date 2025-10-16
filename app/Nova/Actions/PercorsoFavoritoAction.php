@@ -19,7 +19,7 @@ class PercorsoFavoritoAction extends Action
 
     public function __construct()
     {
-        $this->name = __('FAVORITE ROUTE');
+        $this->name = __('Favorite Route');
     }
 
     public function handle(ActionFields $fields, Collection $models)
@@ -27,13 +27,13 @@ class PercorsoFavoritoAction extends Action
         $user = auth()->user();
 
         if (! $user || $user == null) {
-            return Action::danger('User information not available');
+            return Action::danger(__('User information not available'));
         }
 
         $model = $models->first();
 
         if (! $user->canManageHikingRoute($model)) {
-            return Action::danger('You are not authorized for this hiking route');
+            return Action::danger(__('You are not authorized for this hiking route'));
         }
 
         // Handle FAVORITE toggle
