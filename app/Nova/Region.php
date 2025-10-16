@@ -132,7 +132,7 @@ class Region extends Resource
                 return $stats['hiking_routes'][0] ?? 0;
             }),
 
-            MapMultiPolygon::make('Geometry')->withMeta([
+            MapMultiPolygon::make(__('Geometry'), 'geometry')->withMeta([
                 'center' => ['42.795977075', '10.326813853'],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
             ])->hideFromIndex(),

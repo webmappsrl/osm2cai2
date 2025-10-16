@@ -60,7 +60,7 @@ class CaiHut extends Resource
             Text::make(__('Owner')),
             Number::make(__('Elevation')),
             BelongsToField::make(__('Region')),
-            MapPoint::make(__('Geometry'))->withMeta([
+            MapPoint::make(__('Geometry'), 'geometry')->withMeta([
                 'center' => [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
                 'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',

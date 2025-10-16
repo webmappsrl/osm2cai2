@@ -472,7 +472,7 @@ class HikingRoute extends OsmfeaturesResource
                     </ul>
                     HTML;
             })->asHtml()->onlyOnDetail(),
-            FeatureCollectionMap::make('geometry'),
+            FeatureCollectionMap::make(__('Geometry'), 'geometry'),
         ];
 
         return $fields;

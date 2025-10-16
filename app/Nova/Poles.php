@@ -46,8 +46,8 @@ class Poles extends OsmfeaturesResource
             ->all();
 
         return array_merge($parentFields, [
-            Text::make('Ref', 'ref')->sortable(),
-            FeatureCollectionMap::make(__('geometry')),
+            Text::make(__('Ref'), 'ref')->sortable(),
+            FeatureCollectionMap::make(__('Geometry'), 'geometry'),
         ]);
     }
 }
