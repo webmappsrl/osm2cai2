@@ -86,14 +86,19 @@ class HikingRouteObserver
 
         // todo: insert all properties
         if ($hikingRoute->isDirty('geometry')) {
-            // This logic was previously in the 'saved' event.
-            // Moved to 'saving' to ensure it runs before the 'updated' event logic.
-            if ($hikingRoute->exists) { // To mimic 'updated' event behavior
-                if ($hikingRoute->osm2cai_status == 4 && app()->environment('production')) {
-                    ComputeTdhJob::dispatch($hikingRoute->id);
+            // Only process geometry changes if not validated (osm2cai_status != 4)
+            if ($hikingRoute->osm2cai_status <= 3) {
+                // This logic was previously in the 'saved' event.
+                // Moved to 'saving' to ensure it runs before the 'updated' event logic.
+                if ($hikingRoute->exists) { // To mimic 'updated' event behavior
+                    if (app()->environment('production')) {
+                        ComputeTdhJob::dispatch($hikingRoute->id);
+                    }
                 }
+                $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
+            } else {
+                Log::info('HikingRoute ' . $hikingRoute->id . ' is validated (status 4), skipping geometric computations');
             }
-            $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
         }
         if ($hikingRoute->isDirty('osm2cai_status')) {
             $this->updateLayerAssociations($hikingRoute);
@@ -123,12 +128,12 @@ class HikingRouteObserver
 
         // Sincronizza le relazioni con i layer usando sync()
         $layerIds = $hikingRoute->layers()->pluck('layers.id')->toArray();
-        
+
         // Rimuovi il layer del vecchio status se esiste
         if ($previousStatusLayer) {
             $layerIds = array_diff($layerIds, [$previousStatusLayer->id]);
         }
-        
+
         // Aggiungi il layer del nuovo status se esiste
         if ($osm2caiStatusLayer) {
             $layerIds[] = $osm2caiStatusLayer->id;

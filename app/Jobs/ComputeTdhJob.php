@@ -33,8 +33,9 @@ class ComputeTdhJob implements ShouldQueue
     public function handle()
     {
         $hikingRoute = HikingRoute::find($this->hikingRouteId);
+        $osm2cai_status = $hikingRoute->osm2cai_status;
 
-        if ($hikingRoute) {
+        if ($hikingRoute && $osm2cai_status <= 3) {
             $newTdh = $hikingRoute->computeTdh();
             if ($newTdh !== $hikingRoute->tdh) {
                 $hikingRoute->tdh = $newTdh;

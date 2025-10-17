@@ -116,7 +116,7 @@ class EnrichPoi extends OsmfeaturesResource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->whereNull('app_id');
+        return $query->whereNotNull('osmfeatures_id');
     }
 
     /**

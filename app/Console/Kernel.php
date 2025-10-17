@@ -14,10 +14,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('osm2cai:import-ugc-from-geohub')
-            ->dailyAt('00:00')
-            ->description('Sync UGC from Geohub');
-
         $schedule->exec('certbot renew --quiet')
             ->dailyAt('02:00')
             ->description('Renew SSL certificates');
@@ -58,7 +54,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
