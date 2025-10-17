@@ -915,7 +915,7 @@ SQL;
         }
 
         $props = $osmfeaturesData['properties'];
-        $layers = self::find($id)->layers?->pluck('id')->toArray() ?? [];
+        $layers = self::find($id)?->layers?->pluck('id')->toArray() ?? [];
         $properties = array_merge(
             self::extractBaseProperties($props),
             self::extractDemProperties($props),
