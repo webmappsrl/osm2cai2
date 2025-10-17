@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Nova\Actions\CacheMiturApi;
+use App\Nova\Region;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo as BelongsToField;
 use Laravel\Nova\Fields\ID;
@@ -59,7 +60,7 @@ class CaiHut extends Resource
             Textarea::make(__('Description')),
             Text::make(__('Owner')),
             Number::make(__('Elevation')),
-            BelongsToField::make(__('Region')),
+            BelongsToField::make(__('Region'), 'region', Region::class),
             MapPoint::make(__('Geometry'), 'geometry')->withMeta([
                 'center' => [42, 10],
                 'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
@@ -115,5 +116,13 @@ class CaiHut extends Resource
                 return auth()->user()->hasRole('Administrator');
             }),
         ];
+    }
+
+    /**
+     * Determine if the current user can create new resources.
+     */
+    public static function authorizedToCreate($request)
+    {
+        return false;
     }
 }

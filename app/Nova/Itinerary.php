@@ -116,4 +116,12 @@ class Itinerary extends Resource
             }),
         ];
     }
+
+    /**
+     * Determine if the current user can create new resources.
+     */
+    public static function authorizedToCreate($request)
+    {
+        return false;
+    }
 }

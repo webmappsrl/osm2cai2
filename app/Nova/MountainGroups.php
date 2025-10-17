@@ -119,4 +119,12 @@ class MountainGroups extends Resource
     {
         return [];
     }
+
+    /**
+     * Determine if the current user can create new resources.
+     */
+    public static function authorizedToCreate($request)
+    {
+        return false;
+    }
 }
