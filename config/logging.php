@@ -52,10 +52,9 @@ return [
 
     'channels' => [
         'wm-osmfeatures' => [
-            'driver' => 'stack',
-            'channels' => ['single'],
+            'driver' => 'single',
             'path' => storage_path('logs/wm-osmfeatures.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => 'info',
         ],
         'import-ugc' => [
             'driver' => 'single',
