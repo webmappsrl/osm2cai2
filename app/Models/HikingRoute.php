@@ -358,8 +358,8 @@ class HikingRoute extends EcTrack
     {
         $geojson = $this->getFeatureCollectionMapFromTrait();
         $properties = [
-            'strokeColor' => 'red',
-            'strokeWidth' => 2,
+            'strokeColor' => 'blue',
+            'strokeWidth' => 4,
         ];
         $geojson['features'][0]['properties'] = $properties;
 
@@ -377,14 +377,14 @@ class HikingRoute extends EcTrack
 
             return $poleFeature;
         })->toArray();
-        $checkedGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
+        $uncheckedGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
         $properties = [
-            'strokeColor' => 'blue',
-            'strokeWidth' => 6,
+            'strokeColor' => 'red',
+            'strokeWidth' => 2,
         ];
-        $checkedGeometryFeature['properties'] = $properties;
+        $uncheckedGeometryFeature['properties'] = $properties;
 
-        $geojson['features'] = array_merge($poleFeatures, [$checkedGeometryFeature], $geojson['features']);
+        $geojson['features'] = array_merge($poleFeatures, [$uncheckedGeometryFeature], $geojson['features']);
 
         return $geojson;
     }
