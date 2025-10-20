@@ -125,7 +125,7 @@ class User extends AbstractUserResource
         $baseFields = parent::fields($request);
 
         $relationFields = [
-            Text::make(__('Phone'))
+            Text::make(__('Phone'), 'phone')
                 ->sortable()
                 ->rules('max:255'),
 

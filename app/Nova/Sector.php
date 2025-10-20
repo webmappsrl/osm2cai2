@@ -102,7 +102,7 @@ class Sector extends Resource
             })->hideWhenUpdating()->hideWhenCreating(),
             BelongsToMany::make(__('Referenti Sentieristica'), 'moderators', User::class)
                 ->searchable(),
-            BelongsTo::make(__('Area'))->onlyOnForms(),
+            BelongsTo::make(__('Area'), 'area', Area::class)->onlyOnForms(),
             File::make(__('Geometry'), 'geometry')->store(function (Request $request, $model) {
                 return $model->fileToGeometry($request->geometry->get());
             })->onlyOnForms()->hideWhenUpdating()->required(),
