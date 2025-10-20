@@ -15,7 +15,7 @@ class TotalAreasCount extends Value
      */
     public function name()
     {
-        return 'Numero Aree';
+        return __('Total Areas');
     }
 
     /**

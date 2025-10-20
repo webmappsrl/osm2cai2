@@ -34,8 +34,8 @@ class DeletedOnOsmFilter extends Filter
     public function options(NovaRequest $request)
     {
         return [
-            'Yes' => true,
-            'No' => false,
+            __('Yes') => true,
+            __('No') => false,
         ];
     }
 }

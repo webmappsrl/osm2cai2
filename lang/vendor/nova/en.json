@@ -718,5 +718,17 @@
   "tracks": "tracks",
   "—": "—",
   "Taxonomy Wheres": "Taxonomy Wheres",
-  "Members": "Members"
+  "Members": "Members",
+  "Admin": "Admin",
+  "National Referent": "National Referent",
+  "Provincial Association": "Provincial Association",
+  "Area Association": "Area Association",
+  "Sector Association": "Sector Association",
+  "Validated Hiking Routes per month": "Validated Hiking Routes per month",
+  "Total Regions": "Total Regions",
+  "Total Provinces": "Total Provinces",
+  "Total Areas": "Total Areas",
+  "Section Routes SAL": "Section Routes SAL",
+  "Hiking Routes Issue Update per month": "Hiking Routes Issue Update per month",
+  "Clubs": "Clubs"
 }

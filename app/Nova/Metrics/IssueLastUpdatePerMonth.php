@@ -16,7 +16,7 @@ class IssueLastUpdatePerMonth extends Trend
      */
     public function name()
     {
-        return 'Hiking Routes Issue Update per month';
+        return __('Hiking Routes Issue Update per month');
     }
 
     /**
