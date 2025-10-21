@@ -21,6 +21,8 @@ use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmPackage\Models\EcPoi as WmEcPoi;
+use Wm\WmPackage\Services\GeometryComputationService;
+
 class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
 {
     use AwsCacheable, HasFactory, OsmfeaturesGeometryUpdateTrait, OsmfeaturesImportableTrait, SpatialDataTrait, TagsMappingTrait;
@@ -88,6 +90,14 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
         }
 
         return is_string($value) ? json_decode($value, true) : $value;
+    }
+
+    /**
+     * Convert 2D geometry to 3D when setting geometry attribute
+     */
+    public function setGeometryAttribute($value)
+    {
+        $this->attributes['geometry'] = GeometryComputationService::make()->convertTo3DGeometry($value);
     }
 
     /**
