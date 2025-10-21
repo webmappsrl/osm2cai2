@@ -15,7 +15,7 @@ class ValidatedHrPerMonth extends Trend
      */
     public function name()
     {
-        return 'Validated Hiking Routes per month';
+        return __('Validated Hiking Routes per month');
     }
 
     /**

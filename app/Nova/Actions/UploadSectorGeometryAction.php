@@ -70,7 +70,7 @@ class UploadSectorGeometryAction extends Action
     public function fields($request)
     {
         return [
-            File::make('Geometry')->help(__('Upload a gpx, kml or geojson file to update the sector geometry and update all technical data of the affected routes (routes in this sector + those within adjacent sectors)')),
+            File::make(__('Geometry'), 'geometry')->help(__('Upload a gpx, kml or geojson file to update the sector geometry and update all technical data of the affected routes (routes in this sector + those within adjacent sectors)')),
         ];
     }
 }

@@ -56,6 +56,6 @@ class AddMembersToClub extends Action
     {
         $users = User::orderBy('name')->pluck('name', 'id');
 
-        return [Multiselect::make('Members')->options($users)];
+        return [Multiselect::make(__('Members'), 'members')->options($users)];
     }
 }

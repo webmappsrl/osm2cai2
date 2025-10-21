@@ -71,7 +71,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make(__('MOBILE'), [
                     MenuItem::resource(App::class),
                     MenuItem::resource(NovaUser::class),
-                    MenuSection::make(__('Editorial content'), [
+                    MenuSection::make(__('Editorial Content'), [
                         MenuItem::resource(Layer::class),
                         MenuItem::resource(EcTrack::class),
                         MenuItem::resource(EcPoi::class),

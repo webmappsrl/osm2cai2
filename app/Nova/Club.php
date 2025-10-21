@@ -55,7 +55,7 @@ class Club extends Resource
 
     public static function label()
     {
-        return 'Clubs';
+        return __('Clubs');
     }
 
     /**

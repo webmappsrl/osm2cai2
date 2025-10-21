@@ -105,7 +105,7 @@ trait UgcCommonFieldsTrait
             }),
 
             // Updated At
-            DateTime::make(__('Updated At'))
+            DateTime::make(__('Updated At'), 'updated_at')
                 ->sortable()
                 ->hideWhenUpdating()
                 ->hideWhenCreating(),
