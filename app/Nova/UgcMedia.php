@@ -60,7 +60,7 @@ class UgcMedia extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            DateTime::make(__('Updated At'))
+            DateTime::make(__('Updated At'), 'updated_at')
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
             Text::make(__('Geohub ID'), 'geohub_id')
@@ -96,7 +96,7 @@ class UgcMedia extends Resource
                 ->sortable()
                 ->nullable()
                 ->hideFromIndex(),
-            Text::make(__('Tassonomie Where'), 'taxonomy_wheres')
+            Text::make(__('Taxonomy Wheres'), 'taxonomy_wheres')
                 ->sortable(),
             Text::make(__('Relative URL'), 'relative_url')
                 ->hideFromIndex()

@@ -6,14 +6,14 @@ use App\Jobs\ComputeTdhJob;
 use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\HikingRoute;
 use App\Models\Layer;
-use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Log;
 use Wm\WmPackage\Services\PBFGeneratorService;
 use Wm\WmPackage\Services\GeometryComputationService;
 use Wm\WmPackage\Jobs\Pbf\GenerateLayerPBFJob;
 use Wm\WmPackage\Jobs\Pbf\GeneratePBFJob;
+use Wm\WmPackage\Observers\EcTrackObserver;
 
-class HikingRouteObserver
+class HikingRouteObserver extends EcTrackObserver
 {
     /**
      * Handle the HikingRoute "created" event.
@@ -76,9 +76,10 @@ class HikingRouteObserver
     /**
      * Handle the HikingRoute "saving" event.
      */
-    public function saving(HikingRoute $hikingRoute): void
+    public function saving($hikingRoute)
     {
         Log::info('HikingRouteObserver saving event');
+        parent::saving($hikingRoute);
         if ($hikingRoute->isDirty('osmfeatures_data.properties.ref') && $hikingRoute->isDirty('osmfeatures_data.properties.from') && $hikingRoute->isDirty('osmfeatures_data.properties.to')) {
             $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['from'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['to'];
             // Non usare saveQuietly() qui per evitare il loop di eventi

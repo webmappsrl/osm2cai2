@@ -69,7 +69,7 @@ class RemoveMembersFromClub extends Action
         }
 
         return [
-            Multiselect::make('Members')->options($users),
+            Multiselect::make(__('Members'), 'members')->options($users),
         ];
     }
 }

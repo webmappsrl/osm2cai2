@@ -102,7 +102,7 @@ class UploadValidationRawDataAction extends Action
         $confirmText = 'WARNING: the file that will be uploaded will be used exclusively to be compared with the track present in the Cadastre/OpenStreetMap; in case of validation, the Cadastre/OpenStreetMap track (blue on the map) will be validated.';
 
         return [
-            File::make('Geometry', 'geometry')
+            File::make(__('Geometry'), 'geometry')
                 ->help($confirmText)
                 ->acceptedTypes('.gpx,.kml,.geojson'),
         ];

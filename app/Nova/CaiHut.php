@@ -55,11 +55,11 @@ class CaiHut extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make(__('Name')),
-            Text::make(__('Second Name')),
-            Textarea::make(__('Description')),
-            Text::make(__('Owner')),
-            Number::make(__('Elevation')),
+            Text::make(__('Name'), 'name'),
+            Text::make(__('Second Name'), 'second_name'),
+            Textarea::make(__('Description'), 'description'),
+            Text::make(__('Owner'), 'owner'),
+            Number::make(__('Elevation'), 'elevation'),
             BelongsToField::make(__('Region'), 'region', Region::class),
             MapPoint::make(__('Geometry'), 'geometry')->withMeta([
                 'center' => [42, 10],

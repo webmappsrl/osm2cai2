@@ -46,7 +46,7 @@ class Area extends Resource
 
     public static function label(): string
     {
-        return 'Aree';
+        return __('Areas');
     }
 
     public static function indexQuery(NovaRequest $request, $query)

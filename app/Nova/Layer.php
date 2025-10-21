@@ -42,7 +42,7 @@ class Layer extends WmNovaLayer
         return [
             ID::make()->sortable(),
             NovaTabTranslatable::make([
-                Text::make('name'),
+                Text::make(__('Name'), 'name'),
             ]),
             Number::make(__('Rank'), 'rank', function () {
                 if (is_array($this->properties) && isset($this->properties['rank'])) {
