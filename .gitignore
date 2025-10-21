@@ -21,3 +21,4 @@ docker-compose.yml
 /tests/stubs
 .php-cs-fixer.cache
 .env copy
+public/wm-osmfeatures.log
