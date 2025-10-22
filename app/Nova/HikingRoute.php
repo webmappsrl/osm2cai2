@@ -119,6 +119,32 @@ class HikingRoute extends OsmfeaturesResource
 
         return $query;
     }
+    
+    /**
+     * Normalize search keywords to support inputs like "R123456".
+     *
+     * Nova will search into JSON field `osmfeatures_data->properties->osm_id` (numeric).
+     * Users often paste the OSM relation prefixed form (e.g. "R19361944").
+     * This override strips an optional leading letter (R/r) before delegating to Nova.
+     */
+    protected static function applySearch(\Illuminate\Contracts\Database\Eloquent\Builder $query, string $search): \Illuminate\Contracts\Database\Eloquent\Builder
+    {
+        $normalized = trim($search);
+        // If the whole query is like "R123", optionally with a space, keep only the digits
+        if (preg_match('/^\s*[Rr]\s*(\d+)\s*$/', $normalized, $m)) {
+            $normalized = $m[1];
+        }
+
+        // Fast path: if the query is only digits, do an exact match on osm_id JSON key
+        if (preg_match('/^\d+$/', $normalized) === 1) {
+            // Use JSON path with text extraction to compare (works on MySQL 5.7+/MariaDB 10.2+ and Postgres JSONB)
+            // For Postgres casting is recommended in index creation; here we keep string compare for portability
+            return $query->where('osmfeatures_data->properties->osm_id', $normalized);
+        }
+
+        return parent::applySearch($query, $normalized);
+    }
+
 
     /**
      * Get the fields displayed by the resource.
