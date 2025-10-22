@@ -21,6 +21,7 @@ use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
 use Wm\WmPackage\Models\EcPoi as WmEcPoi;
+
 class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
 {
     use AwsCacheable, HasFactory, OsmfeaturesGeometryUpdateTrait, OsmfeaturesImportableTrait, SpatialDataTrait, TagsMappingTrait;
@@ -178,5 +179,22 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
     public function municipalities()
     {
         return $this->belongsToMany(Municipality::class, 'ec_poi_municipality', 'ec_poi_id', 'municipality_id');
+    }
+
+    /**
+     * Clean all pivot table relationships before deleting.
+     *
+     * This method is called by the Observer before deleting an EcPoi
+     * to prevent foreign key constraint errors.
+     *
+     * @return void
+     */
+    public function cleanRelations()
+    {
+        $this->mountainGroups()->detach();
+        $this->clubs()->detach();
+        $this->nearbyCaiHuts()->detach();
+        $this->nearbyHikingRoutes()->detach();
+        $this->municipalities()->detach();
     }
 }
