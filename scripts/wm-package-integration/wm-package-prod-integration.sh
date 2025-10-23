@@ -335,6 +335,16 @@ sleep 5
 
 print_success "=== FASE 0 COMPLETATA: Docker-compose.yml aggiornato e container avviati ==="
 
+# Carica le variabili dal file .env per i nomi dei container
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+else
+    print_error "File .env non trovato"
+    exit 1
+fi
+
 # Reinstalla dipendenze Composer per aggiornare autoloader
 print_step "Reinstallazione dipendenze Composer per aggiornare autoloader..."
 if ! docker exec "php81-${APP_NAME}" composer install --no-scripts; then

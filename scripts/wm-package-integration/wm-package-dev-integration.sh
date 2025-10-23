@@ -293,9 +293,19 @@ docker-compose -f docker-compose.yml -f docker-compose.develop.yml up -d
 # Torna alla directory degli script
 cd "$SCRIPT_DIR"
 
+# Carica le variabili dal file .env per i nomi dei container
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -o allexport
+    source "$PROJECT_ROOT/.env"
+    set +o allexport
+else
+    print_error "File .env non trovato"
+    exit 1
+fi
+
 # Reinstalla dipendenze Composer per aggiornare autoloader
 print_step "Reinstallazione dipendenze Composer per aggiornare autoloader..."
-if ! docker exec php81-osm2cai2 composer install --no-scripts; then
+if ! docker exec "php81-${APP_NAME}" composer install --no-scripts; then
     print_error "Errore durante la reinstallazione delle dipendenze Composer!"
     exit 1
 fi
