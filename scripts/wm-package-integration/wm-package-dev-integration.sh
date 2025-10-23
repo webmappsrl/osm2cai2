@@ -224,6 +224,13 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
+# Inizializza e aggiorna submodules Git
+print_step "Inizializzazione e aggiornamento submodules Git..."
+if ! git submodule update --init --recursive; then
+    print_error "Errore durante l'inizializzazione dei submodules!"
+    exit 1
+fi
+print_success "Submodules Git inizializzati e aggiornati"
 
 print_success "Prerequisiti verificati"
 
@@ -285,6 +292,14 @@ docker-compose -f docker-compose.yml -f docker-compose.develop.yml up -d
 
 # Torna alla directory degli script
 cd "$SCRIPT_DIR"
+
+# Reinstalla dipendenze Composer per aggiornare autoloader
+print_step "Reinstallazione dipendenze Composer per aggiornare autoloader..."
+if ! docker exec php81-osm2cai2 composer install --no-scripts; then
+    print_error "Errore durante la reinstallazione delle dipendenze Composer!"
+    exit 1
+fi
+print_success "Dipendenze Composer reinstallate"
 
 # Funzioni di attesa per i servizi, per eliminare gli sleep "magici"
 wait_for_service() {

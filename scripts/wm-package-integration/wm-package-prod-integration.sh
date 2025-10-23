@@ -224,7 +224,13 @@ if ! docker compose version &> /dev/null; then
     exit 1
 fi
 
-
+# Inizializza e aggiorna submodules Git
+print_step "Inizializzazione e aggiornamento submodules Git..."
+if ! git submodule update --init --recursive; then
+    print_error "Errore durante l'inizializzazione dei submodules!"
+    exit 1
+fi
+print_success "Submodules Git inizializzati e aggiornati"
 
 print_success "Prerequisiti verificati"
 
@@ -328,6 +334,14 @@ print_step "Attesa che i container siano pronti..."
 sleep 5
 
 print_success "=== FASE 0 COMPLETATA: Docker-compose.yml aggiornato e container avviati ==="
+
+# Reinstalla dipendenze Composer per aggiornare autoloader
+print_step "Reinstallazione dipendenze Composer per aggiornare autoloader..."
+if ! docker exec "php81-${APP_NAME}" composer install --no-scripts; then
+    print_error "Errore durante la reinstallazione delle dipendenze Composer!"
+    exit 1
+fi
+print_success "Dipendenze Composer reinstallate"
 
 # Log automatico per cronjob
 echo ""
