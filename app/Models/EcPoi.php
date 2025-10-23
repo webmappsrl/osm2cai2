@@ -2,21 +2,13 @@
 
 namespace App\Models;
 
-use App\Jobs\CalculateIntersectionsJob;
-use App\Jobs\CheckNearbyHikingRoutesJob;
-use App\Jobs\CheckNearbyHutsJob;
+use App\Observers\EcPoiObserver;
 use App\Traits\AwsCacheable;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
 use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Log;
-use App\Models\Region;
-use App\Models\MountainGroups;
-use App\Models\Club;
-use App\Models\CaiHut;
-use App\Models\HikingRoute;
-use App\Models\Municipality;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesImportableTrait;
@@ -53,23 +45,9 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
     {
         parent::boot();
 
-        // TODO: Laravel non eredita automaticamente gli observer dalla classe padre
-        static::observe(\Wm\WmPackage\Observers\EcPoiObserver::class);
+        static::observe(EcPoiObserver::class);
     }
 
-    protected static function booted()
-    {
-        parent::booted();
-
-        static::saved(function ($ecPoi) {
-            if ($ecPoi->isDirty('geometry')) {
-                CalculateIntersectionsJob::dispatch($ecPoi, Club::class)->onQueue('geometric-computations');
-                CalculateIntersectionsJob::dispatch($ecPoi, MountainGroups::class)->onQueue('geometric-computations');
-                CheckNearbyHikingRoutesJob::dispatch($ecPoi, config('osm2cai.hiking_route_buffer'))->onQueue('geometric-computations');
-                CheckNearbyHutsJob::dispatch($ecPoi, config('osm2cai.cai_hut_buffer'))->onQueue('geometric-computations');
-            }
-        });
-    }
 
     /**
      * Set the properties attribute
@@ -176,6 +154,7 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
         return $this->belongsToMany(HikingRoute::class, 'hiking_route_ec_poi', 'ec_poi_id', 'hiking_route_id')->withPivot(['buffer']);
     }
 
+    // TODO: La tabella ec_poi_municipality non esiste, da cancellare?
     public function municipalities()
     {
         return $this->belongsToMany(Municipality::class, 'ec_poi_municipality', 'ec_poi_id', 'municipality_id');
@@ -195,6 +174,5 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
         $this->clubs()->detach();
         $this->nearbyCaiHuts()->detach();
         $this->nearbyHikingRoutes()->detach();
-        $this->municipalities()->detach();
     }
 }
