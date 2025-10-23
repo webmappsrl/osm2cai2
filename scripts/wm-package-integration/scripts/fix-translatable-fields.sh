@@ -156,7 +156,7 @@ for model in "${MODELS[@]}"; do
                 
                 if (\$changed) {
                     \$record->properties = \$properties;
-                    \$record->save();
+                    \$record->saveQuietly();
                     \$updated++;
                 }
             }

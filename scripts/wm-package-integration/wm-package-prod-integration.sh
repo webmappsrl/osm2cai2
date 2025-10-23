@@ -469,6 +469,37 @@ print_success "Processamento icone AWS e geojson POI completato"
 
 print_success "=== FASE 4.5 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
 
+# FASE 4.6: INIZIALIZZAZIONE DATA CHAIN HIKING ROUTES
+print_step "=== FASE 4.6: INIZIALIZZAZIONE DATA CHAIN HIKING ROUTES ==="
+
+print_step "🚀 Avvio inizializzazione data chain per tutti gli hiking routes"
+print_step "Questo processo lancerà job asincroni per aggiornare: OSM data, DEM, calcoli geometrici, AWS, etc."
+echo ""
+
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/init-all-tracks-datachain.sh"; then
+    print_error "Errore durante l'inizializzazione data chain degli hiking routes!"
+    print_warning "I job potrebbero essere comunque in esecuzione su Horizon"
+    # Non interrompiamo lo script per questo errore
+fi
+
+print_success "=== FASE 4.6 COMPLETATA: Data chain hiking routes inizializzata ==="
+
+# FASE 4.7: GENERAZIONE PBF OTTIMIZZATI
+print_step "=== FASE 4.7: GENERAZIONE PBF OTTIMIZZATI ==="
+
+print_step "🚀 Avvio generazione PBF ottimizzati per tutte le app"
+print_step "Questo processo genera i file PBF con clustering geografico e li carica su AWS"
+print_warning "⚠️  Ogni app può richiedere diversi minuti per la generazione PBF"
+echo ""
+
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/generate-pbf-for-apps.sh"; then
+    print_error "Errore durante la generazione PBF per alcune app!"
+    print_warning "Alcune app potrebbero non avere i file PBF aggiornati"
+    # Non interrompiamo lo script per questo errore
+fi
+
+print_success "=== FASE 4.7 COMPLETATA: Generazione PBF completata ==="
+
 # FASE 5: Verifica Finale
 print_step "=== FASE 5: VERIFICA FINALE ==="
 
@@ -512,6 +543,8 @@ for app_id in "${APPS_TO_IMPORT[@]}"; do
     print_step "   ✅ App $app_id configurata"
 done
 print_step "   ✅ Icone AWS e file geojson POI generati per tutte le app"
+print_step "   ✅ Data chain hiking routes inizializzata (job in esecuzione su Horizon)"
+print_step "   ✅ File PBF ottimizzati generati e caricati su AWS"
 print_step "   ✅ Verifica finale completata"
 echo ""
 print_step "📁 Script utilizzati per le app:"

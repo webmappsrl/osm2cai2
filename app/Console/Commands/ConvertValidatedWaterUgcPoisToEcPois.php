@@ -120,16 +120,17 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $name = isset($properties['form']['title']) ? $properties['form']['title'] : $ugcPoi->name;
                     $name = $name ?? 'Sorgente d\'acqua';
 
-                    // Crea il nuovo EcPoi
-                    $ecPoi = EcPoi::create([
-                        'name' => $name,
-                        'geometry' => $ugcPoi->geometry,
-                        'properties' => $properties,
-                        'app_id' => $acquasorgenteAppId,
-                        'user_id' => $acquasorgenteApp->user_id, // Usiamo l'utente detentore dell'app
-                        'type' => 'natural_spring',
-                        'score' => 1,
-                    ]);
+                    $ecPoi = EcPoi::withoutEvents(function () use ($name, $ugcPoi, $properties, $acquasorgenteAppId, $acquasorgenteApp) {
+                        return EcPoi::create([
+                            'name' => $name,
+                            'geometry' => $ugcPoi->geometry,
+                            'properties' => $properties,
+                            'app_id' => $acquasorgenteAppId,
+                            'user_id' => $acquasorgenteApp->user_id,
+                            'type' => 'natural_spring',
+                            'score' => 1,
+                        ]);
+                    });
 
                     // Associa la taxonomy_poi_type "Punto acqua" all'EcPoi
                     $ecPoi->taxonomyPoiTypes()->attach($taxonomyPoiType->id);
@@ -168,7 +169,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                     if ($relativeUrl) {
                                         // Se l'URL non contiene geohub.webmapp.it, aggiungi il prefisso osm2cai.cai.it
                                         if (strpos($relativeUrl, 'geohub.webmapp.it') === false) {
-                                            $relativeUrl = 'https://osm2cai.cai.it/storage/'.ltrim($relativeUrl, '/');
+                                            $relativeUrl = 'https://osm2cai.cai.it/storage/' . ltrim($relativeUrl, '/');
                                         }
 
                                         // Controlla se il file esiste già nel sourceDisk
@@ -188,7 +189,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
                                                 $this->line("✅ Media file downloaded and saved with APP_ID {$ecPoi->app_id}: {$duplicatedMedia->file_name}");
                                             } catch (\Exception $e) {
-                                                $this->error("❌ Error downloading media from URL {$relativeUrl}: ".$e->getMessage());
+                                                $this->error("❌ Error downloading media from URL {$relativeUrl}: " . $e->getMessage());
                                                 continue;
                                             }
                                         }
@@ -197,7 +198,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                         continue;
                                     }
                                 } catch (\Exception $e) {
-                                    $this->error("❌ Error copying media {$media->id}: ".$e->getMessage());
+                                    $this->error("❌ Error copying media {$media->id}: " . $e->getMessage());
                                     // Continua con il prossimo media anche se questo fallisce
                                 }
                             }
@@ -211,7 +212,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $convertedCount++;
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    $this->error("❌ Error converting UgcPoi ID {$ugcPoi->id}: ".$e->getMessage());
+                    $this->error("❌ Error converting UgcPoi ID {$ugcPoi->id}: " . $e->getMessage());
                 }
             } else {
                 $this->line("({$currentIndex}/{$totalCount}) 🔄 Would convert UgcPoi ID {$ugcPoi->id} to EcPoi");

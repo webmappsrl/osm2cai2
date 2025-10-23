@@ -1,5 +1,20 @@
 # Docker Environment Rules per osm2cai2
 
+## ⚠️ REGOLA CRITICA - LINGUA ITALIANA OBBLIGATORIA ⚠️
+**PRIMA DI TUTTO: RISPONDERE SEMPRE E SOLO IN ITALIANO**
+- **TUTTE LE RISPOSTE** devono essere in italiano
+- **NON USARE MAI** l'inglese per comunicare con l'utente
+- **TERMINI TECNICI** possono rimanere in inglese se necessario (es. "docker exec", "php artisan")
+- **VIOLAZIONE = FALLIMENTO TOTALE** - Se rispondo in inglese sto fallendo
+- **QUESTA REGOLA È PRIORITARIA** su tutte le altre regole
+
+## ⚠️ REGOLA CRITICA - AMBIENTE DOCKERIZZATO OBBLIGATORIO ⚠️
+**osm2cai2 SEMPRE gira in ambiente Docker - NON SUGGERIRE MAI INSTALLAZIONI DIRETTE**
+- **NON SUGGERIRE MAI** installazioni dirette di PHP, PostgreSQL, Redis o altre dipendenze sul sistema host
+- **TUTTI I COMANDI** devono essere eseguiti all'interno dei container Docker appropriati
+- **VIOLAZIONE = FALLIMENTO TOTALE** - Se suggerisco installazioni dirette sto fallendo
+- **QUESTA REGOLA È PRIORITARIA** su tutte le altre regole
+
 ## MANTENERE SEMPRE IL FOCUS SULLA DOMANDA DELL'UTENTE
 1. **NON DEVIARE MAI** dalla domanda specifica dell'utente per risolvere errori non correlati
 2. **SE L'UTENTE DICE "RISOLVI A"** - rispondere SOLO ad A, mai dire "prima risolvo B"
