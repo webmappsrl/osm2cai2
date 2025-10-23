@@ -35,6 +35,10 @@ class HikingRoute extends EcTrack
     protected $table = 'hiking_routes';
 
     protected $fillable = [
+        'name',
+        'app_id',
+        'user_id',
+        'osmid',
         'geometry',
         'osm2cai_status',
         'osmfeatures_id',
