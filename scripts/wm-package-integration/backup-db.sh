@@ -43,7 +43,7 @@ if [ -L "storage/app/backups/dump.sql.gz" ]; then
 fi
 
 # Crea il nuovo link simbolico
-ln -s ../../../backups/last_dump.sql.gz storage/app/backups/dump.sql.gz
+ln -s ../../backups/last_dump.sql.gz storage/app/backups/dump.sql.gz
 
 if [ $? -eq 0 ]; then
     echo "✅ Link simbolico creato: storage/app/backups/dump.sql.gz -> storage/backups/last_dump.sql.gz"
