@@ -8,27 +8,27 @@ echo "=== Script backup-db.sh - Backup Database ==="
 echo "Inizio esecuzione: $(date)"
 echo ""
 
-# Esegui il backup del database
-echo "1. Esecuzione backup database..."
-docker exec postgres_osm2cai2 pg_dump -U osm2cai2 osm2cai2 | gzip > storage/app/backups/dump.sql.gz
-
-if [ $? -eq 0 ]; then
-    echo "✅ Backup completato con successo"
-else
-    echo "❌ Errore durante il backup"
-    exit 1
-fi
-
-echo ""
-
 # Crea la cartella storage/app/backups se non esiste
-echo "2. Creazione cartella storage/app/backups..."
+echo "1. Creazione cartella storage/app/backups..."
 mkdir -p storage/app/backups
 
 if [ $? -eq 0 ]; then
     echo "✅ Cartella storage/app/backups creata/verificata"
 else
     echo "❌ Errore nella creazione della cartella"
+    exit 1
+fi
+
+echo ""
+
+# Esegui il backup del database
+echo "2. Esecuzione backup database..."
+docker exec postgres_osm2cai2 pg_dump -U osm2cai2 osm2cai2 | gzip > storage/app/backups/dump.sql.gz
+
+if [ $? -eq 0 ]; then
+    echo "✅ Backup completato con successo"
+else
+    echo "❌ Errore durante il backup"
     exit 1
 fi
 
