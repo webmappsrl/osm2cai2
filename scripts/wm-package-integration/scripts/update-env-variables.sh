@@ -94,7 +94,7 @@ update_env_variable "EC_TRACK_MODEL" "App\\Models\\HikingRoute"
 # Aggiorna le variabili Laravel Scout (Elasticsearch)
 print_step "Configurazione variabili Laravel Scout..."
 update_env_variable "SCOUT_DRIVER" "Matchish\ScoutElasticSearch\\Engines\ElasticSearchEngine"
-update_env_variable "ELASTICSEARCH_HOST" "elasticsearch:9200"
+update_env_variable "ELASTICSEARCH_HOST" "elasticsearch-\${APP_NAME}:9200"
 
 # Rimuovi il file di backup se esiste
 if [ -f "$PROJECT_ROOT/.env.bak" ]; then
@@ -116,7 +116,7 @@ echo "   • GEOHUB_DB_PORT=5432"
 echo "   • EC_TRACK_TABLE=hiking_routes"
 echo "   • EC_TRACK_MODEL=App\\Models\\HikingRoute"
 echo "   • SCOUT_DRIVER=Matchish\\ScoutElasticSearch\\Engines\\ElasticSearchEngine"
-echo "   • ELASTICSEARCH_HOST=elasticsearch:9200"
+echo "   • ELASTICSEARCH_HOST=elasticsearch-\${APP_NAME}:9200"
 echo ""
 
 print_success "=== AGGIORNAMENTO COMPLETATO ==="

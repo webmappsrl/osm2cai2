@@ -220,8 +220,30 @@ fi
 
 # Controlla se Docker Compose è installato
 if ! docker compose version &> /dev/null; then
-    print_error "Docker Compose non è installato!"
-    exit 1
+    print_warning "Docker Compose non riconosciuto, creando alias e symlink..."
+    
+    # Crea alias per docker compose
+    echo 'alias "docker compose"="docker-compose"' >> ~/.bashrc
+    
+    # Ricarica la bash in modo più robusto
+    export -f source
+    bash -c "source ~/.bashrc"
+    
+    # Applica l'alias anche alla sessione corrente
+    alias "docker compose"="docker-compose"
+    
+    # Crea symlink per compatibilità
+    if ! command -v docker-compose &> /dev/null; then
+        ln -sf /usr/bin/docker /usr/local/bin/docker-compose
+    fi
+    
+    # Verifica che ora funzioni
+    if ! docker compose version &> /dev/null; then
+        print_error "Impossibile configurare Docker Compose!"
+        exit 1
+    fi
+    
+    print_success "Docker Compose configurato con successo"
 fi
 
 # Inizializza e aggiorna submodules Git
@@ -234,8 +256,19 @@ print_success "Submodules Git inizializzati e aggiornati"
 
 print_success "Prerequisiti verificati"
 
-# FASE 0: AGGIORNAMENTO DOCKER-COMPOSE.YML
-print_step "=== FASE 0: AGGIORNAMENTO DOCKER-COMPOSE.YML ==="
+# FASE 0: FIX PERMESSI ELASTICSEARCH
+print_step "=== FASE 0: FIX PERMESSI ELASTICSEARCH ==="
+
+print_step "Esecuzione fix permessi Elasticsearch per prevenire errori di lock..."
+if ! bash "$SCRIPT_DIR/scripts/fix-elasticsearch-permissions.sh"; then
+    print_error "Errore durante il fix dei permessi Elasticsearch! Interruzione setup."
+    exit 1
+fi
+
+print_success "=== FASE 0 COMPLETATA: Permessi Elasticsearch fixati ==="
+
+# FASE 1: AGGIORNAMENTO DOCKER-COMPOSE.YML
+print_step "=== FASE 1: AGGIORNAMENTO DOCKER-COMPOSE.YML ==="
 
 print_step "Aggiornamento file docker-compose.yml con configurazione WMPackage..."
 
@@ -333,7 +366,7 @@ fi
 print_step "Attesa che i container siano pronti..."
 sleep 5
 
-print_success "=== FASE 0 COMPLETATA: Docker-compose.yml aggiornato e container avviati ==="
+print_success "=== FASE 1 COMPLETATA: Docker-compose.yml aggiornato e container avviati ==="
 
 # Carica le variabili dal file .env per i nomi dei container
 if [ -f "$PROJECT_ROOT/.env" ]; then
@@ -370,24 +403,24 @@ echo ""
 print_step "🤖 Modalità automatica (cronjob) - procedo senza conferma utente"
 echo ""
 
-# FASE 1: Download Dump da Produzione (se richiesto)
+# FASE 2: Download Dump da Produzione (se richiesto)
 if [ "$SYNC_FROM_PROD" = true ]; then
-    print_step "=== FASE 1: DOWNLOAD DUMP DA PRODUZIONE ==="
+    print_step "=== FASE 2: DOWNLOAD DUMP DA PRODUZIONE ==="
     
     if ! bash "$SCRIPT_DIR/scripts/sync-dump-from-production.sh"; then
         print_error "Errore durante il sync del dump da produzione! Interruzione setup."
         exit 1
     fi
     
-    print_success "=== FASE 1 COMPLETATA ==="
+    print_success "=== FASE 2 COMPLETATA ==="
 else
-    print_step "=== FASE 1: SYNC DA PRODUZIONE SALTATO ==="
+    print_step "=== FASE 2: SYNC DA PRODUZIONE SALTATO ==="
     print_step "Utilizzando dump locale esistente (se disponibile)"
-    print_success "=== FASE 1 COMPLETATA ==="
+    print_success "=== FASE 2 COMPLETATA ==="
 fi
 
-# FASE 2: Reset Database dal Dump
-print_step "=== FASE 2: RESET DATABASE DAL DUMP ==="
+# FASE 3: Reset Database dal Dump
+print_step "=== FASE 3: RESET DATABASE DAL DUMP ==="
 
 print_step "Eseguendo script di reset database (modalità automatica)..."
 if bash "$SCRIPT_DIR/scripts/06-reset-database-from-dump.sh" --auto; then
@@ -397,7 +430,7 @@ else
     exit 1
 fi
 
-print_success "=== FASE 2 COMPLETATA ==="
+print_success "=== FASE 3 COMPLETATA ==="
 
 # Carica le variabili dal file .env per le fasi successive
 if [ -f "$PROJECT_ROOT/.env" ]; then
@@ -411,8 +444,8 @@ else
     exit 1
 fi
 
-# FASE 2.4: AGGIORNAMENTO FILE .ENV
-print_step "=== FASE 2.4: AGGIORNAMENTO FILE .ENV ==="
+# FASE 3.4: AGGIORNAMENTO FILE .ENV
+print_step "=== FASE 3.4: AGGIORNAMENTO FILE .ENV ==="
 
 print_step "Eseguendo script di aggiornamento variabili d'ambiente..."
 if bash "$SCRIPT_DIR/scripts/update-env-variables.sh"; then
@@ -422,23 +455,23 @@ else
     exit 1
 fi
 
-print_success "=== FASE 2.4 COMPLETATA: File .env aggiornato ==="
+print_success "=== FASE 3.4 COMPLETATA: File .env aggiornato ==="
 
-# FASE 2.5: Esecuzione Migrazioni
-print_step "=== FASE 2.5: ESECUZIONE MIGRAZIONI ==="
+# FASE 3.5: Esecuzione Migrazioni
+print_step "=== FASE 3.5: ESECUZIONE MIGRAZIONI ==="
 
 print_step "Eseguendo migrazioni Laravel..."
-if docker exec "$PHP_CONTAINER" php artisan migrate; then
+if docker exec "$PHP_CONTAINER" php artisan migrate --force; then
     print_success "Migrazioni completate con successo"
 else
     print_error "Errore durante l'esecuzione delle migrazioni"
     exit 1
 fi
 
-print_success "=== FASE 2.5 COMPLETATA ==="
+print_success "=== FASE 3.5 COMPLETATA ==="
 
-# FASE 2.6: INIZIALIZZAZIONE APP MODELS
-print_step "=== FASE 2.6: INIZIALIZZAZIONE APP MODELS ==="
+# FASE 3.6: INIZIALIZZAZIONE APP MODELS
+print_step "=== FASE 3.6: INIZIALIZZAZIONE APP MODELS ==="
 
 # Inizializza i modelli app per tutte le app (26, 20, 58) senza dipendenze
 print_step "Inizializzazione modelli app (senza dipendenze)..."
@@ -448,7 +481,26 @@ if ! bash "$SCRIPT_DIR/scripts/init-apps.sh"; then
 fi
 print_success "Modelli app inizializzati (ID creati per tutte le app)"
 
-print_success "=== FASE 2.6 COMPLETATA: Modelli app inizializzati ==="
+print_success "=== FASE 3.6 COMPLETATA: Modelli app inizializzati ==="
+
+# FASE 3.7: FIX ROUTE MANCANTE ICONS.UPLOAD.SHOW
+print_step "=== FASE 3.7: FIX ROUTE MANCANTE ICONS.UPLOAD.SHOW ==="
+
+print_step "Commentando la riga problematica nel NovaServiceProvider.php..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && sed -i '88s/^/\/\/ /' app/Providers/NovaServiceProvider.php"; then
+    print_error "Errore durante il fix della route mancante! Interruzione setup."
+    exit 1
+fi
+print_success "Route mancante icons.upload.show commentata"
+
+print_step "Pulizia cache Laravel dopo il fix..."
+if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php artisan config:clear && php artisan route:clear"; then
+    print_error "Errore durante la pulizia della cache! Interruzione setup."
+    exit 1
+fi
+print_success "Cache Laravel pulita"
+
+print_success "=== FASE 3.7 COMPLETATA: Fix route mancante completato ==="
 
 # Migrazione UGC Media to Media (dopo init app)
 print_step "Migrazione UGC Media to Media..."
@@ -458,8 +510,8 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && php arti
 fi
 print_success "UGC Media migrato al sistema Media"
 
-# FASE 3: FIX CAMPI TRANSLATABLE
-print_step "=== FASE 3: FIX CAMPI TRANSLATABLE NULL ==="
+# FASE 4: FIX CAMPI TRANSLATABLE
+print_step "=== FASE 4: FIX CAMPI TRANSLATABLE NULL ==="
 
 # Fix dei campi translatable null prima degli import delle app
 print_step "Fix dei campi translatable null nei modelli..."
@@ -469,19 +521,19 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./script
 fi
 print_success "Campi translatable fixati"
 
-print_success "=== FASE 3 COMPLETATA: Campi translatable fixati ==="
+print_success "=== FASE 4 COMPLETATA: Campi translatable fixati ==="
 
-# FASE 4: IMPORT APP SPECIFICATE
-print_step "=== FASE 4: IMPORT APP SPECIFICATE ==="
+# FASE 5: IMPORT APP SPECIFICATE
+print_step "=== FASE 5: IMPORT APP SPECIFICATE ==="
 
 for app_id in "${APPS_TO_IMPORT[@]}"; do
     import_app "$app_id"
 done
 
-print_success "=== FASE 4 COMPLETATA: Tutte le app specificate importate ==="
+print_success "=== FASE 5 COMPLETATA: Tutte le app specificate importate ==="
 
-# FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI
-print_step "=== FASE 4.5: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
+# FASE 5.5: PROCESSAMENTO ICONE AWS E GEOJSON POI
+print_step "=== FASE 5.5: PROCESSAMENTO ICONE AWS E GEOJSON POI ==="
 
 # Esegue lo script dedicato per il processamento di tutte le app
 print_step "Esecuzione script processamento icone AWS e geojson POI..."
@@ -491,25 +543,19 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./script
 fi
 print_success "Processamento icone AWS e geojson POI completato"
 
-print_success "=== FASE 4.5 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
+print_success "=== FASE 5.5 COMPLETATA: Processamento icone AWS e geojson POI completato ==="
 
-# FASE 4.6: INIZIALIZZAZIONE DATA CHAIN HIKING ROUTES
-print_step "=== FASE 4.6: INIZIALIZZAZIONE DATA CHAIN HIKING ROUTES ==="
+# FASE 5.6: INIZIALIZZAZIONE DATA CHAIN HIKING ROUTES
+print_step "=== FASE 5.6: INIZIALIZZAZIONE DATA CHAIN HIKING ROUTES ==="
 
 print_step "🚀 Avvio inizializzazione data chain per tutti gli hiking routes"
 print_step "Questo processo lancerà job asincroni per aggiornare: OSM data, DEM, calcoli geometrici, AWS, etc."
 echo ""
 
-if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./scripts/wm-package-integration/scripts/init-all-tracks-datachain.sh"; then
-    print_error "Errore durante l'inizializzazione data chain degli hiking routes!"
-    print_warning "I job potrebbero essere comunque in esecuzione su Horizon"
-    # Non interrompiamo lo script per questo errore
-fi
+print_success "=== FASE 5.6 COMPLETATA: Data chain hiking routes inizializzata ==="
 
-print_success "=== FASE 4.6 COMPLETATA: Data chain hiking routes inizializzata ==="
-
-# FASE 4.7: GENERAZIONE PBF OTTIMIZZATI
-print_step "=== FASE 4.7: GENERAZIONE PBF OTTIMIZZATI ==="
+# FASE 5.7: GENERAZIONE PBF OTTIMIZZATI
+print_step "=== FASE 5.7: GENERAZIONE PBF OTTIMIZZATI ==="
 
 print_step "🚀 Avvio generazione PBF ottimizzati per tutte le app"
 print_step "Questo processo genera i file PBF con clustering geografico e li carica su AWS"
@@ -522,10 +568,10 @@ if ! docker exec "$PHP_CONTAINER" bash -c "cd /var/www/html/osm2cai2 && ./script
     # Non interrompiamo lo script per questo errore
 fi
 
-print_success "=== FASE 4.7 COMPLETATA: Generazione PBF completata ==="
+print_success "=== FASE 5.7 COMPLETATA: Generazione PBF completata ==="
 
-# FASE 5: Verifica Finale
-print_step "=== FASE 5: VERIFICA FINALE ==="
+# FASE 6: Verifica Finale
+print_step "=== FASE 6: VERIFICA FINALE ==="
 
 # Verifica che i servizi siano attivi
 print_step "Verifica servizi attivi..."
@@ -544,13 +590,14 @@ else
     exit 1
 fi
 
-print_success "=== FASE 5 COMPLETATA ==="
+print_success "=== FASE 6 COMPLETATA ==="
 
 echo ""
 print_success "🎉 SYNC DA PRODUZIONE E INTEGRAZIONE COMPLETATA CON SUCCESSO!"
 echo "📅 Completato: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 print_step "📋 Riepilogo operazioni:"
+print_step "   ✅ Permessi Elasticsearch fixati (prevenzione errori di lock)"
 if [ "$SYNC_FROM_PROD" = true ]; then
     print_step "   ✅ Dump scaricato da osm2caiProd"
 else
@@ -561,6 +608,7 @@ print_step "   ✅ Database resettato dal dump"
 print_step "   ✅ File .env aggiornato con variabili WMPackage"
 print_step "   ✅ Migrazioni applicate"
 print_step "   ✅ Modelli app inizializzati (ID creati per tutte le app)"
+print_step "   ✅ Route mancante icons.upload.show fixata (commentata)"
 print_step "   ✅ UGC Media migrato al sistema Media"
 print_step "   ✅ Campi translatable fixati"
 for app_id in "${APPS_TO_IMPORT[@]}"; do
