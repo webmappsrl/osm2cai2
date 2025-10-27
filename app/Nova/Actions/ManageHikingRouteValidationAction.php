@@ -48,18 +48,18 @@ class ManageHikingRouteValidationAction extends Action
             return Action::danger(__('You are not authorized to validate this hiking route'));
         }
 
-        if ($model->osm2cai_status == 4) {
-            $this->revertValidation($model);
-        } elseif ($model->osm2cai_status == 3) {
-            $this->validateSDA($model, $user, $date);
-        }
-
         if (! $model->geometry_raw_data) {
             return Action::danger(__('Upload a Geometry file first!'));
         }
 
         if (! $model->is_geometry_correct) {
             return Action::danger(__('Geometry is not correct'));
+        }
+
+        if ($model->osm2cai_status == 4) {
+            $this->revertValidation($model);
+        } elseif ($model->osm2cai_status == 3) {
+            $this->validateSDA($model, $user, $date);
         }
 
         return Action::redirect($model->id);
@@ -110,9 +110,9 @@ class ManageHikingRouteValidationAction extends Action
     public static function getValidationConfirmText(HikingRoute $model)
     {
         if ($model->osm2cai_status == 4) {
-            return __('Are you sure you want to revert the validation of this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')';
+            return __('Are you sure you want to revert the validation of this route? REF:') . ' ' . $model->ref . ' (REI CODE: ' . $model->ref_REI . ' / ' . $model->ref_REI_comp . ')';
         } elseif ($model->osm2cai_status == 3) {
-            return __('Are you sure you want to validate this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')';
+            return __('Are you sure you want to validate this route? REF:') . ' ' . $model->ref . ' (REI CODE: ' . $model->ref_REI . ' / ' . $model->ref_REI_comp . ')';
         }
 
         return __('Are you sure you want to perform this action?');
