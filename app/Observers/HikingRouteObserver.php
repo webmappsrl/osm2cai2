@@ -16,6 +16,15 @@ use Wm\WmPackage\Observers\EcTrackObserver;
 class HikingRouteObserver extends EcTrackObserver
 {
     /**
+     * Handle events after all transactions are committed.
+     * 
+     * Impostato a false per permettere a Scout di indicizzare correttamente
+     * 
+     * @var bool
+     */
+    public $afterCommit = false;
+
+    /**
      * Handle the HikingRoute "created" event.
      */
     public function created(HikingRoute $hikingRoute): void
@@ -101,12 +110,16 @@ class HikingRouteObserver extends EcTrackObserver
                 Log::info('HikingRoute ' . $hikingRoute->id . ' is validated (status 4), skipping geometric computations');
             }
         }
+    }
+
+    public function saved($hikingRoute)
+    {
+        parent::saved($hikingRoute);
         if ($hikingRoute->isDirty('osm2cai_status')) {
             $this->updateLayerAssociations($hikingRoute);
             $this->updatePbfsForHikingRoute($hikingRoute);
         }
     }
-
     /**
      * Aggiorna le associazioni della hiking route ai layer in base al cambio di osm2cai_status
      */
