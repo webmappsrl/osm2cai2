@@ -38,6 +38,11 @@ trait UgcCommonFieldsTrait
             // Created by field with platform icons and version
             Text::make(__('Created by'), 'created_by')
                 ->displayUsing(function ($value) {
+                    // ticket #6496 - add geoHubIndicator - in progress
+                    $geoHubIndicator = (isset($this->properties['geohub_id']) || isset($this->properties['geohub_synced_at']))
+                        ? '<span style="font-size: 16px; margin-right: 4px;" title="Synced from GeoHub">🔄</span>' 
+                        : '';
+
                     if ($value === 'device') {
                         $version = $this->properties['device']['appVersion'] ?? null;
                         $platform = $this->properties['device']['platform'] ?? null;
@@ -54,12 +59,13 @@ trait UgcCommonFieldsTrait
                             }
                         }
 
-                        return $version ? "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$platformIcon}<span>v{$version}</span></div>" : $platformIcon;
+                        $output = $version ? "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$platformIcon}<span>v{$version}</span></div>" : $platformIcon;
+                        return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}{$output}</div>";
                     } elseif ($value === 'platform') {
-                        return '<span style="font-size: 16px;">💻</span>';
+                        return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}<span style='font-size: 16px;'>💻</span></div>";
                     }
 
-                    return '<span style="font-size: 16px;">❓</span>';
+                    return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}<span style='font-size: 16px;'>❓</span></div>";
                 })
                 ->asHtml()
                 ->hideWhenCreating()
