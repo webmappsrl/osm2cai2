@@ -42,7 +42,7 @@ class Kernel extends ConsoleKernel
             ->dailyAt('07:00')
             ->description('Update hiking routes status');
 
-        $schedule->command('osm2cai:cache-mitur-abruzzo-api --all')
+        /*$schedule->command('osm2cai:cache-mitur-abruzzo-api --all')
             ->weeklyOn(6, '09:00') // 6 = Saturday
             ->description('Cache Mitur Abruzzo API (Saturday)');
     }
