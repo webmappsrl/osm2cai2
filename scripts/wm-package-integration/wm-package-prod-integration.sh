@@ -256,17 +256,6 @@ print_success "Submodules Git inizializzati e aggiornati"
 
 print_success "Prerequisiti verificati"
 
-# FASE 0: FIX PERMESSI ELASTICSEARCH
-print_step "=== FASE 0: FIX PERMESSI ELASTICSEARCH ==="
-
-print_step "Esecuzione fix permessi Elasticsearch per prevenire errori di lock..."
-if ! bash "$SCRIPT_DIR/scripts/fix-elasticsearch-permissions.sh"; then
-    print_error "Errore durante il fix dei permessi Elasticsearch! Interruzione setup."
-    exit 1
-fi
-
-print_success "=== FASE 0 COMPLETATA: Permessi Elasticsearch fixati ==="
-
 # FASE 1: AGGIORNAMENTO DOCKER-COMPOSE.YML
 print_step "=== FASE 1: AGGIORNAMENTO DOCKER-COMPOSE.YML ==="
 
