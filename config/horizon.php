@@ -208,8 +208,8 @@ return [
                 'queue' => ['geometric-computations'],
                 'balance' => 'simple',
                 'maxProcesses' => 15,
-                'tries' => 2,
-                'timeout' => 300,
+                'tries' => 5,
+                'timeout' => 600,
             ],
             'supervisor-aws' => [
                 'connection' => 'redis',
