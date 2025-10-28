@@ -38,13 +38,16 @@ trait UgcCommonFieldsTrait
             // Created by field with platform icons and version
             Text::make(__('Created by'), 'created_by')
                 ->displayUsing(function ($value) {
+                    $syncedFromGeoHubLabel = __('Synced from GeoHub');
                     $geoHubIndicator = (isset($this->geohub_id))
-                        ? '<span style="font-size: 16px; margin-right: 4px;" title="Synced from GeoHub">🔄</span>' 
+                        ? "<span style='font-size: 16px; margin-right: 4px;' title='{$syncedFromGeoHubLabel}'>🔄</span>" 
                         : '';
 
                     if ($value === 'device') {
                         $version = $this->properties['device']['appVersion'] ?? null;
                         $platform = $this->properties['device']['platform'] ?? null;
+
+                        $outputVersion = $version ? "<span style='margin-right: 8px;'>v{$version}</span>" : '';
 
                         // Default mobile icon
                         $platformIcon = '<span style="font-size: 16px;">📱</span>';
@@ -58,8 +61,7 @@ trait UgcCommonFieldsTrait
                             }
                         }
 
-                        $output = $version ? "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$platformIcon}<span style='margin-right: 8px;'>v{$version}</span></div>" : $platformIcon;
-                        return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}{$output}</div>";
+                        return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}{$platformIcon}{$outputVersion}</div>";
                     } elseif ($value === 'platform') {
                         return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}<span style='font-size: 16px;'>💻</span></div>";
                     }
