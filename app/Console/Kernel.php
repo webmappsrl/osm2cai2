@@ -44,7 +44,7 @@ class Kernel extends ConsoleKernel
 
         /*$schedule->command('osm2cai:cache-mitur-abruzzo-api --all')
             ->weeklyOn(6, '09:00') // 6 = Saturday
-            ->description('Cache Mitur Abruzzo API (Saturday)');
+            ->description('Cache Mitur Abruzzo API (Saturday)');*/
     }
 
     /**
