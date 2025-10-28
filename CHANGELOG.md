@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.0.0 (2025-10-28)
+
+
+### Features
+
+* add search normalization for osm_id oc: 6428 ([#231](https://github.com/webmappsrl/osm2cai2/issues/231)) ([c9ac628](https://github.com/webmappsrl/osm2cai2/commit/c9ac62867ce97f7e115dbcdaef67298fc71d82f8))
+* **backup:** ✨ add database backup script with symbolic link creation ([e87ded8](https://github.com/webmappsrl/osm2cai2/commit/e87ded83f3ccc71cf68c9e0df94b6aba274eac05))
+* **database:** ✨ add properties column to users table ([26a6701](https://github.com/webmappsrl/osm2cai2/commit/26a670186a82f080ae6750ff3a9e74a85e70c468))
+* **deployment:** ✨ add SSL and non-SSL Apache configuration for osm2cai.prod.maphub.it ([ff8d92e](https://github.com/webmappsrl/osm2cai2/commit/ff8d92ed86b95780f431b4057092427397b0df7c))
+* **models:** ✨ add method to clean pivot table relationships in EcPoi OC:6387 ([#234](https://github.com/webmappsrl/osm2cai2/issues/234)) ([2fcd3a6](https://github.com/webmappsrl/osm2cai2/commit/2fcd3a6882672b6951f516c2cdb32f1d3af260d1))
+* **models:** ✨ add new fillable attributes to HikingRoute class ([#235](https://github.com/webmappsrl/osm2cai2/issues/235)) ([36885c2](https://github.com/webmappsrl/osm2cai2/commit/36885c2c6aa2ed1992b0e36a3394d25b6260b433))
+* **nova:** ✨ add GeoHub indicator to 'Created by' field OC 6496 ([#236](https://github.com/webmappsrl/osm2cai2/issues/236)) ([9e2db06](https://github.com/webmappsrl/osm2cai2/commit/9e2db06696e578bc317940c46d040a1ab3343691))
+* **observer:** ✨ add afterCommit property and saved event handler ([3f655c7](https://github.com/webmappsrl/osm2cai2/commit/3f655c7ef386f568830c97efe04cb9ae577fedd0))
+* **scripts:** ✨ add initialization and update for git submodules and composer dependencies ([fbdcd83](https://github.com/webmappsrl/osm2cai2/commit/fbdcd8314f0abc483bc2ee81824cd56d92312073))
+* **scripts:** ✨ enhance database backup and Elasticsearch setup ([68dfb84](https://github.com/webmappsrl/osm2cai2/commit/68dfb84dbc24f3f887dd53fc5de11a8c68e74c06))
+* **scripts:** ✨ load environment variables for container names ([a9f58d6](https://github.com/webmappsrl/osm2cai2/commit/a9f58d6ead6e17cc13f70b8a91e2b53f899a29f4))
+* **webhook:** ✨ unify UGC POI and Track webhook handling ([7f5f104](https://github.com/webmappsrl/osm2cai2/commit/7f5f104af6767768b2fb23f88e54521876d60a9d))
+* **wm-package-integration:** ✨ add Apache configuration for osm2cai.cai.it ([f8dbd15](https://github.com/webmappsrl/osm2cai2/commit/f8dbd15c0aba5b8a928cc3106d5b05863a6bab7b))
+
+
+### Bug Fixes
+
+* **logging:** 🔧 change logger configuration for wm-osmfeatures ([566f497](https://github.com/webmappsrl/osm2cai2/commit/566f4970ee1c9cd396b92e97bd101d1b4af58305))
+* **models:** 🐛 add null safe operator for layers in HikingRoute ([e9c9539](https://github.com/webmappsrl/osm2cai2/commit/e9c953913a6bc1fed843c8de0e208adfe6b21ff1))
+* **scripts:** 🐛 correct symbolic link path in backup-db.sh ([93acde5](https://github.com/webmappsrl/osm2cai2/commit/93acde57a8ab2b9462bc85f430c865e86a202275))
+
+
+### Miscellaneous Chores
+
+* **gitignore:** ➕ add public/wm-osmfeatures.log to .gitignore ([8bc2f34](https://github.com/webmappsrl/osm2cai2/commit/8bc2f34c8c14ec31703770912ec52e1117416f94))
+* **schedule:** 🔧 comment out obsolete command ([3c83a98](https://github.com/webmappsrl/osm2cai2/commit/3c83a981b7245ce565f1d43f4a8bba588be1bb98))
+* **script:** 🔧 remove Elasticsearch permissions fix step ([30bb9c5](https://github.com/webmappsrl/osm2cai2/commit/30bb9c5cdf93e1f53195a1924f7bc6bdec63e436))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
