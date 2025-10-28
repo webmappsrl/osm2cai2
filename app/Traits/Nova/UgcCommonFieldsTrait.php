@@ -38,8 +38,7 @@ trait UgcCommonFieldsTrait
             // Created by field with platform icons and version
             Text::make(__('Created by'), 'created_by')
                 ->displayUsing(function ($value) {
-                    // ticket #6496 - add geoHubIndicator - in progress
-                    $geoHubIndicator = (isset($this->properties['geohub_id']) || isset($this->properties['geohub_synced_at']))
+                    $geoHubIndicator = (isset($this->geohub_id))
                         ? '<span style="font-size: 16px; margin-right: 4px;" title="Synced from GeoHub">🔄</span>' 
                         : '';
 
@@ -59,7 +58,7 @@ trait UgcCommonFieldsTrait
                             }
                         }
 
-                        $output = $version ? "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$platformIcon}<span>v{$version}</span></div>" : $platformIcon;
+                        $output = $version ? "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$platformIcon}<span style='margin-right: 8px;'>v{$version}</span></div>" : $platformIcon;
                         return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}{$output}</div>";
                     } elseif ($value === 'platform') {
                         return "<div style='display: inline-flex; align-items: center; white-space: nowrap;'>{$geoHubIndicator}<span style='font-size: 16px;'>💻</span></div>";
