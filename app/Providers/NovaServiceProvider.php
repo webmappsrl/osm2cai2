@@ -44,7 +44,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
-use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\Nova;
@@ -90,47 +89,42 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('globe')->collapsable()->canSee(function () {
                     return optional(Auth::user())->hasRole('Administrator');
                 }),
-                MenuGroup::make('', [
+                
+                // Statistiche
+                MenuSection::make(__('Statistiche'), [
                     MenuItem::link(__('National Summary'), '/dashboards/italy-dashboard')
                         ->canSee(function () {
                             return true;
                         }),
-
                     MenuItem::link(__('Favorite Routes Summary'), '/dashboards/percorsi-favoriti')
                         ->canSee(function () {
                             return true;
                         }),
-
                     MenuItem::link(__('POIS'), '/dashboards/ec-pois')
                         ->canSee(function () {
                             return true;
                         }),
-
                     MenuItem::link(__('Users Summary'), '/dashboards/utenti')
                         ->canSee(function () {
                             return optional(Auth::user())->hasRole('Administrator');
                         }),
-
                     MenuItem::link(__('Accessibility Summary'), '/dashboards/percorribilità')
                         ->canSee(function () {
                             return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
                         }),
-
                     MenuItem::link(__('MITUR-Abruzzo Summary'), '/dashboards/sal-mitur-abruzzo')
                         ->canSee(function () {
                             return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
                         }),
-
                     MenuItem::link(__('Acqua Sorgente Summary'), '/dashboards/acqua-sorgente')
                         ->canSee(function () {
                             return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
                         }),
-
                     MenuItem::link(__('Sectors Summary'), '/dashboards/settori')
                         ->canSee(function () {
                             return optional(Auth::user())->hasRole('Regional Referent');
                         }),
-                ]),
+                ])->icon('chart-bar')->collapsable(),
 
                 // Rete Escursionistica
                 MenuSection::make(__('Rete Escursionistica'), [
