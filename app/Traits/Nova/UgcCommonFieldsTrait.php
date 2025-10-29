@@ -39,10 +39,12 @@ trait UgcCommonFieldsTrait
             Text::make(__('Created by'), 'created_by')
                 ->displayUsing(function ($value) {
                     $syncedFromGeoHubLabel = __('Synced from GeoHub');
-                    $geoHubIndicator = (isset($this->geohub_id))
-                        ? "<span style='font-size: 16px; margin-right: 4px;' title='{$syncedFromGeoHubLabel}'>🔄</span>" 
-                        : '';
+                    $hasGeoHubId = isset($this->geohub_id) ||
+                        (isset($this->properties['geohub_app_id']) && $this->properties['geohub_app_id'] !== null);
 
+                    $geoHubIndicator = $hasGeoHubId
+                        ? "<span style='font-size: 16px; margin-right: 4px;' title='{$syncedFromGeoHubLabel}'>🔄</span>"
+                        : '';
                     if ($value === 'device') {
                         $version = $this->properties['device']['appVersion'] ?? null;
                         $platform = $this->properties['device']['platform'] ?? null;
@@ -94,10 +96,10 @@ trait UgcCommonFieldsTrait
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
                     return match ($value) {
-                        ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
-                        ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
-                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="'.__('Not Validated').'">⏳</span>',
-                        default => '<span title="'.ucfirst($value).'">❓</span>',
+                        ValidatedStatusEnum::VALID->value => '<span title="' . __('Valid') . '">✅</span>',
+                        ValidatedStatusEnum::INVALID->value => '<span title="' . __('Invalid') . '">❌</span>',
+                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="' . __('Not Validated') . '">⏳</span>',
+                        default => '<span title="' . ucfirst($value) . '">❓</span>',
                     };
                 })
                 ->asHtml(),
@@ -166,7 +168,7 @@ trait UgcCommonFieldsTrait
      */
     public function validatedStatusOptions(): array
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
     }
 
     /**
