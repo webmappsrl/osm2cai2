@@ -37,7 +37,6 @@ use App\Nova\Lenses\HikingRoutesStatus2Lens;
 use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
@@ -119,32 +118,48 @@ class HikingRoute extends OsmfeaturesResource
 
         return $query;
     }
-    
+
     /**
-     * Normalize search keywords to support inputs like "R123456".
+     * Optimize search with support for OSM object IDs.
      *
-     * Nova will search into JSON field `osmfeatures_data->properties->osm_id` (numeric).
-     * Users often paste the OSM relation prefixed form (e.g. "R19361944").
-     * This override strips an optional leading letter (R/r) before delegating to Nova.
+     * SEARCH BEHAVIORS:
+     * 1. "#1234" or direct number → searches internal ID (exact match)
+     * 2. "R19" / "N19" / "W19" (with OSM type prefix) → searches by osm_type + osm_id starting with "19" (PARTIAL search)
+     * 3. "19" (without prefix) → searches exactly OSM ID "19" (EXACT match)
+     * 4. Text → searches ref, ref_REI, and other fields (default Nova behavior)
+     *
+     * OSM Types: N=Node, W=Way, R=Relation
+     * Nova searches JSON fields `osmfeatures_data->properties->osm_type` and `osm_id`.
+     * Users often paste OSM objects with type prefix (e.g., "R19361944", "N123", "W456").
      */
     protected static function applySearch(\Illuminate\Contracts\Database\Eloquent\Builder $query, string $search): \Illuminate\Contracts\Database\Eloquent\Builder
     {
-        $normalized = trim($search);
-        // If the whole query is like "R123", optionally with a space, keep only the digits
-        if (preg_match('/^\s*[Rr]\s*(\d+)\s*$/', $normalized, $m)) {
-            $normalized = $m[1];
+        $searchTerm = trim($search);
+
+        // OSM object search with type prefix (N/W/R) - PARTIAL search enabled
+        if (preg_match('/^\s*([NnWwRr])\s*(\d+)\s*$/', $searchTerm, $m)) {
+            $osmType = strtoupper($m[1]);
+            $osmId = $m[2];
+
+            // Search by both osm_type (stored as "N"/"W"/"R") and osm_id (partial match)
+            return $query->whereRaw(
+                "osmfeatures_data->'properties'->>'osm_type' = ? AND osmfeatures_data->'properties'->>'osm_id' LIKE ?",
+                [$osmType, $osmId.'%']
+            );
         }
 
-        // Fast path: if the query is only digits, do an exact match on osm_id JSON key
-        if (preg_match('/^\d+$/', $normalized) === 1) {
-            // Use JSON path with text extraction to compare (works on MySQL 5.7+/MariaDB 10.2+ and Postgres JSONB)
-            // For Postgres casting is recommended in index creation; here we keep string compare for portability
-            return $query->where('osmfeatures_data->properties->osm_id', $normalized);
+        // Pure numeric search (without prefix) - PARTIAL match on osm_id (all types)
+        // "197" finds all types (N/W/R) with osm_id starting with "197"
+        if (preg_match('/^\d+$/', $searchTerm) === 1) {
+            return $query->whereRaw(
+                "osmfeatures_data->'properties'->>'osm_id' LIKE ?",
+                [$searchTerm.'%']
+            );
         }
 
-        return parent::applySearch($query, $normalized);
+        // Default search for ref, ref_REI, and other text fields
+        return parent::applySearch($query, $searchTerm);
     }
-
 
     /**
      * Get the fields displayed by the resource.
