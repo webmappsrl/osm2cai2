@@ -6,28 +6,27 @@ use Laravel\Nova\Fields\Text;
 
 class FeatureCollectionMap extends Text
 {
-
     /**
      * Create a new field.
      *
      * @param  string  $name
      * @param  string|callable|null  $attribute
-     * @param  callable|null  $resolveCallback
      * @return void
      */
-    public function __construct($name, $attribute = null, callable $resolveCallback = null)
+    public function __construct($name, $attribute = null, ?callable $resolveCallback = null)
     {
         parent::__construct($name, $attribute, $resolveCallback);
-        
+
         // Imposta automaticamente il rendering come HTML
         $this->asHtml();
-        
+
         // Imposta automaticamente soloOnDetail
         $this->onlyOnDetail();
-        
+
         // Imposta il callback di default per generare la mappa
         $this->resolveUsing(function ($value, $resource) {
-            \Log::info('FeatureCollectionMap resolve called for resource ID: ' . $resource->id);
+            \Log::info('FeatureCollectionMap resolve called for resource ID: '.$resource->id);
+
             return $this->generateMapHtml($resource);
         })->asHtml();
     }
@@ -43,7 +42,7 @@ class FeatureCollectionMap extends Text
         // Converti il nome della classe in kebab-case (slug)
         $className = class_basename(get_class($resource));
         $slug = \Illuminate\Support\Str::kebab($className);
-        
+
         return <<<HTML
             <div style="min-height: 400px; position: relative;background: white;">
                 <iframe 
@@ -66,6 +65,7 @@ class FeatureCollectionMap extends Text
     {
         $this->resolveUsing(function ($value, $resource) use ($url) {
             $geojsonUrl = is_callable($url) ? $url($resource) : $url;
+
             return $this->generateMapHtmlWithUrl($resource, $geojsonUrl);
         })->asHtml();
 
@@ -100,12 +100,12 @@ class FeatureCollectionMap extends Text
         // Converti il nome della classe in kebab-case (slug)
         $className = class_basename(get_class($resource));
         $slug = \Illuminate\Support\Str::kebab($className);
-        
+
         // Se geojsonUrl è un URL completo, estraiamo solo l'ID
         if (filter_var($geojsonUrl, FILTER_VALIDATE_URL)) {
             $geojsonUrl = basename(parse_url($geojsonUrl, PHP_URL_PATH));
         }
-        
+
         return <<<HTML
             <div style="min-height: 400px; position: relative;background: white;">
                 <iframe 

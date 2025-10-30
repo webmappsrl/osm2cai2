@@ -14,7 +14,7 @@ class Layer extends WmLayer
     {
         parent::boot();
         // Registra l'observer anche nel modello dell'applicazione
-        Layer::observe(\Wm\WmPackage\Observers\LayerObserver::class);
+        self::observe(\Wm\WmPackage\Observers\LayerObserver::class);
     }
 
     /**

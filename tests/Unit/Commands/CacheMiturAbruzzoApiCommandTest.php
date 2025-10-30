@@ -18,7 +18,7 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     {
         parent::setUp();
         Queue::fake();
-        //clean up the database
+        // clean up the database
         HikingRoute::truncate();
         Region::truncate();
     }

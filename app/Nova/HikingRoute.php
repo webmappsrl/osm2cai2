@@ -119,7 +119,7 @@ class HikingRoute extends OsmfeaturesResource
 
         return $query;
     }
-    
+
     /**
      * Normalize search keywords to support inputs like "R123456".
      *
@@ -144,7 +144,6 @@ class HikingRoute extends OsmfeaturesResource
 
         return parent::applySearch($query, $normalized);
     }
-
 
     /**
      * Get the fields displayed by the resource.

@@ -89,7 +89,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('globe')->collapsable()->canSee(function () {
                     return optional(Auth::user())->hasRole('Administrator');
                 }),
-                
+
                 // Statistiche
                 MenuSection::make(__('Statistiche'), [
                     MenuItem::link(__('National Summary'), '/dashboards/italy-dashboard')

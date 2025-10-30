@@ -19,7 +19,7 @@ class CheckNearbyEcPoisJobTest extends TestCase
     {
         // Mock del metodo isOsm2caiApp per restituire false
         $job = $this->getMockBuilder(CheckNearbyEcPoisJob::class)
-            ->setConstructorArgs([new HikingRoute(), 1000])
+            ->setConstructorArgs([new HikingRoute, 1000])
             ->onlyMethods(['isOsm2caiApp'])
             ->getMock();
 
@@ -50,7 +50,7 @@ class CheckNearbyEcPoisJobTest extends TestCase
     {
         // Mock del metodo isOsm2caiApp per restituire true
         $job = $this->getMockBuilder(CheckNearbyEcPoisJob::class)
-            ->setConstructorArgs([new HikingRoute(), 1000])
+            ->setConstructorArgs([new HikingRoute, 1000])
             ->onlyMethods(['isOsm2caiApp'])
             ->getMock();
 

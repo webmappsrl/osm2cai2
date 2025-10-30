@@ -40,7 +40,7 @@ trait UgcCommonFieldsTrait
                 ->displayUsing(function ($value) {
                     $syncedFromGeoHubLabel = __('Synced from GeoHub');
                     $geoHubIndicator = (isset($this->geohub_id))
-                        ? "<span style='font-size: 16px; margin-right: 4px;' title='{$syncedFromGeoHubLabel}'>🔄</span>" 
+                        ? "<span style='font-size: 16px; margin-right: 4px;' title='{$syncedFromGeoHubLabel}'>🔄</span>"
                         : '';
 
                     if ($value === 'device') {

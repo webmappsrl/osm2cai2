@@ -20,7 +20,7 @@ return new class extends Migration
 
         $main_keys = [
             'name', 'type', 'uuid', 'media', 'app_id', 'device', 'photos',
-            'createdAt', 'nominatim', 'updatedAt', 'description', 'photoKeys', 'position', 'storedPhotoKeys', 'displayPosition', 'sync_id','locations'
+            'createdAt', 'nominatim', 'updatedAt', 'description', 'photoKeys', 'position', 'storedPhotoKeys', 'displayPosition', 'sync_id', 'locations',
         ];
 
         // Lista delle chiavi che rappresentano dati del FORM utente (non metadati tecnici)
@@ -137,4 +137,4 @@ return new class extends Migration
             $table->dropColumn('geohub_app_id');
         });
     }
-}; 
+};

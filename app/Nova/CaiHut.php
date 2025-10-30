@@ -3,7 +3,6 @@
 namespace App\Nova;
 
 use App\Nova\Actions\CacheMiturApi;
-use App\Nova\Region;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo as BelongsToField;
 use Laravel\Nova\Fields\ID;

@@ -32,7 +32,7 @@ final class PopulatePropertiesFromSourceCommand extends Command
      */
     public function handle(): int
     {
-        $modelClass = 'App\\Models\\' . $this->option('model');
+        $modelClass = 'App\\Models\\'.$this->option('model');
         $sourceColumn = $this->option('source');
         $destinationColumn = $this->option('destination');
         $methodName = $this->option('method');
@@ -73,12 +73,12 @@ final class PopulatePropertiesFromSourceCommand extends Command
 
                     $mergedProperties = array_merge($existingProperties, $newProperties);
                     $record->updateQuietly([$destinationColumn => $mergedProperties]);
-                    ++$updatedCount;
+                    $updatedCount++;
                 } catch (\Throwable $e) {
-                    ++$errorCount;
+                    $errorCount++;
                     $this->error("\nError processing {$modelClass} ID {$record->id}: {$e->getMessage()}");
                 }
-                ++$processedCount;
+                $processedCount++;
                 $progressBar->advance();
             }
         });
