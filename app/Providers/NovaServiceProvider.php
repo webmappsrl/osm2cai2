@@ -67,29 +67,44 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Nova::mainMenu(function (Request $request) {
             return [
                 MenuSection::dashboard(Main::class)->icon('home'),
-                MenuSection::make(__('MOBILE'), [
-                    MenuItem::resource(App::class),
-                    MenuItem::resource(NovaUser::class),
-                    MenuSection::make(__('Editorial Content'), [
-                        MenuItem::resource(Layer::class),
-                        MenuItem::resource(EcTrack::class),
-                        MenuItem::resource(EcPoi::class),
-                    ])->icon('none')->collapsable(),
-                    MenuSection::make(__('User Generated Content'), [
-                        MenuItem::resource(UgcPoi::class),
-                        MenuItem::resource(UgcTrack::class),
-                    ])->icon('none')->collapsable(),
-                    MenuSection::make(__('Taxonomies'), [
-                        MenuItem::resource(TaxonomyPoiType::class),
-                        MenuItem::resource(TaxonomyActivity::class),
-                    ])->icon('none')->collapsable(),
-                    MenuSection::make(__('Files'), [
-                        MenuItem::externalLink(__('Icons'), route('icons.upload.show'))->openInNewTab(),
-                    ])->collapsable(),
-                ])->icon('globe')->collapsable()->canSee(function () {
+                // Admin
+                MenuSection::make(__('Admin'), [
+                    MenuItem::resource(User::class, __('User'))->canSee(function () {
+                        return optional(Auth::user())->hasRole('Administrator') || optional(Auth::user())->hasRole('National Referent') || optional(Auth::user())->hasRole('Regional Referent');
+                    }),
+                    MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab()->canSee(function () {
+                        return optional(Auth::user())->hasRole('Administrator');
+                    }),
+                    MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab()->canSee(function () {
+                        return optional(Auth::user())->hasRole('Administrator');
+                    }),
+                    MenuSection::make(__('MOBILE'), [
+                        MenuItem::resource(App::class),
+                        MenuItem::resource(NovaUser::class),
+                        MenuSection::make(__('Editorial Content'), [
+                            MenuItem::resource(Layer::class),
+                            MenuItem::resource(EcTrack::class),
+                            MenuItem::resource(EcPoi::class),
+                        ])->icon('none')->collapsable()->collapsedByDefault(),
+                        MenuSection::make(__('User Generated Content'), [
+                            MenuItem::resource(UgcPoi::class),
+                            MenuItem::resource(UgcTrack::class),
+                        ])->icon('none')->collapsable()->collapsedByDefault(),
+                        MenuSection::make(__('Taxonomies'), [
+                            MenuItem::resource(TaxonomyPoiType::class),
+                            MenuItem::resource(TaxonomyActivity::class),
+                        ])->icon('none')->collapsable()->collapsedByDefault(),
+                        MenuSection::make(__('Files'), [
+                            MenuItem::externalLink(__('Icons'), route('icons.upload.show'))->openInNewTab(),
+                        ])->collapsable()->collapsedByDefault(),
+                    ])->icon('globe')->collapsable()->canSee(function () {
+                        return optional(Auth::user())->hasRole('Administrator');
+                    }),
+                ])->icon('user')->collapsable()->collapsedByDefault()->canSee(function () {
                     return optional(Auth::user())->hasRole('Administrator');
                 }),
-                
+
+
                 // Statistiche
                 MenuSection::make(__('Statistiche'), [
                     MenuItem::link(__('National Summary'), '/dashboards/italy-dashboard')
@@ -124,17 +139,17 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         ->canSee(function () {
                             return optional(Auth::user())->hasRole('Regional Referent');
                         }),
-                ])->icon('chart-bar')->collapsable(),
+                ])->icon('chart-bar')->collapsable()->collapsedByDefault(),
 
                 // Rete Escursionistica
                 MenuSection::make(__('Rete Escursionistica'), [
                     MenuSection::make(__('Sentieri'), [
                         MenuItem::resource(HikingRoute::class, __('Hiking Routes')),
                         MenuItem::resource(Itinerary::class, __('Itineraries')),
-                    ])->icon('none')->collapsable(),
+                    ])->icon('none')->collapsable()->collapsedByDefault(),
                     MenuSection::make(__('Places'), [
                         MenuItem::resource(Poles::class, __('Poles')),
-                    ])->icon('none')->collapsable(),
+                    ])->icon('none')->collapsable()->collapsedByDefault(),
                     MenuSection::make(__('Unità Territoriali'), [
                         MenuItem::resource(Club::class),
                         MenuItem::resource(Municipality::class, __('Municipalities')),
@@ -142,7 +157,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(Area::class, __('Areas')),
                         MenuItem::resource(Province::class, __('Provinces')),
                         MenuItem::resource(Region::class, __('Regions')),
-                    ])->icon('none')->collapsable(),
+                    ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('globe')->collapsable(),
 
                 // Arricchimenti
@@ -151,7 +166,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(MountainGroups::class, __('Mountain Groups')),
                     MenuItem::resource(CaiHut::class, __('Huts')),
                     MenuItem::resource(NaturalSpring::class, __('Acqua Sorgente')),
-                ])->icon('database')->collapsable(),
+                ])->icon('database')->collapsable()->collapsedByDefault(),
 
                 // Rilievi
                 MenuSection::make(__('Rilievi'), [
@@ -159,14 +174,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(UgcPoi::class, 'Ugc Poi'),
                         MenuItem::resource(UgcTrack::class),
                         MenuItem::resource(UgcMedia::class),
-                    ])->icon('none')->collapsable(),
+                    ])->icon('none')->collapsable()->collapsedByDefault(),
                     MenuSection::make(__('Validazioni'), [
                         MenuItem::resource(SourceSurvey::class),
                         MenuItem::resource(Sign::class),
                         MenuItem::resource(ArchaeologicalSite::class),
                         MenuItem::resource(ArchaeologicalArea::class),
                         MenuItem::resource(GeologicalSite::class),
-                    ])->icon('none')->collapsable(),
+                    ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('eye')->collapsable(),
 
                 // Tools
@@ -180,20 +195,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('Migration check'), route('migration-check'))->canSee(function () {
                         return optional(Auth::user())->hasRole('Administrator');
                     })->openInNewTab(),
-                ])->icon('color-swatch')->collapsable(),
+                ])->icon('color-swatch')->collapsable()->collapsedByDefault(),
 
-                // Admin
-                MenuSection::make(__('Admin'), [
-                    MenuItem::resource(User::class, __('User'))->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator') || optional(Auth::user())->hasRole('National Referent') || optional(Auth::user())->hasRole('Regional Referent');
-                    }),
-                    MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab()->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator');
-                    }),
-                    MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab()->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator');
-                    }),
-                ])->icon('user'),
+
 
             ];
         });
