@@ -24,6 +24,7 @@ use App\Nova\GeologicalSite;
 use App\Nova\HikingRoute;
 use App\Nova\Itinerary;
 use App\Nova\Layer;
+use App\Nova\MobileUser;
 use App\Nova\MountainGroups;
 use App\Nova\Municipality;
 use App\Nova\NaturalSpring;
@@ -39,7 +40,6 @@ use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
 use App\Nova\User;
-use App\Nova\User as NovaUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
@@ -80,7 +80,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     }),
                     MenuSection::make(__('MOBILE'), [
                         MenuItem::resource(App::class),
-                        MenuItem::resource(NovaUser::class),
+                        MenuItem::resource(MobileUser::class),
                         MenuSection::make(__('Editorial Content'), [
                             MenuItem::resource(Layer::class),
                             MenuItem::resource(EcTrack::class),

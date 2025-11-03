@@ -14,11 +14,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\WmPackage\Nova\AbstractUserResource;
 
-class User extends AbstractUserResource
+class MobileUser extends AbstractUserResource
 {
     /**
      * The model the resource corresponds to.
@@ -26,6 +27,26 @@ class User extends AbstractUserResource
      * @var string
      */
     public static $model = UserModel::class;
+
+    /**
+     * Get the displayable label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return __('Users');
+    }
+
+    /**
+     * Get the displayable singular label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('User');
+    }
 
     private static array $indexDefaultOrder = [
         'name' => 'asc',
@@ -37,7 +58,12 @@ class User extends AbstractUserResource
             $query->getQuery()->orders = [];
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
-        
+
+        // Show only users with mobile-created UGC
+        $query->where(function ($q) {
+            $q->has('ugcPois')->orHas('ugcTracks');
+        });
+
         /**
          * @var UserModel
          */
@@ -95,7 +121,7 @@ class User extends AbstractUserResource
                 $clubManagerUsers
             ));
 
-            $query->whereIn('users.id', $allUsers);
+            $query->whereIn('id', $allUsers);
         }
         // if user is section manager
         elseif ($user->managedClub) {
@@ -109,7 +135,7 @@ class User extends AbstractUserResource
             // Include also the club manager in the list
             $allUsers = array_unique(array_merge([$user->id], $clubMemberIds));
 
-            $query->whereIn('users.id', $allUsers);
+            $query->whereIn('id', $allUsers);
         }
 
         return $query;
@@ -162,6 +188,10 @@ class User extends AbstractUserResource
                 ->searchable()
                 ->nullable()
                 ->sortable(),
+
+            HasMany::make(__('UGC POIs'), 'ugcPois', UgcPoi::class),
+
+            HasMany::make(__('UGC Tracks'), 'ugcTracks', UgcTrack::class),
 
         ];
 
