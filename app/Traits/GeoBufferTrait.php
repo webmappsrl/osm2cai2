@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -25,11 +26,11 @@ trait GeoBufferTrait
             return collect();
         }
 
-        // Optimized: single query instead of two separate queries
-        // Uses ST_DWithin for efficient spatial search with geography cast
-        return $model::whereRaw(
-            'ST_DWithin(geometry::geography, (SELECT geometry::geography FROM '.$this->getTable().' WHERE id = ?), ?)',
-            [$this->id, $buffer]
-        )->get();
+        $nearbyIds = DB::table($model->getTable())
+            ->select('id')
+            ->whereRaw('ST_DWithin(geometry::geography, (SELECT geometry::geography FROM '.$this->getTable().' WHERE id = ?), ?)', [$this->id, $buffer])
+            ->pluck('id');
+
+        return $model::whereIn('id', $nearbyIds)->get();
     }
 }
