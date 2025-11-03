@@ -57,12 +57,12 @@ return [
         ],
         'wmdumps' => [
             'driver' => 's3',
-            'key' => config('services.wmdumps.key'),
-            'secret' => config('services.wmdumps.secret'),
-            'region' => config('services.wmdumps.region'),
-            'bucket' => config('services.wmdumps.bucket'),
-            'url' => config('services.wmdumps.url'),
-            'endpoint' => config('services.wmdumps.endpoint'),
+            'key' => env('AWS_DUMPS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_DUMPS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_DUMPS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
         ],
         'wmfemitur' => [
             'driver' => 's3',
