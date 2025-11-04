@@ -42,4 +42,5 @@ class UgcPoi extends WmUgcPoi
     {
         $this->attributes['geometry'] = GeometryComputationService::make()->convertTo3DGeometry($value);
     }
+
 }

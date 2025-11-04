@@ -152,7 +152,7 @@ trait UgcCommonFieldsTrait
                 ->onlyOnForms(),
 
             // Images
-            Images::make(__('Image'), 'default')->onlyOnDetail(),
+            Images::make(__('Image'), 'default')->hideFromIndex(),
 
             // Properties panels
             PropertiesPanel::makeWithModel('Form', 'properties->form', $this, true),

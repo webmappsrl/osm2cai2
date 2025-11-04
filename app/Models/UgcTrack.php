@@ -55,4 +55,5 @@ class UgcTrack extends WmUgcTrack
 
         return $array;
     }
+
 }
