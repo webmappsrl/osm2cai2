@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('taxonomy_themeable_id');
             $table->string('taxonomy_themeable_type');
             $table->timestamps();
-            
+
             $table->unique(['taxonomy_theme_id', 'taxonomy_themeable_id', 'taxonomy_themeable_type'], 'themeable_unique');
         });
     }

@@ -62,7 +62,7 @@ class UpdateHikingRouteMedia extends Command
         foreach ($mediaItems as $media) {
             if ($media->disk !== 'wmfe') {
                 $sourceDisk = Storage::disk($media->disk);
-                $sourcePath = $media->id . '/' . $media->file_name;
+                $sourcePath = $media->id.'/'.$media->file_name;
 
                 if ($sourceDisk->exists($sourcePath)) {
                     $mediaContent = $sourceDisk->get($sourcePath);
