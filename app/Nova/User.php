@@ -38,12 +38,8 @@ class User extends AbstractUserResource
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
 
-        // Show only users with platform-created UGC
-        $query->whereHas('ugcPois', function ($q) {
-            $q->where('created_by', 'platform');
-        })->orWhereHas('ugcTracks', function ($q) {
-            $q->where('created_by', 'platform');
-        });
+        // Show only users with roles (exclude users with only 'guest' role or no roles)
+        $query->role('Administrator');
 
         /**
          * @var UserModel
