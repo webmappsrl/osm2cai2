@@ -37,10 +37,7 @@ class User extends AbstractUserResource
             $query->getQuery()->orders = [];
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
-
-        // Show only users with roles (exclude users with only 'guest' role or no roles)
-        $query->role('Administrator');
-
+        
         /**
          * @var UserModel
          */
