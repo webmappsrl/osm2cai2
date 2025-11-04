@@ -101,7 +101,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return optional(Auth::user())->hasRole('Administrator');
                     }),
                 ])->icon('user')->collapsable()->collapsedByDefault()->canSee(function () {
-                    return optional(Auth::user())->hasRole('Administrator');
+                    return optional(Auth::user())->hasRole('Administrator') || optional(Auth::user())->hasRole('National Referent') || optional(Auth::user())->hasRole('Regional Referent');;
                 }),
 
 
