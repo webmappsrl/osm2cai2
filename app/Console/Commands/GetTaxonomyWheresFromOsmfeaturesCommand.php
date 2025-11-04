@@ -4,9 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\HikingRoute;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use App\Jobs\GetTaxonomyWheresFromOsmfeaturesJob;
 use Wm\WmPackage\Jobs\UpdateModelWithGeometryTaxonomyWhere;
 
 class GetTaxonomyWheresFromOsmfeaturesCommand extends Command

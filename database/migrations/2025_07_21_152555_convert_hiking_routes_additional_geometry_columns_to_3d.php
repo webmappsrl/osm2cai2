@@ -15,11 +15,11 @@ return new class extends Migration
         DB::transaction(function () {
             // Convert geometry_osm column to 3D (if it exists and has data)
             $hasGeometryOsm = Schema::hasColumn('hiking_routes', 'geometry_osm');
-            
+
             if ($hasGeometryOsm) {
                 // Check if there are records with geometry_osm data
                 $hasData = DB::table('hiking_routes')->whereNotNull('geometry_osm')->exists();
-                
+
                 if ($hasData) {
                     // 1. Add a temporary 3D geometry_osm column
                     Schema::table('hiking_routes', function (Blueprint $table) {
@@ -43,11 +43,11 @@ return new class extends Migration
 
             // Convert geometry_raw_data column to 3D (if it exists and has data)
             $hasGeometryRawData = Schema::hasColumn('hiking_routes', 'geometry_raw_data');
-            
+
             if ($hasGeometryRawData) {
                 // Check if there are records with geometry_raw_data data
                 $hasData = DB::table('hiking_routes')->whereNotNull('geometry_raw_data')->exists();
-                
+
                 if ($hasData) {
                     // 1. Add a temporary 3D geometry_raw_data column
                     Schema::table('hiking_routes', function (Blueprint $table) {
@@ -79,11 +79,11 @@ return new class extends Migration
         DB::transaction(function () {
             // Revert geometry_osm column to 2D (if it exists)
             $hasGeometryOsm = Schema::hasColumn('hiking_routes', 'geometry_osm');
-            
+
             if ($hasGeometryOsm) {
                 // Check if there are records with geometry_osm data
                 $hasData = DB::table('hiking_routes')->whereNotNull('geometry_osm')->exists();
-                
+
                 if ($hasData) {
                     // 1. Add a temporary 2D geometry_osm column
                     Schema::table('hiking_routes', function (Blueprint $table) {
@@ -107,11 +107,11 @@ return new class extends Migration
 
             // Revert geometry_raw_data column to 2D (if it exists)
             $hasGeometryRawData = Schema::hasColumn('hiking_routes', 'geometry_raw_data');
-            
+
             if ($hasGeometryRawData) {
                 // Check if there are records with geometry_raw_data data
                 $hasData = DB::table('hiking_routes')->whereNotNull('geometry_raw_data')->exists();
-                
+
                 if ($hasData) {
                     // 1. Add a temporary 2D geometry_raw_data column
                     Schema::table('hiking_routes', function (Blueprint $table) {

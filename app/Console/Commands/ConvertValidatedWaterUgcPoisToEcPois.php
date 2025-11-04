@@ -169,7 +169,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                     if ($relativeUrl) {
                                         // Se l'URL non contiene geohub.webmapp.it, aggiungi il prefisso osm2cai.cai.it
                                         if (strpos($relativeUrl, 'geohub.webmapp.it') === false) {
-                                            $relativeUrl = 'https://osm2cai.cai.it/storage/' . ltrim($relativeUrl, '/');
+                                            $relativeUrl = 'https://osm2cai.cai.it/storage/'.ltrim($relativeUrl, '/');
                                         }
 
                                         // Controlla se il file esiste già nel sourceDisk
@@ -189,7 +189,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
 
                                                 $this->line("✅ Media file downloaded and saved with APP_ID {$ecPoi->app_id}: {$duplicatedMedia->file_name}");
                                             } catch (\Exception $e) {
-                                                $this->error("❌ Error downloading media from URL {$relativeUrl}: " . $e->getMessage());
+                                                $this->error("❌ Error downloading media from URL {$relativeUrl}: ".$e->getMessage());
                                                 continue;
                                             }
                                         }
@@ -198,7 +198,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                                         continue;
                                     }
                                 } catch (\Exception $e) {
-                                    $this->error("❌ Error copying media {$media->id}: " . $e->getMessage());
+                                    $this->error("❌ Error copying media {$media->id}: ".$e->getMessage());
                                     // Continua con il prossimo media anche se questo fallisce
                                 }
                             }
@@ -212,7 +212,7 @@ class ConvertValidatedWaterUgcPoisToEcPois extends Command
                     $convertedCount++;
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    $this->error("❌ Error converting UgcPoi ID {$ugcPoi->id}: " . $e->getMessage());
+                    $this->error("❌ Error converting UgcPoi ID {$ugcPoi->id}: ".$e->getMessage());
                 }
             } else {
                 $this->line("({$currentIndex}/{$totalCount}) 🔄 Would convert UgcPoi ID {$ugcPoi->id} to EcPoi");
