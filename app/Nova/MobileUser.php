@@ -35,7 +35,7 @@ class MobileUser extends AbstractUserResource
      */
     public static function label()
     {
-        return __('Mobile Users');
+        return __('Users');
     }
 
     /**
@@ -45,7 +45,7 @@ class MobileUser extends AbstractUserResource
      */
     public static function singularLabel()
     {
-        return __('Mobile User');
+        return __('User');
     }
 
     private static array $indexDefaultOrder = [
@@ -60,12 +60,8 @@ class MobileUser extends AbstractUserResource
         }
 
         // Show only users with mobile-created UGC
-        $query->where(function ($query) {
-            $query->whereHas('ugcPois', function ($q) {
-                $q->where('created_by', 'device');
-            })->orWhereHas('ugcTracks', function ($q) {
-                $q->where('created_by', 'device');
-            });
+        $query->where(function ($q) {
+            $q->has('ugcPois')->orHas('ugcTracks');
         });
 
         /**
