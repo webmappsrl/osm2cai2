@@ -1,9 +1,9 @@
 <?php
 
 use App\Models\HikingRoute;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -51,9 +51,8 @@ return new class extends Migration
         return implode(' - ', $nameParts);
     }
 
-
     protected function validateData($data): bool
     {
-        return !is_null($data) && $data !== '';
+        return ! is_null($data) && $data !== '';
     }
 };

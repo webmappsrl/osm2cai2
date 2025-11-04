@@ -15,7 +15,7 @@ use Wm\WmPackage\Models\Abstracts\GeometryModel;
 
 class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, SpatialDataTrait, FeatureCollectionMapTrait;
+    use FeatureCollectionMapTrait, HasFactory, OsmfeaturesSyncableTrait, SpatialDataTrait;
 
     protected $fillable = [
         'name',
@@ -115,7 +115,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
     {
         // Aggiungi features aggiuntive per hiking routes e personalizza la feature principale
         $this->addAdditionalFeaturesForPoles();
-        
+
         // Properties di default per il polo principale
         $defaultProperties = [
             'tooltip' => $this->ref,                              // Riferimento del polo
@@ -124,10 +124,10 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
             'pointFillColor' => 'rgba(255, 0, 0, 0.8)',          // Colore riempimento punto
             'pointRadius' => 6,                                  // Raggio del punto
         ];
-        
+
         // Merge con eventuali properties passate dall'esterno
         $mergedProperties = array_merge($defaultProperties, $properties);
-        
+
         // Chiama il metodo del trait invece di se stesso
         return $this->getFeatureCollectionMapFromTrait($mergedProperties);
     }
@@ -151,7 +151,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
     {
         // Pulisce features precedenti per evitare duplicati
         $this->clearAdditionalFeaturesForMap();
-        
+
         $hikingRoutes = $this->getHikingRoutesWithBuffer();
 
         $checkedHikingRouteFeatures = $hikingRoutes->map(function ($route) {
