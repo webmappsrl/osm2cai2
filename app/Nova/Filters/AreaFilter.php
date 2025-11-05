@@ -2,6 +2,7 @@
 
 namespace App\Nova\Filters;
 
+use App\Enums\UserRole;
 use App\Models\Area;
 use Illuminate\Http\Request;
 use Laravel\Nova\Filters\Filter;
@@ -54,7 +55,7 @@ class AreaFilter extends Filter
     public function options(Request $request)
     {
         $options = [];
-        if (auth()->user()->hasRole('Regional Referent')) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             $areas = Area::whereIn('province_id', auth()->user()->region->provinces->pluck('id')->toArray())->orderBy('name')->get();
             foreach ($areas as $item) {
                 $options[$item->name] = $item->id;

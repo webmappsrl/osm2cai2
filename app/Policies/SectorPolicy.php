@@ -2,12 +2,13 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Sector;
 use App\Models\User;
 
 class SectorPolicy
 {
-    private $allowedRoles = ['Administrator', 'National Referent'];
+    private array $allowedRoles = [UserRole::Administrator->value, UserRole::NationalReferent->value];
 
     private function hasAllowedRole(User $user): bool
     {
@@ -37,7 +38,7 @@ class SectorPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::Administrator);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\ID;
@@ -109,10 +110,10 @@ class Itinerary extends Resource
     {
         return [
             (new Actions\GenerateItineraryEdgesAction)->canSee(function ($request) {
-                return $request->user()->hasRole('Administrator') || $request->user()->hasRole('Itinerary Manager');
+                return $request->user()->hasRole(UserRole::Administrator) || $request->user()->hasRole(UserRole::ItineraryManager);
             })->showInline(),
             (new Actions\ImportItinerary)->standalone()->canSee(function ($request) {
-                return $request->user()->hasRole('Administrator') || $request->user()->hasRole('Itinerary Manager');
+                return $request->user()->hasRole(UserRole::Administrator) || $request->user()->hasRole(UserRole::ItineraryManager);
             }),
         ];
     }
