@@ -2,10 +2,10 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Models\EcPoi;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\User;
-use App\Enums\UserRole;
 use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;

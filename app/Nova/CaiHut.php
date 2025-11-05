@@ -2,9 +2,8 @@
 
 namespace App\Nova;
 
-use App\Nova\Actions\CacheMiturApi;
-use App\Nova\Region;
 use App\Enums\UserRole;
+use App\Nova\Actions\CacheMiturApi;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo as BelongsToField;
 use Laravel\Nova\Fields\ID;

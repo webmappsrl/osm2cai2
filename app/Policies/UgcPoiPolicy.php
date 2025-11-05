@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\ValidatedStatusEnum;
-use App\Models\User;
 use App\Models\UgcPoi;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UgcPoiPolicy
@@ -51,7 +51,7 @@ class UgcPoiPolicy
      * 4. Form validators can update non-validated POIs for their assigned forms
      *
      * @param  User  $user  The user attempting to update the POI
-     * @param  ugcPoi  $ugcPoi  The POI to be updated
+     * @param  UgcPoi  $ugcPoi  The POI to be updated
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function update(User $user, UgcPoi $ugcPoi)
@@ -105,7 +105,7 @@ class UgcPoiPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, ugcPoi $ugcPoi)
+    public function delete(User $user, UgcPoi $ugcPoi)
     {
         // Admin can delete any POI, owner can delete only if not validated
         return $user->hasRole('Administrator') ||
@@ -117,7 +117,7 @@ class UgcPoiPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, ugcPoi $ugcPoi)
+    public function restore(User $user, UgcPoi $ugcPoi)
     {
         return true;
     }
@@ -127,7 +127,7 @@ class UgcPoiPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, ugcPoi $ugcPoi)
+    public function forceDelete(User $user, UgcPoi $ugcPoi)
     {
         return true;
     }

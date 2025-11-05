@@ -102,9 +102,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return optional(Auth::user())->hasRole(UserRole::Administrator);
                     }),
                 ])->icon('user')->collapsable()->collapsedByDefault()->canSee(function () {
-                    return optional(Auth::user())->hasRole(UserRole::Administrator) || optional(Auth::user())->hasRole(UserRole::NationalReferent) || optional(Auth::user())->hasRole(UserRole::RegionalReferent);;
+                    return optional(Auth::user())->hasRole(UserRole::Administrator) || optional(Auth::user())->hasRole(UserRole::NationalReferent) || optional(Auth::user())->hasRole(UserRole::RegionalReferent);
                 }),
-
 
                 // Statistiche
                 MenuSection::make(__('Statistiche'), [
@@ -197,8 +196,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return optional(Auth::user())->hasRole(UserRole::Administrator);
                     })->openInNewTab(),
                 ])->icon('color-swatch')->collapsable()->collapsedByDefault(),
-
-
 
             ];
         });

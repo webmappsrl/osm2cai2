@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -22,7 +22,7 @@ return new class extends Migration
         DB::statement('ALTER TABLE ec_pois ADD COLUMN geometry_3d geography(POINTZ, 4326)');
 
         // Copia i dati con conversione 3D
-        DB::statement("UPDATE ec_pois SET geometry_3d = ST_Force3D(geometry::geometry)::geography WHERE geometry IS NOT NULL");
+        DB::statement('UPDATE ec_pois SET geometry_3d = ST_Force3D(geometry::geometry)::geography WHERE geometry IS NOT NULL');
 
         // Rimuovi la colonna vecchia e rinomina quella nuova
         DB::statement('ALTER TABLE ec_pois DROP COLUMN geometry');
@@ -54,7 +54,7 @@ return new class extends Migration
         DB::statement('ALTER TABLE ec_pois ADD COLUMN geometry_2d geography(POINT, 4326)');
 
         // Copia i dati con conversione 2D
-        DB::statement("UPDATE ec_pois SET geometry_2d = ST_Force2D(geometry::geometry)::geography WHERE geometry IS NOT NULL");
+        DB::statement('UPDATE ec_pois SET geometry_2d = ST_Force2D(geometry::geometry)::geography WHERE geometry IS NOT NULL');
 
         // Rimuovi la colonna vecchia e rinomina quella nuova
         DB::statement('ALTER TABLE ec_pois DROP COLUMN geometry');

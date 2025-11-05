@@ -32,9 +32,6 @@ trait UgcCommonMethodsTrait
 
     /**
      * Get the default label for the resource
-     * 
-     * @param string $defaultLabel
-     * @return string
      */
     protected static function getResourceLabel(string $defaultLabel): string
     {
@@ -43,8 +40,6 @@ trait UgcCommonMethodsTrait
 
     /**
      * Get the cards available for the request.
-     *
-     * @return array
      */
     public function cards(Request $request): array
     {
@@ -53,8 +48,6 @@ trait UgcCommonMethodsTrait
 
     /**
      * Get the lenses available for the resource.
-     *
-     * @return array
      */
     public function lenses(Request $request): array
     {
@@ -103,4 +96,4 @@ trait UgcCommonMethodsTrait
     {
         return [];
     }
-} 
+}
