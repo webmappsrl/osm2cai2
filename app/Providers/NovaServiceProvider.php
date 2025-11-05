@@ -183,12 +183,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(GeologicalSite::class),
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('eye')->collapsable(),
-
+                MenuSection::make(__('Webapp'), [
+                    MenuItem::externalLink(__('App del Sentierista'), 'http://1.osm2cai.webmapp.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('Sicai'), 'http://2.osm2cai.webmapp.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('Acqua Sorgente'), 'http://3.osm2cai.webmapp.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('INFOMONT'), 'https://1.osm2cai.webmapp.it/map?layer=4')->openInNewTab(),
+                ])->icon('map')->collapsable()->collapsedByDefault(),
                 // Tools
                 MenuSection::make(__('Tools'), [
-                    MenuItem::externalLink(__('Map of Sectors'), 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
-                    MenuItem::externalLink(__('Map of Routes'), 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
-                    MenuItem::externalLink(__('INFOMONT'), 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
                     MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
                     MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
                     MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
