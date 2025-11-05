@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Models\HikingRoute;
 use App\Nova\Actions\downloadGeojson;
@@ -51,7 +52,7 @@ class Area extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        if (auth()->user()->hasRole('Administrator')) {
+        if (auth()->user()->hasRole(UserRole::Administrator)) {
             return $query;
         }
 
