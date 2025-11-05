@@ -2,6 +2,7 @@
 
 namespace App\Nova\Filters;
 
+use App\Enums\UserRole;
 use App\Models\Sector;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -42,7 +43,7 @@ class SectorFilter extends Filter
     public function options(NovaRequest $request)
     {
         $options = [];
-        if (auth()->user()->hasRole('Regional Referent')) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             $sectors_id = [];
             foreach (auth()->user()->region->provinces as $province) {
                 foreach ($province->areas as $area) {

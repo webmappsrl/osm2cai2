@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Models\EcPoi;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\User;
+use App\Enums\UserRole;
 use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;
@@ -263,7 +264,7 @@ class HikingRoute extends OsmfeaturesResource
             (new RegionFavoriteHikingRouteFilter),
         ];
 
-        if (auth()->user()->hasRole('Regional Referent')) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             return $regionalReferentFilters;
         }
 
@@ -373,9 +374,9 @@ class HikingRoute extends OsmfeaturesResource
                 ),
             (new CacheMiturApi('HikingRoute'))
                 ->canSee(function ($request) {
-                    return $request->user()->hasRole('Administrator');
+                    return $request->user()->hasRole(UserRole::Administrator);
                 })->canRun(function ($request) {
-                    return $request->user()->hasRole('Administrator');
+                    return $request->user()->hasRole(UserRole::Administrator);
                 }),
             (new PercorsoFavoritoAction)
                 ->onlyOnDetail('true')
@@ -396,7 +397,7 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
-                    return auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent');
+                    return auth()->user()->hasRole(UserRole::Administrator) || auth()->user()->hasRole(UserRole::NationalReferent);
                 })
                 ->canRun(
                     function ($request, $user) {
@@ -425,7 +426,7 @@ class HikingRoute extends OsmfeaturesResource
                     $userRoles = auth()->user()->getRoleNames()->toArray();
 
                     // can only see if admin, itinerary manager or national referent
-                    return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                    return in_array(UserRole::Administrator, $userRoles) || in_array(UserRole::NationalReferent, $userRoles) || in_array(UserRole::ItineraryManager, $userRoles);
                 })
                 ->canRun(function ($request, $user) {
                     return true;
@@ -439,7 +440,7 @@ class HikingRoute extends OsmfeaturesResource
                     $userRoles = auth()->user()->getRoleNames()->toArray();
 
                     // can only see if admin, itinerary manager or national referent
-                    return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                    return in_array(UserRole::Administrator, $userRoles) || in_array(UserRole::NationalReferent, $userRoles) || in_array(UserRole::ItineraryManager, $userRoles);
                 })
                 ->canRun(function ($request, $user) {
                     return true;
