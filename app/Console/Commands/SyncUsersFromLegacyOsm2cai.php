@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\Area;
 use App\Models\Club;
 use App\Models\Province;
@@ -482,30 +483,30 @@ class SyncUsersFromLegacyOsm2cai extends Command
         }
 
         // Remove roles if conditions are not met
-        if (! $shouldHaveLocalReferent && $user->hasRole('Local Referent')) {
-            $user->removeRole('Local Referent');
+        if (! $shouldHaveLocalReferent && $user->hasRole(UserRole::LocalReferent)) {
+            $user->removeRole(UserRole::LocalReferent);
         }
 
-        if (! $shouldHaveRegionalReferent && $user->hasRole('Regional Referent')) {
-            $user->removeRole('Regional Referent');
+        if (! $shouldHaveRegionalReferent && $user->hasRole(UserRole::RegionalReferent)) {
+            $user->removeRole(UserRole::RegionalReferent);
         }
 
-        if (! $shouldHaveClubManager && $user->hasRole('Club Manager')) {
-            $user->removeRole('Club Manager');
+        if (! $shouldHaveClubManager && $user->hasRole(UserRole::ClubManager)) {
+            $user->removeRole(UserRole::ClubManager);
         }
 
         // If no role is assigned and the user is not Administrator or National Referent or other roles,
         // reassign the Guest role
         if (
-            ! $user->hasRole('Administrator') &&
-            ! $user->hasRole('National Referent') &&
-            ! $user->hasRole('Itinerary Manager') &&
-            ! $user->hasRole('Validator') &&
+            ! $user->hasRole(UserRole::Administrator) &&
+            ! $user->hasRole(UserRole::NationalReferent) &&
+            ! $user->hasRole(UserRole::ItineraryManager) &&
+            ! $user->hasRole(UserRole::Validator) &&
             ! $shouldHaveLocalReferent &&
             ! $shouldHaveRegionalReferent &&
             ! $shouldHaveClubManager
         ) {
-            $user->assignRole('Guest');
+            $user->assignRole(UserRole::Guest);
         }
 
         $user->save();
@@ -514,16 +515,16 @@ class SyncUsersFromLegacyOsm2cai extends Command
     private function assignRolesAndPermissions($user, $legacyUser)
     {
         if ($legacyUser->is_administrator) {
-            $user->removeRole('Guest');
-            $user->assignRole('Administrator');
+            $user->removeRole(UserRole::Guest);
+            $user->assignRole(UserRole::Administrator);
         }
         if ($legacyUser->is_national_referent) {
-            $user->removeRole('Guest');
-            $user->assignRole('National Referent');
+            $user->removeRole(UserRole::Guest);
+            $user->assignRole(UserRole::NationalReferent);
         }
         if ($legacyUser->is_itinerary_manager) {
-            $user->removeRole('Guest');
-            $user->assignRole('Itinerary Manager');
+            $user->removeRole(UserRole::Guest);
+            $user->assignRole(UserRole::ItineraryManager);
         }
 
         $this->assignResourcesValidationPermissions($legacyUser, $user);
@@ -539,29 +540,29 @@ class SyncUsersFromLegacyOsm2cai extends Command
             return;
         }
 
-        if (! $user->hasRole('Administrator')) {
+        if (! $user->hasRole(UserRole::Administrator)) {
             if (isset($legacyResourceValidation['is_signs_validator']) && $legacyResourceValidation['is_signs_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate signs');
             }
 
             if (isset($legacyResourceValidation['is_source_validator']) && $legacyResourceValidation['is_source_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate source surveys');
             }
 
             if (isset($legacyResourceValidation['is_geological_site_validator']) && $legacyResourceValidation['is_geological_site_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate geological sites');
             }
 
             if (isset($legacyResourceValidation['is_archaeological_site_validator']) && $legacyResourceValidation['is_archaeological_site_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate archaeological sites');
             }
 
             if (isset($legacyResourceValidation['is_archaeological_area_validator']) && $legacyResourceValidation['is_archaeological_area_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate archaeological areas');
             }
         }
