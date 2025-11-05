@@ -38,6 +38,7 @@ use App\Nova\Lenses\HikingRoutesStatus3Lens;
 use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Support\Collection;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
@@ -132,7 +133,7 @@ class HikingRoute extends OsmfeaturesResource
      * Nova searches JSON fields `osmfeatures_data->properties->osm_type` and `osm_id`.
      * Users often paste OSM objects with type prefix (e.g., "R19361944", "N123", "W456").
      */
-    protected static function applySearch(\Illuminate\Contracts\Database\Eloquent\Builder $query, string $search): \Illuminate\Contracts\Database\Eloquent\Builder
+    protected static function applySearch(Builder $query, string $search): Builder
     {
         $searchTerm = trim($search);
 
