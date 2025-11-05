@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 use Illuminate\Support\Facades\DB;
 use Wm\WmPackage\Models\Layer as WmLayer;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 
 class Layer extends WmLayer
 {
@@ -45,7 +45,7 @@ class Layer extends WmLayer
                     'geometry' => $geometry,
                     'properties' => [
                         'tooltip' => $hikingRouteName,
-                        'link' => url('/resources/'.$novaResourceName.'/'.$hikingRoute->id),
+                        'link' => url('/resources/' . $novaResourceName . '/' . $hikingRoute->id),
                         'strokeColor' => 'red',
                         'strokeWidth' => 2,
                     ],

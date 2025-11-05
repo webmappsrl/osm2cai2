@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 use App\Traits\SpatialDataTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +11,7 @@ use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Interfaces\OsmfeaturesSyncableInterface;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Wm\WmPackage\Models\Abstracts\GeometryModel;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 
 class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 {
@@ -70,7 +70,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
         }
 
         if (! $model->osmfeatures_data) {
-            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole ' . $osmfeaturesId);
 
             return;
         }
@@ -78,21 +78,21 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         // format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Pole ' . $osmfeaturesId);
             $geometry = null;
         }
         $properties = $osmfeaturesData['properties'];
         if (! $properties) {
-            Log::channel('wm-osmfeatures')->info('No properties found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No properties found for Pole ' . $osmfeaturesId);
 
             return;
         }
 
         if ($properties['ref'] === null || $properties['ref'] === '') {
-            Log::channel('wm-osmfeatures')->info('No ref found for Pole '.$osmfeaturesId);
-            $ref = 'noname('.$osmfeaturesId.')';
+            Log::channel('wm-osmfeatures')->info('No ref found for Pole ' . $osmfeaturesId);
+            $ref = 'noname(' . $osmfeaturesId . ')';
         } else {
             $ref = $properties['ref'];
         }
@@ -115,7 +115,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
     {
         // Aggiungi features aggiuntive per hiking routes e personalizza la feature principale
         $this->addAdditionalFeaturesForPoles();
-        
+
         // Properties di default per il polo principale
         $defaultProperties = [
             'tooltip' => $this->ref,                              // Riferimento del polo
@@ -124,10 +124,10 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
             'pointFillColor' => 'rgba(255, 0, 0, 0.8)',          // Colore riempimento punto
             'pointRadius' => 6,                                  // Raggio del punto
         ];
-        
+
         // Merge con eventuali properties passate dall'esterno
         $mergedProperties = array_merge($defaultProperties, $properties);
-        
+
         // Chiama il metodo del trait invece di se stesso
         return $this->getFeatureCollectionMapFromTrait($mergedProperties);
     }
@@ -151,13 +151,13 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
     {
         // Pulisce features precedenti per evitare duplicati
         $this->clearAdditionalFeaturesForMap();
-        
+
         $hikingRoutes = $this->getHikingRoutesWithBuffer();
 
         $checkedHikingRouteFeatures = $hikingRoutes->map(function ($route) {
             $routeProperties = [
-                'tooltip' => $route->name.' (ufficiale)',         // Nome del percorso
-                'link' => url('/resources/hiking-routes/'.$route->id), // Link di navigazione
+                'tooltip' => $route->name . ' (ufficiale)',         // Nome del percorso
+                'link' => url('/resources/hiking-routes/' . $route->id), // Link di navigazione
                 'strokeColor' => 'blue',                          // Colore della linea
                 'strokeWidth' => 6,                               // Spessore della linea
             ];

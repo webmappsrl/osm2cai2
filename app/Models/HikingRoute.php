@@ -6,7 +6,6 @@ use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyEcPoisJob;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Jobs\CheckNearbyNaturalSpringsJob;
-use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 use App\Observers\HikingRouteObserver;
 use App\Services\HikingRouteDescriptionService;
 use App\Traits\AwsCacheable;
@@ -21,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Wm\WmPackage\Models\EcTrack;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 
 class HikingRoute extends EcTrack
 {
