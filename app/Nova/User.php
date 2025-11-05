@@ -95,7 +95,7 @@ class User extends AbstractUserResource
                 $clubManagerUsers
             ));
 
-            $query->whereIn('id', $allUsers);
+            $query->whereIn('users.id', $allUsers);
         }
         // if user is section manager
         elseif ($user->managedClub) {
@@ -109,7 +109,7 @@ class User extends AbstractUserResource
             // Include also the club manager in the list
             $allUsers = array_unique(array_merge([$user->id], $clubMemberIds));
 
-            $query->whereIn('id', $allUsers);
+            $query->whereIn('users.id', $allUsers);
         }
 
         return $query;
