@@ -2,12 +2,13 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Area;
 use App\Models\User;
 
 class AreaPolicy
 {
-    private $allowedRoles = ['Administrator', 'National Referent', 'Regional Referent'];
+    private array $allowedRoles = [UserRole::Administrator, UserRole::NationalReferent, UserRole::RegionalReferent];
 
     private function hasAllowedRole(User $user): bool
     {

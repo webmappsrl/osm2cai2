@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -443,7 +444,7 @@ class WebhookController extends Controller
             ]);
 
             // Assegna il ruolo Guest
-            $user->assignRole('Guest');
+            $user->assignRole(UserRole::Guest);
 
             Log::info('Webhook: Created new user', [
                 'email' => $email,

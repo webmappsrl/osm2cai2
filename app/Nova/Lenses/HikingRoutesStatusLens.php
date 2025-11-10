@@ -2,6 +2,7 @@
 
 namespace App\Nova\Lenses;
 
+use App\Enums\UserRole;
 use App\Nova\Filters\AreaFilter;
 use App\Nova\Filters\ClubFilter;
 use App\Nova\Filters\ProvinceFilter;
@@ -32,7 +33,7 @@ class HikingRoutesStatusLens extends Lens
      */
     public static function query(LensRequest $request, $query)
     {
-        if (auth()->user()->hasRole('Regional Referent')) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             $value = auth()->user()->region->id;
 
             return $request->withOrdering($request->withFilters(
@@ -123,7 +124,7 @@ class HikingRoutesStatusLens extends Lens
      */
     public function filters(Request $request)
     {
-        if (auth()->user()->hasRole('Regional Referent')) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             return [
                 (new ProvinceFilter),
                 (new AreaFilter),
@@ -168,7 +169,7 @@ class HikingRoutesStatus0Lens extends HikingRoutesStatusLens
 
     public function __construct($resource = null)
     {
-        $this->name = auth()->user()->hasRole('Regional Referent') ? 'SDA0 '.auth()->user()->region->name : 'SDA0';
+        $this->name = auth()->user()->hasRole(UserRole::RegionalReferent) ? 'SDA0 '.auth()->user()->region->name : 'SDA0';
         parent::__construct($resource);
     }
 
@@ -184,7 +185,7 @@ class HikingRoutesStatus1Lens extends HikingRoutesStatusLens
 
     public function __construct($resource = null)
     {
-        $this->name = auth()->user()->hasRole('Regional Referent') ? 'SDA1 '.auth()->user()->region->name : 'SDA1';
+        $this->name = auth()->user()->hasRole(UserRole::RegionalReferent) ? 'SDA1 '.auth()->user()->region->name : 'SDA1';
         parent::__construct($resource);
     }
 
@@ -200,7 +201,7 @@ class HikingRoutesStatus2Lens extends HikingRoutesStatusLens
 
     public function __construct($resource = null)
     {
-        $this->name = auth()->user()->hasRole('Regional Referent') ? 'SDA2 '.auth()->user()->region->name : 'SDA2';
+        $this->name = auth()->user()->hasRole(UserRole::RegionalReferent) ? 'SDA2 '.auth()->user()->region->name : 'SDA2';
         parent::__construct($resource);
     }
 
@@ -216,7 +217,7 @@ class HikingRoutesStatus3Lens extends HikingRoutesStatusLens
 
     public function __construct($resource = null)
     {
-        $this->name = auth()->user()->hasRole('Regional Referent') ? 'SDA3 '.auth()->user()->region->name : 'SDA3';
+        $this->name = auth()->user()->hasRole(UserRole::RegionalReferent) ? 'SDA3 '.auth()->user()->region->name : 'SDA3';
         parent::__construct($resource);
     }
 
@@ -232,7 +233,7 @@ class HikingRoutesStatus4Lens extends HikingRoutesStatusLens
 
     public function __construct($resource = null)
     {
-        $this->name = auth()->user()->hasRole('Regional Referent') ? 'SDA4 '.auth()->user()->region->name : 'SDA4';
+        $this->name = auth()->user()->hasRole(UserRole::RegionalReferent) ? 'SDA4 '.auth()->user()->region->name : 'SDA4';
         parent::__construct($resource);
     }
 

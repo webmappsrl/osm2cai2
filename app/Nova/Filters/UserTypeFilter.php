@@ -2,12 +2,11 @@
 
 namespace App\Nova\Filters;
 
+use App\Enums\UserRole;
 use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-const ADMINISTRATOR = 'Administrator';
-const NATIONAL_REFERENT = 'National Referent';
-const REGIONAL_REFERENT = 'Regional Referent';
+
 const PROVINCIAL_ASSOCIATION = 'Provincial Association';
 const AREA_ASSOCIATION = 'Area Association';
 const SECTOR_ASSOCIATION = 'Sector Association';
@@ -67,9 +66,9 @@ class UserTypeFilter extends BooleanFilter
     {
         return [
 
-            'Admin' => ADMINISTRATOR,
-            'Referente Nazionale' => NATIONAL_REFERENT,
-            'Referente Regionale' => REGIONAL_REFERENT,
+            'Admin' => UserRole::Administrator,
+            'Referente Nazionale' => UserRole::NationalReferent,
+            'Referente Regionale' => UserRole::RegionalReferent,
             'Associazione Provinciale' => PROVINCIAL_ASSOCIATION,
             'Associazione Area' => AREA_ASSOCIATION,
             'Associazione Settore' => SECTOR_ASSOCIATION,

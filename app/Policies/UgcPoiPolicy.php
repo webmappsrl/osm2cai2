@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Enums\ValidatedStatusEnum;
 use App\Models\UgcPoi;
 use App\Models\User;
@@ -58,7 +59,7 @@ class UgcPoiPolicy
     {
         // RULE 1: Administrators have complete access
         // Admins can modify any POI regardless of its validation status
-        if ($user->hasRole('Administrator')) {
+        if ($user->hasRole(UserRole::Administrator)) {
             return true;
         }
 
@@ -108,7 +109,7 @@ class UgcPoiPolicy
     public function delete(User $user, UgcPoi $ugcPoi)
     {
         // Admin can delete any POI, owner can delete only if not validated
-        return $user->hasRole('Administrator') ||
+        return $user->hasRole(UserRole::Administrator) ||
             ($user->id === $ugcPoi->user_id && $ugcPoi->validated !== ValidatedStatusEnum::VALID->value);
     }
 

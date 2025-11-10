@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\UgcTrack;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -47,7 +48,7 @@ class UgcTrackPolicy
      */
     public function update(User $user, UgcTrack $ugcTrack)
     {
-        $user_can_update = $user->hasRole('Administrator') || ($ugcTrack->user_id === $user->id && $ugcTrack->validated === 'not_validated');
+        $user_can_update = $user->hasRole(UserRole::Administrator) || ($ugcTrack->user_id === $user->id && $ugcTrack->validated === 'not_validated');
 
         $permission = 'validate tracks';
 
@@ -61,7 +62,7 @@ class UgcTrackPolicy
      */
     public function delete(User $user, UgcTrack $ugcTrack)
     {
-        return $user->hasRole('Administrator') || ($user->id === $ugcTrack->user_id && $ugcTrack->validated !== 'valid');
+        return $user->hasRole(UserRole::Administrator) || ($user->id === $ugcTrack->user_id && $ugcTrack->validated !== 'valid');
     }
 
     /**
