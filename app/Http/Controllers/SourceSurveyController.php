@@ -299,8 +299,8 @@ class SourceSurveyController extends Controller
 
     private function getMediasHtml($sourceSurvey): string
     {
-        $medias = $sourceSurvey->ugc_media()->get();
-        if (count($medias) === 0) {
+        $medias = $sourceSurvey->getMedia();
+        if ($medias->isEmpty()) {
             $mediasHtml = <<<'HTML'
                         <div style="display: flex; justify-content: start;"> 'N/A'
                         HTML;
