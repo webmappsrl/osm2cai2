@@ -38,8 +38,8 @@ class SourceSurvey extends AbstractValidationResource
 
         // Defines the field to check for the presence of photos
         $hasPhotosField = Boolean::make(__('Has Photos'), function () {
-            return $this->ugc_media->isNotEmpty();
-        })->hideFromIndex();
+            return $this->getMedia()->isNotEmpty();
+        })->showOnIndex();
 
         // Preparation of acqua sorgente specific fields
         $surveyFields = $this->prepareSurveyFields();
