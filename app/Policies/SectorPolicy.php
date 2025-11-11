@@ -8,7 +8,7 @@ use App\Models\User;
 
 class SectorPolicy
 {
-    private array $allowedRoles = [UserRole::Administrator, UserRole::NationalReferent];
+    private array $allowedRoles = [UserRole::Administrator->value, UserRole::NationalReferent->value];
 
     private function hasAllowedRole(User $user): bool
     {

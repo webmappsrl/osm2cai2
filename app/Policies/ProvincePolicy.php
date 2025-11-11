@@ -8,7 +8,7 @@ use App\Models\User;
 
 class ProvincePolicy
 {
-    private array $allowedRoles = [UserRole::Administrator, UserRole::NationalReferent, UserRole::RegionalReferent];
+    private array $allowedRoles = [UserRole::Administrator->value, UserRole::NationalReferent->value, UserRole::RegionalReferent->value];
 
     private function hasAllowedRole(User $user): bool
     {

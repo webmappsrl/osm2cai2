@@ -66,9 +66,9 @@ class UserTypeFilter extends BooleanFilter
     {
         return [
 
-            'Admin' => UserRole::Administrator,
-            'Referente Nazionale' => UserRole::NationalReferent,
-            'Referente Regionale' => UserRole::RegionalReferent,
+            'Admin' => UserRole::Administrator->value,
+            'Referente Nazionale' => UserRole::NationalReferent->value,
+            'Referente Regionale' => UserRole::RegionalReferent->value,
             'Associazione Provinciale' => PROVINCIAL_ASSOCIATION,
             'Associazione Area' => AREA_ASSOCIATION,
             'Associazione Settore' => SECTOR_ASSOCIATION,

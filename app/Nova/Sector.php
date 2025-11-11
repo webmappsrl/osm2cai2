@@ -304,7 +304,7 @@ class Sector extends Resource
                 return true;
             })->showInline(),
             (new BulkSectorsModeratorAssignAction)->canSee(function ($request) {
-                $rolesAllowed = [UserRole::Administrator, UserRole::NationalReferent, UserRole::RegionalReferent];
+                $rolesAllowed = [UserRole::Administrator->value, UserRole::NationalReferent->value, UserRole::RegionalReferent->value];
 
                 $userRoles = auth()->user()->roles->pluck('name')->toArray();
 
