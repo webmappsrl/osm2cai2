@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CalculateIntersections;
@@ -197,14 +198,14 @@ class Region extends Resource
                 return true;
             })->showInline(),
             (new CacheMiturApi('Region'))->canSee(function ($request) {
-                return $request->user()->hasRole('Administrator');
+                return $request->user()->hasRole(UserRole::Administrator);
             })->canRun(function ($request) {
-                return $request->user()->hasRole('Administrator');
+                return $request->user()->hasRole(UserRole::Administrator);
             })->showInline(),
             (new CalculateIntersections('Region'))->canSee(function ($request) {
-                return $request->user()->hasRole('Administrator');
+                return $request->user()->hasRole(UserRole::Administrator);
             })->canRun(function ($request) {
-                return $request->user()->hasRole('Administrator');
+                return $request->user()->hasRole(UserRole::Administrator);
             })->showInline(),
 
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Club;
 use App\Models\User;
 
@@ -28,7 +29,7 @@ class ClubPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::Administrator);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\Area;
 use App\Models\Club;
 use App\Models\Province;
@@ -61,7 +62,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
             // Apply filters based on requested role
             switch ($role) {
-                case 'Local Referent':
+                case UserRole::LocalReferent->value:
                     // Users with assigned provinces, areas or sectors
                     $usersWithProvinces = $this->legacyDbConnection->table('province_user')
                         ->distinct()->pluck('user_id');
@@ -86,7 +87,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     $query->whereIn('id', $userIds);
                     break;
 
-                case 'Club Manager':
+                case UserRole::ClubManager->value:
                     // Users with manager_section_id set
                     $query->whereNotNull('manager_section_id');
 
@@ -97,7 +98,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     }
                     break;
 
-                case 'Regional Referent':
+                case UserRole::RegionalReferent->value:
                     // Users with region_id set
                     $query->whereNotNull('region_id');
 
@@ -108,7 +109,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     }
                     break;
 
-                case 'Administrator':
+                case UserRole::Administrator->value:
                     $query->where('is_administrator', true);
 
                     if ($debug) {
@@ -118,7 +119,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     }
                     break;
 
-                case 'National Referent':
+                case UserRole::NationalReferent->value:
                     $query->where('is_national_referent', true);
 
                     if ($debug) {
@@ -128,7 +129,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                     }
                     break;
 
-                case 'Validator':
+                case UserRole::Validator->value:
                     // Users with any validation permission
                     $query->where(function ($q) {
                         $q->whereNotNull('resources_validator')
@@ -187,7 +188,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
             try {
                 foreach ($legacyUsers as $legacyUser) {
-                    $this->info('Importing user: '.$legacyUser->email);
+                    $this->info('Importing user: ' . $legacyUser->email);
                     $userStats['processed']++;
 
                     try {
@@ -215,24 +216,24 @@ class SyncUsersFromLegacyOsm2cai extends Command
                                     $userStats['roles'][$role]++;
                                 }
 
-                                $this->info("User {$user->email} roles: ".implode(', ', $after));
+                                $this->info("User {$user->email} roles: " . implode(', ', $after));
 
                                 if ($before) {
                                     $added = array_diff($after, $before);
                                     $removed = array_diff($before, $after);
 
                                     if (! empty($added)) {
-                                        $this->info('Roles added: '.implode(', ', $added));
+                                        $this->info('Roles added: ' . implode(', ', $added));
                                     }
 
                                     if (! empty($removed)) {
-                                        $this->info('Roles removed: '.implode(', ', $removed));
+                                        $this->info('Roles removed: ' . implode(', ', $removed));
                                     }
                                 }
                             }
                         }
                     } catch (\Exception $e) {
-                        $this->error('Error importing user: '.$legacyUser->email);
+                        $this->error('Error importing user: ' . $legacyUser->email);
                         $this->error($e->getMessage());
 
                         continue;
@@ -242,7 +243,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
-                $this->error('Error during transaction: '.$e->getMessage());
+                $this->error('Error during transaction: ' . $e->getMessage());
             }
         });
 
@@ -265,7 +266,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
             }
 
             // Show specific statistics for Local Referents
-            if ($this->option('role') == 'Local Referent' || ! $this->option('role')) {
+            if ($this->option('role') == UserRole::LocalReferent->value || ! $this->option('role')) {
                 $this->info("\nLocal Referent Details:");
                 $usersWithProvinces = User::has('provinces')->count();
                 $usersWithAreas = User::has('areas')->count();
@@ -274,7 +275,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 $this->info("- Users with areas: $usersWithAreas");
                 $this->info("- Users with sectors: $usersWithSectors");
 
-                $localRefCount = User::role('Local Referent')->count();
+                $localRefCount = User::role(UserRole::LocalReferent)->count();
                 $this->info("- Total with 'Local Referent' role: $localRefCount");
             }
         }
@@ -337,15 +338,15 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($provinceIds)) {
             // Retrieve province codes only once if not in cache
-            if (! isset($this->legacyCache['provinceCodes_'.implode('_', $provinceIds)])) {
-                $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['provinceCodes_' . implode('_', $provinceIds)])) {
+                $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)] = $this->legacyDbConnection
                     ->table('provinces')
                     ->whereIn('id', $provinceIds)
                     ->pluck('code')
                     ->toArray();
             }
 
-            $provinceCodes = $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)];
+            $provinceCodes = $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)];
 
             if (! empty($provinceCodes)) {
                 $provinces = $this->modelCache['provinces']->filter(function ($province) use ($provinceCodes) {
@@ -357,8 +358,8 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
                 if ($provinces->isNotEmpty()) {
                     $user->provinces()->sync($provinces->pluck('id'));
-                    $user->removeRole('Guest');
-                    $user->assignRole('Local Referent');
+                    $user->removeRole(UserRole::Guest);
+                    $user->assignRole(UserRole::LocalReferent);
                     $shouldHaveLocalReferent = true;
                 } else {
                     $user->provinces()->detach();
@@ -379,22 +380,22 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($areaIds)) {
             // Retrieve area names only once if not in cache
-            if (! isset($this->legacyCache['areaNames_'.implode('_', $areaIds)])) {
-                $this->legacyCache['areaNames_'.implode('_', $areaIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['areaNames_' . implode('_', $areaIds)])) {
+                $this->legacyCache['areaNames_' . implode('_', $areaIds)] = $this->legacyDbConnection
                     ->table('areas')
                     ->whereIn('id', $areaIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $areaNames = $this->legacyCache['areaNames_'.implode('_', $areaIds)];
+            $areaNames = $this->legacyCache['areaNames_' . implode('_', $areaIds)];
 
             if (! empty($areaNames)) {
                 $areas = $this->modelCache['areas']->whereIn('name', $areaNames);
                 if ($areas->isNotEmpty()) {
                     $user->areas()->sync($areas->pluck('id'));
-                    $user->removeRole('Guest');
-                    $user->assignRole('Local Referent');
+                    $user->removeRole(UserRole::Guest);
+                    $user->assignRole(UserRole::LocalReferent);
                     $shouldHaveLocalReferent = true;
                 } else {
                     $user->areas()->detach();
@@ -415,22 +416,22 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($sectorIds)) {
             // Retrieve sector names only once if not in cache
-            if (! isset($this->legacyCache['sectorNames_'.implode('_', $sectorIds)])) {
-                $this->legacyCache['sectorNames_'.implode('_', $sectorIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['sectorNames_' . implode('_', $sectorIds)])) {
+                $this->legacyCache['sectorNames_' . implode('_', $sectorIds)] = $this->legacyDbConnection
                     ->table('sectors')
                     ->whereIn('id', $sectorIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $sectorNames = $this->legacyCache['sectorNames_'.implode('_', $sectorIds)];
+            $sectorNames = $this->legacyCache['sectorNames_' . implode('_', $sectorIds)];
 
             if (! empty($sectorNames)) {
                 $sectors = $this->modelCache['sectors']->whereIn('name', $sectorNames);
                 if ($sectors->isNotEmpty()) {
                     $user->sectors()->sync($sectors->pluck('id'));
-                    $user->removeRole('Guest');
-                    $user->assignRole('Local Referent');
+                    $user->removeRole(UserRole::Guest);
+                    $user->assignRole(UserRole::LocalReferent);
                     $shouldHaveLocalReferent = true;
                 } else {
                     $user->sectors()->detach();
@@ -461,8 +462,8 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $legacyRegion = $this->legacyCache['regions'][$regionId];
             if ($legacyRegion && isset($this->modelCache['regions'][$legacyRegion->osmfeatures_id])) {
                 $user->region_id = $this->modelCache['regions'][$legacyRegion->osmfeatures_id]->id;
-                $user->removeRole('Guest');
-                $user->assignRole('Regional Referent');
+                $user->removeRole(UserRole::Guest);
+                $user->assignRole(UserRole::RegionalReferent);
                 $shouldHaveRegionalReferent = true;
             }
         }
@@ -475,37 +476,37 @@ class SyncUsersFromLegacyOsm2cai extends Command
             $legacyManagedSection = $this->legacyCache['sections'][$managedSectionId];
             if ($legacyManagedSection && isset($this->modelCache['clubs'][$legacyManagedSection->cai_code])) {
                 $user->managed_club_id = $this->modelCache['clubs'][$legacyManagedSection->cai_code]->id;
-                $user->removeRole('Guest');
-                $user->assignRole('Club Manager');
+                $user->removeRole(UserRole::Guest);
+                $user->assignRole(UserRole::ClubManager);
                 $shouldHaveClubManager = true;
             }
         }
 
         // Remove roles if conditions are not met
-        if (! $shouldHaveLocalReferent && $user->hasRole('Local Referent')) {
-            $user->removeRole('Local Referent');
+        if (! $shouldHaveLocalReferent && $user->hasRole(UserRole::LocalReferent)) {
+            $user->removeRole(UserRole::LocalReferent);
         }
 
-        if (! $shouldHaveRegionalReferent && $user->hasRole('Regional Referent')) {
-            $user->removeRole('Regional Referent');
+        if (! $shouldHaveRegionalReferent && $user->hasRole(UserRole::RegionalReferent)) {
+            $user->removeRole(UserRole::RegionalReferent);
         }
 
-        if (! $shouldHaveClubManager && $user->hasRole('Club Manager')) {
-            $user->removeRole('Club Manager');
+        if (! $shouldHaveClubManager && $user->hasRole(UserRole::ClubManager)) {
+            $user->removeRole(UserRole::ClubManager);
         }
 
         // If no role is assigned and the user is not Administrator or National Referent or other roles,
         // reassign the Guest role
         if (
-            ! $user->hasRole('Administrator') &&
-            ! $user->hasRole('National Referent') &&
-            ! $user->hasRole('Itinerary Manager') &&
-            ! $user->hasRole('Validator') &&
+            ! $user->hasRole(UserRole::Administrator) &&
+            ! $user->hasRole(UserRole::NationalReferent) &&
+            ! $user->hasRole(UserRole::ItineraryManager) &&
+            ! $user->hasRole(UserRole::Validator) &&
             ! $shouldHaveLocalReferent &&
             ! $shouldHaveRegionalReferent &&
             ! $shouldHaveClubManager
         ) {
-            $user->assignRole('Guest');
+            $user->assignRole(UserRole::Guest);
         }
 
         $user->save();
@@ -514,16 +515,16 @@ class SyncUsersFromLegacyOsm2cai extends Command
     private function assignRolesAndPermissions($user, $legacyUser)
     {
         if ($legacyUser->is_administrator) {
-            $user->removeRole('Guest');
-            $user->assignRole('Administrator');
+            $user->removeRole(UserRole::Guest);
+            $user->assignRole(UserRole::Administrator);
         }
         if ($legacyUser->is_national_referent) {
-            $user->removeRole('Guest');
-            $user->assignRole('National Referent');
+            $user->removeRole(UserRole::Guest);
+            $user->assignRole(UserRole::NationalReferent);
         }
         if ($legacyUser->is_itinerary_manager) {
-            $user->removeRole('Guest');
-            $user->assignRole('Itinerary Manager');
+            $user->removeRole(UserRole::Guest);
+            $user->assignRole(UserRole::ItineraryManager);
         }
 
         $this->assignResourcesValidationPermissions($legacyUser, $user);
@@ -539,29 +540,29 @@ class SyncUsersFromLegacyOsm2cai extends Command
             return;
         }
 
-        if (! $user->hasRole('Administrator')) {
+        if (! $user->hasRole(UserRole::Administrator)) {
             if (isset($legacyResourceValidation['is_signs_validator']) && $legacyResourceValidation['is_signs_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate signs');
             }
 
             if (isset($legacyResourceValidation['is_source_validator']) && $legacyResourceValidation['is_source_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate source surveys');
             }
 
             if (isset($legacyResourceValidation['is_geological_site_validator']) && $legacyResourceValidation['is_geological_site_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate geological sites');
             }
 
             if (isset($legacyResourceValidation['is_archaeological_site_validator']) && $legacyResourceValidation['is_archaeological_site_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate archaeological sites');
             }
 
             if (isset($legacyResourceValidation['is_archaeological_area_validator']) && $legacyResourceValidation['is_archaeological_area_validator'] == true) {
-                $user->syncRoles(['Validator']);
+                $user->syncRoles([UserRole::Validator]);
                 $user->givePermissionTo('validate archaeological areas');
             }
         }

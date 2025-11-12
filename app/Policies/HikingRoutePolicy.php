@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\HikingRoute;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -18,9 +19,7 @@ class HikingRoutePolicy
      */
     public function before(User $user, $ability)
     {
-        if ($user->hasRole('Administrator')) {
-            return true;
-        }
+        return $user->hasRole(UserRole::Administrator);
     }
     /**
      * Determine whether the user can view any models.

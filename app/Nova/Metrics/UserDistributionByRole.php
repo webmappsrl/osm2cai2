@@ -2,6 +2,7 @@
 
 namespace App\Nova\Metrics;
 
+use App\Enums\UserRole;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
 
@@ -21,15 +22,25 @@ class UserDistributionByRole extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        $formattedResults = [
-            'Superadmin' => $this->users['Administrator'] ?? 0,
-            'Referente Nazionale' => $this->users['National Referent'] ?? 0,
-            'Referente Regionale' => $this->users['Regional Referent'] ?? 0,
-            'Referente di Zona' => $this->users['Local Referent'] ?? 0,
-            'Responsabile di Sezione' => $this->users['Club Manager'] ?? 0,
-            'Responsabile Itinerario' => $this->users['Itinerary Manager'] ?? 0,
-            'Guest' => $this->users['Guest'] ?? 0,
+        // Mappa i ruoli ai loro nomi in italiano per la visualizzazione
+        $roleLabels = [
+            UserRole::Administrator->value => 'Superadmin',
+            UserRole::NationalReferent->value => 'Referente Nazionale',
+            UserRole::RegionalReferent->value => 'Referente Regionale',
+            UserRole::LocalReferent->value => 'Referente di Zona',
+            UserRole::ClubManager->value => 'Responsabile di Sezione',
+            UserRole::ItineraryManager->value => 'Responsabile Itinerario',
+            UserRole::Guest->value => 'Guest',
+            UserRole::Contributor->value => 'Contributore',
+            UserRole::Editor->value => 'Editore',
+            UserRole::Author->value => 'Autore',
+            UserRole::Validator->value => 'Validatore',
         ];
+
+        $formattedResults = [];
+        foreach ($roleLabels as $roleValue => $roleLabel) {
+            $formattedResults[$roleLabel] = $this->users[$roleValue] ?? 0;
+        }
 
         return $this->result($formattedResults);
     }

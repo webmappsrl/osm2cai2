@@ -2,18 +2,15 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Sector;
 use App\Models\User;
 
 class SectorPolicy
 {
-    private $allowedRoles = ['Administrator', 'National Referent'];
-
     private function hasAllowedRole(User $user): bool
     {
-        $userRoles = $user->getRoleNames();
-
-        return $userRoles->intersect($this->allowedRoles)->isNotEmpty();
+        return $user->hasAnyRole([UserRole::Administrator, UserRole::NationalReferent]);
     }
 
     /**
@@ -37,7 +34,7 @@ class SectorPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::Administrator);
     }
 
     /**

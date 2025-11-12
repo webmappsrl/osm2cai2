@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Models\EcPoi;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\User;
+use App\Enums\UserRole;
 use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;
@@ -38,11 +39,13 @@ use App\Nova\Lenses\HikingRoutesStatus4Lens;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Http\Requests\ActionRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
@@ -264,7 +267,7 @@ class HikingRoute extends OsmfeaturesResource
             (new RegionFavoriteHikingRouteFilter),
         ];
 
-        if (auth()->user()->hasRole('Regional Referent')) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             return $regionalReferentFilters;
         }
 
@@ -374,9 +377,7 @@ class HikingRoute extends OsmfeaturesResource
                 ),
             (new CacheMiturApi('HikingRoute'))
                 ->canSee(function ($request) {
-                    return $request->user()->hasRole('Administrator');
-                })->canRun(function ($request) {
-                    return $request->user()->hasRole('Administrator');
+                    return $request->user()->hasRole(UserRole::Administrator);
                 }),
             (new PercorsoFavoritoAction)
                 ->onlyOnDetail('true')
@@ -397,13 +398,8 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
-                    return auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('National Referent');
-                })
-                ->canRun(
-                    function ($request, $user) {
-                        return true;
-                    }
-                ),
+                    return auth()->user()->hasRole(UserRole::Administrator) || auth()->user()->hasRole(UserRole::NationalReferent);
+                }),
             (new CreateIssue($this->model()))
                 ->confirmText(__('Are you sure you want to create an issue for this route?'))
                 ->confirmButtonText(__('Confirm'))
@@ -411,11 +407,6 @@ class HikingRoute extends OsmfeaturesResource
                 ->canSee(function ($request) {
                     return auth()->user()->getTerritorialRole() != 'unknown';
                 })
-                ->canRun(
-                    function ($request, $user) {
-                        return true;
-                    }
-                )
                 ->showInline(),
             (new OverpassMap($this->model()))
                 ->onlyOnDetail('true')
@@ -423,10 +414,9 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
-                    $userRoles = auth()->user()->getRoleNames()->toArray();
-
+                    $user = $request->user();
                     // can only see if admin, itinerary manager or national referent
-                    return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                    return $user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent) || $user->hasRole(UserRole::ItineraryManager);
                 })
                 ->canRun(function ($request, $user) {
                     return true;
@@ -437,10 +427,9 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
-                    $userRoles = auth()->user()->getRoleNames()->toArray();
-
+                    $user = $request->user();
                     // can only see if admin, itinerary manager or national referent
-                    return in_array('Administrator', $userRoles) || in_array('National Referent', $userRoles) || in_array('Itinerary Manager', $userRoles);
+                    return $user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent) || $user->hasRole(UserRole::ItineraryManager);
                 })
                 ->canRun(function ($request, $user) {
                     return true;
@@ -681,11 +670,11 @@ class HikingRoute extends OsmfeaturesResource
         }
 
         try {
-            \Log::info('HikingRoute getPOITabFields() called for ID: ' . ($this->model()->id ?? 'N/A'));
+            Log::info('HikingRoute getPOITabFields() called for ID: ' . ($this->model()->id ?? 'N/A'));
             $pois = $this->model()->getElementsInBuffer(new EcPoi, 10000);
-            \Log::info('HikingRoute getPOITabFields() found ' . count($pois) . ' POIs');
+            Log::info('HikingRoute getPOITabFields() found ' . count($pois) . ' POIs');
         } catch (\Exception $e) {
-            \Log::error('HikingRoute getPOITabFields() error: ' . $e->getMessage(), [
+            Log::error('HikingRoute getPOITabFields() error: ' . $e->getMessage(), [
                 'hiking_route_id' => $this->model()->id ?? 'N/A',
                 'exception' => $e,
             ]);

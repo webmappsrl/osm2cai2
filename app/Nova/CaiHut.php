@@ -4,7 +4,7 @@ namespace App\Nova;
 
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Region;
-use Illuminate\Http\Request;
+use App\Enums\UserRole;
 use Laravel\Nova\Fields\BelongsTo as BelongsToField;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
@@ -110,10 +110,8 @@ class CaiHut extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            (new CacheMiturApi('CaiHut'))->canSee(function () {
-                return auth()->user()->hasRole('Administrator');
-            })->canRun(function () {
-                return auth()->user()->hasRole('Administrator');
+            (new CacheMiturApi('CaiHut'))->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Administrator);
             }),
         ];
     }

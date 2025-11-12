@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Itinerary;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -12,7 +13,7 @@ class ItineraryPolicy
 
     public function before(User $user)
     {
-        return $user->hasRole('Itinerary Manager') || $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::ItineraryManager) || $user->hasRole(UserRole::Administrator);
     }
 
     /**
