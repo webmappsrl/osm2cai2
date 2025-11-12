@@ -71,7 +71,7 @@ abstract class CheckNearbyEntitiesJob implements ShouldQueue
                 return;
             }
 
-            $nearbyIds = array_map(fn($entity) => $entity->id, $nearbyEntities);
+            $nearbyIds = array_map(fn ($entity) => $entity->id, $nearbyEntities);
 
             $syncData = array_combine(
                 $nearbyIds,

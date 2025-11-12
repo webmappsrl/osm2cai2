@@ -15,7 +15,7 @@ use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 
 class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 {
-    use HasFactory, OsmfeaturesSyncableTrait, SpatialDataTrait, FeatureCollectionMapTrait;
+    use FeatureCollectionMapTrait, HasFactory, OsmfeaturesSyncableTrait, SpatialDataTrait;
 
     protected $fillable = [
         'name',
@@ -70,7 +70,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
         }
 
         if (! $model->osmfeatures_data) {
-            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole '.$osmfeaturesId);
 
             return;
         }
@@ -78,21 +78,21 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         // format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Pole ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Pole '.$osmfeaturesId);
             $geometry = null;
         }
         $properties = $osmfeaturesData['properties'];
         if (! $properties) {
-            Log::channel('wm-osmfeatures')->info('No properties found for Pole ' . $osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No properties found for Pole '.$osmfeaturesId);
 
             return;
         }
 
         if ($properties['ref'] === null || $properties['ref'] === '') {
-            Log::channel('wm-osmfeatures')->info('No ref found for Pole ' . $osmfeaturesId);
-            $ref = 'noname(' . $osmfeaturesId . ')';
+            Log::channel('wm-osmfeatures')->info('No ref found for Pole '.$osmfeaturesId);
+            $ref = 'noname('.$osmfeaturesId.')';
         } else {
             $ref = $properties['ref'];
         }
@@ -156,8 +156,8 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         $checkedHikingRouteFeatures = $hikingRoutes->map(function ($route) {
             $routeProperties = [
-                'tooltip' => $route->name . ' (ufficiale)',         // Nome del percorso
-                'link' => url('/resources/hiking-routes/' . $route->id), // Link di navigazione
+                'tooltip' => $route->name.' (ufficiale)',         // Nome del percorso
+                'link' => url('/resources/hiking-routes/'.$route->id), // Link di navigazione
                 'strokeColor' => 'blue',                          // Colore della linea
                 'strokeWidth' => 6,                               // Spessore della linea
             ];
