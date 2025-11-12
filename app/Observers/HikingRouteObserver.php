@@ -7,19 +7,19 @@ use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\HikingRoute;
 use App\Models\Layer;
 use Illuminate\Support\Facades\Log;
-use Wm\WmPackage\Services\PBFGeneratorService;
-use Wm\WmPackage\Services\GeometryComputationService;
 use Wm\WmPackage\Jobs\Pbf\GenerateLayerPBFJob;
 use Wm\WmPackage\Jobs\Pbf\GeneratePBFJob;
 use Wm\WmPackage\Observers\EcTrackObserver;
+use Wm\WmPackage\Services\GeometryComputationService;
+use Wm\WmPackage\Services\PBFGeneratorService;
 
 class HikingRouteObserver extends EcTrackObserver
 {
     /**
      * Handle events after all transactions are committed.
-     * 
+     *
      * Impostato a false per permettere a Scout di indicizzare correttamente
-     * 
+     *
      * @var bool
      */
     public $afterCommit = false;
@@ -44,7 +44,7 @@ class HikingRouteObserver extends EcTrackObserver
             5   // minZoom
         );
 
-        if (!empty($impactedTiles)) {
+        if (! empty($impactedTiles)) {
             // Crea i job per ogni tile impattato
             $jobs = [];
             foreach ($impactedTiles as $tile) {
@@ -59,14 +59,14 @@ class HikingRouteObserver extends EcTrackObserver
             }
 
             // Dispatch del batch se ci sono job da eseguire
-            if (!empty($jobs)) {
+            if (! empty($jobs)) {
                 $batch = \Illuminate\Support\Facades\Bus::batch($jobs)
                     ->name("PBF Regeneration for Track {$hikingRoute->id}: {$hikingRoute->app_id}")
                     ->onConnection('redis')
                     ->onQueue('pbf')
                     ->dispatch();
 
-                Log::info("Batch di rigenerazione PBF avviato per traccia {$hikingRoute->id}: " . count($jobs) . " job");
+                Log::info("Batch di rigenerazione PBF avviato per traccia {$hikingRoute->id}: ".count($jobs).' job');
             }
         }
     }
@@ -78,8 +78,7 @@ class HikingRouteObserver extends EcTrackObserver
     {
         Log::info('HikingRouteObserver updated event');
         // Rigenera i tile PBF ottimizzati solo se la geometria è stata modificata
-        //if ($hikingRoute->isDirty('geometry')) {}
-
+        // if ($hikingRoute->isDirty('geometry')) {}
     }
 
     /**
@@ -90,7 +89,7 @@ class HikingRouteObserver extends EcTrackObserver
         Log::info('HikingRouteObserver saving event');
         parent::saving($hikingRoute);
         if ($hikingRoute->isDirty('osmfeatures_data.properties.ref') && $hikingRoute->isDirty('osmfeatures_data.properties.from') && $hikingRoute->isDirty('osmfeatures_data.properties.to')) {
-            $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['from'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['to'];
+            $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'].' - '.$hikingRoute->osmfeatures_data['properties']['from'].' - '.$hikingRoute->osmfeatures_data['properties']['to'];
             // Non usare saveQuietly() qui per evitare il loop di eventi
         }
 
@@ -107,7 +106,7 @@ class HikingRouteObserver extends EcTrackObserver
                 }
                 $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
             } else {
-                Log::info('HikingRoute ' . $hikingRoute->id . ' is validated (status 4), skipping geometric computations');
+                Log::info('HikingRoute '.$hikingRoute->id.' is validated (status 4), skipping geometric computations');
             }
         }
     }
@@ -120,6 +119,7 @@ class HikingRouteObserver extends EcTrackObserver
             $this->updatePbfsForHikingRoute($hikingRoute);
         }
     }
+
     /**
      * Aggiorna le associazioni della hiking route ai layer in base al cambio di osm2cai_status
      */

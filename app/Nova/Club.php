@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\IssuesStatusEnum;
+use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Models\Club as ModelsClub;
 use App\Nova\Actions\AddMembersToClub;
@@ -158,7 +159,7 @@ class Club extends Resource
 
         $club = ModelsClub::where('id', $clubId)->first();
         $hr = $club ? $club->hikingRoutes()->get() : [];
-        if (! auth()->user()->hasRole('Administrator') && auth()->user()->club_id != null && auth()->user()->region_id != null) {
+        if (! auth()->user()->hasRole(UserRole::Administrator) && auth()->user()->club_id != null && auth()->user()->region_id != null) {
             $userClub = ModelsClub::where('id', auth()->user()->club_id)->first();
             $numbers[1] = $userClub->hikingRoutes()->where('osm2cai_status', 1)->count();
             $numbers[2] = $userClub->hikingRoutes()->where('osm2cai_status', 2)->count();
@@ -276,7 +277,7 @@ class Club extends Resource
         return [
             (new FindClubHrAssociationAction)
                 ->canSee(function ($request) {
-                    return $request->user()->hasRole('Administrator');
+                    return $request->user()->hasRole(UserRole::Administrator);
                 })
                 ->canRun(function ($request) {
                     return true;
@@ -313,21 +314,21 @@ class Club extends Resource
                 return true;
             })->showInline(),
             (new CacheMiturApi('Club'))->canSee(function ($request) {
-                return $request->user()->hasRole('Administrator');
+                return $request->user()->hasRole(UserRole::Administrator);
             })->canRun(function ($request) {
-                return $request->user()->hasRole('Administrator');
+                return $request->user()->hasRole(UserRole::Administrator);
             }),
         ];
     }
 
     public function authorizedToAttachAny(NovaRequest $request, $model)
     {
-        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent') || $request->user()->managedClub?->id === $this->model()->id;
+        return $request->user()->hasRole(UserRole::Administrator) || $request->user()->hasRole(UserRole::NationalReferent) || $request->user()->managedClub?->id === $this->model()->id;
     }
 
     public function authorizedToDetach(NovaRequest $request, $model, $relationship)
     {
-        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent');
+        return $request->user()->hasRole(UserRole::Administrator) || $request->user()->hasRole(UserRole::NationalReferent);
     }
 
     /**

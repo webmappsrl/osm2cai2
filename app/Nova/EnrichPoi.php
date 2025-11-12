@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CalculateIntersections;
@@ -74,12 +75,12 @@ class EnrichPoi extends OsmfeaturesResource
     {
         $actions = parent::actions($request);
         $actions[] = (new CalculateIntersections('EcPoi'))->canSee(function () {
-            return auth()->user()->hasRole('Administrator');
+            return auth()->user()->hasRole(UserRole::Administrator);
         })->canRun(function () {
             return true;
         });
         $actions[] = (new CacheMiturApi('EcPoi'))->canSee(function () {
-            return auth()->user()->hasRole('Administrator');
+            return auth()->user()->hasRole(UserRole::Administrator);
         })->canRun(function () {
             return true;
         });

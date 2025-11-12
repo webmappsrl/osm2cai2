@@ -20,7 +20,7 @@ class UgcTrack extends WmUgcTrack
         parent::__construct($attributes);
         $this->initializeUgcCommonModelTrait();
     }
-    
+
     protected static function boot()
     {
         parent::boot();
@@ -55,5 +55,4 @@ class UgcTrack extends WmUgcTrack
 
         return $array;
     }
-
 }

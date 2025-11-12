@@ -2,6 +2,7 @@
 
 namespace App\Nova\Filters;
 
+use App\Enums\UserRole;
 use App\Models\Province;
 use Illuminate\Http\Request;
 use Laravel\Nova\Filters\Filter;
@@ -54,7 +55,7 @@ class ProvinceFilter extends Filter
     public function options(Request $request)
     {
         $options = [];
-        if (auth()->user()->hasRole(__('Regional Referent'))) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             $provinces = Province::where('region_id', auth()->user()->region->id)->orderBy('name')->get();
             foreach ($provinces as $item) {
                 $options[$item->name] = $item->id;

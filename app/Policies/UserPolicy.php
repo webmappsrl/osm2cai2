@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Area;
 use App\Models\Province;
 use App\Models\Sector;
@@ -35,7 +36,7 @@ class UserPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::Administrator);
     }
 
     public function update(User $user, User $model): bool
@@ -47,17 +48,17 @@ class UserPolicy
 
     public function delete(User $user, User $model): bool
     {
-        return $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::Administrator);
     }
 
     public function restore(User $user, User $model): bool
     {
-        return $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::Administrator);
     }
 
     public function forceDelete(User $user, User $model): bool
     {
-        return $user->hasRole('Administrator');
+        return $user->hasRole(UserRole::Administrator);
     }
 
     public function attachProvince(User $user, User $model, Province $province)
@@ -95,6 +96,6 @@ class UserPolicy
      */
     private function canManageTerritoryAssociations(User $user): bool
     {
-        return $user->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent']);
+        return $user->hasAnyRole([UserRole::Administrator, UserRole::NationalReferent, UserRole::RegionalReferent]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Region;
 use App\Models\User;
 
@@ -12,7 +13,7 @@ class RegionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('Administrator') || $user->hasRole('National Referent');
+        return $user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Nova\Actions\BulkSectorsModeratorAssignAction;
 use App\Nova\Actions\DownloadCsvCompleteAction;
@@ -253,7 +254,7 @@ class Sector extends Resource
             (new AreaFilter),
         ];
 
-        if (auth()->user()->hasRole('Regional Referent')) {
+        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             unset($filters[0]);
         }
 
@@ -303,7 +304,7 @@ class Sector extends Resource
                 return true;
             })->showInline(),
             (new BulkSectorsModeratorAssignAction)->canSee(function ($request) {
-                $rolesAllowed = ['Administrator', 'National Referent', 'Regional Referent'];
+                $rolesAllowed = [UserRole::Administrator->value, UserRole::NationalReferent->value, UserRole::RegionalReferent->value];
 
                 $userRoles = auth()->user()->roles->pluck('name')->toArray();
 
@@ -314,10 +315,10 @@ class Sector extends Resource
                 ->confirmButtonText(__('Update Geometry'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
-                    return auth()->user()->hasRole('Administrator');
+                    return auth()->user()->hasRole(UserRole::Administrator);
                 })
                 ->canRun(function ($request, $user) {
-                    return auth()->user()->hasRole('Administrator');
+                    return auth()->user()->hasRole(UserRole::Administrator);
                 }),
             (new DownloadCsvCompleteAction)->canRun(function ($request, $zone) {
                 return true;
@@ -330,7 +331,7 @@ class Sector extends Resource
         $user = auth()->user();
         $sector = $this->resource;
 
-        if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
+        if ($user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent)) {
             return true;
         }
 

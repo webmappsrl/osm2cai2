@@ -2,6 +2,7 @@
 
 namespace App\Helpers\Nova;
 
+use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Models\Area;
 use App\Models\HikingRoute;
@@ -164,16 +165,16 @@ class DashboardCardsHelper
         $roles = $user->getRoleNames()->toArray();
 
         switch (true) {
-            case in_array('Administrator', $roles):
+            case in_array(UserRole::Administrator, $roles):
                 $cards = $this->nationalCards($user, $roles);
                 break;
-            case in_array('National Referent', $roles):
+            case in_array(UserRole::NationalReferent, $roles):
                 $cards = $this->nationalCards($user, $roles);
                 break;
-            case in_array('Regional Referent', $roles):
+            case in_array(UserRole::RegionalReferent, $roles):
                 $cards = $this->regionalCards($user, $roles);
                 break;
-            case in_array('Local Referent', $roles):
+            case in_array(UserRole::LocalReferent, $roles):
                 if ($user->sectors->count()) {
                     $cards = $this->_localCardsByModelClassName($user, Sector::class);
                 } elseif ($user->areas->count()) {

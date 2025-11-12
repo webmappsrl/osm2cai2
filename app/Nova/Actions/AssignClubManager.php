@@ -2,6 +2,7 @@
 
 namespace App\Nova\Actions;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -37,7 +38,7 @@ class AssignClubManager extends Action
             }
             $user = User::find($fields->clubManager);
             $user->managed_club_id = $model->id;
-            $user->assignRole('Club Manager');
+            $user->assignRole(UserRole::ClubManager);
             $user->club_manager_expire_date = $fields->club_manager_expire_date;
             $user->save();
         }

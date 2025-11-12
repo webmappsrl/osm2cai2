@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Models\Region;
 use App\Models\User as UserModel;
 use App\Nova\Filters\AreaFilter;
@@ -44,7 +45,7 @@ class User extends AbstractUserResource
         $user = Auth::user();
 
         // if user is administrator or national referent
-        if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
+        if ($user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent)) {
             return $query;
         }
 

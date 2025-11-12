@@ -2,6 +2,7 @@
 
 namespace App\Nova\Metrics;
 
+use App\Enums\UserRole;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
 
@@ -22,13 +23,13 @@ class UserDistributionByRole extends Partition
     public function calculate(NovaRequest $request)
     {
         $formattedResults = [
-            'Superadmin' => $this->users['Administrator'] ?? 0,
-            'Referente Nazionale' => $this->users['National Referent'] ?? 0,
-            'Referente Regionale' => $this->users['Regional Referent'] ?? 0,
-            'Referente di Zona' => $this->users['Local Referent'] ?? 0,
-            'Responsabile di Sezione' => $this->users['Club Manager'] ?? 0,
-            'Responsabile Itinerario' => $this->users['Itinerary Manager'] ?? 0,
-            'Guest' => $this->users['Guest'] ?? 0,
+            'Superadmin' => $this->users[UserRole::Administrator] ?? 0,
+            'Referente Nazionale' => $this->users[UserRole::NationalReferent] ?? 0,
+            'Referente Regionale' => $this->users[UserRole::RegionalReferent] ?? 0,
+            'Referente di Zona' => $this->users[UserRole::LocalReferent] ?? 0,
+            'Responsabile di Sezione' => $this->users[UserRole::ClubManager] ?? 0,
+            'Responsabile Itinerario' => $this->users[UserRole::ItineraryManager] ?? 0,
+            'Guest' => $this->users[UserRole::Guest] ?? 0,
         ];
 
         return $this->result($formattedResults);

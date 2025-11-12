@@ -2,6 +2,7 @@
 
 namespace App\Nova\Actions;
 
+use App\Enums\UserRole;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -35,7 +36,11 @@ class DeleteHikingRouteAction extends DestructiveAction
         if (! $user || $user == null) {
             return Action::danger(__('User info is not available'));
         }
-        if (in_array('Administrator', $roles) || in_array('National Referent', $roles) || in_array('Regional Referent', $roles)) {
+        if (
+            in_array(UserRole::Administrator, $roles) ||
+            in_array(UserRole::NationalReferent, $roles) ||
+            in_array(UserRole::RegionalReferent, $roles)
+        ) {
             foreach ($models as $m) {
                 if ($m->deleted_on_osm) {
                     $m->regions()->sync([]);

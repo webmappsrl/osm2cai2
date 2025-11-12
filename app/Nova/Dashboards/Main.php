@@ -2,6 +2,7 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Enums\UserRole;
 use App\Helpers\Nova\DashboardCardsHelper;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Dashboards\Main as Dashboard;
@@ -19,19 +20,19 @@ class Main extends Dashboard
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrator')) {
+        if ($user->hasRole(UserRole::Administrator)) {
             return __('Main Dashboard');
         }
 
-        if ($user->hasRole('National Referent')) {
+        if ($user->hasRole(UserRole::NationalReferent)) {
             return __('National Dashboard');
         }
 
-        if ($user->hasRole('Regional Referent')) {
+        if ($user->hasRole(UserRole::RegionalReferent)) {
             return __('Regional Dashboard');
         }
 
-        if ($user->hasRole('Local Referent')) {
+        if ($user->hasRole(UserRole::LocalReferent)) {
             return __('Local Dashboard');
         }
 
