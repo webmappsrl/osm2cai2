@@ -37,7 +37,7 @@ class User extends AbstractUserResource
             $query->getQuery()->orders = [];
             $query->orderBy(key(static::$indexDefaultOrder), reset(static::$indexDefaultOrder));
         }
-        
+
         /**
          * @var UserModel
          */

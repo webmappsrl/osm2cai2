@@ -48,7 +48,6 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
         static::observe(EcPoiObserver::class);
     }
 
-
     /**
      * Set the properties attribute
      */
