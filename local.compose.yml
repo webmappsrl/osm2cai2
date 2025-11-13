@@ -21,6 +21,8 @@ services:
         condition: service_started
       elasticsearch:
         condition: service_started
+    networks:
+      - laravel
   db:
     extends:
       file: develop.compose.yml
@@ -47,6 +49,8 @@ services:
       memlock:
         soft: -1
         hard: -1
+    networks:
+      - laravel
   # Init container necessario per impostare automaticamente la password di kibana_system
   # Elasticsearch non supporta variabili d'ambiente per kibana_system, quindi va impostata via API
   # Il container viene rimosso automaticamente dopo l'esecuzione
@@ -85,6 +89,8 @@ services:
     # Usa la socket Docker per permettere la rimozione del container stesso
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - laravel
   # Init container per indicizzazione automatica di Scout
   # Esegue l'importazione di EcTrack in Elasticsearch all'avvio
   scout-init:
@@ -137,6 +143,8 @@ services:
         echo "Removing init container..."
         docker rm -f scout-init-${APP_NAME} 2>/dev/null || true
     restart: "no"
+    networks:
+      - laravel
   kibana:
     image: docker.elastic.co/kibana/kibana:8.17.1
     container_name: "kibana-${APP_NAME}"
@@ -154,6 +162,8 @@ services:
       - SERVER_HOST=0.0.0.0
     ports:
       - ${DOCKER_KIBANA_PORT:-5601}:5601
+    networks:
+      - laravel
   # Servizi da develop.compose.yml (mantengono la catena di ereditarietà)
   # Server Laravel per ambiente local
   laravel:
@@ -197,5 +207,4 @@ services:
 
 networks:
   laravel:
-    external: true
-    name: laravel
+    driver: bridge

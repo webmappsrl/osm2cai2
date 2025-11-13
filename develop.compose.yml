@@ -109,5 +109,4 @@ services:
 
 networks:
   laravel:
-    external: true
-    name: laravel
+    driver: bridge
