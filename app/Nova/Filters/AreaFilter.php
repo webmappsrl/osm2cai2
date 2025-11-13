@@ -33,7 +33,7 @@ class AreaFilter extends Filter
     public function apply(Request $request, $query, $value)
     {
         if ($query->getModel() instanceof \App\Models\HikingRoute) {
-            return $query->whereHas('area', function ($query) use ($value) {
+            return $query->whereHas('areas', function ($query) use ($value) {
                 $query->where('area_id', $value);
             });
         }
