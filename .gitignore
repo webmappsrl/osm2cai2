@@ -23,3 +23,4 @@ docker-compose.yml
 .env copy
 public/wm-osmfeatures.log
 /public/vendor
+.phpunit.cache/test-results
