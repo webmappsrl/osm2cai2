@@ -26,6 +26,8 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class Club extends Resource
 {
@@ -35,6 +37,29 @@ class Club extends Resource
      * @var class-string<ModelsClub>
      */
     public static $model = ModelsClub::class;
+
+    public static function indexQuery(NovaRequest $request, $query): Builder
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent)) {
+            return $query;
+        }
+
+        if ($user->getTerritorialRole() == 'regional' && ! is_null($user->region_id)) {
+            return $query->where('region_id', $user->region_id);
+        }
+
+        if ($user->managedClub) {
+            return $query->where('id', $user->managedClub->id);
+        }
+
+        if ($user->club) {
+            return $query->where('id', $user->club->id);
+        }
+
+        return $query;
+    }
 
     /**
      * The single value that should be used to represent the resource when being displayed.
