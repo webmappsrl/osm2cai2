@@ -6,7 +6,6 @@ use App\Enums\UserRole;
 use Laravel\Nova\Filters\BooleanFilter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-
 const PROVINCIAL_ASSOCIATION = 'Provincial Association';
 const AREA_ASSOCIATION = 'Area Association';
 const SECTOR_ASSOCIATION = 'Sector Association';

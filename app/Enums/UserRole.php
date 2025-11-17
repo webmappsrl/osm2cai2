@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum UserRole: string
 {
-    //TODO: translate all the roles
+    // TODO: translate all the roles
     case Administrator = 'Administrator';
     case NationalReferent = 'National Referent';
     case RegionalReferent = 'Regional Referent';
@@ -42,5 +42,4 @@ enum UserRole: string
             UserRole::RegionalReferent,
         ];
     }
-
 }

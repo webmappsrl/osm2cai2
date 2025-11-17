@@ -2,23 +2,23 @@
 
 namespace Tests\Api;
 
-use Tests\TestCase;
 use App\Models\Area;
-use App\Models\Club;
-use App\Models\User;
-use App\Models\EcPoi;
 use App\Models\CaiHut;
-use App\Models\Sector;
-use App\Models\UgcPoi;
-use App\Models\UgcMedia;
-use App\Models\UgcTrack;
-use App\Models\Itinerary;
+use App\Models\Club;
+use App\Models\EcPoi;
 use App\Models\HikingRoute;
-use App\Models\NaturalSpring;
+use App\Models\Itinerary;
 use App\Models\MountainGroups;
+use App\Models\NaturalSpring;
+use App\Models\Sector;
+use App\Models\UgcMedia;
+use App\Models\UgcPoi;
+use App\Models\UgcTrack;
+use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\TestCase;
 
 class ExportControllerTest extends TestCase
 {
@@ -130,7 +130,7 @@ class ExportControllerTest extends TestCase
             $model = $modelClass::factory()->createQuietly();
         }
 
-        $response = $this->getJson($endpoint . '/' . $model->id);
+        $response = $this->getJson($endpoint.'/'.$model->id);
         $response->assertStatus(200);
 
         $data = $response->json();

@@ -19,8 +19,11 @@ class SectorPolicyTest extends TestCase
     use DatabaseTransactions;
 
     private SectorPolicy $policy;
+
     private Region $region;
+
     private Province $province;
+
     private Area $area;
 
     protected function setUp(): void
@@ -201,4 +204,3 @@ class SectorPolicyTest extends TestCase
         $this->assertFalse($this->policy->delete($user, $sector));
     }
 }
-

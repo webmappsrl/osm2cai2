@@ -18,7 +18,9 @@ class AreaPolicyTest extends TestCase
     use DatabaseTransactions;
 
     private AreaPolicy $policy;
+
     private Region $region;
+
     private Province $province;
 
     protected function setUp(): void
