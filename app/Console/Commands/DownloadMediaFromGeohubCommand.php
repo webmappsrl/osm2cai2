@@ -4,12 +4,10 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Wm\WmPackage\Models\Media;
-use App\Models\UgcPoi;
-use App\Models\UgcTrack;
 
 class DownloadMediaFromGeohubCommand extends Command
 {
@@ -45,23 +43,24 @@ class DownloadMediaFromGeohubCommand extends Command
 
         // If not forcing, exclude already downloaded images (size > 0)
         // Note: We still check physical file existence in downloadImageFromGeohub()
-        if (!$force) {
+        if (! $force) {
             $query->where('size', '<=', 0);
         }
 
         // Order by most recent media first (better for testing new uploads)
         $mediaRecords = $query
             ->orderBy('created_at', 'desc');
-            
+
         // Apply limit only if greater than 0 (0 means no limit)
         if ($limit > 0) {
             $mediaRecords = $mediaRecords->limit($limit);
         }
-        
+
         $mediaRecords = $mediaRecords->get();
 
         if ($mediaRecords->isEmpty()) {
             $this->info('ℹ️ No Geohub images found to download');
+
             return Command::SUCCESS;
         }
 
@@ -98,38 +97,39 @@ class DownloadMediaFromGeohubCommand extends Command
     private function downloadImageFromGeohub($mediaRecord, string $geohubUrl): bool
     {
         try {
-            // Get the existing media record  
+            // Get the existing media record
             $existingMedia = Media::find($mediaRecord->id);
-            
-            if (!$existingMedia) {
+
+            if (! $existingMedia) {
                 Log::warning("Media record {$mediaRecord->id} not found");
+
                 return false;
             }
 
             // Check if file already exists and has size (unless force is used)
-            if (!$this->option('force') && $existingMedia->size > 0) {
+            if (! $this->option('force') && $existingMedia->size > 0) {
                 return true; // Already downloaded
             }
 
             // Download the image
             $response = Http::timeout(30)->get($geohubUrl);
-            
-            if (!$response->successful()) {
+
+            if (! $response->successful()) {
                 return false;
             }
 
             $imageContent = $response->body();
-            
+
             // Use the PathGeneratorFactory to get the correct path generator for this media
             $disk = Storage::disk($existingMedia->disk);
-            
+
             // Let MediaLibrary determine the correct path generator via factory
             $pathGenerator = \Spatie\MediaLibrary\Support\PathGenerator\PathGeneratorFactory::create($existingMedia);
-            $filePath = $pathGenerator->getPath($existingMedia) . '/' . $existingMedia->file_name;
-            
+            $filePath = $pathGenerator->getPath($existingMedia).'/'.$existingMedia->file_name;
+
             // Save to the configured storage (respects AWS/Minio config and correct path structure)
             $disk->put($filePath, $imageContent);
-            
+
             // Update the media record
             $existingMedia->update([
                 'size' => strlen($imageContent),
@@ -137,9 +137,9 @@ class DownloadMediaFromGeohubCommand extends Command
             ]);
 
             return true;
-
         } catch (\Exception $e) {
-            Log::warning("Failed to download image from {$geohubUrl}: " . $e->getMessage());
+            Log::warning("Failed to download image from {$geohubUrl}: ".$e->getMessage());
+
             return false;
         }
     }

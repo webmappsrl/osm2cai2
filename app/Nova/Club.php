@@ -17,7 +17,9 @@ use App\Nova\Filters\ClubFilter;
 use App\Nova\Filters\RegionFilter;
 use App\Nova\Metrics\ClubSalPercorribilità;
 use App\Nova\Metrics\ClubSalPercorsi;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
@@ -35,6 +37,29 @@ class Club extends Resource
      * @var class-string<ModelsClub>
      */
     public static $model = ModelsClub::class;
+
+    public static function indexQuery(NovaRequest $request, $query): Builder
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent)) {
+            return $query;
+        }
+
+        if ($user->getTerritorialRole() == 'regional' && ! is_null($user->region_id)) {
+            return $query->where('region_id', $user->region_id);
+        }
+
+        if ($user->managedClub) {
+            return $query->where('id', $user->managedClub->id);
+        }
+
+        if ($user->club) {
+            return $query->where('id', $user->club->id);
+        }
+
+        return $query;
+    }
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -69,16 +94,16 @@ class Club extends Resource
         $hikingRoutes = $this->hikingRoutes;
 
         // define the hiking routes for each osm2cai status
-        $hikingRoutesSDA1 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 1);
-        $hikingRoutesSDA2 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 2);
-        $hikingRoutesSDA3 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 3);
-        $hikingRoutesSDA4 = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->osm2cai_status == 4);
+        $hikingRoutesSDA1 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 1);
+        $hikingRoutesSDA2 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 2);
+        $hikingRoutesSDA3 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 3);
+        $hikingRoutesSDA4 = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->osm2cai_status == 4);
 
         // define the hikingroutes for each issue status
-        $hikingRoutesSPS = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Unknown);
-        $hikingRoutesSPP = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Open);
-        $hikingRouteSPPP = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::PartiallyClosed);
-        $hikingRoutesSPNP = $hikingRoutes->filter(fn($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Closed);
+        $hikingRoutesSPS = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Unknown);
+        $hikingRoutesSPP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Open);
+        $hikingRouteSPPP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::PartiallyClosed);
+        $hikingRoutesSPNP = $hikingRoutes->filter(fn ($hikingRoute) => $hikingRoute->issues_status == IssuesStatusEnum::Closed);
 
         return [
             ID::make()->sortable()
@@ -229,7 +254,7 @@ class Club extends Resource
             $filter = base64_encode(json_encode([
                 ['class' => ClubFilter::class, 'value' => $resourceId],
             ]));
-            $exploreUrl = trim(Nova::path(), '/') . "/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
+            $exploreUrl = trim(Nova::path(), '/')."/resources/hiking-routes/lens/hiking-routes-status-$sda-lens?hiking-routes_filter=$filter";
         }
 
         return (new HtmlCard)
@@ -346,14 +371,14 @@ class Club extends Resource
         $formattedNames = $users->map(function ($user) use ($maxLength) {
             $name = $user->name;
             if ($maxLength && strlen($name) > $maxLength) {
-                $name = substr($name, 0, $maxLength) . '...';
+                $name = substr($name, 0, $maxLength).'...';
             }
 
             return $name;
         })->join('<br>');
 
         if ($showCount) {
-            $formattedNames .= '<br><strong>Total: ' . $users->count() . '</strong>';
+            $formattedNames .= '<br><strong>Total: '.$users->count().'</strong>';
         }
 
         return $formattedNames;

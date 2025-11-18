@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum UgcCreatedByEnum: string
+enum UgcCreatedByeEnum: string
 {
     case PLATFORM = 'platform';
     case DEVICE = 'device';

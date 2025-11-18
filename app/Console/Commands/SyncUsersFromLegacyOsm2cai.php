@@ -188,7 +188,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
             try {
                 foreach ($legacyUsers as $legacyUser) {
-                    $this->info('Importing user: ' . $legacyUser->email);
+                    $this->info('Importing user: '.$legacyUser->email);
                     $userStats['processed']++;
 
                     try {
@@ -216,24 +216,24 @@ class SyncUsersFromLegacyOsm2cai extends Command
                                     $userStats['roles'][$role]++;
                                 }
 
-                                $this->info("User {$user->email} roles: " . implode(', ', $after));
+                                $this->info("User {$user->email} roles: ".implode(', ', $after));
 
                                 if ($before) {
                                     $added = array_diff($after, $before);
                                     $removed = array_diff($before, $after);
 
                                     if (! empty($added)) {
-                                        $this->info('Roles added: ' . implode(', ', $added));
+                                        $this->info('Roles added: '.implode(', ', $added));
                                     }
 
                                     if (! empty($removed)) {
-                                        $this->info('Roles removed: ' . implode(', ', $removed));
+                                        $this->info('Roles removed: '.implode(', ', $removed));
                                     }
                                 }
                             }
                         }
                     } catch (\Exception $e) {
-                        $this->error('Error importing user: ' . $legacyUser->email);
+                        $this->error('Error importing user: '.$legacyUser->email);
                         $this->error($e->getMessage());
 
                         continue;
@@ -243,7 +243,7 @@ class SyncUsersFromLegacyOsm2cai extends Command
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
-                $this->error('Error during transaction: ' . $e->getMessage());
+                $this->error('Error during transaction: '.$e->getMessage());
             }
         });
 
@@ -338,15 +338,15 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($provinceIds)) {
             // Retrieve province codes only once if not in cache
-            if (! isset($this->legacyCache['provinceCodes_' . implode('_', $provinceIds)])) {
-                $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['provinceCodes_'.implode('_', $provinceIds)])) {
+                $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)] = $this->legacyDbConnection
                     ->table('provinces')
                     ->whereIn('id', $provinceIds)
                     ->pluck('code')
                     ->toArray();
             }
 
-            $provinceCodes = $this->legacyCache['provinceCodes_' . implode('_', $provinceIds)];
+            $provinceCodes = $this->legacyCache['provinceCodes_'.implode('_', $provinceIds)];
 
             if (! empty($provinceCodes)) {
                 $provinces = $this->modelCache['provinces']->filter(function ($province) use ($provinceCodes) {
@@ -380,15 +380,15 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($areaIds)) {
             // Retrieve area names only once if not in cache
-            if (! isset($this->legacyCache['areaNames_' . implode('_', $areaIds)])) {
-                $this->legacyCache['areaNames_' . implode('_', $areaIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['areaNames_'.implode('_', $areaIds)])) {
+                $this->legacyCache['areaNames_'.implode('_', $areaIds)] = $this->legacyDbConnection
                     ->table('areas')
                     ->whereIn('id', $areaIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $areaNames = $this->legacyCache['areaNames_' . implode('_', $areaIds)];
+            $areaNames = $this->legacyCache['areaNames_'.implode('_', $areaIds)];
 
             if (! empty($areaNames)) {
                 $areas = $this->modelCache['areas']->whereIn('name', $areaNames);
@@ -416,15 +416,15 @@ class SyncUsersFromLegacyOsm2cai extends Command
 
         if (! empty($sectorIds)) {
             // Retrieve sector names only once if not in cache
-            if (! isset($this->legacyCache['sectorNames_' . implode('_', $sectorIds)])) {
-                $this->legacyCache['sectorNames_' . implode('_', $sectorIds)] = $this->legacyDbConnection
+            if (! isset($this->legacyCache['sectorNames_'.implode('_', $sectorIds)])) {
+                $this->legacyCache['sectorNames_'.implode('_', $sectorIds)] = $this->legacyDbConnection
                     ->table('sectors')
                     ->whereIn('id', $sectorIds)
                     ->pluck('name')
                     ->toArray();
             }
 
-            $sectorNames = $this->legacyCache['sectorNames_' . implode('_', $sectorIds)];
+            $sectorNames = $this->legacyCache['sectorNames_'.implode('_', $sectorIds)];
 
             if (! empty($sectorNames)) {
                 $sectors = $this->modelCache['sectors']->whereIn('name', $sectorNames);
