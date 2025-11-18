@@ -194,13 +194,13 @@ class DashboardCardsHelper
         $usersByRole = Cache::remember('usersByRole', 60 * 60 * 24 * 2, function () {
             return
                 DB::table('users')
-                ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-                ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                ->select('roles.name', DB::raw('count(*) as count'))
-                ->groupBy('roles.name')
-                ->get()
-                ->pluck('count', 'name')
-                ->toArray();
+                    ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                    ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                    ->select('roles.name', DB::raw('count(*) as count'))
+                    ->groupBy('roles.name')
+                    ->get()
+                    ->pluck('count', 'name')
+                    ->toArray();
         });
 
         $usersByRegion = Cache::remember('usersByRegion', 60 * 60 * 24 * 2, function () {
@@ -365,7 +365,7 @@ class DashboardCardsHelper
 
     private function getTotalKmCard($status, $label)
     {
-        $cacheKey = is_array($status) ? 'total_km_' . implode('_', $status) : 'total_km_' . $status;
+        $cacheKey = is_array($status) ? 'total_km_'.implode('_', $status) : 'total_km_'.$status;
 
         $total = Cache::remember($cacheKey, now()->addDays(2), function () use ($status) {
             $query = DB::table('hiking_routes')
@@ -453,7 +453,7 @@ class DashboardCardsHelper
     {
         $region = $user->region;
 
-        $data = Cache::remember('regional_data_' . $region->id, now()->addDays(2), function () use ($region) {
+        $data = Cache::remember('regional_data_'.$region->id, now()->addDays(2), function () use ($region) {
             $numbers = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
 
             foreach ($region->hikingRoutes as $hr) {
@@ -490,7 +490,7 @@ class DashboardCardsHelper
             ];
         });
 
-        $SALIssueStatus = Cache::remember('sal_issue_status_' . $region->id, now()->addDays(2), function () use ($region) {
+        $SALIssueStatus = Cache::remember('sal_issue_status_'.$region->id, now()->addDays(2), function () use ($region) {
             return $this->getSalIssueStatus($region);
         });
 
@@ -649,7 +649,7 @@ class DashboardCardsHelper
                 if ($att > 0) {
                     $sal = ($tot1 * 0.25 + $tot2 * 0.50 + $tot3 * 0.75 + $tot4) / $att;
                     $sal = min($sal, 1);
-                    $salDisplay = number_format($sal * 100, 2) . ' %';
+                    $salDisplay = number_format($sal * 100, 2).' %';
                 } else {
                     $sal = 0;
                     $salDisplay = 'N/A';
@@ -658,14 +658,14 @@ class DashboardCardsHelper
                 $sal_color = Osm2caiHelper::getSalColor($sal);
 
                 $row = new Row(
-                    new Cell($region->name . ($region->code ? ' (' . $region->code . ')' : '')),
+                    new Cell($region->name.($region->code ? ' ('.$region->code.')' : '')),
                     new Cell((string) $tot1),
                     new Cell((string) $tot2),
                     new Cell((string) $tot3),
                     new Cell((string) $tot4),
                     new Cell((string) $tot),
                     new Cell((string) $att),
-                    new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . $salDisplay . '</div>'),
+                    new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.$salDisplay.'</div>'),
                 );
                 $tableData[] = $row;
             }
@@ -705,7 +705,7 @@ class DashboardCardsHelper
         $result = (($percorribile + $percorribileParzialmente + $nonPercorribile) / count($hikingRoutes)) * 100;
         $result = round($result, 2);
 
-        return strval($result) . '%';
+        return strval($result).'%';
     }
 
     private function getSdaRegionalCard(int $sda, int $num): HtmlCard
@@ -716,7 +716,7 @@ class DashboardCardsHelper
                 'sda' => $sda,
                 'num' => $num,
                 'backgroundColor' => Osm2caiHelper::getSdaColor($sda),
-                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens'),
+                'exploreUrl' => url('/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens'),
             ])
             ->center()
             ->withBasicStyles();
@@ -770,8 +770,8 @@ class DashboardCardsHelper
                 new Cell($item->tot4),
                 new Cell($tot),
                 new Cell($item->num_expected ?? 0),
-                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
-                new Cell('<a href="/resources/' . ($childrenTable == 'regions' ? 'region' : $childrenTable) . '/' . $item->id . '">[VIEW]</a>'),
+                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
+                new Cell('<a href="/resources/'.($childrenTable == 'regions' ? 'region' : $childrenTable).'/'.$item->id.'">[VIEW]</a>'),
             );
             $data[] = $row;
         }
@@ -786,7 +786,7 @@ class DashboardCardsHelper
         $table = (new $modelClassName)->getTable();
         $models = $user->{$table}; // Get models from user relation
 
-        $data = Cache::remember('local_cards_data_' . $user->id . '_' . $modelClassName, now()->addDays(2), function () use ($user, $models, $table) {
+        $data = Cache::remember('local_cards_data_'.$user->id.'_'.$modelClassName, now()->addDays(2), function () use ($user, $models, $table) {
             $numbers = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
             foreach ($models as $model) {
                 foreach ($model->hikingRoutes as $hr) {
@@ -807,8 +807,8 @@ class DashboardCardsHelper
                 foreach ($user->provinces as $province) {
                     $sal = $province->getSal();
                     $sal_color = Osm2caiHelper::getSalColor($sal);
-                    $salHtml .= $province->name . '<div style="background-color: ' . $sal_color . '; color: white; font-size: xx-large; padding: 12px">' .
-                        number_format($sal * 100, 2) . ' %</div>';
+                    $salHtml .= $province->name.'<div style="background-color: '.$sal_color.'; color: white; font-size: xx-large; padding: 12px">'.
+                        number_format($sal * 100, 2).' %</div>';
 
                     $numAreas += $province->areas->count();
                     if ($province->areas->count() > 0) {
@@ -823,8 +823,8 @@ class DashboardCardsHelper
                     foreach ($user->areas as $area) {
                         $sal = $area->getSal();
                         $sal_color = Osm2caiHelper::getSalColor($sal);
-                        $salHtml .= $area->name . '<div style="background-color: ' . $sal_color . '; color: white; font-size: xx-large; padding: 12px">' .
-                            number_format($sal * 100, 2) . ' %</div>';
+                        $salHtml .= $area->name.'<div style="background-color: '.$sal_color.'; color: white; font-size: xx-large; padding: 12px">'.
+                            number_format($sal * 100, 2).' %</div>';
                         $numSectors += $area->sectors->count();
                     }
                 }
@@ -833,8 +833,8 @@ class DashboardCardsHelper
                 foreach ($user->sectors as $sector) {
                     $sal = $sector->getSal();
                     $salColor = Osm2caiHelper::getSalColor($sal);
-                    $salHtml .= $sector->name . '<div style="background-color: ' . $salColor . '; color: white; font-size: xx-large; padding: 12px">' .
-                        number_format($sal * 100, 2) . ' %</div>';
+                    $salHtml .= $sector->name.'<div style="background-color: '.$salColor.'; color: white; font-size: xx-large; padding: 12px">'.
+                        number_format($sal * 100, 2).' %</div>';
                 }
             }
 
@@ -851,7 +851,7 @@ class DashboardCardsHelper
         ob_start();
         foreach ($models as $relatedModel) {
             $id = $relatedModel->id;
-?>
+            ?>
             <h5><?= $relatedModel->name ?>: </h5>
             <a href="<?= route('loading-download', ['type' => 'geojson', 'model' => $tableSingular, 'id' => $id]) ?>">Download
                 geojson
@@ -896,10 +896,10 @@ class DashboardCardsHelper
                 ->withBasicStyles(),
             (new HtmlCard)
                 ->html('<div class="font-light">
-                <p>&nbsp;</p>' .
-                    $downloadLinks .
+                <p>&nbsp;</p>'.
+                    $downloadLinks.
                     '<p>&nbsp;</p>
-                 <p>Ultima sincronizzazione da osm: ' . $syncDate . '</p>
+                 <p>Ultima sincronizzazione da osm: '.$syncDate.'</p>
                  </div>')
                 ->center()
                 ->width('full')
@@ -951,10 +951,10 @@ class DashboardCardsHelper
 
     private function _getSdaCard(int $sda, int $num): HtmlCard
     {
-        $path = '/resources/hiking-routes/lens/hiking-routes-status-' . $sda . '-lens';
+        $path = '/resources/hiking-routes/lens/hiking-routes-status-'.$sda.'-lens';
 
         return (new HtmlCard)->width('1/4')
-            ->html('<div style="background-color: ' . Osm2caiHelper::getSdaColor($sda) . '; color: white; font-size: xx-large; padding: 10px">' . $num . '</div><div style="padding: 5px">#sda ' . $sda . ' <a href="' . url($path) . '">[Esplora]</a></div>')
+            ->html('<div style="background-color: '.Osm2caiHelper::getSdaColor($sda).'; color: white; font-size: xx-large; padding: 10px">'.$num.'</div><div style="padding: 5px">#sda '.$sda.' <a href="'.url($path).'">[Esplora]</a></div>')
             ->center()
             ->withBasicStyles();
     }
@@ -966,7 +966,7 @@ class DashboardCardsHelper
         $table = (new $modelClassName)->getTable();
         $modelNamesString = $user->$table->pluck('name')->implode(', ');
 
-        $sectorsCard->title(__('SDA e SAL Settori - ' . $modelNamesString));
+        $sectorsCard->title(__('SDA e SAL Settori - '.$modelNamesString));
 
         // Headings
         $sectorsCard->header([
@@ -1037,8 +1037,8 @@ class DashboardCardsHelper
                 new Cell($item->tot4),
                 new Cell($tot),
                 new Cell($item->num_expected),
-                new Cell('<div style="background-color: ' . $sal_color . '; color: white; font-size: x-large">' . number_format($sal * 100, 2) . ' %</div>'),
-                new Cell('<a href="/resources/sectors/' . $item->id . '">[VIEW]</a>'),
+                new Cell('<div style="background-color: '.$sal_color.'; color: white; font-size: x-large">'.number_format($sal * 100, 2).' %</div>'),
+                new Cell('<a href="/resources/sectors/'.$item->id.'">[VIEW]</a>'),
             );
             $data[] = $row;
         }
@@ -1056,11 +1056,11 @@ class DashboardCardsHelper
      */
     protected function getHikingRoutes($status, $user = null)
     {
-        $cacheKey = is_array($status) ? 'hikingRoutesSda' . implode('', $status) : 'hikingRoutesSda' . $status;
+        $cacheKey = is_array($status) ? 'hikingRoutesSda'.implode('', $status) : 'hikingRoutesSda'.$status;
 
         // add user id to cache key to avoid conflicts between users
         if ($user) {
-            $cacheKey .= '_user_' . $user->id;
+            $cacheKey .= '_user_'.$user->id;
         }
 
         return Cache::remember($cacheKey, 60 * 60 * 24 * 2, function () use ($status, $user) {
@@ -1077,28 +1077,28 @@ class DashboardCardsHelper
                     if ($user->region) {
                         $q->whereHas(
                             'regions',
-                            fn($query) => $query->where('regions.id', $user->region->id)
+                            fn ($query) => $query->where('regions.id', $user->region->id)
                         );
                     }
 
                     if ($user->areas->count()) {
                         $q->whereHas(
                             'areas',
-                            fn($query) => $query->whereIn('areas.id', $user->area->pluck('id'))
+                            fn ($query) => $query->whereIn('areas.id', $user->area->pluck('id'))
                         );
                     }
 
                     if ($user->provinces->count()) {
                         $q->whereHas(
                             'provinces',
-                            fn($query) => $query->whereIn('provinces.id', $user->provinces->pluck('id'))
+                            fn ($query) => $query->whereIn('provinces.id', $user->provinces->pluck('id'))
                         );
                     }
 
                     if ($user->sectors->count()) {
                         $q->whereHas(
                             'sectors',
-                            fn($query) => $query->whereIn('sectors.id', $user->sectors->pluck('id'))
+                            fn ($query) => $query->whereIn('sectors.id', $user->sectors->pluck('id'))
                         );
                     }
                 });

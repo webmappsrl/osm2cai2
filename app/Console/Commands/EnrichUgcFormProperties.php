@@ -79,7 +79,7 @@ class EnrichUgcFormProperties extends Command
                         $bar->advance();
                     } catch (\Exception $e) {
                         $this->newLine();
-                        $this->error("Errore processando POI ID {$poi->id}: " . $e->getMessage());
+                        $this->error("Errore processando POI ID {$poi->id}: ".$e->getMessage());
                         $errorCount++;
                         $processedCount++;
                         $bar->advance();
@@ -107,7 +107,7 @@ class EnrichUgcFormProperties extends Command
                         $bar->advance();
                     } catch (\Exception $e) {
                         $this->newLine();
-                        $this->error("Errore processando Track ID {$track->id}: " . $e->getMessage());
+                        $this->error("Errore processando Track ID {$track->id}: ".$e->getMessage());
                         $errorCount++;
                         $processedCount++;
                         $bar->advance();
@@ -137,8 +137,7 @@ class EnrichUgcFormProperties extends Command
      * Processa un singolo UGC (POI o Track)
      *
      * @param  UgcPoi|UgcTrack  $ugc
-     * @param  string  $type 'poi' o 'track'
-     * @param  bool  $isDryRun
+     * @param  string  $type  'poi' o 'track'
      * @return string 'updated', 'skipped', o 'error'
      */
     private function processUgc($ugc, string $type, bool $isDryRun): string

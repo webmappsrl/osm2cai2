@@ -34,12 +34,12 @@ class MigrateUgcMediaToMediaCommand extends Command
         }
 
         // Step 2: Pre-migration checks
-        if (!$this->preMigrationChecks()) {
+        if (! $this->preMigrationChecks()) {
             return Command::FAILURE;
         }
 
         // Step 3: Execute migration
-        if (!$this->executeMigration()) {
+        if (! $this->executeMigration()) {
             return Command::FAILURE;
         }
 
@@ -48,12 +48,12 @@ class MigrateUgcMediaToMediaCommand extends Command
 
         $this->info('✅ Migration completed successfully!');
         $this->newLine();
-        
+
         $this->info('📋 Next steps:');
         $this->line('1. Download images: php artisan osm2cai:download-media-from-geohub');
         $this->line('2. Test the application thoroughly');
         $this->line('3. When ready, deprecate ugc_media table manually if needed');
-        
+
         return Command::SUCCESS;
     }
 
@@ -65,14 +65,16 @@ class MigrateUgcMediaToMediaCommand extends Command
         $this->info('🔍 Performing pre-migration checks...');
 
         // Check if ugc_media table exists
-        if (!Schema::hasTable('ugc_media')) {
+        if (! Schema::hasTable('ugc_media')) {
             $this->error('❌ ugc_media table does not exist');
+
             return false;
         }
 
         // Check if media table exists
-        if (!Schema::hasTable('media')) {
+        if (! Schema::hasTable('media')) {
             $this->error('❌ media table does not exist');
+
             return false;
         }
 
@@ -82,9 +84,10 @@ class MigrateUgcMediaToMediaCommand extends Command
             ->whereIn('model_type', ['App\\Models\\UgcPoi', 'App\\Models\\UgcTrack'])
             ->count();
 
-        if ($existingMigrated > 0 && !$this->option('force')) {
+        if ($existingMigrated > 0 && ! $this->option('force')) {
             $this->error("❌ Migration appears to have already been run ({$existingMigrated} records found)");
             $this->line('Use --force to run anyway');
+
             return false;
         }
 
@@ -94,6 +97,7 @@ class MigrateUgcMediaToMediaCommand extends Command
 
         if ($ugcMediaCount === 0) {
             $this->warn('⚠️ No records found in ugc_media table');
+
             return true;
         }
 
@@ -110,24 +114,25 @@ class MigrateUgcMediaToMediaCommand extends Command
         try {
             // 1. Ensure required columns exist
             $this->ensureRequiredColumns();
-            
+
             // 2. Clear any existing migrated data if force is used
             if ($this->option('force')) {
                 DB::table('media')
-            ->where('collection_name', 'default')
-            ->whereIn('model_type', ['App\\Models\\UgcPoi', 'App\\Models\\UgcTrack'])
-            ->delete();
+                    ->where('collection_name', 'default')
+                    ->whereIn('model_type', ['App\\Models\\UgcPoi', 'App\\Models\\UgcTrack'])
+                    ->delete();
                 $this->info('🧹 Cleared existing migrated data');
             }
-            
+
             // 3. Migrate data
             $this->migrateUgcMediaToMedia();
 
             $this->info('✅ Migration executed successfully');
-            return true;
 
+            return true;
         } catch (\Exception $e) {
-            $this->error('❌ Migration failed: ' . $e->getMessage());
+            $this->error('❌ Migration failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -138,8 +143,8 @@ class MigrateUgcMediaToMediaCommand extends Command
     private function ensureRequiredColumns(): void
     {
         $columnsAdded = false;
-        
-        if (!Schema::hasColumn('media', 'app_id')) {
+
+        if (! Schema::hasColumn('media', 'app_id')) {
             Schema::table('media', function ($table) {
                 $table->string('app_id')->nullable()->after('order_column');
             });
@@ -148,12 +153,13 @@ class MigrateUgcMediaToMediaCommand extends Command
         }
 
         // Check if geometry column exists (managed by wmpackage)
-        if (!Schema::hasColumn('media', 'geometry')) {
+        if (! Schema::hasColumn('media', 'geometry')) {
             $this->error('❌ media table does not have geometry column (wmpackage schema issue)');
+
             return;
         }
-        
-        if (!$columnsAdded) {
+
+        if (! $columnsAdded) {
             $this->info('✅ Required columns already exist');
         }
     }
@@ -164,7 +170,7 @@ class MigrateUgcMediaToMediaCommand extends Command
     private function migrateUgcMediaToMedia(): void
     {
         $this->info('📦 Migrating ugc_media data to media table...');
-        
+
         // Get all ugc_media records
         $ugcMediaRecords = DB::table('ugc_media')->get();
         $progressBar = $this->output->createProgressBar($ugcMediaRecords->count());
@@ -179,41 +185,40 @@ class MigrateUgcMediaToMediaCommand extends Command
             if ($ugcMedia->ugc_poi_id) {
                 $modelType = 'App\\Models\\UgcPoi';
                 $modelId = $ugcMedia->ugc_poi_id;
-                
+
                 // Get app_id from UgcPoi model
                 $ugcPoi = DB::table('ugc_pois')->where('id', $modelId)->first();
                 $targetAppId = $ugcPoi ? $ugcPoi->app_id : null;
-                
+
                 // If app_id is not numeric, try to determine from form content
-                if ($targetAppId && !is_numeric($targetAppId)) {
+                if ($targetAppId && ! is_numeric($targetAppId)) {
                     $targetAppId = $this->determineAppIdFromForm($ugcPoi, $targetAppId);
                 }
-                
             } elseif ($ugcMedia->ugc_track_id) {
                 $modelType = 'App\\Models\\UgcTrack';
                 $modelId = $ugcMedia->ugc_track_id;
-                
+
                 // Get app_id from UgcTrack model
                 $ugcTrack = DB::table('ugc_tracks')->where('id', $modelId)->first();
                 $targetAppId = $ugcTrack ? $ugcTrack->app_id : null;
-                
+
                 // If app_id is not numeric, try to determine from form content
-                if ($targetAppId && !is_numeric($targetAppId)) {
+                if ($targetAppId && ! is_numeric($targetAppId)) {
                     $targetAppId = $this->determineAppIdFromForm($ugcTrack, $targetAppId);
                 }
             }
 
             // Skip if no model association
-            if (!$modelType || !$modelId) {
+            if (! $modelType || ! $modelId) {
                 $progressBar->advance();
                 continue;
             }
 
             // Get geometry from ugc_media or from associated UGC model
             $geometry = $ugcMedia->geometry;
-            
+
             // If ugc_media doesn't have geometry, get it from the associated UGC model
-            if (!$geometry) {
+            if (! $geometry) {
                 if ($modelType === 'App\\Models\\UgcPoi') {
                     $ugcPoi = DB::table('ugc_pois')->where('id', $modelId)->first();
                     $geometry = $ugcPoi ? $ugcPoi->geometry : null;
@@ -224,16 +229,16 @@ class MigrateUgcMediaToMediaCommand extends Command
             }
 
             // Skip if still no geometry (media table requires NOT NULL geometry)
-            if (!$geometry) {
+            if (! $geometry) {
                 $progressBar->advance();
                 continue;
             }
 
             // Convert geometry and check if it's valid
             $convertedGeometry = $this->convertGeometryTo3D($geometry);
-            
+
             // Skip if geometry conversion failed (media table requires NOT NULL geometry)
-            if (!$convertedGeometry) {
+            if (! $convertedGeometry) {
                 $progressBar->advance();
                 continue;
             }
@@ -286,11 +291,12 @@ class MigrateUgcMediaToMediaCommand extends Command
      */
     private function generateFileName(?string $relativeUrl): string
     {
-        if (!$relativeUrl) {
+        if (! $relativeUrl) {
             return 'unknown_file.jpg';
         }
 
         $filename = basename($relativeUrl);
+
         return $filename ?: 'unknown_file.jpg';
     }
 
@@ -299,13 +305,13 @@ class MigrateUgcMediaToMediaCommand extends Command
      */
     private function guessMimeType(?string $relativeUrl): string
     {
-        if (!$relativeUrl) {
+        if (! $relativeUrl) {
             return 'image/jpeg';
         }
 
         $extension = strtolower(pathinfo($relativeUrl, PATHINFO_EXTENSION));
-        
-        return match($extension) {
+
+        return match ($extension) {
             'jpg', 'jpeg' => 'image/jpeg',
             'png' => 'image/png',
             'gif' => 'image/gif',
@@ -319,7 +325,7 @@ class MigrateUgcMediaToMediaCommand extends Command
      */
     private function convertGeometryTo3D($geometry)
     {
-        if (!$geometry) {
+        if (! $geometry) {
             return null;
         }
 
@@ -349,11 +355,11 @@ class MigrateUgcMediaToMediaCommand extends Command
     private function determineAppIdFromForm($ugcModel, $originalAppId): ?string
     {
         // Parse properties if it's JSON
-        $properties = is_string($ugcModel->properties) 
-            ? json_decode($ugcModel->properties, true) 
+        $properties = is_string($ugcModel->properties)
+            ? json_decode($ugcModel->properties, true)
             : $ugcModel->properties;
 
-        if (!$properties || !isset($properties['form'])) {
+        if (! $properties || ! isset($properties['form'])) {
             return null; // No form data, can't determine
         }
 
@@ -363,31 +369,31 @@ class MigrateUgcMediaToMediaCommand extends Command
         // 1. Check form ID first (most reliable)
         if (isset($form['id'])) {
             $formId = strtolower($form['id']);
-            
+
             switch ($formId) {
                 case 'water':
                 case 'spring':
                 case 'source':
                     $geohubAppId = '58'; // it.webmapp.acquasorgente
                     break;
-                    
+
                 case 'poi':
                     // For generic POI, check waypointtype
                     if (isset($form['waypointtype'])) {
                         $waypointtype = strtolower($form['waypointtype']);
-                        
+
                         if (in_array($waypointtype, ['flora', 'fauna', 'habitat'])) {
                             $geohubAppId = '26'; // it.webmapp.osm2cai (naturalistic)
                         }
-                        
+
                         if (in_array($waypointtype, ['archaeological_site', 'archaeological_area', 'geological_site', 'signs'])) {
                             $geohubAppId = '26'; // it.webmapp.osm2cai (cultural)
                         }
                     }
                     break;
-                    
+
                 case 'archaeological_site':
-                case 'archaeological_area': 
+                case 'archaeological_area':
                 case 'geological_site':
                 case 'signs':
                     $geohubAppId = '26'; // it.webmapp.osm2cai
@@ -396,16 +402,16 @@ class MigrateUgcMediaToMediaCommand extends Command
         }
 
         // 2. Check description for source hints
-        if (!$geohubAppId && isset($form['description'])) {
+        if (! $geohubAppId && isset($form['description'])) {
             $description = strtolower($form['description']);
-            
+
             if (strpos($description, 'inaturalist.org') !== false) {
                 $geohubAppId = '26'; // iNaturalist data usually goes to osm2cai
             }
         }
 
         // 3. Fallback: try to extract from geohub_ pattern
-        if (!$geohubAppId && strpos($originalAppId, 'geohub_') === 0) {
+        if (! $geohubAppId && strpos($originalAppId, 'geohub_') === 0) {
             $geohubAppId = str_replace('geohub_', '', $originalAppId);
         }
 
@@ -418,14 +424,14 @@ class MigrateUgcMediaToMediaCommand extends Command
      */
     private function mapGeohubToLocalAppId(?string $geohubAppId): ?string
     {
-        if (!$geohubAppId) {
+        if (! $geohubAppId) {
             return null;
         }
 
         // Mapping Geohub ID → Local ID
         $mapping = [
             '20' => '3', // it.webmapp.sicai
-            '26' => '1', // it.webmapp.osm2cai  
+            '26' => '1', // it.webmapp.osm2cai
             '58' => '2', // it.webmapp.acquasorgente
         ];
 
@@ -475,17 +481,17 @@ class MigrateUgcMediaToMediaCommand extends Command
         $this->table(['Metric', 'Value'], [
             ['Original ugc_media records', $ugcMediaCount],
             ['Migrated media records', $migratedCount],
-            ['Success rate', $ugcMediaCount > 0 ? round(($migratedCount / $ugcMediaCount) * 100, 2) . '%' : '100%'],
+            ['Success rate', $ugcMediaCount > 0 ? round(($migratedCount / $ugcMediaCount) * 100, 2).'%' : '100%'],
         ]);
 
         if ($ugcMediaCount === $migratedCount) {
             $this->info('✅ Post-migration verification passed');
+
             return true;
         } else {
             $this->warn('⚠️ Post-migration verification: Record count mismatch');
+
             return false;
         }
     }
-
-
-} 
+}

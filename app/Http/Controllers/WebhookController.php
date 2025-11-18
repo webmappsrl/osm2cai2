@@ -7,11 +7,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
+use Wm\WmPackage\Http\Controllers\Controller;
 use Wm\WmPackage\Models\UgcPoi;
 use Wm\WmPackage\Models\UgcTrack;
-use Wm\WmPackage\Services\GeometryComputationService;
-use Wm\WmPackage\Http\Controllers\Controller;
 
 class WebhookController extends Controller
 {
@@ -41,11 +39,9 @@ class WebhookController extends Controller
 
     /**
      * Processa un webhook UGC (POI o Track) con logica unificata
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param string $controllerClass Nome completo della classe controller
-     * @param string $modelClass Nome completo della classe model
-     * @return JsonResponse
+     *
+     * @param  string  $controllerClass  Nome completo della classe controller
+     * @param  string  $modelClass  Nome completo della classe model
      */
     private function processUgcWebhook(Request $request, string $controllerClass, string $modelClass): JsonResponse
     {
@@ -57,7 +53,7 @@ class WebhookController extends Controller
             'headers' => $request->headers->all(),
             'body_preview' => substr($request->getContent(), 0, 200),
             'has_files' => $request->hasFile('images'),
-            'files_count' => $request->hasFile('images') ? count($request->allFiles()['images'] ?? []) : 0
+            'files_count' => $request->hasFile('images') ? count($request->allFiles()['images'] ?? []) : 0,
         ]);
 
         // Preserva i dati originali prima di modificare la richiesta
@@ -67,7 +63,7 @@ class WebhookController extends Controller
         Log::info("Webhook: Original data received for {$modelType}", [
             'original_data_keys' => array_keys($originalData),
             'action' => $action,
-            'original_data' => $originalData
+            'original_data' => $originalData,
         ]);
 
         // Step 1: Decodifica il feature (solo decodifica, nessuna modifica)
@@ -76,19 +72,18 @@ class WebhookController extends Controller
             return response()->json(['error' => 'Invalid feature JSON'], 400);
         }
 
-
         // Gestisci le immagini usando la funzione unificata
         $imagesArray = $this->handleImages($request, null, $modelType);
 
         Log::info("Webhook: Files reorganized for {$modelType}", [
             'images_count' => count($imagesArray),
-            'feature_decoded' => $feature
+            'feature_decoded' => $feature,
         ]);
 
         // Crea una nuova richiesta con i dati modificati
         $newRequestData = [
             'action' => $action,
-            'feature' => json_encode($feature)
+            'feature' => json_encode($feature),
         ];
 
         // Crea una nuova richiesta Request
@@ -120,14 +115,14 @@ class WebhookController extends Controller
             'feature_value' => $newRequest->input('feature'),
             'has_files' => $newRequest->hasFile('feature'),
             'files_count' => count($newRequest->allFiles()),
-            'content_type' => $newRequest->header('Content-Type')
+            'content_type' => $newRequest->header('Content-Type'),
         ]);
 
         Log::info("Webhook: Request prepared for {$modelType} controller", [
             'feature_type' => gettype($feature),
             'images_count' => count($imagesArray),
             'has_feature' => isset($feature),
-            'has_images' => !empty($imagesArray)
+            'has_images' => ! empty($imagesArray),
         ]);
 
         try {
@@ -138,7 +133,7 @@ class WebhookController extends Controller
                 'action' => $action,
                 'request_all' => $newRequest->all(),
                 'request_has_files' => $newRequest->hasFile('images'),
-                'request_files_count' => count($newRequest->allFiles())
+                'request_files_count' => count($newRequest->allFiles()),
             ]);
 
             // Gestione create/update per Track (POI ha solo create tramite store)
@@ -146,8 +141,9 @@ class WebhookController extends Controller
             if ($modelType === 'Track' && $action === 'update') {
                 $ugcId = $originalData['ugc_id'] ?? null;
                 $ugcModel = $ugcId ? $modelClass::find($ugcId) : null;
-                if (!$ugcModel) {
+                if (! $ugcModel) {
                     Log::error("Webhook: UGC {$modelType} not found", ['ugc_id' => $ugcId]);
+
                     return response()->json(['error' => "UGC {$modelType} not found"], 404);
                 }
                 $response = $controller->update($newRequest, $ugcModel);
@@ -183,15 +179,13 @@ class WebhookController extends Controller
                 'request_all' => $request->all(),
                 'request_content' => $request->getContent(),
             ]);
+
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }
 
     /**
      * Mappa gli app ID da geohub a osm2cai
-     * 
-     * @param int $originalAppId
-     * @return int
      */
     private function mapAppId(int $originalAppId): int
     {
@@ -207,7 +201,7 @@ class WebhookController extends Controller
             'input_app_id' => $originalAppId,
             'output_app_id' => $mappedAppId,
             'mapping_found' => isset($mapping[$originalAppId]),
-            'mapping_rule' => isset($mapping[$originalAppId]) ? "{$originalAppId} -> {$mappedAppId}" : 'no mapping (using original)'
+            'mapping_rule' => isset($mapping[$originalAppId]) ? "{$originalAppId} -> {$mappedAppId}" : 'no mapping (using original)',
         ]);
 
         return $mappedAppId;
@@ -215,9 +209,9 @@ class WebhookController extends Controller
 
     /**
      * Gestisce la decodifica del feature che può arrivare come stringa JSON, array o file
-     * 
-     * @param mixed $feature Il feature da decodificare
-     * @param string $modelType Tipo di modello per logging ('POI' o 'Track')
+     *
+     * @param  mixed  $feature  Il feature da decodificare
+     * @param  string  $modelType  Tipo di modello per logging ('POI' o 'Track')
      * @return array|null Il feature decodificato o null in caso di errore
      */
     private function decodeFeature($feature, string $modelType): ?array
@@ -225,7 +219,7 @@ class WebhookController extends Controller
         Log::info("Webhook: Feature received for {$modelType}", [
             'feature_type' => gettype($feature),
             'feature_class' => is_object($feature) ? get_class($feature) : 'N/A',
-            'feature_raw' => $feature
+            'feature_raw' => $feature,
         ]);
 
         // Se il feature è un file, leggi il contenuto
@@ -233,15 +227,16 @@ class WebhookController extends Controller
             $featureContent = $feature->get();
             Log::info("Webhook: Feature file content for {$modelType}", [
                 'content_length' => strlen($featureContent),
-                'content_preview' => substr($featureContent, 0, 200)
+                'content_preview' => substr($featureContent, 0, 200),
             ]);
 
             $feature = json_decode($featureContent, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::error("Webhook: Error decoding feature file JSON for {$modelType}", [
                     'content' => $featureContent,
-                    'json_error' => json_last_error_msg()
+                    'json_error' => json_last_error_msg(),
                 ]);
+
                 return null;
             }
         } elseif (is_string($feature)) {
@@ -249,8 +244,9 @@ class WebhookController extends Controller
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::error("Webhook: Error decoding feature JSON for {$modelType}", [
                     'feature_string' => $feature,
-                    'json_error' => json_last_error_msg()
+                    'json_error' => json_last_error_msg(),
                 ]);
+
                 return null;
             }
         }
@@ -258,20 +254,17 @@ class WebhookController extends Controller
         Log::info("Webhook: Feature decoded for {$modelType}", [
             'feature_decoded' => $feature,
             'properties' => $feature['properties'] ?? 'N/A',
-            'geometry' => isset($feature['geometry']) ? 'Present' : 'Missing'
+            'geometry' => isset($feature['geometry']) ? 'Present' : 'Missing',
         ]);
 
         return $feature;
     }
 
-
-
     /**
      * Gestisce le immagini per un modello UGC (POI o Track)
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param mixed $model Il modello UGC (UgcPoi o UgcTrack)
-     * @param string $modelType Tipo di modello per logging ('POI' o 'Track')
+     *
+     * @param  mixed  $model  Il modello UGC (UgcPoi o UgcTrack)
+     * @param  string  $modelType  Tipo di modello per logging ('POI' o 'Track')
      * @return array Array delle immagini processate
      */
     private function handleImages(Request $request, $model, string $modelType): array
@@ -290,7 +283,7 @@ class WebhookController extends Controller
 
             Log::info("Webhook: Processing images for {$modelType}", [
                 'images_count' => $imagesCount,
-                'all_files_keys' => array_keys($allFiles)
+                'all_files_keys' => array_keys($allFiles),
             ]);
         }
 
@@ -318,7 +311,7 @@ class WebhookController extends Controller
 
         Log::info("Webhook: Files reorganized for {$modelType}", [
             'all_files_keys' => array_keys($allFiles),
-            'images_count' => count($imagesArray)
+            'images_count' => count($imagesArray),
         ]);
 
         return $imagesArray;
@@ -326,15 +319,15 @@ class WebhookController extends Controller
 
     /**
      * Associa le immagini a un modello UGC dopo la creazione
-     * 
-     * @param mixed $model Il modello UGC (UgcPoi o UgcTrack)
-     * @param array $imagesArray Array delle immagini da associare
-     * @param string $modelType Tipo di modello per logging ('POI' o 'Track')
-     * @param int $modelId ID del modello per logging
+     *
+     * @param  mixed  $model  Il modello UGC (UgcPoi o UgcTrack)
+     * @param  array  $imagesArray  Array delle immagini da associare
+     * @param  string  $modelType  Tipo di modello per logging ('POI' o 'Track')
+     * @param  int  $modelId  ID del modello per logging
      */
     private function associateImagesToModel($model, array $imagesArray, string $modelType, int $modelId): void
     {
-        if (!empty($imagesArray)) {
+        if (! empty($imagesArray)) {
             foreach ($imagesArray as $image) {
                 if ($image instanceof \Illuminate\Http\UploadedFile) {
                     $model->addMedia($image)
@@ -342,19 +335,18 @@ class WebhookController extends Controller
                 }
             }
             Log::info("Webhook: Associated images with {$modelType}", [
-                strtolower($modelType) . '_id' => $modelId,
-                'images_count' => count($imagesArray)
+                strtolower($modelType).'_id' => $modelId,
+                'images_count' => count($imagesArray),
             ]);
         }
     }
 
     /**
      * Gestisce l'associazione dell'utente e imposta created_by per un modello UGC
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param mixed $model Il modello UGC (UgcPoi o UgcTrack)
-     * @param string $modelType Tipo di modello per logging ('POI' o 'Track')
-     * @param int $modelId ID del modello per logging
+     *
+     * @param  mixed  $model  Il modello UGC (UgcPoi o UgcTrack)
+     * @param  string  $modelType  Tipo di modello per logging ('POI' o 'Track')
+     * @param  int  $modelId  ID del modello per logging
      */
     private function handleUserAssociation(Request $request, $model, string $modelType, int $modelId): void
     {
@@ -368,11 +360,11 @@ class WebhookController extends Controller
         // - name: nome dell'elemento
 
         // DEBUG: Log dei valori prima dell'assegnazione
-        Log::info("Webhook: Debug properties before assignment", [
+        Log::info('Webhook: Debug properties before assignment', [
             'properties' => $model->properties ?? 'null',
             'geohub_id' => $model->properties['geohub_id'] ?? 'not set',
             'geohub_app_id' => $model->properties['geohub_app_id'] ?? 'not set',
-            'app_id' => $model->properties['app_id'] ?? 'not set'
+            'app_id' => $model->properties['app_id'] ?? 'not set',
         ]);
 
         // Controlla se i campi esistono nel database prima di assegnarli
@@ -389,12 +381,12 @@ class WebhookController extends Controller
             }
         }
 
-        Log::info("Webhook: Model attributes assigned", [
+        Log::info('Webhook: Model attributes assigned', [
             'model_type' => $modelType,
             'model_id' => $modelId,
             'table_name' => $tableName,
             'existing_columns' => $columnNames,
-            'assigned_fields' => $assignedFields
+            'assigned_fields' => $assignedFields,
         ]);
 
         Log::info("Webhook: Fields assigned for {$modelType}", [
@@ -402,7 +394,7 @@ class WebhookController extends Controller
             'geohub_id' => $model->geohub_id,
             'geohub_app_id' => $model->geohub_app_id,
             'app_id' => $model->app_id,
-            'form_id' => $model->form_id
+            'form_id' => $model->form_id,
         ]);
 
         // Associa l'utente basandomi sull'header X-Geohub-User-Email
@@ -412,9 +404,9 @@ class WebhookController extends Controller
             if ($user) {
                 $model->user_id = $user->id;
                 Log::info("Webhook: Associated {$modelType} with user", [
-                    strtolower($modelType) . '_id' => $modelId,
+                    strtolower($modelType).'_id' => $modelId,
                     'user_email' => $userEmail,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
                 ]);
             }
         }
@@ -422,15 +414,12 @@ class WebhookController extends Controller
         $model->saveQuietly();
 
         Log::info("Webhook: Updated {$modelType} created_by to device", [
-            strtolower($modelType) . '_id' => $modelId
+            strtolower($modelType).'_id' => $modelId,
         ]);
     }
 
     /**
      * Trova o crea un utente basandomi sull'email
-     * 
-     * @param string $email
-     * @return User|null
      */
     private function findOrCreateUser(string $email): ?User
     {
@@ -441,8 +430,9 @@ class WebhookController extends Controller
             if ($user) {
                 Log::info('Webhook: Found existing user', [
                     'email' => $email,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
                 ]);
+
                 return $user;
             }
 
@@ -458,15 +448,16 @@ class WebhookController extends Controller
 
             Log::info('Webhook: Created new user', [
                 'email' => $email,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return $user;
         } catch (\Exception $e) {
             Log::error('Webhook: Error finding/creating user', [
                 'email' => $email,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }

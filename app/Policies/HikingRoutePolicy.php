@@ -21,6 +21,7 @@ class HikingRoutePolicy
     {
         return $user->hasRole(UserRole::Administrator);
     }
+
     /**
      * Determine whether the user can view any models.
      */

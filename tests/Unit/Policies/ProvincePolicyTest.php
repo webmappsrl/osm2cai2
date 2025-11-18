@@ -17,6 +17,7 @@ class ProvincePolicyTest extends TestCase
     use DatabaseTransactions;
 
     private ProvincePolicy $policy;
+
     private Region $region;
 
     protected function setUp(): void
@@ -197,4 +198,3 @@ class ProvincePolicyTest extends TestCase
         $this->assertFalse($this->policy->delete($user, $province));
     }
 }
-
