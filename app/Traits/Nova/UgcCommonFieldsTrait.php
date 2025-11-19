@@ -90,7 +90,7 @@ trait UgcCommonFieldsTrait
             // Name
             Text::make('Name', function () {
                 return $this->properties['name'] ?? (isset($this->properties['form']['title']) ? $this->properties['form']['title'] : null);
-            }),
+            })->readonly(),
 
             // Validation Status display with emoji
             Text::make(__('Validation Status'), 'validated')
