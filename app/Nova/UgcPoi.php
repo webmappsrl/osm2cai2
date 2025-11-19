@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Traits\Nova\UgcCommonFieldsTrait;
 use App\Traits\Nova\UgcCommonMethodsTrait;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Heading;
 use Wm\MapPoint\MapPoint;
 use Wm\WmPackage\Nova\UgcPoi as WmUgcPoi;
 
@@ -33,6 +34,36 @@ class UgcPoi extends WmUgcPoi
     public function fields(Request $request): array
     {
         $commonFields = $this->getCommonFields();
+
+        // Helper per la creazione e edit (fino a quando non è stato selezionato un form)
+        $helperText = '<div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; margin-bottom: 16px; border-radius: 4px;">' .
+            '<p style="margin: 0 0 12px 0; font-weight: 600; color: #1976d2;">' . __('To create a POI, follow these steps:') . '</p>' .
+            '<ol style="margin: 0; padding-left: 20px; color: #424242;">' .
+            '<li style="margin-bottom: 8px;">' . __('Insert App and coordinates, optionally add one or more images.') . '</li>' .
+            '<li style="margin-bottom: 8px;">' . __('Once created, select one of the available forms.') . '</li>' .
+            '<li style="margin-bottom: 8px;">' . __('Once the form is selected, fill in the fields present in the form. The name is mandatory.') . '</li>' .
+            '</ol>' .
+            '</div>';
+
+        // Aggiungi helper all'inizio: mostra fino a quando non è stato inserito almeno il name nel form
+        array_unshift($commonFields, Heading::make($helperText)
+            ->asHtml()
+            ->hideFromIndex()
+            ->hideFromDetail()
+            ->canSee(function ($request) {
+                // Mostra sempre in creazione
+                if ($request->isCreateOrAttachRequest()) {
+                    return true;
+                }
+                // In edit, mostra solo se il name non è stato ancora inserito
+                // Controlla sia properties->name che properties->form->title
+                $name = $this->properties['name'] ?? null;
+                $formTitle = isset($this->properties['form']['title']) ? $this->properties['form']['title'] : null;
+                // Controlla se entrambi sono vuoti, null o contengono solo spazi
+                $hasName = !empty(trim($name ?? ''));
+                $hasFormTitle = !empty(trim($formTitle ?? ''));
+                return !($hasName || $hasFormTitle);
+            }));
 
         // Aggiungi MapPoint dopo tutti i campi comuni
         $commonFields[] = MapPoint::make('geometry')->withMeta([
