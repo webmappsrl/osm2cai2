@@ -88,9 +88,10 @@ trait UgcCommonFieldsTrait
                 ->hideWhenCreating(),
 
             // Name from properties with fallback to form title
-            Text::make(__('Name'), function () {
-                return $this->properties['name'] ?? $this->properties['form']['title'];
-            }),
+            Text::make(__('Name'), 'properties->name')
+                ->displayUsing(function ($value) {
+                    return $value ?? $this->properties['form']['title'] ?? null;
+                }),
 
             // Validation Status display with emoji
             Text::make(__('Validation Status'), 'validated')
