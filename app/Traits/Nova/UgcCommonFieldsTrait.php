@@ -18,6 +18,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\Heading;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
@@ -34,6 +35,7 @@ trait UgcCommonFieldsTrait
     {
         return [
             ID::make()->sortable(),
+            $this->getCreationHelperHeading(),
 
             // Created by field with platform icons and version
             Text::make(__('Created by'), 'created_by')
@@ -87,8 +89,11 @@ trait UgcCommonFieldsTrait
                 ->hideWhenUpdating()
                 ->hideWhenCreating(),
 
-            // Name from properties
-            Text::make(__('Name'), 'properties->name'),
+            // Name
+            Text::make('Name', function () {
+                return data_get($this->properties, 'form.title')
+                    ?? data_get($this->properties, 'name');
+            })->readonly(),
 
             // Validation Status display with emoji
             Text::make(__('Validation Status'), 'validated')
@@ -161,6 +166,48 @@ trait UgcCommonFieldsTrait
             PropertiesPanel::makeWithModel('Nominatim', 'properties->nominatim', $this, false)->collapsible()->collapsedByDefault(),
             PropertiesPanel::makeWithModel('Properties', 'properties', $this, false)->collapsible()->collapsedByDefault(),
         ];
+    }
+
+    /**
+     * Get the creation helper heading field
+     */
+    protected function getCreationHelperHeading(): Heading
+    {
+        // Helper for UGC creation
+        $title = __('Creation Instructions');
+        $step1 = __('Insert App and coordinates, optionally add one or more images.');
+        $step2 = __('Once created, select one of the available forms.');
+        $step3 = __('Once the form is selected, fill in the fields present in the form. The name is mandatory.');
+
+        $helperText = <<<HTML
+<div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; margin-bottom: 16px; border-radius: 4px;">
+    <p style="margin: 0 0 12px 0; font-weight: 600; color: #1976d2;">{$title}</p>
+    <ol style="margin: 0; padding-left: 20px; color: #424242;">
+        <li style="margin-bottom: 8px;">{$step1}</li>
+        <li style="margin-bottom: 8px;">{$step2}</li>
+        <li style="margin-bottom: 8px;">{$step3}</li>
+    </ol>
+</div>
+HTML;
+
+        return Heading::make($helperText)
+            ->asHtml()
+            ->hideFromIndex()
+            ->hideFromDetail()
+            ->canSee(function ($request) {
+                // Mostra sempre in creazione
+                if ($request->isCreateOrAttachRequest()) {
+                    return true;
+                }
+                // In edit, show only if name and form title are not set
+                $name = data_get($this->properties, 'name');
+                $formTitle = data_get($this->properties, 'form.title');
+                // Checking if name and form title are not empty
+                $hasName = ! empty(trim($name ?? ''));
+                $hasFormTitle = ! empty(trim($formTitle ?? ''));
+
+                return ! ($hasName || $hasFormTitle);
+            });
     }
 
     /**

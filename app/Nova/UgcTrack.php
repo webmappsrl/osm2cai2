@@ -12,7 +12,7 @@ use Wm\WmPackage\Nova\UgcTrack as WmUgcTrack;
 
 class UgcTrack extends WmUgcTrack
 {
-    use UgcCommonFieldsTrait, UgcCommonMethodsTrait, SpatialDataTrait;
+    use SpatialDataTrait, UgcCommonFieldsTrait, UgcCommonMethodsTrait;
 
     /**
      * The model the resource corresponds to.
