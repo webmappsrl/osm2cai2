@@ -99,10 +99,10 @@ trait UgcCommonFieldsTrait
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
                     return match ($value) {
-                        ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
-                        ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
-                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="'.__('Not Validated').'">⏳</span>',
-                        default => '<span title="'.ucfirst($value).'">❓</span>',
+                        ValidatedStatusEnum::VALID->value => '<span title="' . __('Valid') . '">✅</span>',
+                        ValidatedStatusEnum::INVALID->value => '<span title="' . __('Invalid') . '">❌</span>',
+                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="' . __('Not Validated') . '">⏳</span>',
+                        default => '<span title="' . ucfirst($value) . '">❓</span>',
                     };
                 })
                 ->asHtml(),
@@ -171,7 +171,7 @@ trait UgcCommonFieldsTrait
      */
     public function validatedStatusOptions(): array
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
     }
 
     /**
