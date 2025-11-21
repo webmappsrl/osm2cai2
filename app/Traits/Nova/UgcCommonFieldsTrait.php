@@ -101,10 +101,10 @@ trait UgcCommonFieldsTrait
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
                     return match ($value) {
-                        ValidatedStatusEnum::VALID->value => '<span title="' . __('Valid') . '">✅</span>',
-                        ValidatedStatusEnum::INVALID->value => '<span title="' . __('Invalid') . '">❌</span>',
-                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="' . __('Not Validated') . '">⏳</span>',
-                        default => '<span title="' . ucfirst($value) . '">❓</span>',
+                        ValidatedStatusEnum::VALID->value => '<span title="'.__('Valid').'">✅</span>',
+                        ValidatedStatusEnum::INVALID->value => '<span title="'.__('Invalid').'">❌</span>',
+                        ValidatedStatusEnum::NOT_VALIDATED->value => '<span title="'.__('Not Validated').'">⏳</span>',
+                        default => '<span title="'.ucfirst($value).'">❓</span>',
                     };
                 })
                 ->asHtml(),
@@ -173,7 +173,7 @@ trait UgcCommonFieldsTrait
      */
     protected function getCreationHelperHeading(): Heading
     {
-        // Helper for UGC creation 
+        // Helper for UGC creation
         $title = __('Creation Instructions');
         $step1 = __('Insert App and coordinates, optionally add one or more images.');
         $step2 = __('Once created, select one of the available forms.');
@@ -203,9 +203,10 @@ HTML;
                 $name = data_get($this->properties, 'name');
                 $formTitle = data_get($this->properties, 'form.title');
                 // Checking if name and form title are not empty
-                $hasName = !empty(trim($name ?? ''));
-                $hasFormTitle = !empty(trim($formTitle ?? ''));
-                return !($hasName || $hasFormTitle);
+                $hasName = ! empty(trim($name ?? ''));
+                $hasFormTitle = ! empty(trim($formTitle ?? ''));
+
+                return ! ($hasName || $hasFormTitle);
             });
     }
 
@@ -214,7 +215,7 @@ HTML;
      */
     public function validatedStatusOptions(): array
     {
-        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn($enum) => [$enum->value => $enum->name]);
+        return Arr::mapWithKeys(ValidatedStatusEnum::cases(), fn ($enum) => [$enum->value => $enum->name]);
     }
 
     /**
