@@ -12,17 +12,6 @@ class HikingRoutePolicy
     use HandlesAuthorization;
 
     /**
-     * Perform pre-authorization checks.
-     *
-     * @param  string  $ability
-     * @return void|bool
-     */
-    public function before(User $user, $ability)
-    {
-        return $user->hasRole(UserRole::Administrator);
-    }
-
-    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
