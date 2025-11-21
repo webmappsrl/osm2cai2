@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 use Illuminate\Support\Facades\DB;
 use Wm\WmPackage\Models\Layer as WmLayer;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 
 class Layer extends WmLayer
 {
@@ -14,7 +14,7 @@ class Layer extends WmLayer
     {
         parent::boot();
         // Registra l'observer anche nel modello dell'applicazione
-        Layer::observe(\Wm\WmPackage\Observers\LayerObserver::class);
+        self::observe(\Wm\WmPackage\Observers\LayerObserver::class);
     }
 
     /**

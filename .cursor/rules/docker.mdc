@@ -71,16 +71,53 @@
 - **Container name**: `mailpit-${APP_NAME}`
 - **Porta**: `8025:8025`
 
-## Pattern di Naming dei Container
+## ⚠️ REGOLA CRITICA - DETERMINAZIONE NOMI CONTAINER ⚠️
+**PRIMA DI USARE I NOMI DEI CONTAINER, DEVO SEMPRE DETERMINARLI AUTOMATICAMENTE**
+
+### Procedura OBBLIGATORIA per determinare i nomi dei container:
+
+1. **Leggere APP_NAME dal file .env**:
+   ```bash
+   # Se il file .env esiste, leggere APP_NAME
+   if [ -f .env ]; then
+       APP_NAME=$(grep "^APP_NAME=" .env | cut -d '=' -f2 | tr -d ' ' | tr -d '"' | tr -d "'")
+   fi
+   # Se non trovato, usare default
+   APP_NAME=${APP_NAME:-osm2cai2}
+   ```
+
+2. **Verificare i container attivi** (metodo più affidabile):
+   ```bash
+   # Verificare container PHP
+   docker ps --filter "name=php81" --format "{{.Names}}"
+   
+   # Verificare tutti i container del progetto
+   docker ps --format "{{.Names}}" | grep -E "(php81|postgres|redis|elasticsearch|minio|mailpit)"
+   ```
+
+3. **Usare i nomi determinati** invece di hardcodare "osm2cai2"
+
+### Pattern di Naming dei Container
 
 ### Regola Generale
 Tutti i container seguono il pattern: `{SERVICE}-{APP_NAME}`
 
 Dove:
 - `{SERVICE}` = nome del servizio (php81, postgres, elasticsearch, minio, mailpit, redis)
-- `{APP_NAME}` = nome dell'applicazione (osm2cai2)
+- `{APP_NAME}` = nome dell'applicazione (leggere da .env o usare default osm2cai2)
 
-### Esempi di Container Names
+### Mapping Servizi → Nomi Container
+```bash
+# Pattern: {SERVICE}-{APP_NAME}
+php81-${APP_NAME}          # Container PHP
+postgres-${APP_NAME}       # Container Database
+redis-${APP_NAME}          # Container Redis
+elasticsearch-${APP_NAME}  # Container Elasticsearch
+minio-${APP_NAME}          # Container MinIO
+mailpit-${APP_NAME}        # Container MailPit
+```
+
+### Esempi di Container Names (con APP_NAME=osm2cai2)
 ```bash
 # Container PHP
 php81-osm2cai2
@@ -103,13 +140,24 @@ mailpit-osm2cai2
 
 ### Variabili Ambiente per Container Names
 ```bash
-APP_NAME=osm2cai2
+APP_NAME=osm2cai2  # LEGGERE DA .env, non hardcodare!
 DOCKER_PROJECT_DIR_NAME=osm2cai2
 DOCKER_PHP_PORT=9108
 DOCKER_PSQL_PORT=5508
 DOCKER_SERVE_PORT=8008 # solo locale
 DB_HOST=db # sempre "db" (nome container)
 ```
+
+### Cosa NON fare MAI:
+- ❌ Hardcodare "osm2cai2" nei comandi
+- ❌ Assumere che APP_NAME sia sempre "osm2cai2"
+- ❌ Usare nomi di container senza verificarli
+
+### Cosa fare SEMPRE:
+- ✅ Leggere APP_NAME dal file .env prima di usarlo
+- ✅ Verificare i container attivi con `docker ps`
+- ✅ Usare variabili invece di valori hardcodati
+- ✅ Se non trovo .env, usare default "osm2cai2" ma segnalarlo
 
 ## Comandi Essenziali
 
@@ -200,6 +248,54 @@ chown -R 33 bootstrap/cache/
   - `geobox_serve osm2cai2`
   - `geobox_dump_restore osm2cai2`
 
+## ⚠️ REGOLA CRITICA - AVVIO LARAVEL SERVE E HORIZON ⚠️
+**QUANDO L'UTENTE CHIEDE DI AVVIARE LARAVEL SERVE E/O HORIZON:**
+- **NON MODIFICARE MAI** codice, file, script o configurazioni
+- **NON CREARE MAI** file nuovi o modificare Dockerfile, docker-compose, o script
+- **ESEGUIRE SOLO** i comandi direttamente nel container PHP usando `docker exec -d`
+- **VIOLAZIONE = FALLIMENTO TOTALE** - Se modifico codice invece di eseguire comandi sto fallendo
+
+### Frasi che indicano questa richiesta:
+- "avvia laravel e horizon"
+- "avvia serve e horizon"
+- "docker avviati avvia laravel e horizon"
+- "entra nel docker php e avvia laravel"
+- "fai serve di laravel"
+- Qualsiasi richiesta di avviare servizi Laravel nel container
+
+### Comandi da eseguire SEMPRE (senza modificare nulla):
+```bash
+# 1. Determinare il nome del container PHP (leggere da .env o verificare container attivi)
+# Metodo 1: Leggere APP_NAME da .env
+if [ -f .env ]; then
+    APP_NAME=$(grep "^APP_NAME=" .env | cut -d '=' -f2 | tr -d ' ' | tr -d '"' | tr -d "'")
+fi
+APP_NAME=${APP_NAME:-osm2cai2}
+CONTAINER_NAME="php81-${APP_NAME}"
+
+# Metodo 2: Verificare direttamente i container attivi (più affidabile)
+CONTAINER_NAME=$(docker ps --filter "name=php81" --format "{{.Names}}" | head -n1)
+
+# 2. Avviare Laravel serve in background
+docker exec -d ${CONTAINER_NAME} php artisan serve --host=0.0.0.0
+
+# 3. Avviare Horizon in background
+docker exec -d ${CONTAINER_NAME} php artisan horizon
+```
+
+### Cosa NON fare MAI:
+- ❌ Modificare Dockerfile
+- ❌ Modificare docker-compose.yml
+- ❌ Creare file di configurazione supervisor
+- ❌ Modificare script init-docker.sh
+- ❌ Creare entrypoint o script personalizzati
+- ❌ Chiedere conferma o spiegare cosa si sta per fare
+
+### Cosa fare SEMPRE:
+- ✅ Eseguire direttamente i comandi con `run_terminal_cmd`
+- ✅ Usare `docker exec -d` per eseguire in background
+- ✅ Verificare che i processi siano attivi dopo l'avvio
+
 ## AVVIO AUTOMATICO AMBIENTE DI SVILUPPO
 
 ### Quando l'utente dice "tira su l'ambiente di sviluppo" o frasi simili:
@@ -215,14 +311,20 @@ Eseguire automaticamente e in sequenza i seguenti comandi:
    sleep 5
    ```
 
-3. **Avvio Laravel serve nel container PHP** (in background):
+3. **Determinare il nome del container PHP**:
    ```bash
-   docker exec -d php81-osm2cai2 php artisan serve --host 0.0.0.0
+   # Leggere APP_NAME da .env o verificare container attivi
+   CONTAINER_NAME=$(docker ps --filter "name=php81" --format "{{.Names}}" | head -n1)
    ```
 
-4. **Avvio Horizon nel container PHP** (in background):
+4. **Avvio Laravel serve nel container PHP** (in background):
    ```bash
-   docker exec -d php81-osm2cai2 php artisan horizon
+   docker exec -d ${CONTAINER_NAME} php artisan serve --host 0.0.0.0
+   ```
+
+5. **Avvio Horizon nel container PHP** (in background):
+   ```bash
+   docker exec -d ${CONTAINER_NAME} php artisan horizon
    ```
 
 ### Risultato atteso:

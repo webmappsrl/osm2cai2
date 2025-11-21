@@ -28,6 +28,11 @@ services:
     extends:
       file: docker-compose.yml
       service: elasticsearch
+  # Kibana - configurazione per ambiente locale
+  kibana:
+    extends:
+      file: docker-compose.yml
+      service: kibana
   # MinIO - AWS S3 Compatible Object Storage per sviluppo locale
   minio:
     image: minio/minio:latest

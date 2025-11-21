@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use App\Models\Pivots\AreaUser;
 use App\Models\Pivots\ProvinceUser;
 use App\Models\Pivots\SectorUser;
@@ -92,19 +93,19 @@ class User extends WmUser
      */
     public function getTerritorialRole(): string
     {
-        if ($this->hasRole('Administrator')) {
+        if ($this->hasRole(UserRole::Administrator)) {
             return 'admin';
         }
 
-        if ($this->hasRole('National Referent')) {
+        if ($this->hasRole(UserRole::NationalReferent)) {
             return 'national';
         }
 
-        if ($this->hasRole('Regional Referent')) {
+        if ($this->hasRole(UserRole::RegionalReferent)) {
             return 'regional';
         }
 
-        if ($this->hasRole('Local Referent')) {
+        if ($this->hasRole(UserRole::LocalReferent)) {
             return 'local';
         }
 
@@ -175,17 +176,15 @@ class User extends WmUser
      */
     public function canManageHikingRoute(HikingRoute $hr): bool
     {
-        $roles = $this->getRoleNames()->toArray();
-
-        if (in_array('Administrator', $roles) || in_array('National Referent', $roles)) {
+        if ($this->hasRole(UserRole::Administrator) || $this->hasRole(UserRole::NationalReferent)) {
             return true;
         }
 
-        if (in_array('Regional Referent', $roles)) {
+        if ($this->hasRole(UserRole::RegionalReferent)) {
             return $hr->regions->pluck('id')->contains($this->region->id);
         }
 
-        if (in_array('Local Referent', $roles)) {
+        if ($this->hasRole(UserRole::LocalReferent)) {
             return ! $hr->sectors->intersect($this->sectors)->isEmpty() ||
                 ! $hr->areas->intersect($this->areas)->isEmpty() ||
                 ! $hr->provinces->intersect($this->provinces)->isEmpty();
@@ -196,17 +195,17 @@ class User extends WmUser
 
     public function canImpersonate()
     {
-        return $this->hasRole('Administrator');
+        return $this->hasRole(UserRole::Administrator);
     }
 
     public function canBeImpersonated()
     {
-        return ! $this->hasRole('Administrator');
+        return ! $this->hasRole(UserRole::Administrator);
     }
 
     public function canManageClub(Club $club): bool
     {
-        return $this->hasRole('Administrator') || $this->hasRole('National Referent') || ($this->hasRole('Regional Referent') && $this->region_id == $club->region_id) || (! is_null($this->managedClub) && $this->managedClub->id == $club->id);
+        return $this->hasRole(UserRole::Administrator) || $this->hasRole(UserRole::NationalReferent) || ($this->hasRole(UserRole::RegionalReferent) && $this->region_id == $club->region_id) || (! is_null($this->managedClub) && $this->managedClub->id == $club->id);
     }
 
     /**
@@ -278,17 +277,16 @@ class User extends WmUser
             $this->areas()->exists() ||
             $this->sectors()->exists();
 
-        $higherRoles = ['Administrator', 'National Referent', 'Regional Referent'];
-        $isHigherRole = $this->hasAnyRole($higherRoles);
-        $hasLocalRole = $this->hasRole('Local Referent');
+        $isHigherRole = $this->hasAnyRole(UserRole::higherRoles());
+        $hasLocalRole = $this->hasRole(UserRole::LocalReferent);
 
         if ($hasTerritoryAssociations) {
             if (! $isHigherRole && ! $hasLocalRole) {
-                $this->assignRole('Local Referent');
+                $this->assignRole(UserRole::LocalReferent);
             }
         } else {
             if (! $isHigherRole && $hasLocalRole) {
-                $this->removeRole('Local Referent');
+                $this->removeRole(UserRole::LocalReferent);
             }
         }
     }

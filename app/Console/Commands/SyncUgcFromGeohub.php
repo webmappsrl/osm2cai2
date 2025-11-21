@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\UgcMedia;
 use App\Models\UgcPoi;
 use App\Models\UgcTrack;
@@ -264,7 +265,7 @@ class SyncUgcFromGeohub extends Command
                     'password' => bcrypt('webmapp123'),
                 ]);
 
-                $user->assignRole('Guest');
+                $user->assignRole(UserRole::Guest);
 
                 $model->user_id = $user->id;
                 $model->save();

@@ -1,0 +1,112 @@
+services:
+  php:
+    extends:
+      file: compose.yml
+      service: php
+    container_name: "php81-${APP_NAME}"
+    ports:
+      - ${DOCKER_PHP_PORT}:9000
+      - ${DOCKER_SERVE_PORT}:8000
+      - ${DOCKER_VITE_PORT}:5173
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+      - minio
+      - mailpit
+  db:
+    extends:
+      file: compose.yml
+      service: db
+  redis:
+    extends:
+      file: compose.yml
+      service: redis
+  elasticsearch:
+    extends:
+      file: compose.yml
+      service: elasticsearch
+  elasticsearch-init:
+    extends:
+      file: compose.yml
+      service: elasticsearch-init
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+  kibana:
+    extends:
+      file: compose.yml
+      service: kibana
+    restart: always
+    depends_on:
+      elasticsearch-init:
+        condition: service_completed_successfully
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      # Password da variabile d'ambiente (deve corrispondere a ELASTIC_PASSWORD)
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+      # Rimossi SERVER_BASEPATH e SERVER_REWRITEBASEPATH per accesso diretto in local
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=false
+    ports:
+      - ${DOCKER_KIBANA_PORT:-5601}:5601
+  minio:
+    image: "minio/minio:latest"
+    container_name: "minio-${APP_NAME}"
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      CONSOLE_BASE_HREF: "/minio"
+    command: 'minio server /data/minio --console-address ":8900"'
+    platform: linux/amd64
+    ports:
+      - "${FORWARD_MINIO_PORT:-9002}:9000"
+      - "${FORWARD_MINIO_CONSOLE_PORT:-9003}:8900"
+    volumes:
+      - "./docker/volumes/minio/data:/data"
+    healthcheck:
+      test:
+        - CMD
+        - mc
+        - ready
+        - local
+      retries: 3
+      timeout: 5s
+    networks:
+      - laravel
+  horizon:
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    build: ./docker/configs/phpfpm
+    restart: always
+    container_name: "horizon-${APP_NAME}"
+    image: wm-phpfpm:8.4-fpm
+    command: php artisan horizon
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+      - "../wm-package:/var/www/html/wm-package"
+    working_dir: "/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    depends_on:
+      - redis
+      - db
+    # Nessuna porta esposta (Horizon non necessita di porte)
+    ports: []
+    networks:
+      - laravel
+  mailpit:
+    container_name: "mailpit-${APP_NAME}"
+    image: "axllent/mailpit:latest"
+    ports:
+      - "${FORWARD_MAILPIT_PORT:-1025}:1025"
+      - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge

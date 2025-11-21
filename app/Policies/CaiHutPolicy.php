@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\CaiHut;
 use App\Models\User;
 
@@ -28,7 +29,7 @@ class CaiHutPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('Administrator') || $user->hasRole('National Referent');
+        return $user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent);
     }
 
     /**

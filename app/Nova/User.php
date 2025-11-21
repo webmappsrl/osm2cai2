@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Models\Region;
 use App\Models\User as UserModel;
 use App\Nova\Filters\AreaFilter;
@@ -44,7 +45,7 @@ class User extends AbstractUserResource
         $user = Auth::user();
 
         // if user is administrator or national referent
-        if ($user->hasRole('Administrator') || $user->hasRole('National Referent')) {
+        if ($user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent)) {
             return $query;
         }
 
@@ -95,7 +96,7 @@ class User extends AbstractUserResource
                 $clubManagerUsers
             ));
 
-            $query->whereIn('id', $allUsers);
+            $query->whereIn('users.id', $allUsers);
         }
         // if user is section manager
         elseif ($user->managedClub) {
@@ -109,7 +110,7 @@ class User extends AbstractUserResource
             // Include also the club manager in the list
             $allUsers = array_unique(array_merge([$user->id], $clubMemberIds));
 
-            $query->whereIn('id', $allUsers);
+            $query->whereIn('users.id', $allUsers);
         }
 
         return $query;

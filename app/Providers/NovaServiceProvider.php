@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Nova\App;
 use App\Nova\ArchaeologicalArea;
 use App\Nova\ArchaeologicalSite;
@@ -39,7 +40,7 @@ use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
 use App\Nova\User;
-use App\Nova\User as NovaUser;
+use App\Nova\WmUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
@@ -70,17 +71,17 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Admin
                 MenuSection::make(__('Admin'), [
                     MenuItem::resource(User::class, __('User'))->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator') || optional(Auth::user())->hasRole('National Referent') || optional(Auth::user())->hasRole('Regional Referent');
+                        return optional(Auth::user())->hasRole(UserRole::Administrator) || optional(Auth::user())->hasRole(UserRole::NationalReferent) || optional(Auth::user())->hasRole(UserRole::RegionalReferent);
                     }),
                     MenuItem::externalLink(__('Horizon'), url('/horizon'))->openInNewTab()->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator');
+                        return optional(Auth::user())->hasRole(UserRole::Administrator);
                     }),
                     MenuItem::externalLink(__('Logs'), url('/logs'))->openInNewTab()->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator');
+                        return optional(Auth::user())->hasRole(UserRole::Administrator);
                     }),
                     MenuSection::make(__('MOBILE'), [
                         MenuItem::resource(App::class),
-                        MenuItem::resource(NovaUser::class),
+                        MenuItem::resource(WmUser::class),
                         MenuSection::make(__('Editorial Content'), [
                             MenuItem::resource(Layer::class),
                             MenuItem::resource(EcTrack::class),
@@ -98,12 +99,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             MenuItem::externalLink(__('Icons'), route('icons.upload.show'))->openInNewTab(),
                         ])->collapsable()->collapsedByDefault(),
                     ])->icon('globe')->collapsable()->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator');
+                        return optional(Auth::user())->hasRole(UserRole::Administrator);
                     }),
                 ])->icon('user')->collapsable()->collapsedByDefault()->canSee(function () {
-                    return optional(Auth::user())->hasRole('Administrator') || optional(Auth::user())->hasRole('National Referent') || optional(Auth::user())->hasRole('Regional Referent');;
+                    return optional(Auth::user())->hasRole(UserRole::Administrator) || optional(Auth::user())->hasRole(UserRole::NationalReferent) || optional(Auth::user())->hasRole(UserRole::RegionalReferent);
                 }),
-
 
                 // Statistiche
                 MenuSection::make(__('Statistiche'), [
@@ -121,23 +121,23 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         }),
                     MenuItem::link(__('Users Summary'), '/dashboards/utenti')
                         ->canSee(function () {
-                            return optional(Auth::user())->hasRole('Administrator');
+                            return optional(Auth::user())->hasRole(UserRole::Administrator);
                         }),
                     MenuItem::link(__('Accessibility Summary'), '/dashboards/percorribilità')
                         ->canSee(function () {
-                            return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent', 'Regional Referent', 'Local Referent']);
+                            return optional(Auth::user())->hasAnyRole([UserRole::Administrator, UserRole::NationalReferent, UserRole::RegionalReferent, UserRole::LocalReferent]);
                         }),
                     MenuItem::link(__('MITUR-Abruzzo Summary'), '/dashboards/sal-mitur-abruzzo')
                         ->canSee(function () {
-                            return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
+                            return optional(Auth::user())->hasAnyRole([UserRole::Administrator, UserRole::NationalReferent]);
                         }),
                     MenuItem::link(__('Acqua Sorgente Summary'), '/dashboards/acqua-sorgente')
                         ->canSee(function () {
-                            return optional(Auth::user())->hasAnyRole(['Administrator', 'National Referent']);
+                            return optional(Auth::user())->hasAnyRole([UserRole::Administrator, UserRole::NationalReferent]);
                         }),
                     MenuItem::link(__('Sectors Summary'), '/dashboards/settori')
                         ->canSee(function () {
-                            return optional(Auth::user())->hasRole('Regional Referent');
+                            return optional(Auth::user())->hasRole(UserRole::RegionalReferent);
                         }),
                 ])->icon('chart-bar')->collapsable()->collapsedByDefault(),
 
@@ -183,21 +183,21 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(GeologicalSite::class),
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('eye')->collapsable(),
-
+                MenuSection::make(__('Webapp'), [
+                    MenuItem::externalLink(__('App del Sentierista'), 'http://1.osm2cai.webmapp.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('Sicai'), 'http://2.osm2cai.webmapp.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('Acqua Sorgente'), 'http://3.osm2cai.webmapp.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('INFOMONT'), 'https://1.osm2cai.webmapp.it/map?layer=4')->openInNewTab(),
+                ])->icon('map')->collapsable()->collapsedByDefault(),
                 // Tools
                 MenuSection::make(__('Tools'), [
-                    MenuItem::externalLink(__('Map of Sectors'), 'http://osm2cai.j.webmapp.it/#/main/map?map=6.08,12.5735,41.5521')->openInNewTab(),
-                    MenuItem::externalLink(__('Map of Routes'), 'https://26.app.geohub.webmapp.it/#/map')->openInNewTab(),
-                    MenuItem::externalLink(__('INFOMONT'), 'https://15.app.geohub.webmapp.it/#/map')->openInNewTab(),
                     MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
                     MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
                     MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
                     MenuItem::externalLink(__('Migration check'), route('migration-check'))->canSee(function () {
-                        return optional(Auth::user())->hasRole('Administrator');
+                        return optional(Auth::user())->hasRole(UserRole::Administrator);
                     })->openInNewTab(),
                 ])->icon('color-swatch')->collapsable()->collapsedByDefault(),
-
-
 
             ];
         });
@@ -250,25 +250,25 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         }
 
         /** @var \App\Models\User $loggedInUser */
-        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Administrator')) {
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole(UserRole::Administrator)) {
             $dashboards[] = new Utenti;
             $dashboards[] = new Percorribilità;
             $dashboards[] = new SALMiturAbruzzo;
             $dashboards[] = new AcquaSorgente;
         }
 
-        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('National Referent')) {
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole(UserRole::NationalReferent)) {
             $dashboards[] = new Percorribilità;
             $dashboards[] = new SALMiturAbruzzo;
             $dashboards[] = new AcquaSorgente;
         }
 
-        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Regional Referent')) {
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole(UserRole::RegionalReferent)) {
             $dashboards[] = new SectorsDashboard;
             $dashboards[] = new Percorribilità;
         }
 
-        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole('Local Referent')) {
+        if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole(UserRole::LocalReferent)) {
             $dashboards[] = new Percorribilità;
         }
 

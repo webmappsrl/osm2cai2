@@ -1,0 +1,210 @@
+services:
+  php:
+    # Servizio generico per operazioni (artisan, tinker, composer)
+    # Copiato da develop.compose.yml/compose.yml senza estendere
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    build: ./docker/configs/phpfpm
+    restart: always
+    container_name: "php-${APP_NAME}"
+    image: wm-phpfpm:8.4
+    # Nessuna porta esposta (solo per operazioni manuali)
+    ports: []
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+      - "../wm-package:/var/www/html/wm-package"
+    working_dir: "/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    depends_on:
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+      elasticsearch:
+        condition: service_started
+    networks:
+      - laravel
+  db:
+    extends:
+      file: develop.compose.yml
+      service: db
+  redis:
+    extends:
+      file: develop.compose.yml
+      service: redis
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
+    container_name: "elasticsearch-${APP_NAME}"
+    restart: always
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      # Sicurezza abilitata per supportare Enterprise Search
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - laravel
+  # Init container necessario per impostare automaticamente la password di kibana_system
+  # Elasticsearch non supporta variabili d'ambiente per kibana_system, quindi va impostata via API
+  # Il container viene rimosso automaticamente dopo l'esecuzione
+  elasticsearch-init:
+    image: curlimages/curl:latest
+    container_name: "elasticsearch-init-${APP_NAME}"
+    depends_on:
+      elasticsearch:
+        condition: service_started
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+    command:
+      - sh
+      - -c
+      - |
+        echo "Waiting for Elasticsearch to be ready..."
+        i=0
+        while [ $$i -lt 60 ]; do
+          if curl -s -f -u elastic:$$ELASTICSEARCH_PASSWORD http://elasticsearch:9200/_cluster/health > /dev/null 2>&1; then
+            echo "Elasticsearch is ready!"
+            break
+          fi
+          i=$$((i + 1))
+          sleep 2
+        done
+        echo "Setting password for kibana_system user..."
+        curl -s -X POST -u elastic:$$ELASTICSEARCH_PASSWORD \
+          http://elasticsearch:9200/_security/user/kibana_system/_password \
+          -H "Content-Type: application/json" \
+          -d "{\"password\":\"$$ELASTICSEARCH_PASSWORD\"}" || true
+        echo "Password set successfully!"
+        # Rimuove il container dopo l'esecuzione
+        echo "Removing init container..."
+        docker rm -f elasticsearch-init-${APP_NAME} 2>/dev/null || true
+    restart: "no"
+    # Usa la socket Docker per permettere la rimozione del container stesso
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - laravel
+  # Init container per indicizzazione automatica di Scout
+  # Esegue l'importazione di EcTrack in Elasticsearch all'avvio
+  scout-init:
+    build: ./docker/configs/phpfpm
+    image: wm-phpfpm:8.4
+    container_name: "scout-init-${APP_NAME}"
+    depends_on:
+      elasticsearch-init:
+        condition: service_completed_successfully
+      db:
+        condition: service_started
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+      - "../wm-package:/var/www/html/wm-package"
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: "/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    command:
+      - sh
+      - -c
+      - |
+        echo "Waiting for Elasticsearch to be ready..."
+        i=0
+        while [ $$i -lt 60 ]; do
+          if curl -s -f -u elastic:$$ELASTICSEARCH_PASSWORD http://elasticsearch:9200/_cluster/health > /dev/null 2>&1; then
+            echo "Elasticsearch is ready!"
+            break
+          fi
+          i=$$((i + 1))
+          sleep 2
+        done
+        echo "Waiting for database to be ready..."
+        i=0
+        while [ $$i -lt 60 ]; do
+          if php artisan db:show > /dev/null 2>&1; then
+            echo "Database is ready!"
+            break
+          fi
+          i=$$((i + 1))
+          sleep 2
+        done
+        echo "Starting Scout import for EcTrack..."
+        EC_TRACK_MODEL=$$(php artisan tinker --execute="echo config('wm-package.ec_track_model');" 2>/dev/null | tail -1)
+        php artisan scout:import "$$EC_TRACK_MODEL"
+        echo "Scout import completed successfully!"
+        # Rimuove il container dopo l'esecuzione
+        echo "Removing init container..."
+        docker rm -f scout-init-${APP_NAME} 2>/dev/null || true
+    restart: "no"
+    networks:
+      - laravel
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.1
+    container_name: "kibana-${APP_NAME}"
+    restart: always
+    depends_on:
+      elasticsearch-init:
+        condition: service_completed_successfully
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+    ports:
+      - ${DOCKER_KIBANA_PORT:-5601}:5601
+    networks:
+      - laravel
+  # Servizi da develop.compose.yml (mantengono la catena di ereditarietà)
+  # Server Laravel per ambiente local
+  laravel:
+    build: ./docker/configs/phpfpm
+    container_name: "laravel-${APP_NAME}"
+    image: wm-phpfpm:8.4
+    command: php artisan serve --host 0.0.0.0 --port 8000
+    restart: always
+    depends_on:
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+      elasticsearch:
+        condition: service_started
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+      - "../wm-package:/var/www/html/wm-package"
+    working_dir: "/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    # Solo porta Laravel (8000), nessuna porta PHP-FPM
+    ports:
+      - ${DOCKER_SERVE_PORT:-8000}:8000
+    networks:
+      - laravel
+  horizon:
+    extends:
+      file: develop.compose.yml
+      service: horizon
+    # Forza rimozione porte per evitare conflitti
+    ports: []
+  minio:
+    extends:
+      file: develop.compose.yml
+      service: minio
+  mailpit:
+    extends:
+      file: develop.compose.yml
+      service: mailpit
+
+networks:
+  laravel:
+    driver: bridge

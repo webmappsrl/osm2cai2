@@ -14,13 +14,10 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         // Registra FeatureCollectionMap FieldServiceProvider
-        $this->app->register(\App\Nova\Fields\FeatureCollectionMap\src\FieldServiceProvider::class);
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
     public function boot(): void
     {

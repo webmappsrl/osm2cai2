@@ -4,22 +4,21 @@ namespace App\Observers;
 
 use App\Jobs\ComputeTdhJob;
 use App\Jobs\SyncClubHikingRouteRelationJob;
-use App\Models\HikingRoute;
 use App\Models\Layer;
 use Illuminate\Support\Facades\Log;
-use Wm\WmPackage\Services\PBFGeneratorService;
-use Wm\WmPackage\Services\GeometryComputationService;
 use Wm\WmPackage\Jobs\Pbf\GenerateLayerPBFJob;
 use Wm\WmPackage\Jobs\Pbf\GeneratePBFJob;
 use Wm\WmPackage\Observers\EcTrackObserver;
+use Wm\WmPackage\Services\GeometryComputationService;
+use Wm\WmPackage\Services\PBFGeneratorService;
 
 class HikingRouteObserver extends EcTrackObserver
 {
     /**
      * Handle events after all transactions are committed.
-     * 
+     *
      * Impostato a false per permettere a Scout di indicizzare correttamente
-     * 
+     *
      * @var bool
      */
     public $afterCommit = false;
@@ -27,12 +26,13 @@ class HikingRouteObserver extends EcTrackObserver
     /**
      * Handle the HikingRoute "created" event.
      */
-    public function created(HikingRoute $hikingRoute): void
+    public function created($hikingRoute): void
     {
+        parent::created($hikingRoute);
         SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
     }
 
-    public function updatePbfsForHikingRoute(HikingRoute $hikingRoute): void
+    public function updatePbfsForHikingRoute($hikingRoute): void
     {
         $pbfService = app(PBFGeneratorService::class);
         $geometryService = app(GeometryComputationService::class);
@@ -44,7 +44,7 @@ class HikingRouteObserver extends EcTrackObserver
             5   // minZoom
         );
 
-        if (!empty($impactedTiles)) {
+        if (! empty($impactedTiles)) {
             // Crea i job per ogni tile impattato
             $jobs = [];
             foreach ($impactedTiles as $tile) {
@@ -59,14 +59,14 @@ class HikingRouteObserver extends EcTrackObserver
             }
 
             // Dispatch del batch se ci sono job da eseguire
-            if (!empty($jobs)) {
+            if (! empty($jobs)) {
                 $batch = \Illuminate\Support\Facades\Bus::batch($jobs)
                     ->name("PBF Regeneration for Track {$hikingRoute->id}: {$hikingRoute->app_id}")
                     ->onConnection('redis')
                     ->onQueue('pbf')
                     ->dispatch();
 
-                Log::info("Batch di rigenerazione PBF avviato per traccia {$hikingRoute->id}: " . count($jobs) . " job");
+                Log::info("Batch di rigenerazione PBF avviato per traccia {$hikingRoute->id}: " . count($jobs) . ' job');
             }
         }
     }
@@ -74,12 +74,10 @@ class HikingRouteObserver extends EcTrackObserver
     /**
      * Handle the HikingRoute "updated" event.
      */
-    public function updated(HikingRoute $hikingRoute): void
+    public function updated($hikingRoute): void
     {
+        parent::updated($hikingRoute);
         Log::info('HikingRouteObserver updated event');
-        // Rigenera i tile PBF ottimizzati solo se la geometria è stata modificata
-        //if ($hikingRoute->isDirty('geometry')) {}
-
     }
 
     /**
@@ -112,18 +110,18 @@ class HikingRouteObserver extends EcTrackObserver
         }
     }
 
-    public function saved($hikingRoute)
+    public function saved($hikingRoute): void
     {
-        parent::saved($hikingRoute);
         if ($hikingRoute->isDirty('osm2cai_status')) {
             $this->updateLayerAssociations($hikingRoute);
             $this->updatePbfsForHikingRoute($hikingRoute);
         }
     }
+
     /**
      * Aggiorna le associazioni della hiking route ai layer in base al cambio di osm2cai_status
      */
-    private function updateLayerAssociations(HikingRoute $hikingRoute): void
+    private function updateLayerAssociations($hikingRoute): void
     {
         // Trova il layer corrispondente al nuovo stato
         $osm2caiStatusLayer = Layer::where('app_id', $hikingRoute->app_id)
@@ -159,7 +157,7 @@ class HikingRouteObserver extends EcTrackObserver
     /**
      * Handle the HikingRoute "deleting" event.
      */
-    public function deleting(HikingRoute $hikingRoute): void
+    public function deleting($hikingRoute): void
     {
         $hikingRoute->cleanRelations();
         $hikingRoute->clearMediaCollection('feature_image');

@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Traits\Nova\UgcCommonFieldsTrait;
 use App\Traits\Nova\UgcCommonMethodsTrait;
+use App\Traits\SpatialDataTrait;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
@@ -11,7 +12,7 @@ use Wm\WmPackage\Nova\UgcTrack as WmUgcTrack;
 
 class UgcTrack extends WmUgcTrack
 {
-    use UgcCommonFieldsTrait, UgcCommonMethodsTrait;
+    use UgcCommonFieldsTrait, UgcCommonMethodsTrait, SpatialDataTrait;
 
     /**
      * The model the resource corresponds to.

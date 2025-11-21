@@ -2,18 +2,15 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Area;
 use App\Models\User;
 
 class AreaPolicy
 {
-    private $allowedRoles = ['Administrator', 'National Referent', 'Regional Referent'];
-
     private function hasAllowedRole(User $user): bool
     {
-        $userRoles = $user->getRoleNames();
-
-        return $userRoles->intersect($this->allowedRoles)->isNotEmpty();
+        return $user->hasAnyRole(UserRole::higherRoles());
     }
 
     /**

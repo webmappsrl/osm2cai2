@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\IssuesStatusEnum;
+use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Models\Club as ModelsClub;
 use App\Nova\Actions\AddMembersToClub;
@@ -16,7 +17,9 @@ use App\Nova\Filters\ClubFilter;
 use App\Nova\Filters\RegionFilter;
 use App\Nova\Metrics\ClubSalPercorribilità;
 use App\Nova\Metrics\ClubSalPercorsi;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
@@ -34,6 +37,29 @@ class Club extends Resource
      * @var class-string<ModelsClub>
      */
     public static $model = ModelsClub::class;
+
+    public static function indexQuery(NovaRequest $request, $query): Builder
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent)) {
+            return $query;
+        }
+
+        if ($user->getTerritorialRole() == 'regional' && ! is_null($user->region_id)) {
+            return $query->where('region_id', $user->region_id);
+        }
+
+        if ($user->managedClub) {
+            return $query->where('id', $user->managedClub->id);
+        }
+
+        if ($user->club) {
+            return $query->where('id', $user->club->id);
+        }
+
+        return $query;
+    }
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -158,7 +184,7 @@ class Club extends Resource
 
         $club = ModelsClub::where('id', $clubId)->first();
         $hr = $club ? $club->hikingRoutes()->get() : [];
-        if (! auth()->user()->hasRole('Administrator') && auth()->user()->club_id != null && auth()->user()->region_id != null) {
+        if (! auth()->user()->hasRole(UserRole::Administrator) && auth()->user()->club_id != null && auth()->user()->region_id != null) {
             $userClub = ModelsClub::where('id', auth()->user()->club_id)->first();
             $numbers[1] = $userClub->hikingRoutes()->where('osm2cai_status', 1)->count();
             $numbers[2] = $userClub->hikingRoutes()->where('osm2cai_status', 2)->count();
@@ -276,7 +302,7 @@ class Club extends Resource
         return [
             (new FindClubHrAssociationAction)
                 ->canSee(function ($request) {
-                    return $request->user()->hasRole('Administrator');
+                    return $request->user()->hasRole(UserRole::Administrator);
                 })
                 ->canRun(function ($request) {
                     return true;
@@ -313,21 +339,19 @@ class Club extends Resource
                 return true;
             })->showInline(),
             (new CacheMiturApi('Club'))->canSee(function ($request) {
-                return $request->user()->hasRole('Administrator');
-            })->canRun(function ($request) {
-                return $request->user()->hasRole('Administrator');
+                return $request->user()->hasRole(UserRole::Administrator);
             }),
         ];
     }
 
     public function authorizedToAttachAny(NovaRequest $request, $model)
     {
-        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent') || $request->user()->managedClub?->id === $this->model()->id;
+        return $request->user()->hasRole(UserRole::Administrator) || $request->user()->hasRole(UserRole::NationalReferent) || $request->user()->managedClub?->id === $this->model()->id;
     }
 
     public function authorizedToDetach(NovaRequest $request, $model, $relationship)
     {
-        return $request->user()->hasRole('Administrator') || $request->user()->hasRole('National referent');
+        return $request->user()->hasRole(UserRole::Administrator) || $request->user()->hasRole(UserRole::NationalReferent);
     }
 
     /**

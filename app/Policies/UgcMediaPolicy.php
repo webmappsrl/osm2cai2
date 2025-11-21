@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\UgcMedia;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -47,7 +48,7 @@ class UgcMediaPolicy
      */
     public function update(User $user, UgcMedia $ugcMedia)
     {
-        return $user->hasRole('Administrator') || ($ugcMedia->user_id === $user->id);
+        return $user->hasRole(UserRole::Administrator) || ($ugcMedia->user_id === $user->id);
     }
 
     /**
@@ -57,7 +58,7 @@ class UgcMediaPolicy
      */
     public function delete(User $user, UgcMedia $ugcMedia)
     {
-        return $user->hasRole('Administrator') || $user->id === $ugcMedia->user_id;
+        return $user->hasRole(UserRole::Administrator) || $user->id === $ugcMedia->user_id;
     }
 
     /**

@@ -1,0 +1,160 @@
+services:
+  php:
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    # user: root
+    build: ./docker/configs/phpfpm
+    restart: always
+    container_name: "php81-${APP_NAME}"
+    image: wm-phpfpm:8.4-fpm
+    ports:
+      - ${DOCKER_PHP_PORT}:9000
+      - ${DOCKER_SERVE_PORT}:8000
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+      - "../wm-package:/var/www/html/wm-package"
+    working_dir: "/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - laravel
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: "postgres-${APP_NAME}"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?err}
+      POSTGRES_USER_PASSWORD: ${DB_PASSWORD:?err}
+      POSTGRES_USER: ${DB_USERNAME:?err}
+      POSTGRES_DB: ${DB_DATABASE:?err}
+    volumes:
+      - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
+    ports:
+      - ${DOCKER_PSQL_PORT}:5432
+    networks:
+      - laravel
+  redis:
+    image: redis:latest
+    container_name: "redis-${APP_NAME}"
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - laravel
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
+    container_name: "elasticsearch-${APP_NAME}"
+    restart: always
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+      - ES_JAVA_OPTS=-Xms8g -Xmx8g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "./docker/volumes/elasticsearch/data:/usr/share/elasticsearch/data"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - laravel
+  # Init container necessario per impostare automaticamente la password di kibana_system
+  # Elasticsearch non supporta variabili d'ambiente per kibana_system, quindi va impostata via API
+  # Il container viene rimosso automaticamente dopo l'esecuzione
+  elasticsearch-init:
+    image: curlimages/curl:latest
+    container_name: "elasticsearch-init-${APP_NAME}"
+    depends_on:
+      elasticsearch:
+        condition: service_started
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+    command:
+      - sh
+      - -c
+      - |
+        echo "Waiting for Elasticsearch to be ready..."
+        i=0
+        while [ $$i -lt 60 ]; do
+          if curl -s -f -u elastic:$$ELASTICSEARCH_PASSWORD http://elasticsearch:9200/_cluster/health > /dev/null 2>&1; then
+            echo "Elasticsearch is ready!"
+            break
+          fi
+          i=$$((i + 1))
+          sleep 2
+        done
+        echo "Setting password for kibana_system user..."
+        curl -s -X POST -u elastic:$$ELASTICSEARCH_PASSWORD \
+          http://elasticsearch:9200/_security/user/kibana_system/_password \
+          -H "Content-Type: application/json" \
+          -d "{\"password\":\"$$ELASTICSEARCH_PASSWORD\"}" || true
+        echo "Password set successfully!"
+        # Rimuove il container dopo l'esecuzione
+        echo "Removing init container..."
+        docker rm -f elasticsearch-init-${APP_NAME} 2>/dev/null || true
+    restart: "no"
+    # Usa la socket Docker per permettere la rimozione del container stesso
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - laravel
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.1
+    container_name: "kibana-${APP_NAME}"
+    restart: always
+    depends_on:
+      elasticsearch-init:
+        condition: service_completed_successfully
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      # Password deve corrispondere a ELASTIC_PASSWORD
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=false
+    ports:
+      - ${DOCKER_KIBANA_PORT:-5601}:5601
+    networks:
+      - laravel
+  horizon:
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    build: ./docker/configs/phpfpm
+    restart: always
+    container_name: "horizon-${APP_NAME}"
+    image: wm-phpfpm:8.4
+    command: php artisan horizon
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+      - "../wm-package:/var/www/html/wm-package"
+    working_dir: "/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    depends_on:
+      - redis
+      - db
+    # Nessuna porta esposta (Horizon non necessita di porte)
+    ports: []
+
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge

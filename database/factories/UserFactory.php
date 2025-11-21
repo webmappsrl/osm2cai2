@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -11,6 +12,13 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     /**
+     * The name of the factory's corresponding model.
+     *
+     * @var class-string<\Illuminate\Database\Eloquent\Model>
+     */
+    protected $model = User::class;
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -18,10 +26,10 @@ class UserFactory extends Factory
     public function definition()
     {
         return [
-            'name' => 'Webmapp',
-            'email' => 'team@webmapp.it',
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => bcrypt('webmapp123'), // password
+            'password' => bcrypt('password'),
             'remember_token' => Str::random(10),
         ];
     }
