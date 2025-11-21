@@ -135,16 +135,23 @@ services:
     networks:
       - laravel
   horizon:
-    extends:
-      service: php
-    container_name: "horizon-${APP_NAME}"
-    command: php artisan horizon
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    build: ./docker/configs/phpfpm
     restart: always
+    container_name: "horizon-${APP_NAME}"
+    image: wm-phpfpm:8.4
+    command: php artisan horizon
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+      - "../wm-package:/var/www/html/wm-package"
+    working_dir: "/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
     depends_on:
       - redis
       - db
-    # Rimuove la porta PHP-FPM non necessaria per Horizon
+    # Nessuna porta esposta (Horizon non necessita di porte)
     ports: []
+
     networks:
       - laravel
 
