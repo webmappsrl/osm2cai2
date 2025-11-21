@@ -66,7 +66,7 @@ class HikingRouteObserver extends EcTrackObserver
                     ->onQueue('pbf')
                     ->dispatch();
 
-                Log::info("Batch di rigenerazione PBF avviato per traccia {$hikingRoute->id}: " . count($jobs) . ' job');
+                Log::info("Batch di rigenerazione PBF avviato per traccia {$hikingRoute->id}: ".count($jobs).' job');
             }
         }
     }
@@ -88,7 +88,7 @@ class HikingRouteObserver extends EcTrackObserver
         Log::info('HikingRouteObserver saving event');
         parent::saving($hikingRoute);
         if ($hikingRoute->isDirty('osmfeatures_data.properties.ref') && $hikingRoute->isDirty('osmfeatures_data.properties.from') && $hikingRoute->isDirty('osmfeatures_data.properties.to')) {
-            $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['from'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['to'];
+            $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'].' - '.$hikingRoute->osmfeatures_data['properties']['from'].' - '.$hikingRoute->osmfeatures_data['properties']['to'];
             // Non usare saveQuietly() qui per evitare il loop di eventi
         }
 
@@ -105,7 +105,7 @@ class HikingRouteObserver extends EcTrackObserver
                 }
                 $hikingRoute->dispatchGeometricComputationsJobs('geometric-computations');
             } else {
-                Log::info('HikingRoute ' . $hikingRoute->id . ' is validated (status 4), skipping geometric computations');
+                Log::info('HikingRoute '.$hikingRoute->id.' is validated (status 4), skipping geometric computations');
             }
         }
     }
