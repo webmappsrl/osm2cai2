@@ -16,6 +16,11 @@ class TrailSurvey extends Model
         'description',
     ];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
+
     public function hikingRoute(): BelongsTo
     {
         return $this->belongsTo(HikingRoute::class);
