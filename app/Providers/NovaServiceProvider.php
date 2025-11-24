@@ -35,6 +35,7 @@ use App\Nova\Sector;
 use App\Nova\Sign;
 use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
+use App\Nova\TrailSurvey;
 use App\Nova\TaxonomyPoiType;
 use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
@@ -170,6 +171,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Rilievi
                 MenuSection::make(__('Rilievi'), [
+                    MenuItem::resource(TrailSurvey::class, __('Trail Surveys')),
                     MenuSection::make(__('Elementi rilevati'), [
                         MenuItem::resource(UgcPoi::class, 'Ugc Poi'),
                         MenuItem::resource(UgcTrack::class),
