@@ -2,12 +2,14 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\GenerateTrailSurveyPdfAction;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\URL;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionGrid\FeatureCollectionGrid;
 
 class TrailSurvey extends Resource
@@ -74,6 +76,13 @@ class TrailSurvey extends Resource
                 ->nullable()
                 ->rows(3),
 
+            URL::make(__('PDF URL'), 'pdf_url')
+                ->nullable()
+                ->displayUsing(function ($value) {
+                    return $value ? '<a href="' . $value . '" target="_blank">Visualizza PDF</a>' : 'Non disponibile';
+                })
+                ->asHtml(),
+
             BelongsToMany::make(__('Ugc Pois'), 'ugcPois', UgcPoi::class)
                 ->searchable(),
 
@@ -123,6 +132,8 @@ class TrailSurvey extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            new GenerateTrailSurveyPdfAction(),
+        ];
     }
 }
