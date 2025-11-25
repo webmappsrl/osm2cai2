@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Textarea;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionGrid\FeatureCollectionGrid;
 
 class TrailSurvey extends Resource
 {
@@ -78,6 +79,10 @@ class TrailSurvey extends Resource
 
             BelongsToMany::make(__('Ugc Tracks'), 'ugcTracks', UgcTrack::class)
                 ->searchable(),
+
+            FeatureCollectionGrid::make(__('UGC Features'), null)
+                ->geojsonSource('getFeatureCollectionForGrid')
+                ->syncRelations(['ugcPois', 'ugcTracks']),
         ];
     }
 
@@ -121,4 +126,3 @@ class TrailSurvey extends Resource
         return [];
     }
 }
-

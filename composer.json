@@ -37,6 +37,7 @@
         "spatie/schema-org": "^3.23",
         "subfission/cas": "^5.1",
         "symm/gisconverter": "^1.0",
+        "dompdf/dompdf": "^2.0",
         "tymon/jwt-auth": "^2.1",
         "webmapp/wm-osmfeatures": "*",
         "wm/map-multi-polygon": "*",
