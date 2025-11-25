@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Observers\TrailSurveyObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,6 +15,7 @@ class TrailSurvey extends Model
         'start_date',
         'end_date',
         'description',
+        'pdf_url',
     ];
 
     protected $casts = [
@@ -40,5 +42,9 @@ class TrailSurvey extends Model
     {
         return $this->belongsToMany(UgcTrack::class, 'trail_survey_ugc_track');
     }
-}
 
+    protected static function booted(): void
+    {
+        self::observe(TrailSurveyObserver::class);
+    }
+}

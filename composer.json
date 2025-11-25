@@ -13,6 +13,7 @@
         "badinansoft/nova-language-switch": "^3.0",
         "cweagans/composer-patches": "^1.7",
         "darkaonline/l5-swagger": "^8.6",
+        "dompdf/dompdf": "^2.0",
         "ebess/advanced-nova-media-library": "^5.0",
         "eminiarts/nova-tabs": "dev-master",
         "guzzlehttp/guzzle": "^7.2",
