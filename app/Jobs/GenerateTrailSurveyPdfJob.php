@@ -34,7 +34,6 @@ class GenerateTrailSurveyPdfJob implements ShouldQueue
         Log::info("Inizio generazione PDF per TrailSurvey {$this->trailSurvey->id}");
 
         $pdfUrl = $pdfService->generateAndSavePdf($this->trailSurvey);
-        $this->trailSurvey->update(['pdf_url' => $pdfUrl]);
         if ($pdfUrl) {
             Log::info("PDF generato con successo per TrailSurvey {$this->trailSurvey->id}", [
                 'pdf_url' => $pdfUrl,
