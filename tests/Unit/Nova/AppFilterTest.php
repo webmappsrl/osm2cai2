@@ -202,4 +202,3 @@ class AppFilterTest extends TestCase
         $this->assertEmpty($options);
     }
 }
-

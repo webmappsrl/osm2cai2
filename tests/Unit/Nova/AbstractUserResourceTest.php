@@ -192,4 +192,3 @@ class TestableUserResource extends AbstractUserResource
         return $field->value;
     }
 }
-
