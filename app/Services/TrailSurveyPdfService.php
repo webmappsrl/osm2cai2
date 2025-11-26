@@ -21,6 +21,11 @@ class TrailSurveyPdfService
     public function generateAndSavePdf(TrailSurvey $trailSurvey): ?string
     {
         try {
+            // Carica la relazione owner se non è già caricata
+            if (!$trailSurvey->relationLoaded('owner')) {
+                $trailSurvey->load('owner');
+            }
+
             // Genera il PDF usando il controller
             $pdfController = app(\App\Http\Controllers\TrailSurveyPdfController::class);
             $pdfContent = $pdfController->generatePdfContent($trailSurvey);
@@ -62,8 +67,28 @@ class TrailSurveyPdfService
     /**
      * Genera il path per il PDF
      */
-    protected function getPdfPath(TrailSurvey $trailSurvey): string
+    public function getPdfPath(TrailSurvey $trailSurvey): string
     {
-        return "trail-surveys/survey_{$trailSurvey->id}.pdf";
+        // Ottieni il nome dell'owner e sanitizzalo per il nome file
+        $ownerName = $trailSurvey->owner ? $this->sanitizeFileName($trailSurvey->owner->name) : 'unknown';
+
+        // Formatta le date
+        $startDate = $trailSurvey->start_date ? $trailSurvey->start_date->format('Ymd') : 'nodate';
+        $endDate = $trailSurvey->end_date ? $trailSurvey->end_date->format('Ymd') : 'nodate';
+
+        return "trail-surveys/{$trailSurvey->id}/survey_{$ownerName}_{$startDate}_{$endDate}.pdf";
+    }
+
+    /**
+     * Sanitizza una stringa per essere usata come nome file
+     */
+    protected function sanitizeFileName(string $name): string
+    {
+        // Rimuovi caratteri speciali e sostituisci spazi con underscore
+        $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
+        // Rimuovi underscore multipli
+        $sanitized = preg_replace('/_+/', '_', $sanitized);
+        // Rimuovi underscore all'inizio e alla fine
+        return trim($sanitized, '_');
     }
 }

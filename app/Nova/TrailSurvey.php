@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Nova\Actions\GenerateTrailSurveyPdfAction;
+use App\Services\TrailSurveyPdfService;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
@@ -11,6 +12,7 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\URL;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionGrid\FeatureCollectionGrid;
+use Wm\WmPackage\Services\StorageService;
 
 class TrailSurvey extends Resource
 {
@@ -79,8 +81,24 @@ class TrailSurvey extends Resource
             URL::make(__('PDF URL'), 'pdf_url')
                 ->nullable()
                 ->displayUsing(function ($value) {
-                    $link = "trail-surveys/survey_{$this->id}.pdf";
-                    return $value ? '<a href="' . $link . '" target="_blank">Visualizza PDF</a>' : 'Non disponibile';
+                    // Genera sempre il path usando il servizio
+                    $pdfService = app(TrailSurveyPdfService::class);
+                    $path = $pdfService->getPdfPath($this->resource);
+
+                    // Verifica se il file esiste e genera l'URL pubblico usando StorageService
+                    $storageService = app(StorageService::class);
+                    $publicDisk = $storageService->getPublicDisk();
+                    $exists = $publicDisk->exists($path);
+
+                    if ($exists) {
+                        // Costruisci l'URL manualmente usando l'helper url() di Laravel
+                        // Il path è relativo alla root del disco public, quindi rimuoviamo lo slash iniziale se presente
+                        $cleanPath = ltrim($path, '/');
+                        $link = url('/storage/' . $cleanPath);
+                        return '<a href="' . $link . '" target="_blank">Visualizza PDF</a>';
+                    }
+
+                    return 'Non disponibile';
                 })
                 ->asHtml(),
 
