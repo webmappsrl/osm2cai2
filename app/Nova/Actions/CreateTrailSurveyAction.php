@@ -4,6 +4,7 @@ namespace App\Nova\Actions;
 
 use App\Models\HikingRoute;
 use App\Models\TrailSurvey;
+use App\Jobs\GenerateTrailSurveyPdfJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
@@ -80,7 +81,8 @@ class CreateTrailSurveyAction extends Action
         if ($ugcTracks->isNotEmpty()) {
             $trailSurvey->ugcTracks()->attach($ugcTracks->pluck('id')->toArray());
         }
-
+        // Genera il PDF sincrono
+        GenerateTrailSurveyPdfJob::dispatchSync($trailSurvey);
         // Reindirizza al dettaglio del TrailSurvey creato
         return Action::redirect(Nova::url('/resources/trail-surveys/' . $trailSurvey->id));
     }
