@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\TrailSurvey;
-use DomPDF\Dompdf;
-use DomPDF\Options;
+use Dompdf\Dompdf;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 
 class TrailSurveyPdfController extends Controller
@@ -20,7 +20,7 @@ class TrailSurveyPdfController extends Controller
             $trailSurvey = $trailSurvey->fresh();
 
             if (!$trailSurvey) {
-                \Log::error("TrailSurvey non trovato nel database");
+                Log::error("TrailSurvey non trovato nel database");
                 return null;
             }
 
@@ -28,7 +28,7 @@ class TrailSurveyPdfController extends Controller
             $trailSurvey->load(['hikingRoute', 'owner', 'ugcPois', 'ugcTracks']);
 
             // Log per debug
-            \Log::info("Generazione PDF per TrailSurvey {$trailSurvey->id}", [
+            Log::info("Generazione PDF per TrailSurvey {$trailSurvey->id}", [
                 'description' => $trailSurvey->description,
                 'description_length' => $trailSurvey->description ? strlen($trailSurvey->description) : 0,
             ]);
@@ -38,11 +38,11 @@ class TrailSurveyPdfController extends Controller
                 'trailSurvey' => $trailSurvey,
             ])->render();
 
-            // Configura le opzioni per DomPDF
-            $options = new Options();
-            $options->set('isRemoteEnabled', true);
-            $options->set('isHtml5ParserEnabled', true);
-            $options->set('enableLocalFileAccess', true);
+            // Configura le opzioni per DomPDF (DomPDF 2.0 accetta array di opzioni)
+            $options = [
+                'isRemoteEnabled' => true,
+                'isHtml5ParserEnabled' => true,
+            ];
 
             // Crea l'istanza DomPDF
             $dompdf = new Dompdf($options);
@@ -52,7 +52,7 @@ class TrailSurveyPdfController extends Controller
 
             return $dompdf->output();
         } catch (\Exception $e) {
-            \Log::error("Errore nella generazione PDF: " . $e->getMessage());
+            Log::error("Errore nella generazione PDF: " . $e->getMessage());
             return null;
         }
     }
