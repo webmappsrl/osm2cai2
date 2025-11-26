@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.0.0 (2025-11-26)
+
+
+### Features
+
+* **command:** ✨ add EnrichUgcFormProperties command oc:  6596 ([e649f5a](https://github.com/webmappsrl/osm2cai2/commit/e649f5ae75a5261f51e4a1ad70e73f20b9869da1))
+* **commands:** ✨ add UploadUgcMediaToAwsCommand oc: 6630 ([cd9061f](https://github.com/webmappsrl/osm2cai2/commit/cd9061fe1cb5187aa0c2bc5465161c308e8adc34))
+* **commands:** ✨ add UploadUgcMediaToAwsCommand oc: 6630 ([c10eef7](https://github.com/webmappsrl/osm2cai2/commit/c10eef70b52235938e2bd8258d0f539dc9eb6002))
+* **docker:** ✨ add Docker Compose configuration files ([4dcdc45](https://github.com/webmappsrl/osm2cai2/commit/4dcdc45a8b42a54e1881cb8254b125d88b956890))
+* **docker:** ✨ add Kibana service for local development ([3be05d0](https://github.com/webmappsrl/osm2cai2/commit/3be05d0a16658171ab814846f6f10dfedeabc451))
+* **nova:** ✨ add new "Webapp" menu section with external links ([7b724b0](https://github.com/webmappsrl/osm2cai2/commit/7b724b04e2258c956dc08452d170e65683ea7fa7))
+* **nova:** ✨ introduce WmUser resource and replace NovaUser ([10a61db](https://github.com/webmappsrl/osm2cai2/commit/10a61db92a88c5622abf8d12578036c7e1db9a61))
+* **UgcTrack:** ✨ add SpatialDataTrait to enhance spatial capabilities oc:6631 ([598cb33](https://github.com/webmappsrl/osm2cai2/commit/598cb3310db208b468c87c13e6ccb75bc711ea3e))
+
+
+### Bug Fixes
+
+* correct area relationship in filter oc: 6598 ([5d58898](https://github.com/webmappsrl/osm2cai2/commit/5d58898235260200a91b691a44101898c03c9164))
+* **htaccess:** 🐛 skip redirect for OPTIONS requests to handle CORS preflight ([129c4cf](https://github.com/webmappsrl/osm2cai2/commit/129c4cf8322fcac3cf7db5e4315d409c312ed5e5))
+* improve name field handling oc: 6625 ([#252](https://github.com/webmappsrl/osm2cai2/issues/252)) ([334098f](https://github.com/webmappsrl/osm2cai2/commit/334098f26649b2ff05e658738b8987f6a874ccd0))
+* **nova:** 🐛 correct table reference in indexQuery oc:6550 ([ddbd3ad](https://github.com/webmappsrl/osm2cai2/commit/ddbd3ad82d48102c8b4ac0166d65a98b7afd58ea))
+
+
+### Miscellaneous Chores
+
+* **compose:** 🔧 update network configuration for local and develop environments ([c416b63](https://github.com/webmappsrl/osm2cai2/commit/c416b6364e0a9661673f612666520edefc9901d1))
+* **docker:** 🔧 change MinIO default ports in develop compose file ([dce22b0](https://github.com/webmappsrl/osm2cai2/commit/dce22b0425e1e92af92d1d53eb09dd943a26f014))
+* **docker:** 🔧 update Horizon service configuration ([406a303](https://github.com/webmappsrl/osm2cai2/commit/406a303101b69bc98d5300e88ce6563cdb439a94))
+* **env:** 🔧 update example env file with new ports and credentials ([ac63020](https://github.com/webmappsrl/osm2cai2/commit/ac63020b445685240a13f7c806049109f1d052b3))
+* **gitignore:** ➕ add PHPUnit cache to ignore list ([b6037e9](https://github.com/webmappsrl/osm2cai2/commit/b6037e90dd464978ff74862e221492f168952920))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
