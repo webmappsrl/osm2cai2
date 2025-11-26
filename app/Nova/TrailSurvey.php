@@ -6,6 +6,7 @@ use App\Nova\Actions\GenerateTrailSurveyPdfAction;
 use App\Services\TrailSurveyPdfService;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\ID;
@@ -159,5 +160,41 @@ class TrailSurvey extends Resource
         return [
             new GenerateTrailSurveyPdfAction(),
         ];
+    }
+
+    /**
+     * Determine if the current user can create new resources.
+     * La creazione è permessa solo tramite action in detail di hiking route.
+     */
+    public static function authorizedToCreate(Request $request)
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can update the given resource.
+     * Solo il proprietario può modificare.
+     */
+    public function authorizedToUpdate(Request $request)
+    {
+        return $request->user()->can('update', $this->resource);
+    }
+
+    /**
+     * Determine if the current user can delete the given resource.
+     * Solo il proprietario può eliminare.
+     */
+    public function authorizedToDelete(Request $request)
+    {
+        return $request->user()->can('delete', $this->resource);
+    }
+
+    /**
+     * Determine if the current user can attach any resources of the given type.
+     * Disabilita l'attach per tutte le relazioni BelongsToMany.
+     */
+    public function authorizedToAttachAny(NovaRequest $request, $model)
+    {
+        return false;
     }
 }
