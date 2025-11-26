@@ -60,18 +60,22 @@ class TrailSurvey extends Resource
 
             BelongsTo::make(__('Hiking Route'), 'hikingRoute', HikingRoute::class)
                 ->searchable()
-                ->required(),
+                ->required()
+                ->readonly(),
 
             BelongsTo::make(__('Owner'), 'owner', User::class)
                 ->searchable()
+                ->readonly()
                 ->required(),
 
             Date::make(__('Start Date'), 'start_date')
                 ->required()
+                ->readonly()
                 ->sortable(),
 
             Date::make(__('End Date'), 'end_date')
                 ->required()
+                ->readonly()
                 ->sortable(),
 
             Textarea::make(__('Description'), 'description')
@@ -80,6 +84,7 @@ class TrailSurvey extends Resource
 
             URL::make(__('PDF URL'), 'pdf_url')
                 ->nullable()
+                ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
                     // Genera sempre il path usando il servizio
                     $pdfService = app(TrailSurveyPdfService::class);
