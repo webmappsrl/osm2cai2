@@ -432,5 +432,19 @@
     "Creation Instructions": "Istruzioni per la creazione",
     "Insert App and coordinates, optionally add one or more images.": "Inserisci App e coordinate, opzionalmente aggiungi una o più immagini.",
     "Once created, select one of the available forms.": "Una volta creato, seleziona uno dei form disponibili.",
-    "Once the form is selected, fill in the fields present in the form. The name is mandatory.": "Una volta selezionato il form, compila i campi presenti nel form. Il nome è obbligatorio."
+    "Once the form is selected, fill in the fields present in the form. The name is mandatory.": "Una volta selezionato il form, compila i campi presenti nel form. Il nome è obbligatorio.",
+    "Trail Surveys": "Rilevamenti Percorsi",
+    "Hiking Route": "Percorso Escursionistico",
+    "Start Date": "Data Inizio",
+    "End Date": "Data Fine",
+    "PDF URL": "URL PDF",
+    "Ugc Pois": "POI UGC",
+    "Ugc Tracks": "Tracciati UGC",
+    "Visualizza PDF": "Visualizza PDF",
+    "Non disponibile": "Non disponibile",
+    "Genera PDF": "Genera PDF",
+    "Generazione PDF avviata per :count Trail Survey": "Generazione PDF avviata per :count Rilevamento Percorso",
+    "Create Trail Survey": "Crea Rilevamento Percorso",
+    "Date of start of the survey": "Data di inizio del rilevamento",
+    "Date of end of the survey": "Data di fine del rilevamento"
 }

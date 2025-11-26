@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,44 +11,54 @@
             margin: 20px;
             color: #333;
         }
+
         .header {
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
+
         .section {
             margin-bottom: 30px;
         }
+
         .section-title {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 10px;
             color: #2c3e50;
         }
+
         .info-row {
             margin-bottom: 8px;
         }
+
         .label {
             font-weight: bold;
             display: inline-block;
             width: 150px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
+
         th {
             background-color: #f2f2f2;
             font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>Trail Survey #{{ $trailSurvey->id }}</h1>
@@ -72,9 +83,13 @@
             <span>{{ $trailSurvey->end_date->format('d/m/Y') }}</span>
         </div>
         @if($trailSurvey->description)
-        <div class="info-row">
-            <span class="label">Descrizione:</span>
-            <span>{{ $trailSurvey->description }}</span>
+        <div class="info-row" style="margin-top: 15px;">
+            <div style="margin-bottom: 5px;">
+                <span class="label">Descrizione:</span>
+            </div>
+            <div style="margin-left: 150px; padding: 10px; background-color: #f9f9f9; border-left: 3px solid #2c3e50; white-space: pre-wrap; word-wrap: break-word;">
+                {{ $trailSurvey->description }}
+            </div>
         </div>
         @endif
     </div>
@@ -129,5 +144,5 @@
         </div>
     </div>
 </body>
-</html>
 
+</html>

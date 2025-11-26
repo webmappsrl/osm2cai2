@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\TrailSurvey;
-use Dompdf\Dompdf;
+use DomPDF\Dompdf;
+use DomPDF\Options;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\View;
 
@@ -15,22 +16,35 @@ class TrailSurveyPdfController extends Controller
     public function generatePdfContent(TrailSurvey $trailSurvey): ?string
     {
         try {
+            // Ricarica il modello dal database per assicurarsi di avere i dati più recenti
+            $trailSurvey = $trailSurvey->fresh();
+
+            if (!$trailSurvey) {
+                \Log::error("TrailSurvey non trovato nel database");
+                return null;
+            }
+
             // Carica le relazioni necessarie
             $trailSurvey->load(['hikingRoute', 'owner', 'ugcPois', 'ugcTracks']);
+
+            // Log per debug
+            \Log::info("Generazione PDF per TrailSurvey {$trailSurvey->id}", [
+                'description' => $trailSurvey->description,
+                'description_length' => $trailSurvey->description ? strlen($trailSurvey->description) : 0,
+            ]);
 
             // Genera l'HTML dalla view
             $html = View::make('trail-survey.pdf', [
                 'trailSurvey' => $trailSurvey,
             ])->render();
 
-            // Configura le opzioni per DomPDF (versione 2.0)
-            $options = [
-                'isRemoteEnabled' => true,
-                'isHtml5ParserEnabled' => true,
-                'enableLocalFileAccess' => true,
-            ];
+            // Configura le opzioni per DomPDF
+            $options = new Options();
+            $options->set('isRemoteEnabled', true);
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('enableLocalFileAccess', true);
 
-            // Crea l'istanza DomPDF con le opzioni
+            // Crea l'istanza DomPDF
             $dompdf = new Dompdf($options);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
@@ -59,4 +73,3 @@ class TrailSurveyPdfController extends Controller
             ->header('Content-Disposition', 'attachment; filename="trail_survey_' . $trailSurvey->id . '.pdf"');
     }
 }
-

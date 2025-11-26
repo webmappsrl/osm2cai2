@@ -742,5 +742,19 @@
   "Creation Instructions": "Creation Instructions",
   "Insert App and coordinates, optionally add one or more images.": "Insert App and coordinates, optionally add one or more images.",
   "Once created, select one of the available forms.": "Once created, select one of the available forms.",
-  "Once the form is selected, fill in the fields present in the form. The name is mandatory.": "Once the form is selected, fill in the fields present in the form. The name is mandatory."
+  "Once the form is selected, fill in the fields present in the form. The name is mandatory.": "Once the form is selected, fill in the fields present in the form. The name is mandatory.",
+  "Trail Surveys": "Trail Surveys",
+  "Hiking Route": "Hiking Route",
+  "Start Date": "Start Date",
+  "End Date": "End Date",
+  "PDF URL": "PDF URL",
+  "Ugc Pois": "UGC POIs",
+  "Ugc Tracks": "UGC Tracks",
+  "Visualizza PDF": "View PDF",
+  "Non disponibile": "Not available",
+  "Genera PDF": "Generate PDF",
+  "Generazione PDF avviata per :count Trail Survey": "PDF generation started for :count Trail Survey",
+  "Create Trail Survey": "Create Trail Survey",
+  "Date of start of the survey": "Date of start of the survey",
+  "Date of end of the survey": "Date of end of the survey"
 }
