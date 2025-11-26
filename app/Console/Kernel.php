@@ -34,6 +34,10 @@ class Kernel extends ConsoleKernel
             ->dailyAt('05:00')
             ->description('Check osmfeatures for hiking routes updates');
 
+        $schedule->command('osm2cai:calculate-region-hiking-routes-intersection')
+            ->dailyAt('7:00')
+            ->description('Calculate region hiking routes intersection');
+
         $schedule->command('osm2cai:check_hr_existence_on_osm')
             ->dailyAt('06:30')
             ->description('Check hiking routes existence on OSM');
@@ -54,7 +58,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
