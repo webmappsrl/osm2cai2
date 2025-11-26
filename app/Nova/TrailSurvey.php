@@ -79,7 +79,8 @@ class TrailSurvey extends Resource
             URL::make(__('PDF URL'), 'pdf_url')
                 ->nullable()
                 ->displayUsing(function ($value) {
-                    return $value ? '<a href="' . $value . '" target="_blank">Visualizza PDF</a>' : 'Non disponibile';
+                    $link = "trail-surveys/survey_{$this->id}.pdf";
+                    return $value ? '<a href="' . $link . '" target="_blank">Visualizza PDF</a>' : 'Non disponibile';
                 })
                 ->asHtml(),
 

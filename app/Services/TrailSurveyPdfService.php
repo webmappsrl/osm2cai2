@@ -45,7 +45,7 @@ class TrailSurveyPdfService
             $pdfUrl = $this->storageService->getPublicDisk()->url($path);
 
             // Salva l'URL sul modello
-            $trailSurvey->update(['pdf_url' => $pdfUrl]);
+            $trailSurvey->updateQuietly(['pdf_url' => $pdfUrl]);
 
             Log::info("PDF generato con successo per TrailSurvey {$trailSurvey->id}", [
                 'pdf_url' => $pdfUrl,
@@ -64,7 +64,6 @@ class TrailSurveyPdfService
      */
     protected function getPdfPath(TrailSurvey $trailSurvey): string
     {
-        return "trail-surveys/{$trailSurvey->id}/survey_{$trailSurvey->id}_" . now()->format('YmdHis') . ".pdf";
+        return "trail-surveys/survey_{$trailSurvey->id}.pdf";
     }
 }
-
