@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
-use Wm\WmPackage\Models\Media;
 use Spatie\MediaLibrary\Support\PathGenerator\PathGeneratorFactory;
+use Wm\WmPackage\Models\Media;
 
 class UploadUgcMediaToAwsCommand extends Command
 {
@@ -61,6 +61,7 @@ class UploadUgcMediaToAwsCommand extends Command
 
         if ($mediaWithDifferentNames->isEmpty()) {
             $this->info('Nessun media trovato con name e file_name diversi per UgcPoi o UgcTrack.');
+
             return 0;
         }
 
@@ -90,10 +91,10 @@ class UploadUgcMediaToAwsCommand extends Command
         foreach ($mediaWithDifferentNames as $media) {
             try {
                 // Cerca il file locale usando file_name
-                $localFilePath = $localPath . '/' . $media->file_name;
+                $localFilePath = $localPath.'/'.$media->file_name;
 
                 // Verifica se il file esiste localmente
-                if (!file_exists($localFilePath)) {
+                if (! file_exists($localFilePath)) {
                     $skipped++;
                     $errors[] = "Media ID {$media->id}: File non trovato localmente - {$media->file_name}";
                     $progressBar->advance();
@@ -102,9 +103,9 @@ class UploadUgcMediaToAwsCommand extends Command
 
                 // Usa name come nome file su AWS
                 $pathGenerator = PathGeneratorFactory::create($media);
-                $awsFilePath = $pathGenerator->getPath($media) . '/' . $media->name;
+                $awsFilePath = $pathGenerator->getPath($media).'/'.$media->name;
 
-                if (!$dryRun && $awsDisk->exists($awsFilePath)) {
+                if (! $dryRun && $awsDisk->exists($awsFilePath)) {
                     // Il file esiste già su AWS, aggiorna solo file_name
                     $media->file_name = $media->name;
                     $media->saveQuietly();
@@ -124,11 +125,11 @@ class UploadUgcMediaToAwsCommand extends Command
                     continue;
                 }
 
-                if (!$dryRun) {
+                if (! $dryRun) {
                     // Carica il file su AWS usando name come nome file
                     $uploadedSuccessfully = $awsDisk->put($awsFilePath, $fileContent);
 
-                    if (!$uploadedSuccessfully) {
+                    if (! $uploadedSuccessfully) {
                         $failed++;
                         $errors[] = "Media ID {$media->id}: Errore durante il caricamento su AWS - {$media->name}";
                         $progressBar->advance();
@@ -155,7 +156,7 @@ class UploadUgcMediaToAwsCommand extends Command
         $this->newLine(2);
 
         // Mostra i risultati
-        $this->info("✅ Completato!");
+        $this->info('✅ Completato!');
         $this->table(
             ['Risultato', 'Conteggio'],
             [
@@ -166,14 +167,14 @@ class UploadUgcMediaToAwsCommand extends Command
         );
 
         // Mostra sempre gli errori se si testa un singolo UgcPoi o se verbose è attivo
-        if (!empty($errors) && ($ugcPoiId || $this->option('verbose'))) {
+        if (! empty($errors) && ($ugcPoiId || $this->option('verbose'))) {
             $this->newLine();
             $this->warn('Errori riscontrati:');
             foreach (array_slice($errors, 0, 20) as $error) {
                 $this->line("  - {$error}");
             }
             if (count($errors) > 20) {
-                $this->line("  ... e altri " . (count($errors) - 20) . " errori");
+                $this->line('  ... e altri '.(count($errors) - 20).' errori');
             }
         }
 
