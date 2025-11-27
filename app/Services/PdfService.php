@@ -64,9 +64,8 @@ class PdfService
             $cleanPath = ltrim($path, '/');
             $pdfUrl = url('/storage/' . $cleanPath);
 
-            // Save the URL on the model
-            $urlField = $model->getPdfUrlFieldName();
-            $model->updateQuietly([$urlField => $pdfUrl]);
+            // Note: pdf_url is not saved to database, it's generated dynamically from the path
+            // The URL is generated on-the-fly when needed (e.g., in Nova resources)
 
             Log::info("PDF generato con successo per " . get_class($model) . " {$model->id}", [
                 'pdf_url' => $pdfUrl,

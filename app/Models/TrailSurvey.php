@@ -17,7 +17,6 @@ class TrailSurvey extends Model
         'start_date',
         'end_date',
         'description',
-        'pdf_url',
     ];
 
     protected $casts = [

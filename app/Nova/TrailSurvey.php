@@ -78,7 +78,7 @@ class TrailSurvey extends Resource
                 ->readonly()
                 ->sortable(),
 
-            Textarea::make(__('Description'), 'description')
+            Textarea::make(__('Description IT'), 'description')
                 ->nullable()
                 ->rows(3),
 
