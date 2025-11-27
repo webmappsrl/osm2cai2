@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Observers\TrailSurveyObserver;
+use App\Traits\GeneratesPdfTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class TrailSurvey extends Model
 {
+    use GeneratesPdfTrait;
     protected $fillable = [
         'hiking_route_id',
         'owner_id',
@@ -175,5 +177,37 @@ class TrailSurvey extends Model
             'type' => 'FeatureCollection',
             'features' => $features,
         ];
+    }
+
+    /**
+     * Override the methods of the GeneratesPdfTrait for TrailSurvey
+     */
+    public function getPdfViewName(): string
+    {
+        return 'trail-survey.pdf';
+    }
+
+    public function getPdfViewVariableName(): string
+    {
+        return 'trailSurvey';
+    }
+
+    public function getPdfPath(): string
+    {
+        $ownerName = $this->owner ? $this->sanitizeFileName($this->owner->name) : 'unknown';
+        $startDate = $this->start_date ? $this->start_date->format('Ymd') : 'nodate';
+        $endDate = $this->end_date ? $this->end_date->format('Ymd') : 'nodate';
+
+        return "trail-surveys/{$this->id}/survey_{$ownerName}_{$startDate}_{$endDate}.pdf";
+    }
+
+    public function getPdfRelationsToLoad(): array
+    {
+        return ['hikingRoute', 'owner', 'ugcPois', 'ugcTracks'];
+    }
+
+    public function getPdfControllerClass(): ?string
+    {
+        return \App\Http\Controllers\TrailSurveyPdfController::class;
     }
 }

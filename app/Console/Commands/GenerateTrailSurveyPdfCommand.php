@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\GenerateTrailSurveyPdfJob;
+use App\Jobs\GeneratePdfJob;
 use App\Models\TrailSurvey;
 use Illuminate\Console\Command;
 
@@ -31,22 +31,20 @@ class GenerateTrailSurveyPdfCommand extends Command
 
         if ($id) {
             $trailSurvey = TrailSurvey::find($id);
-            
             if (!$trailSurvey) {
                 $this->error("TrailSurvey con ID {$id} non trovato");
                 return 1;
             }
 
             $this->info("Generazione PDF per TrailSurvey {$id}...");
-            GenerateTrailSurveyPdfJob::dispatch($trailSurvey);
+            GeneratePdfJob::dispatch($trailSurvey);
             $this->info("Job di generazione PDF avviato per TrailSurvey {$id}");
         } else {
             $this->info("Generazione PDF per tutti i TrailSurvey...");
             $count = 0;
-            
             TrailSurvey::chunk(100, function ($trailSurveys) use (&$count) {
                 foreach ($trailSurveys as $trailSurvey) {
-                    GenerateTrailSurveyPdfJob::dispatch($trailSurvey);
+                    GeneratePdfJob::dispatch($trailSurvey);
                     $count++;
                 }
             });
@@ -57,4 +55,3 @@ class GenerateTrailSurveyPdfCommand extends Command
         return 0;
     }
 }
-
