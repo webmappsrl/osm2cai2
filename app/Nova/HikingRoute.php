@@ -439,7 +439,7 @@ class HikingRoute extends OsmfeaturesResource
                 }),
             (new CreateTrailSurveyAction($this->model()))
                 ->onlyOnDetail()
-                ->confirmText(__('Are you sure you want to create a trail survey for this route?'))
+                ->confirmText(__('Create Trail Survey confirmation message'))
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
