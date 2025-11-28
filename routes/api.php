@@ -12,6 +12,7 @@ use App\Http\Controllers\RegionController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ShapeFileController;
 use App\Http\Controllers\SourceSurveyController;
+use App\Http\Controllers\TrailSurveyController;
 use App\Http\Controllers\UmapController;
 use App\Http\Controllers\V1\HikingRoutesRegionControllerV1;
 use App\Http\Controllers\WebhookController;
@@ -146,4 +147,9 @@ Route::prefix('umap')->name('umap.')->group(function () {
 Route::prefix('webhook')->name('webhook.')->group(function () {
     Route::post('/ugc/poi', [WebhookController::class, 'ugcPoi'])->name('ugc.poi');
     Route::post('/ugc/track', [WebhookController::class, 'ugcTrack'])->name('ugc.track');
+});
+
+// Trail Survey routes
+Route::prefix('trail-surveys')->name('trail-surveys.')->group(function () {
+    Route::get('/{id}/participants', [TrailSurveyController::class, 'getParticipants'])->name('participants');
 });
