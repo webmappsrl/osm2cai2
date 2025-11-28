@@ -9,6 +9,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\URL;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionGrid\FeatureCollectionGrid;
@@ -77,6 +78,13 @@ class TrailSurvey extends Resource
                 ->required()
                 ->readonly()
                 ->sortable(),
+
+            Text::make(__('Participants'), function () {
+                $participants = $this->resource->getParticipants();
+                return !empty($participants) ? implode(', ', $participants) : __('No participants');
+            })
+                ->onlyOnDetail()
+                ->readonly(),
 
             Textarea::make(__('Description IT'), 'description')
                 ->nullable()

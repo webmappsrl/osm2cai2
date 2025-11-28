@@ -209,4 +209,45 @@ class TrailSurvey extends Model
     {
         return \App\Http\Controllers\TrailSurveyPdfController::class;
     }
+
+    /**
+     * Get all unique participant names from associated UGC POIs and Tracks
+     *
+     * @return array
+     */
+    public function getParticipants(): array
+    {
+        $participants = [];
+
+        // Load UGC POIs with users if not already loaded
+        if (!$this->relationLoaded('ugcPois')) {
+            $this->load('ugcPois.user');
+        } else {
+            $this->ugcPois->loadMissing('user');
+        }
+
+        // Load UGC Tracks with users if not already loaded
+        if (!$this->relationLoaded('ugcTracks')) {
+            $this->load('ugcTracks.user');
+        } else {
+            $this->ugcTracks->loadMissing('user');
+        }
+
+        // Collect user names from POIs
+        foreach ($this->ugcPois as $poi) {
+            if ($poi->user && $poi->user->name) {
+                $participants[$poi->user->id] = $poi->user->name;
+            }
+        }
+
+        // Collect user names from Tracks
+        foreach ($this->ugcTracks as $track) {
+            if ($track->user && $track->user->name) {
+                $participants[$track->user->id] = $track->user->name;
+            }
+        }
+
+        // Return unique names sorted alphabetically
+        return array_values(array_unique($participants));
+    }
 }

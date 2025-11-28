@@ -449,5 +449,7 @@
     "Date of start of the survey": "Data di inizio del rilevamento",
     "Date of end of the survey": "Data di fine del rilevamento",
     "Date of end of the survey. If not provided, it will be set equal to the start date.": "Data di fine del rilevamento. Se non fornita, verrà impostata uguale alla data di inizio.",
-    "Create Trail Survey confirmation message": "Questa azione creerà un nuovo Rilevamento Percorso per il percorso escursionistico selezionato. È necessario specificare la data di inizio (obbligatoria) e opzionalmente la data di fine. Se la data di fine non viene fornita, verrà automaticamente impostata uguale alla data di inizio. Il sistema assocerà automaticamente tutti i POI e i Tracciati rilevati sul campo entro un raggio di 10m dal percorso che ricadono nell'intervallo di date specificato. Dopo la creazione, potrai eliminare quelli non necessari. Verrà generato un documento PDF e verrai reindirizzato alla pagina di dettaglio del Rilevamento Percorso creato."
+    "Create Trail Survey confirmation message": "Questa azione creerà un nuovo Rilevamento Percorso per il percorso escursionistico selezionato. È necessario specificare la data di inizio (obbligatoria) e opzionalmente la data di fine. Se la data di fine non viene fornita, verrà automaticamente impostata uguale alla data di inizio. Il sistema assocerà automaticamente tutti i POI e i Tracciati rilevati sul campo entro un raggio di 10m dal percorso che ricadono nell'intervallo di date specificato. Dopo la creazione, potrai eliminare quelli non necessari. Verrà generato un documento PDF e verrai reindirizzato alla pagina di dettaglio del Rilevamento Percorso creato.",
+    "Participants": "Partecipanti",
+    "No participants": "Nessun partecipante"
 }
