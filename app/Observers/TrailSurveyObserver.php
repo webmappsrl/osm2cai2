@@ -8,10 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class TrailSurveyObserver
 {
-
     public function __construct() {}
-
-
 
     /**
      * Handle the TrailSurvey "updated" event. Generate the PDF if relevant fields have changed

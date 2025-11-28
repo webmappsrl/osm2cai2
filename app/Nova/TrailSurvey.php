@@ -5,13 +5,13 @@ namespace App\Nova;
 use App\Nova\Actions\GenerateTrailSurveyPdfAction;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\URL;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionGrid\FeatureCollectionGrid;
 use Wm\WmPackage\Services\StorageService;
 
@@ -81,7 +81,8 @@ class TrailSurvey extends Resource
 
             Text::make(__('Participants'), function () {
                 $participants = $this->resource->getParticipants();
-                return !empty($participants) ? implode(', ', $participants) : __('No participants');
+
+                return ! empty($participants) ? implode(', ', $participants) : __('No participants');
             })
                 ->onlyOnDetail()
                 ->readonly(),
@@ -106,8 +107,9 @@ class TrailSurvey extends Resource
                         // Build the URL manually using the Laravel url() helper
                         // The path is relative to the root of the public disk, so remove the initial slash if present
                         $cleanPath = ltrim($path, '/');
-                        $link = url('/storage/' . $cleanPath);
-                        return '<a href="' . $link . '" target="_blank">Visualizza PDF</a>';
+                        $link = url('/storage/'.$cleanPath);
+
+                        return '<a href="'.$link.'" target="_blank">Visualizza PDF</a>';
                     }
 
                     return 'Non disponibile';
@@ -164,7 +166,7 @@ class TrailSurvey extends Resource
     public function actions(Request $request)
     {
         return [
-            new GenerateTrailSurveyPdfAction(),
+            new GenerateTrailSurveyPdfAction,
         ];
     }
 

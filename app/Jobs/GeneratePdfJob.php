@@ -36,11 +36,12 @@ class GeneratePdfJob implements ShouldQueue
     public function handle(PdfService $pdfService): void
     {
         // Verify that the model uses the trait
-        if (!in_array(GeneratesPdfTrait::class, class_uses_recursive($this->model))) {
-            Log::error("Il modello " . get_class($this->model) . " non usa il trait GeneratesPdfTrait", [
+        if (! in_array(GeneratesPdfTrait::class, class_uses_recursive($this->model))) {
+            Log::error('Il modello '.get_class($this->model).' non usa il trait GeneratesPdfTrait', [
                 'model_id' => $this->model->id,
                 'model_class' => get_class($this->model),
             ]);
+
             return;
         }
 

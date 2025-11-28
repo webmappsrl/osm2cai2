@@ -14,6 +14,7 @@ trait GeneratesPdfTrait
     {
         // Default: automatically generate from the model name
         $modelName = Str::snake(class_basename(static::class));
+
         return "{$modelName}.pdf";
     }
 
@@ -33,6 +34,7 @@ trait GeneratesPdfTrait
     {
         // Default: generic path
         $modelName = Str::plural(Str::snake(class_basename(static::class)));
+
         return "{$modelName}/{$this->id}/document_{$this->id}.pdf";
     }
 
@@ -68,6 +70,7 @@ trait GeneratesPdfTrait
     {
         $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
         $sanitized = preg_replace('/_+/', '_', $sanitized);
+
         return trim($sanitized, '_');
     }
 }

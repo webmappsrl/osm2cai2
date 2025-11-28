@@ -2,9 +2,9 @@
 
 namespace App\Nova\Actions;
 
+use App\Jobs\GeneratePdfJob;
 use App\Models\HikingRoute;
 use App\Models\TrailSurvey;
-use App\Jobs\GeneratePdfJob;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -105,8 +105,9 @@ class CreateTrailSurveyAction extends Action
         }
         // Generate the PDF synchronously
         GeneratePdfJob::dispatchSync($trailSurvey);
+
         // Redirect to the detail of the created TrailSurvey
-        return Action::redirect(Nova::url('/resources/trail-surveys/' . $trailSurvey->id));
+        return Action::redirect(Nova::url('/resources/trail-surveys/'.$trailSurvey->id));
     }
 
     /**

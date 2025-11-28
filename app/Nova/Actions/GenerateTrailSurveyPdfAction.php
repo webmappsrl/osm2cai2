@@ -34,7 +34,7 @@ class GenerateTrailSurveyPdfAction extends Action
             GeneratePdfJob::dispatch($trailSurvey);
         }
 
-        return Action::message('Generazione PDF avviata per ' . $models->count() . ' Trail Survey');
+        return Action::message('Generazione PDF avviata per '.$models->count().' Trail Survey');
     }
 
     /**

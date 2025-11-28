@@ -31,8 +31,9 @@ class GenerateTrailSurveyPdfCommand extends Command
 
         if ($id) {
             $trailSurvey = TrailSurvey::find($id);
-            if (!$trailSurvey) {
+            if (! $trailSurvey) {
                 $this->error("TrailSurvey con ID {$id} non trovato");
+
                 return 1;
             }
 
@@ -40,7 +41,7 @@ class GenerateTrailSurveyPdfCommand extends Command
             GeneratePdfJob::dispatch($trailSurvey);
             $this->info("Job di generazione PDF avviato per TrailSurvey {$id}");
         } else {
-            $this->info("Generazione PDF per tutti i TrailSurvey...");
+            $this->info('Generazione PDF per tutti i TrailSurvey...');
             $count = 0;
             TrailSurvey::chunk(100, function ($trailSurveys) use (&$count) {
                 foreach ($trailSurveys as $trailSurvey) {

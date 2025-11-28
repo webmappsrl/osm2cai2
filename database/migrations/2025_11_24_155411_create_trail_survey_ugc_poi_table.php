@@ -31,5 +31,3 @@ return new class extends Migration
         Schema::dropIfExists('trail_survey_ugc_poi');
     }
 };
-
-

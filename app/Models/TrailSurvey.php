@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class TrailSurvey extends Model
 {
     use GeneratesPdfTrait;
+
     protected $fillable = [
         'hiking_route_id',
         'owner_id',
@@ -31,7 +32,7 @@ class TrailSurvey extends Model
 
     public function owner(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'owner_id');
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     public function ugcPois(): BelongsToMany
@@ -52,24 +53,22 @@ class TrailSurvey extends Model
     /**
      * Get FeatureCollection GeoJSON combining ugcPois and ugcTracks
      * Each feature has properties with model_type and model_id for synchronization
-     *
-     * @return array
      */
     public function getFeatureCollectionForGrid(): array
     {
         $features = [];
 
         // Load relations if not already loaded
-        if (!$this->relationLoaded('hikingRoute')) {
+        if (! $this->relationLoaded('hikingRoute')) {
             $this->load('hikingRoute');
         }
-        if (!$this->relationLoaded('ugcPois')) {
+        if (! $this->relationLoaded('ugcPois')) {
             $this->load('ugcPois.user');
         } else {
             // If already loaded, eager load user relation
             $this->ugcPois->loadMissing('user');
         }
-        if (!$this->relationLoaded('ugcTracks')) {
+        if (! $this->relationLoaded('ugcTracks')) {
             $this->load('ugcTracks.user');
         } else {
             // If already loaded, eager load user relation
@@ -137,7 +136,7 @@ class TrailSurvey extends Model
                 $color = $getColorForUser($userName);
 
                 $tooltipParts = array_filter([$userName, $formId, $title]);
-                $geojson['properties']['tooltip'] = !empty($tooltipParts)
+                $geojson['properties']['tooltip'] = ! empty($tooltipParts)
                     ? implode(' - ', $tooltipParts)
                     : $title;
                 $geojson['properties']['pointFillColor'] = $color;
@@ -163,7 +162,7 @@ class TrailSurvey extends Model
                 $color = $getColorForUser($userName);
 
                 $tooltipParts = array_filter([$userName, $formId, $title]);
-                $geojson['properties']['tooltip'] = !empty($tooltipParts)
+                $geojson['properties']['tooltip'] = ! empty($tooltipParts)
                     ? implode(' - ', $tooltipParts)
                     : $title;
                 $geojson['properties']['strokeColor'] = $color;
@@ -212,22 +211,20 @@ class TrailSurvey extends Model
 
     /**
      * Get all unique participant names from associated UGC POIs and Tracks
-     *
-     * @return array
      */
     public function getParticipants(): array
     {
         $participants = [];
 
         // Load UGC POIs with users if not already loaded
-        if (!$this->relationLoaded('ugcPois')) {
+        if (! $this->relationLoaded('ugcPois')) {
             $this->load('ugcPois.user');
         } else {
             $this->ugcPois->loadMissing('user');
         }
 
         // Load UGC Tracks with users if not already loaded
-        if (!$this->relationLoaded('ugcTracks')) {
+        if (! $this->relationLoaded('ugcTracks')) {
             $this->load('ugcTracks.user');
         } else {
             $this->ugcTracks->loadMissing('user');
