@@ -39,12 +39,12 @@ class HikingRoutesRegionControllerV1 extends Controller
      *     @OA\Parameter(
      *         name="region_code",
      *         in="path",
-     *         description="
+     *         description="Regione code according to CAI convention",
      *         required=true,
      *
      *         @OA\Schema(
      *             type="string",
-     *             format="varchar",
+     *             format="varchar"
      *         )
      *     ),
      *
@@ -118,12 +118,12 @@ class HikingRoutesRegionControllerV1 extends Controller
      *     @OA\Parameter(
      *         name="region_code",
      *         in="path",
-     *         description="
+     *         description="Regione code according to CAI convention",
      *         required=true,
      *
      *         @OA\Schema(
      *             type="string",
-     *             format="varchar",
+     *             format="varchar"
      *         )
      *     ),
      *
