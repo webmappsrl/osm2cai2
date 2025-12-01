@@ -185,6 +185,7 @@
   "Denmark": "Denmark",
   "Description": "Description",
   "Description CAI IT": "Description CAI IT",
+  "Description IT": "Description",
   "Detach": "Detach",
   "Detach Resource": "Detach Resource",
   "Detach Selected": "Detach Selected",
@@ -756,5 +757,7 @@
   "Generazione PDF avviata per :count Trail Survey": "PDF generation started for :count Trail Survey",
   "Create Trail Survey": "Create Trail Survey",
   "Date of start of the survey": "Date of start of the survey",
-  "Date of end of the survey": "Date of end of the survey"
+  "Date of end of the survey": "Date of end of the survey",
+  "Date of end of the survey. If not provided, it will be set equal to the start date.": "Date of end of the survey. If not provided, it will be set equal to the start date.",
+  "Create Trail Survey confirmation message": "This action will create a new Trail Survey for the selected hiking route. You need to specify the start date (required) and optionally the end date. If the end date is not provided, it will be automatically set equal to the start date. The system will automatically associate all field-surveyed POIs and Tracks within a 10m radius from the route that fall within the specified date range. After creation, you can delete any that are not needed. A PDF document will be generated and you will be redirected to the detail page of the created Trail Survey."
 }

@@ -3,19 +3,21 @@
 namespace App\Models;
 
 use App\Observers\TrailSurveyObserver;
+use App\Traits\GeneratesPdfTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class TrailSurvey extends Model
 {
+    use GeneratesPdfTrait;
+
     protected $fillable = [
         'hiking_route_id',
         'owner_id',
         'start_date',
         'end_date',
         'description',
-        'pdf_url',
     ];
 
     protected $casts = [
@@ -30,7 +32,7 @@ class TrailSurvey extends Model
 
     public function owner(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'owner_id');
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     public function ugcPois(): BelongsToMany
@@ -51,24 +53,22 @@ class TrailSurvey extends Model
     /**
      * Get FeatureCollection GeoJSON combining ugcPois and ugcTracks
      * Each feature has properties with model_type and model_id for synchronization
-     *
-     * @return array
      */
     public function getFeatureCollectionForGrid(): array
     {
         $features = [];
 
         // Load relations if not already loaded
-        if (!$this->relationLoaded('hikingRoute')) {
+        if (! $this->relationLoaded('hikingRoute')) {
             $this->load('hikingRoute');
         }
-        if (!$this->relationLoaded('ugcPois')) {
+        if (! $this->relationLoaded('ugcPois')) {
             $this->load('ugcPois.user');
         } else {
             // If already loaded, eager load user relation
             $this->ugcPois->loadMissing('user');
         }
-        if (!$this->relationLoaded('ugcTracks')) {
+        if (! $this->relationLoaded('ugcTracks')) {
             $this->load('ugcTracks.user');
         } else {
             // If already loaded, eager load user relation
@@ -136,7 +136,7 @@ class TrailSurvey extends Model
                 $color = $getColorForUser($userName);
 
                 $tooltipParts = array_filter([$userName, $formId, $title]);
-                $geojson['properties']['tooltip'] = !empty($tooltipParts)
+                $geojson['properties']['tooltip'] = ! empty($tooltipParts)
                     ? implode(' - ', $tooltipParts)
                     : $title;
                 $geojson['properties']['pointFillColor'] = $color;
@@ -162,7 +162,7 @@ class TrailSurvey extends Model
                 $color = $getColorForUser($userName);
 
                 $tooltipParts = array_filter([$userName, $formId, $title]);
-                $geojson['properties']['tooltip'] = !empty($tooltipParts)
+                $geojson['properties']['tooltip'] = ! empty($tooltipParts)
                     ? implode(' - ', $tooltipParts)
                     : $title;
                 $geojson['properties']['strokeColor'] = $color;
@@ -175,5 +175,76 @@ class TrailSurvey extends Model
             'type' => 'FeatureCollection',
             'features' => $features,
         ];
+    }
+
+    /**
+     * Override the methods of the GeneratesPdfTrait for TrailSurvey
+     */
+    public function getPdfViewName(): string
+    {
+        return 'trail-survey.pdf';
+    }
+
+    public function getPdfViewVariableName(): string
+    {
+        return 'trailSurvey';
+    }
+
+    public function getPdfPath(): string
+    {
+        $ownerName = $this->owner ? $this->sanitizeFileName($this->owner->name) : 'unknown';
+        $startDate = $this->start_date ? $this->start_date->format('Ymd') : 'nodate';
+        $endDate = $this->end_date ? $this->end_date->format('Ymd') : 'nodate';
+
+        return "trail-surveys/{$this->id}/survey_{$ownerName}_{$startDate}_{$endDate}.pdf";
+    }
+
+    public function getPdfRelationsToLoad(): array
+    {
+        return ['hikingRoute', 'owner', 'ugcPois', 'ugcTracks'];
+    }
+
+    public function getPdfControllerClass(): ?string
+    {
+        return \App\Http\Controllers\TrailSurveyPdfController::class;
+    }
+
+    /**
+     * Get all unique participant names from associated UGC POIs and Tracks
+     */
+    public function getParticipants(): array
+    {
+        $participants = [];
+
+        // Load UGC POIs with users if not already loaded
+        if (! $this->relationLoaded('ugcPois')) {
+            $this->load('ugcPois.user');
+        } else {
+            $this->ugcPois->loadMissing('user');
+        }
+
+        // Load UGC Tracks with users if not already loaded
+        if (! $this->relationLoaded('ugcTracks')) {
+            $this->load('ugcTracks.user');
+        } else {
+            $this->ugcTracks->loadMissing('user');
+        }
+
+        // Collect user names from POIs
+        foreach ($this->ugcPois as $poi) {
+            if ($poi->user && $poi->user->name) {
+                $participants[$poi->user->id] = $poi->user->name;
+            }
+        }
+
+        // Collect user names from Tracks
+        foreach ($this->ugcTracks as $track) {
+            if ($track->user && $track->user->name) {
+                $participants[$track->user->id] = $track->user->name;
+            }
+        }
+
+        // Return unique names sorted alphabetically
+        return array_values(array_unique($participants));
     }
 }

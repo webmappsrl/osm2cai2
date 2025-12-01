@@ -19,8 +19,9 @@ class TrailSurveyPdfController extends Controller
             // Ricarica il modello dal database per assicurarsi di avere i dati più recenti
             $trailSurvey = $trailSurvey->fresh();
 
-            if (!$trailSurvey) {
-                Log::error("TrailSurvey non trovato nel database");
+            if (! $trailSurvey) {
+                Log::error('TrailSurvey non trovato nel database');
+
                 return null;
             }
 
@@ -52,7 +53,8 @@ class TrailSurveyPdfController extends Controller
 
             return $dompdf->output();
         } catch (\Exception $e) {
-            Log::error("Errore nella generazione PDF: " . $e->getMessage());
+            Log::error('Errore nella generazione PDF: '.$e->getMessage());
+
             return null;
         }
     }
@@ -64,12 +66,12 @@ class TrailSurveyPdfController extends Controller
     {
         $pdfContent = $this->generatePdfContent($trailSurvey);
 
-        if (!$pdfContent) {
+        if (! $pdfContent) {
             abort(500, 'Errore nella generazione del PDF');
         }
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="trail_survey_' . $trailSurvey->id . '.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="trail_survey_'.$trailSurvey->id.'.pdf"');
     }
 }

@@ -3,15 +3,15 @@
 namespace App\Nova;
 
 use App\Nova\Actions\GenerateTrailSurveyPdfAction;
-use App\Services\TrailSurveyPdfService;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\URL;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionGrid\FeatureCollectionGrid;
 use Wm\WmPackage\Services\StorageService;
 
@@ -79,7 +79,15 @@ class TrailSurvey extends Resource
                 ->readonly()
                 ->sortable(),
 
-            Textarea::make(__('Description'), 'description')
+            Text::make(__('Participants'), function () {
+                $participants = $this->resource->getParticipants();
+
+                return ! empty($participants) ? implode(', ', $participants) : __('No participants');
+            })
+                ->onlyOnDetail()
+                ->readonly(),
+
+            Textarea::make(__('Description IT'), 'description')
                 ->nullable()
                 ->rows(3),
 
@@ -87,21 +95,21 @@ class TrailSurvey extends Resource
                 ->nullable()
                 ->hideWhenUpdating()
                 ->displayUsing(function ($value) {
-                    // Genera sempre il path usando il servizio
-                    $pdfService = app(TrailSurveyPdfService::class);
-                    $path = $pdfService->getPdfPath($this->resource);
+                    // Get the path of the PDF file
+                    $path = $this->resource->getPdfPath();
 
-                    // Verifica se il file esiste e genera l'URL pubblico usando StorageService
+                    // Check if the file exists and generate the public URL using StorageService
                     $storageService = app(StorageService::class);
                     $publicDisk = $storageService->getPublicDisk();
                     $exists = $publicDisk->exists($path);
 
                     if ($exists) {
-                        // Costruisci l'URL manualmente usando l'helper url() di Laravel
-                        // Il path è relativo alla root del disco public, quindi rimuoviamo lo slash iniziale se presente
+                        // Build the URL manually using the Laravel url() helper
+                        // The path is relative to the root of the public disk, so remove the initial slash if present
                         $cleanPath = ltrim($path, '/');
-                        $link = url('/storage/' . $cleanPath);
-                        return '<a href="' . $link . '" target="_blank">Visualizza PDF</a>';
+                        $link = url('/storage/'.$cleanPath);
+
+                        return '<a href="'.$link.'" target="_blank">Visualizza PDF</a>';
                     }
 
                     return 'Non disponibile';
@@ -158,13 +166,12 @@ class TrailSurvey extends Resource
     public function actions(Request $request)
     {
         return [
-            new GenerateTrailSurveyPdfAction(),
+            new GenerateTrailSurveyPdfAction,
         ];
     }
 
     /**
-     * Determine if the current user can create new resources.
-     * La creazione è permessa solo tramite action in detail di hiking route.
+     * Determine if the current user can create new models.
      */
     public static function authorizedToCreate(Request $request)
     {
@@ -173,7 +180,6 @@ class TrailSurvey extends Resource
 
     /**
      * Determine if the current user can update the given resource.
-     * Solo il proprietario può modificare.
      */
     public function authorizedToUpdate(Request $request)
     {
@@ -182,7 +188,6 @@ class TrailSurvey extends Resource
 
     /**
      * Determine if the current user can delete the given resource.
-     * Solo il proprietario può eliminare.
      */
     public function authorizedToDelete(Request $request)
     {
@@ -190,8 +195,7 @@ class TrailSurvey extends Resource
     }
 
     /**
-     * Determine if the current user can attach any resources of the given type.
-     * Disabilita l'attach per tutte le relazioni BelongsToMany.
+     * Determine if the current user can attach any models to the given resource.
      */
     public function authorizedToAttachAny(NovaRequest $request, $model)
     {

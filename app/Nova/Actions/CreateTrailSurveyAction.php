@@ -2,9 +2,10 @@
 
 namespace App\Nova\Actions;
 
+use App\Jobs\GeneratePdfJob;
 use App\Models\HikingRoute;
 use App\Models\TrailSurvey;
-use App\Jobs\GenerateTrailSurveyPdfJob;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
@@ -60,20 +61,41 @@ class CreateTrailSurveyAction extends Action
             return Action::danger(__('User not authenticated'));
         }
 
-        // Crea il TrailSurvey
+        // Validate that start date is required
+        if (! $fields->start_date) {
+            return Action::danger(__('The start date is required'));
+        }
+
+        // If end_date is not provided, set it equal to start_date
+        $endDate = $fields->end_date ?? $fields->start_date;
+
+        // Convert to Carbon instances for proper comparison
+        try {
+            $startDate = Carbon::parse($fields->start_date)->startOfDay();
+            $endDateParsed = Carbon::parse($endDate)->startOfDay();
+        } catch (\Exception $e) {
+            return Action::danger(__('Invalid date format'));
+        }
+
+        // Validate date relationship - end date must be >= start date
+        if ($endDateParsed->lt($startDate)) {
+            return Action::danger(__('The end date cannot be earlier than the start date'));
+        }
+
+        // Create the TrailSurvey
         $trailSurvey = TrailSurvey::create([
             'hiking_route_id' => $hikingRoute->id,
             'owner_id' => $user->id,
             'start_date' => $fields->start_date,
-            'end_date' => $fields->end_date,
+            'end_date' => $endDate,
             'description' => $fields->description ?? null,
         ]);
 
-        // Ottieni gli UgcPoi e UgcTrack con buffer
-        $ugcPois = $hikingRoute->getUgcPoisWithBuffer(10, $fields->start_date, $fields->end_date);
-        $ugcTracks = $hikingRoute->getUgcTracksWithBuffer(10, $fields->start_date, $fields->end_date);
+        // Get the UgcPoi and UgcTrack with buffer
+        $ugcPois = $hikingRoute->getUgcPoisWithBuffer(10, $fields->start_date, $endDate);
+        $ugcTracks = $hikingRoute->getUgcTracksWithBuffer(10, $fields->start_date, $endDate);
 
-        // Aggiungi le relazioni
+        // Add the relations
         if ($ugcPois->isNotEmpty()) {
             $trailSurvey->ugcPois()->attach($ugcPois->pluck('id')->toArray());
         }
@@ -81,10 +103,11 @@ class CreateTrailSurveyAction extends Action
         if ($ugcTracks->isNotEmpty()) {
             $trailSurvey->ugcTracks()->attach($ugcTracks->pluck('id')->toArray());
         }
-        // Genera il PDF sincrono
-        GenerateTrailSurveyPdfJob::dispatchSync($trailSurvey);
-        // Reindirizza al dettaglio del TrailSurvey creato
-        return Action::redirect(Nova::url('/resources/trail-surveys/' . $trailSurvey->id));
+        // Generate the PDF synchronously
+        GeneratePdfJob::dispatchSync($trailSurvey);
+
+        // Redirect to the detail of the created TrailSurvey
+        return Action::redirect(Nova::url('/resources/trail-surveys/'.$trailSurvey->id));
     }
 
     /**
@@ -97,11 +120,47 @@ class CreateTrailSurveyAction extends Action
         return [
             Date::make(__('Start Date'), 'start_date')
                 ->required()
-                ->help(__('Date of start of the survey')),
+                ->help(__('Date of start of the survey'))
+                ->rules([
+                    'required',
+                    'date',
+                    function ($attribute, $value, $fail) use ($request) {
+                        $endDate = $request->input('end_date');
+                        if ($endDate && $value) {
+                            try {
+                                $start = Carbon::parse($value)->startOfDay();
+                                $end = Carbon::parse($endDate)->startOfDay();
+                                if ($start->gt($end)) {
+                                    $fail(__('The start date cannot be later than the end date'));
+                                }
+                            } catch (\Exception $e) {
+                                // Ignore parsing errors, handled by date rule
+                            }
+                        }
+                    },
+                ]),
 
             Date::make(__('End Date'), 'end_date')
-                ->required()
-                ->help(__('Date of end of the survey')),
+                ->nullable()
+                ->help(__('Date of end of the survey. If not provided, it will be set equal to the start date.'))
+                ->rules([
+                    'nullable',
+                    'date',
+                    function ($attribute, $value, $fail) use ($request) {
+                        $startDate = $request->input('start_date');
+                        if ($startDate && $value) {
+                            try {
+                                $start = Carbon::parse($startDate)->startOfDay();
+                                $end = Carbon::parse($value)->startOfDay();
+                                if ($end->lt($start)) {
+                                    $fail(__('The end date cannot be earlier than the start date'));
+                                }
+                            } catch (\Exception $e) {
+                                // Ignore parsing errors, handled by date rule
+                            }
+                        }
+                    },
+                ]),
         ];
     }
 }

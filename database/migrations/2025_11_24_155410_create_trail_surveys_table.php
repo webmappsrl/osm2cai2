@@ -34,4 +34,3 @@ return new class extends Migration
         Schema::dropIfExists('trail_surveys');
     }
 };
-

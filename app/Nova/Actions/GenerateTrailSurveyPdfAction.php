@@ -2,7 +2,7 @@
 
 namespace App\Nova\Actions;
 
-use App\Jobs\GenerateTrailSurveyPdfJob;
+use App\Jobs\GeneratePdfJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
@@ -31,10 +31,10 @@ class GenerateTrailSurveyPdfAction extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         foreach ($models as $trailSurvey) {
-            GenerateTrailSurveyPdfJob::dispatch($trailSurvey);
+            GeneratePdfJob::dispatch($trailSurvey);
         }
 
-        return Action::message('Generazione PDF avviata per ' . $models->count() . ' Trail Survey');
+        return Action::message('Generazione PDF avviata per '.$models->count().' Trail Survey');
     }
 
     /**
@@ -47,4 +47,3 @@ class GenerateTrailSurveyPdfAction extends Action
         return [];
     }
 }
-

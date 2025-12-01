@@ -2,29 +2,25 @@
 
 namespace App\Observers;
 
-use App\Jobs\GenerateTrailSurveyPdfJob;
+use App\Jobs\GeneratePdfJob;
 use App\Models\TrailSurvey;
 use Illuminate\Support\Facades\Log;
 
 class TrailSurveyObserver
 {
-
     public function __construct() {}
 
-
-
     /**
-     * Handle the TrailSurvey "updated" event.
-     * Genera il PDF solo se sono cambiati campi rilevanti
+     * Handle the TrailSurvey "updated" event. Generate the PDF if relevant fields have changed
      */
     public function updated(TrailSurvey $trailSurvey): void
     {
-        // Genera il PDF se sono cambiati campi rilevanti
+        // Generate the PDF if relevant fields have changed
         $relevantFields = ['hiking_route_id', 'start_date', 'end_date', 'description'];
 
         if ($trailSurvey->wasChanged($relevantFields)) {
             Log::info("TrailSurvey {$trailSurvey->id} aggiornato, generazione PDF");
-            GenerateTrailSurveyPdfJob::dispatchSync($trailSurvey);
+            GeneratePdfJob::dispatchSync($trailSurvey);
         }
     }
 }

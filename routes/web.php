@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'nova'])->group(function () {
     Route::get('/migration-check', [MigrationCheck::class, 'show'])->name('migration-check');
-    Route::get('/trail-survey/{trailSurvey}/pdf/download', 
+    Route::get('/trail-survey/{trailSurvey}/pdf/download',
         [TrailSurveyPdfController::class, 'download'])
         ->name('trail-survey.pdf.download');
 });
