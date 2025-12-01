@@ -1060,21 +1060,7 @@ SQL;
      */
     public function getPolesWithBuffer(float $bufferDistance = 10)
     {
-        // Ottieni la geometria principale
-        $geojson = DB::table('hiking_routes')
-            ->where('id', $this->id)
-            ->value(DB::raw('ST_AsGeoJSON(geometry)'));
-
-        // Se esiste geometry_raw_data, fai un merge delle geometrie
-        if (! empty($this->geometry_raw_data)) {
-            $mergedGeojson = DB::table('hiking_routes')
-                ->where('id', $this->id)
-                ->value(DB::raw('ST_AsGeoJSON(ST_Union(geometry::geometry, geometry_raw_data))'));
-
-            if ($mergedGeojson) {
-                $geojson = $mergedGeojson;
-            }
-        }
+        $geojson = $this->getHikingRouteGeojson();
 
         return Poles::select('poles.*')
             ->whereRaw(
@@ -1082,6 +1068,78 @@ SQL;
                 [$geojson, $bufferDistance]
             )
             ->get();
+    }
+
+    public function getUgcPoisWithBuffer(float $bufferDistance = 10, ?string $startDate = null, ?string $endDate = null)
+    {
+        // Ottieni la geometria principale
+        $geojson = $this->getHikingRouteGeojson();
+
+        $query = UgcPoi::select('ugc_pois.*');
+
+        // Filtro per start_date
+        if ($startDate !== null) {
+            $query->whereDate('ugc_pois.created_at', '>=', $startDate);
+        }
+
+        // Filtro per end_date
+        if ($endDate !== null) {
+            $query->whereDate('ugc_pois.created_at', '<=', $endDate);
+        }
+
+        return $query
+            ->whereRaw(
+                'ST_DWithin(ugc_pois.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                [$geojson, $bufferDistance]
+            )
+            ->get();
+    }
+
+    public function getUgcTracksWithBuffer(float $bufferDistance = 10, ?string $startDate = null, ?string $endDate = null)
+    {
+        $geojson = $this->getHikingRouteGeojson();
+
+        $query = UgcTrack::select('ugc_tracks.*');
+
+        // Filtro per start_date
+        if ($startDate !== null) {
+            $query->whereDate('ugc_tracks.created_at', '>=', $startDate);
+        }
+
+        // Filtro per end_date
+        if ($endDate !== null) {
+            $query->whereDate('ugc_tracks.created_at', '<=', $endDate);
+        }
+
+        return $query
+            ->whereRaw(
+                'ST_DWithin(ugc_tracks.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                [$geojson, $bufferDistance]
+            )
+            ->get();
+    }
+
+    private function getHikingRouteGeojson(): string
+    {
+        $mergedGeojson = null;
+
+        // Ottieni la geometria principale
+        $geojson = DB::table('hiking_routes')
+            ->where('id', $this->id)
+            ->value(DB::raw('ST_AsGeoJSON(geometry)'));
+
+        if (! empty($this->geometry_raw_data)) {
+            $mergedGeojson = DB::table('hiking_routes')
+                ->where('id', $this->id)
+                ->value(DB::raw('ST_AsGeoJSON(ST_Union(geometry::geometry, geometry_raw_data))'));
+        }
+
+        if ($mergedGeojson) {
+            $geojson = $mergedGeojson;
+        }
+
+        // Assicurati di restituire una stringa (JSON)
+        return $geojson ?? '';
     }
 
     /**
