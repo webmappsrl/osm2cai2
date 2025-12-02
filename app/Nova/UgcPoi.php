@@ -8,6 +8,7 @@ use App\Traits\Nova\UgcCommonMethodsTrait;
 use Illuminate\Http\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Wm\MapPoint\MapPoint;
+use Wm\WmPackage\Nova\Actions\ExportTo;
 use Wm\WmPackage\Nova\UgcPoi as WmUgcPoi;
 
 class UgcPoi extends WmUgcPoi
@@ -76,7 +77,7 @@ class UgcPoi extends WmUgcPoi
 
         // Remove the default ExportTo
         $actions = array_filter($actions, function ($action) {
-            return !($action instanceof \Wm\WmPackage\Nova\Actions\ExportTo);
+            return !($action instanceof ExportTo);
         });
 
         // Add custom ExportTo action with filtered columns
