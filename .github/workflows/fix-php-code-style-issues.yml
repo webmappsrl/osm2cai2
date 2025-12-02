@@ -1,10 +1,14 @@
 name: Fix PHP code style issues
 
+# TEMPORARILY DISABLED
+# on:
+#   pull_request:
+#     branches: [main, develop]
+#     paths:
+#       - "**.php"
+
 on:
-  pull_request:
-    branches: [main, develop]
-    paths:
-      - "**.php"
+  workflow_dispatch: # Solo trigger manuale
 
 jobs:
   php-code-styling:
