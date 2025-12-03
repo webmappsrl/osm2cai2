@@ -79,11 +79,6 @@ export default {
                 return this.field.geojsonUrl;
             }
 
-            let modelName = this.resourceName;
-            if (modelName.endsWith('s')) {
-                modelName = modelName.slice(0, -1);
-            }
-
             const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
             const baseUrl = `/nova-vendor/feature-collection-map/${modelName}/${id}`;
 
