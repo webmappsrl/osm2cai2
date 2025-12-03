@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "95fef502e435b20280d982c70937f526",
+    "content-hash": "f81863be7ae6d276e90227c26bc3c85c",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -12096,7 +12096,7 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-13286258addf1cb737f4157bbb1a6323c83674fe",
+            "version": "dev-e467f1f8f7d794594affd6e0cf1e4307072a188e",
             "dist": {
                 "type": "path",
                 "url": "./wm-osmfeatures",
@@ -12461,7 +12461,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-OC_6293",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -12496,8 +12496,46 @@
             }
         },
         {
+            "name": "wm/signage-map",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/SignageMap",
+                "reference": "ef6e035c7d6823c6d628f434200d151dee1a9969"
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Wm\\SignageMap\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Wm\\SignageMap\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field for CAI signage map with custom popup.",
+            "keywords": [
+                "laravel",
+                "map",
+                "nova",
+                "signage"
+            ],
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "wm/wm-internal",
-            "version": "dev-OC_6293",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -12578,11 +12616,11 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-main",
+            "version": "dev-1793f17c82c5fa05f831d80f5d1ee5fe4648c39d",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
-                "reference": "bd70132410a0394d49c4db39abe8a5025e7d8c5c"
+                "reference": "4ea70c67e3beca23fce517ed7ee5c6ca44359e02"
             },
             "require": {
                 "chillerlan/php-qrcode": "^5.0",
@@ -12653,7 +12691,9 @@
                     "Wm\\WmPackage\\Database\\Factories\\": "database/factories/",
                     "Wm\\WmPackage\\Http\\Controllers\\": "src/Http/Controllers",
                     "Wm\\WmPackage\\Nova\\Fields\\IconSelect\\": "src/Nova/Fields/IconSelect/src/",
-                    "Wm\\WmPackage\\Nova\\Fields\\LayerFeatures\\": "src/Nova/Fields/LayerFeatures/src/"
+                    "Wm\\WmPackage\\Nova\\Fields\\LayerFeatures\\": "src/Nova/Fields/LayerFeatures/src/",
+                    "Wm\\WmPackage\\Nova\\Fields\\FeatureCollectionMap\\": "src/Nova/Fields/FeatureCollectionMap/src/",
+                    "Wm\\WmPackage\\Nova\\Fields\\FeatureCollectionGrid\\": "src/Nova/Fields/FeatureCollectionGrid/src/"
                 },
                 "classmap": [
                     "src/Exceptions/"

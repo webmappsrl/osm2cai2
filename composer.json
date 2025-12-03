@@ -130,6 +130,10 @@
             "url": "./nova-components/osm2cai-map-multi-linestring"
         },
         {
+            "type": "path",
+            "url": "./nova-components/SignageMap"
+        },
+        {
             "type": "vcs",
             "url": "https://github.com/k8n/nova-tabs"
         },
