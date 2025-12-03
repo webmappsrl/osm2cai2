@@ -1,0 +1,35 @@
+{
+    "name": "wm/signage-map",
+    "description": "A Laravel Nova field for CAI signage map with custom popup.",
+    "keywords": [
+        "laravel",
+        "nova",
+        "signage",
+        "map"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wm\\SignageMap\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Wm\\SignageMap\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
+
+
+
+

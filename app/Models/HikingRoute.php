@@ -371,7 +371,9 @@ class HikingRoute extends EcTrack
             $poleFeature = $this->getFeatureMap($pole->geometry);
             $properties = [
                 'id' => $pole->id,
+                'name' => $pole->ref,
                 'tooltip' => $pole->ref,
+                'clickAction' => 'popup',
                 'link' => url('/resources/poles/' . $pole->id),
                 'pointStrokeColor' => 'rgb(255, 255, 255)',
                 'pointStrokeWidth' => 2,
