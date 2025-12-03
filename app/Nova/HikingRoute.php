@@ -20,6 +20,7 @@ use App\Nova\Actions\UploadValidationRawDataAction;
 use App\Nova\Cards\LinksCard;
 use App\Nova\Cards\Osm2caiStatusCard;
 use App\Nova\Cards\RefCard;
+use App\Nova\Fields\SignageMap;
 use App\Nova\Filters\AreaFilter;
 use App\Nova\Filters\CaiHutsHRFilter;
 use App\Nova\Filters\CorrectGeometryFilter;
@@ -48,7 +49,6 @@ use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\ActionRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
-use Wm\SignageMap\SignageMap;
 
 class HikingRoute extends OsmfeaturesResource
 {

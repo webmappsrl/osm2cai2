@@ -79,6 +79,7 @@ export default {
                 return this.field.geojsonUrl;
             }
 
+            const modelName = this.resourceName;
             const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
             const baseUrl = `/nova-vendor/feature-collection-map/${modelName}/${id}`;
 
