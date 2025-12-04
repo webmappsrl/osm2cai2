@@ -130,13 +130,14 @@ class UgcPoiFilteredModelExporter extends ModelExporter
                 }
             }
 
+            // Define coordinate keys
+            $latKey = 'properties.position.latitude';
+            $lonKey = 'properties.position.longitude';
+
             // If properties.position.latitude/longitude are missing, try to get from geometry
             $modelId = $row['id'] ?? null;
             if ($modelId && isset($geometryCoordinates[$modelId])) {
                 // Check if properties.position.latitude is missing or empty
-                $latKey = 'properties.position.latitude';
-                $lonKey = 'properties.position.longitude';
-
                 if (empty($row[$latKey]) && isset($geometryCoordinates[$modelId]['latitude'])) {
                     $row[$latKey] = $geometryCoordinates[$modelId]['latitude'];
                 }
@@ -147,8 +148,6 @@ class UgcPoiFilteredModelExporter extends ModelExporter
             }
 
             // Format latitude and longitude to 6 decimal places for consistency
-            $latKey = 'properties.position.latitude';
-            $lonKey = 'properties.position.longitude';
 
             if (isset($row[$latKey]) && is_numeric($row[$latKey])) {
                 $row[$latKey] = round((float) $row[$latKey], 6);
