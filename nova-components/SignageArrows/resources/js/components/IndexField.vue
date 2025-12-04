@@ -14,12 +14,12 @@ export default {
         arrowsCount() {
             const signage = this.field.value || {};
             let count = 0;
-            
+
             Object.values(signage).forEach(routeData => {
                 if (routeData.forward) count += routeData.forward.length;
                 if (routeData.backward) count += routeData.backward.length;
             });
-            
+
             return count;
         }
     }

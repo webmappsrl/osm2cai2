@@ -71,7 +71,6 @@ class SignageMapController
             $geojson = $hikingRoute->getFeatureCollectionMap();
             $demClient = new DemClient;
             $geojson = $demClient->getPointMatrix($geojson);
-            Log::info('Geojson arricchito con point matrix', ['geojson' => $geojson]);
 
             // Estrai points_order e checkpoint dal GeoJSON e calcola le direzioni
             $this->processPointDirections($geojson, $properties, $id);
@@ -223,10 +222,5 @@ class SignageMapController
             $pole->properties = $poleProperties;
             $pole->saveQuietly();
         }
-
-        Log::info('Point directions processed', [
-            'hiking_route_id' => $hikingRouteId,
-            'points_processed' => $pointCount,
-        ]);
     }
 }

@@ -32,6 +32,13 @@ class HikingRoute extends EcTrack
     use SpatialDataTrait;
     use TagsMappingTrait;
 
+    // Costanti per lo stile dei punti (pali) sulla mappa
+    protected const POINT_STROKE_COLOR = 'rgb(255, 255, 255)';
+    protected const POINT_STROKE_WIDTH = 2;
+    protected const POINT_FILL_COLOR = 'rgba(255, 0, 0, 0.8)';
+    protected const CHECKPOINT_FILL_COLOR = 'rgb(255, 160, 0)';
+    protected const POINT_RADIUS = 4;
+
     protected $table = 'hiking_routes';
 
     protected $fillable = [
@@ -373,18 +380,21 @@ class HikingRoute extends EcTrack
             $geojson['features'][0]['properties']['signage'] = $hikingRouteProperties['signage'];
         }
 
-        $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) {
+        $checkpointPoleIds = $hikingRouteProperties['signage']['checkpoint'] ?? [];
+        $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) use ($checkpointPoleIds) {
             $poleFeature = $this->getFeatureMap($pole->geometry);
+            $isCheckpoint = in_array($pole->id, $checkpointPoleIds);
             $properties = [
                 'id' => $pole->id,
                 'name' => $pole->ref,
                 'tooltip' => $pole->ref,
                 'clickAction' => 'popup',
                 'link' => url('/resources/poles/' . $pole->id),
-                'pointStrokeColor' => 'rgb(255, 255, 255)',
-                'pointStrokeWidth' => 2,
-                'pointFillColor' => 'rgba(255, 0, 0, 0.8)',
-                'pointRadius' => 4,
+                'pointStrokeColor' => self::POINT_STROKE_COLOR,
+                'pointStrokeWidth' => self::POINT_STROKE_WIDTH,
+                'pointFillColor' => $isCheckpoint ? self::CHECKPOINT_FILL_COLOR : self::POINT_FILL_COLOR,
+                'pointRadius' => self::POINT_RADIUS,
+                'signage' => $pole->properties['signage'] ?? [],
             ];
             $poleFeature['properties'] = $properties;
 

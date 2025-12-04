@@ -43,6 +43,7 @@
         "wm/map-multi-polygon": "*",
         "wm/map-point": "*",
         "wm/osm2cai-map-multi-linestring": "*",
+        "wm/signage-map": "*",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },

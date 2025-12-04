@@ -8,7 +8,7 @@ use Laravel\Nova\Fields\Field;
  * SignageArrows - Campo Nova per la visualizzazione delle frecce segnaletica CAI
  *
  * Visualizza le frecce forward (destra) e backward (sinistra) con i dati
- * della segnaletica estratti da properties->signage
+ * della segnaletica. Accetta attributi in dot-notation (es. "properties.signage")
  */
 class SignageArrows extends Field
 {
@@ -40,12 +40,7 @@ class SignageArrows extends Field
      */
     protected function resolveAttribute($resource, string $attribute): mixed
     {
-        // Ottieni le properties dal model
-        $properties = $resource->properties ?? [];
-
-        // Estrai i dati signage
-        $signage = $properties['signage'] ?? [];
-
-        return $signage;
+        // Usa data_get per supportare dot-notation (es. "properties.signage")
+        return data_get($resource, $attribute) ?? [];
     }
 }

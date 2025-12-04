@@ -47,6 +47,15 @@
                                     </span>
                                 </button>
                             </div>
+
+                            <!-- Frecce Segnaletica -->
+                            <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                                    Segnaletica
+                                </label>
+                                <SignageArrowsDisplay :signage-data="signageArrowsData" />
+                            </div>
+
                             <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">
                                 Clicca sul pulsante per visualizzare i dettagli del palo.
                             </p>
@@ -74,12 +83,15 @@
 <script>
 // Importa FeatureCollectionMap dalla copia locale
 import FeatureCollectionMap from './FeatureCollectionMap.vue';
+// Importa SignageArrowsDisplay per mostrare le frecce segnaletica nel popup
+import SignageArrowsDisplay from '../../../../SignageArrows/resources/js/components/SignageArrowsDisplay.vue';
 
 export default {
     name: 'SignageMapDetailField',
 
     components: {
-        FeatureCollectionMap
+        FeatureCollectionMap,
+        SignageArrowsDisplay
     },
 
     props: ['index', 'resource', 'resourceName', 'resourceId', 'field'],
@@ -91,7 +103,8 @@ export default {
             currentPoleId: null,
             metaValue: false,
             isUpdatingMeta: false,
-            cachedProperties: null // Cache delle properties dopo il salvataggio
+            cachedProperties: null, // Cache delle properties dopo il salvataggio
+            signageArrowsData: {}, // Dati per le frecce segnaletica
         };
     },
 
@@ -164,6 +177,9 @@ export default {
             if (event.popupComponent === 'signage-map') {
                 this.currentPoleId = event.id;
                 this.popupTitle = event.properties?.name || event.properties?.tooltip || `Palo #${event.id}`;
+                // Estrai i dati della segnaletica dalle properties del palo
+                this.signageArrowsData = event.properties?.signage || {};
+                console.log('SignageMap: Signage arrows data:', this.signageArrowsData);
                 this.showPopup = true;
                 // Carica il valore di checkpoint per questo palo specifico
                 await this.loadMetaValue();
@@ -180,7 +196,7 @@ export default {
             this.currentPoleId = null;
             this.popupTitle = '';
             this.metaValue = false;
-            // Non resettare cachedProperties, così quando si riapre usa i dati aggiornati
+            this.signageArrowsData = {};
         },
 
         handleKeydown(event) {
@@ -197,16 +213,38 @@ export default {
 
             const poleId = parseInt(this.currentPoleId);
 
-            // Usa le properties cached se disponibili, altrimenti quelle del resource
-            const properties = this.cachedProperties ||
-                (this.resource && this.resource.properties && this.resource.properties.value) ||
-                {};
+            // Usa le properties cached se disponibili
+            if (this.cachedProperties) {
+                const checkpoint = this.cachedProperties?.signage?.checkpoint || [];
+                this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+                console.log('Loaded from cache:', { poleId, checkpoint, metaValue: this.metaValue });
+                return;
+            }
 
-            // Verifica se il palo è presente nell'array checkpoint
-            const checkpoint = properties?.signage?.checkpoint || [];
-            this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+            // Altrimenti recupera le properties dal GeoJSON endpoint
+            try {
+                const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+                const response = await fetch(`/nova-vendor/feature-collection-map/hiking-routes/${id}`);
+                const geojson = await response.json();
 
-            console.log('Loaded checkpoint value:', { poleId, checkpoint, metaValue: this.metaValue });
+                // Trova la feature con le properties (MultiLineString o la prima con signage)
+                let properties = {};
+                for (const feature of geojson.features || []) {
+                    if (feature.properties?.signage) {
+                        properties = { signage: feature.properties.signage };
+                        break;
+                    }
+                }
+
+                this.cachedProperties = properties;
+                const checkpoint = properties?.signage?.checkpoint || [];
+                this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+
+                console.log('Loaded from API:', { poleId, checkpoint, metaValue: this.metaValue });
+            } catch (error) {
+                console.error('Error loading properties:', error);
+                this.metaValue = false;
+            }
         },
 
         async toggleMeta() {
@@ -246,7 +284,7 @@ export default {
                 }
 
                 console.log('metaValue after response:', this.metaValue);
-                Nova.success(`Meta ${newValue ? 'attivato' : 'disattivato'} con successo`);
+                Nova.success(`Checkpoint ${newValue ? 'attivato' : 'disattivato'} con successo`);
             } catch (error) {
                 console.error('Error updating meta:', error);
                 // Ripristina il valore precedente in caso di errore

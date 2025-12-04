@@ -49,7 +49,7 @@ class Poles extends OsmfeaturesResource
         return array_merge($parentFields, [
             Text::make(__('Ref'), 'ref')->sortable(),
             FeatureCollectionMap::make(__('Geometry'), 'geometry'),
-            SignageArrows::make(__('Segnaletica'), 'properties'),
+            SignageArrows::make(__('Segnaletica'), 'properties.signage'),
         ]);
     }
 }
