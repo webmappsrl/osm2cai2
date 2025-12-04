@@ -367,6 +367,12 @@ class HikingRoute extends EcTrack
         ];
         $geojson['features'][0]['properties'] = $properties;
 
+        // Aggiungi le properties.signage dell'hikingRoute al GeoJSON per renderle disponibili al frontend
+        $hikingRouteProperties = $this->properties ?? [];
+        if (isset($hikingRouteProperties['signage'])) {
+            $geojson['features'][0]['properties']['signage'] = $hikingRouteProperties['signage'];
+        }
+
         $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) {
             $poleFeature = $this->getFeatureMap($pole->geometry);
             $properties = [
@@ -390,6 +396,9 @@ class HikingRoute extends EcTrack
             'strokeWidth' => 2,
             'id' => $this->id,
         ];
+        if (isset($hikingRouteProperties['signage'])) {
+            $properties['signage'] = $hikingRouteProperties['signage'];
+        }
         $uncheckedGeometryFeature['properties'] = $properties;
 
         $geojson['features'] = array_merge($poleFeatures, [$uncheckedGeometryFeature], $geojson['features']);

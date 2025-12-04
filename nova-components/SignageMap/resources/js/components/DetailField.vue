@@ -28,6 +28,25 @@
                             <p class="text-gray-600 dark:text-gray-300 text-sm">
                                 Palo selezionato: <strong>{{ popupTitle }}</strong>
                             </p>
+                            <!-- Toggle Meta -->
+                            <div class="mt-4 flex items-center justify-between">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Meta
+                                </label>
+                                <button
+                                    type="button"
+                                    @click="toggleMeta"
+                                    :disabled="isUpdatingMeta"
+                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :class="[metaValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']"
+                                    role="switch"
+                                    :aria-checked="metaValue">
+                                    <span
+                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                        :style="{ transform: metaValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
+                                    </span>
+                                </button>
+                            </div>
                             <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">
                                 Clicca sul pulsante per visualizzare i dettagli del palo.
                             </p>
@@ -69,7 +88,10 @@ export default {
         return {
             showPopup: false,
             popupTitle: '',
-            currentPoleId: null
+            currentPoleId: null,
+            metaValue: false,
+            isUpdatingMeta: false,
+            cachedProperties: null // Cache delle properties dopo il salvataggio
         };
     },
 
@@ -137,12 +159,14 @@ export default {
         },
 
         // Handler per eventi Nova
-        onNovaPopupOpen(event) {
+        async onNovaPopupOpen(event) {
             console.log('SignageMap: Nova popup-open received:', event);
             if (event.popupComponent === 'signage-map') {
                 this.currentPoleId = event.id;
                 this.popupTitle = event.properties?.name || event.properties?.tooltip || `Palo #${event.id}`;
                 this.showPopup = true;
+                // Carica il valore di checkpoint per questo palo specifico
+                await this.loadMetaValue();
             }
         },
 
@@ -155,11 +179,81 @@ export default {
             this.showPopup = false;
             this.currentPoleId = null;
             this.popupTitle = '';
+            this.metaValue = false;
+            // Non resettare cachedProperties, così quando si riapre usa i dati aggiornati
         },
 
         handleKeydown(event) {
             if (event.key === 'Escape' && this.showPopup) {
                 this.closePopup();
+            }
+        },
+
+        async loadMetaValue() {
+            if (!this.currentPoleId) {
+                this.metaValue = false;
+                return;
+            }
+
+            const poleId = parseInt(this.currentPoleId);
+
+            // Usa le properties cached se disponibili, altrimenti quelle del resource
+            const properties = this.cachedProperties ||
+                (this.resource && this.resource.properties && this.resource.properties.value) ||
+                {};
+
+            // Verifica se il palo è presente nell'array checkpoint
+            const checkpoint = properties?.signage?.checkpoint || [];
+            this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+
+            console.log('Loaded checkpoint value:', { poleId, checkpoint, metaValue: this.metaValue });
+        },
+
+        async toggleMeta() {
+            if (this.isUpdatingMeta || !this.currentPoleId) {
+                console.log('Toggle blocked:', { isUpdatingMeta: this.isUpdatingMeta, currentPoleId: this.currentPoleId });
+                return;
+            }
+
+            this.isUpdatingMeta = true;
+            const oldValue = this.metaValue;
+            const newValue = !this.metaValue;
+            const poleId = parseInt(this.currentPoleId);
+
+            // Aggiorna immediatamente il valore per feedback visivo
+            this.metaValue = newValue;
+
+            try {
+                const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+
+                console.log('Sending request:', { id, poleId, add: newValue });
+
+                // Aggiorna le properties dell'hikingRoute aggiungendo/rimuovendo l'ID del palo dall'array checkpoint
+                const response = await Nova.request().patch(
+                    `/nova-vendor/signage-map/hiking-route/${id}/properties`,
+                    {
+                        poleId: poleId,
+                        add: newValue
+                    }
+                );
+
+                console.log('Response received:', response.data);
+
+                // Aggiorna la cache con le properties aggiornate dalla risposta
+                if (response.data && response.data.properties) {
+                    this.cachedProperties = response.data.properties;
+                    console.log('Cached properties updated:', this.cachedProperties);
+                }
+
+                console.log('metaValue after response:', this.metaValue);
+                Nova.success(`Meta ${newValue ? 'attivato' : 'disattivato'} con successo`);
+            } catch (error) {
+                console.error('Error updating meta:', error);
+                // Ripristina il valore precedente in caso di errore
+                this.metaValue = oldValue;
+                Nova.error('Errore durante l\'aggiornamento di Meta');
+            } finally {
+                this.isUpdatingMeta = false;
             }
         }
     }

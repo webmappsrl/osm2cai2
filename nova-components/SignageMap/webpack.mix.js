@@ -1,4 +1,5 @@
 let mix = require('laravel-mix')
+const path = require('path')
 
 mix
   .setPublicPath('dist')
@@ -8,6 +9,12 @@ mix
   .webpackConfig({
     externals: {
       vue: 'Vue'
+    },
+    resolve: {
+      extensions: ['.js', '.jsx', '.vue', '.json'],
+      alias: {
+        'ol': path.resolve(__dirname, 'node_modules/ol')
+      }
     }
   })
 
