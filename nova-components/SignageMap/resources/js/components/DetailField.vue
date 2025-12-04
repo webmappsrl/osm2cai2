@@ -72,8 +72,8 @@
 </template>
 
 <script>
-// Importa FeatureCollectionMap dal wm-package
-import FeatureCollectionMap from '../../../../../wm-package/src/Nova/Fields/FeatureCollectionMap/resources/js/components/FeatureCollectionMap.vue';
+// Importa FeatureCollectionMap dalla copia locale
+import FeatureCollectionMap from './FeatureCollectionMap.vue';
 
 export default {
     name: 'SignageMapDetailField',

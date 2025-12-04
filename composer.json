@@ -28,6 +28,7 @@
         "league/flysystem-aws-s3-v3": "^3.12",
         "m-a-k-o/nova-custom-table-card": "dev-master",
         "maatwebsite/excel": "^3.1",
+        "osm2cai/signage-arrows": "*",
         "outl1ne/nova-multiselect-field": "^5.0.1",
         "predis/predis": "^2.2",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
@@ -132,6 +133,10 @@
         {
             "type": "path",
             "url": "./nova-components/SignageMap"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/SignageArrows"
         },
         {
             "type": "vcs",

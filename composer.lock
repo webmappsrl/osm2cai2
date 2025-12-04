@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f81863be7ae6d276e90227c26bc3c85c",
+    "content-hash": "cb42e47f6e6fb591462cd1566209366b",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -6202,6 +6202,45 @@
             "time": "2025-03-11T14:40:46+00:00"
         },
         {
+            "name": "osm2cai/signage-arrows",
+            "version": "dev-luoghi3",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/SignageArrows",
+                "reference": "6298a8f8499ced867d654ae9154e490ea764d51b"
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Osm2cai\\SignageArrows\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Osm2cai\\SignageArrows\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field for CAI signage arrows visualization.",
+            "keywords": [
+                "arrows",
+                "cai",
+                "laravel",
+                "nova",
+                "signage"
+            ],
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "outl1ne/nova-multiselect-field",
             "version": "5.0.1",
             "source": {
@@ -12096,7 +12135,7 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-e467f1f8f7d794594affd6e0cf1e4307072a188e",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-osmfeatures",
@@ -12461,7 +12500,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-main",
+            "version": "dev-luoghi3",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -12496,46 +12535,8 @@
             }
         },
         {
-            "name": "wm/signage-map",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "./nova-components/SignageMap",
-                "reference": "ef6e035c7d6823c6d628f434200d151dee1a9969"
-            },
-            "require": {
-                "php": "^8.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Wm\\SignageMap\\FieldServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Wm\\SignageMap\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "description": "A Laravel Nova field for CAI signage map with custom popup.",
-            "keywords": [
-                "laravel",
-                "map",
-                "nova",
-                "signage"
-            ],
-            "transport-options": {
-                "relative": true
-            }
-        },
-        {
             "name": "wm/wm-internal",
-            "version": "dev-main",
+            "version": "dev-luoghi3",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -12616,7 +12617,7 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-1793f17c82c5fa05f831d80f5d1ee5fe4648c39d",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
