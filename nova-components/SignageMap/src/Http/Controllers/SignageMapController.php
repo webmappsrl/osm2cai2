@@ -71,9 +71,9 @@ class SignageMapController
             $geojson = $hikingRoute->getFeatureCollectionMap();
             $demClient = new DemClient;
             $geojson = $demClient->getPointMatrix($geojson);
-
+            $ref = $hikingRoute->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
             // Estrai points_order e checkpoint dal GeoJSON e calcola le direzioni
-            $this->processPointDirections($geojson, $properties, $id);
+            $this->processPointDirections($geojson, $properties, $id, $ref);
         } catch (Exception $e) {
             Log::warning('DEM point matrix enrichment failed', [
                 'hiking_route_id' => $id,
@@ -96,7 +96,7 @@ class SignageMapController
      * Processa le direzioni forward e backward per ogni punto basandosi su points_order e checkpoint
      * e salva i dati nei Pole
      */
-    private function processPointDirections(array $geojson, array &$properties, int $hikingRouteId): void
+    private function processPointDirections(array $geojson, array &$properties, int $hikingRouteId, string $hikingRouteRef): void
     {
         // Estrai features in un singolo ciclo: Point features map e MultiLineString
         $pointFeaturesMap = [];
@@ -215,6 +215,7 @@ class SignageMapController
 
             $poleProperties = $pole->properties ?? [];
             $poleProperties['signage'][$hikingRouteIdStr] = [
+                'ref' => $hikingRouteRef,
                 'forward' => $forwardObjects,
                 'backward' => $backwardObjects,
             ];

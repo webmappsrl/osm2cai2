@@ -5,7 +5,7 @@
             <FeatureCollectionMap :geojson-url="geojsonUrl" :height="field.height || 500"
                 :show-zoom-controls="field.showZoomControls !== false"
                 :mouse-wheel-zoom="field.mouseWheelZoom !== false" :drag-pan="field.dragPan !== false"
-                :popup-component="'signage-map'" @feature-click="handleFeatureClick" @map-ready="handleMapReady"
+                :popup-component="'signage-map'"
                 @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
 
             <!-- Custom Signage Popup -->
@@ -105,6 +105,7 @@ export default {
             isUpdatingMeta: false,
             cachedProperties: null, // Cache delle properties dopo il salvataggio
             signageArrowsData: {}, // Dati per le frecce segnaletica
+            mapKey: 0, // Chiave per forzare il refresh della mappa
         };
     },
 
@@ -117,14 +118,18 @@ export default {
             const modelName = this.resourceName;
             const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
             const baseUrl = `/nova-vendor/feature-collection-map/${modelName}/${id}`;
-
-            console.log('SignageMap URL:', baseUrl);
+            let url = baseUrl;
 
             if (this.field.demEnrichment) {
-                return `${baseUrl}?dem_enrichment=1`;
+                url = `${baseUrl}?dem_enrichment=1`;
             }
 
-            return baseUrl;
+            // Aggiungi timestamp solo se mapKey > 0 (dopo un toggle)
+            if (this.mapKey > 0) {
+                url += `${url.includes('?') ? '&' : '?'}_t=${this.mapKey}`;
+            }
+
+            return url;
         },
 
         poleLink() {
@@ -134,7 +139,6 @@ export default {
     },
 
     mounted() {
-        console.log('SignageMap DetailField mounted');
         document.addEventListener('keydown', this.handleKeydown);
 
         // Ascolta gli eventi Nova come fa il wm-package
@@ -149,16 +153,7 @@ export default {
     },
 
     methods: {
-        handleFeatureClick(event) {
-            console.log('SignageMap: Feature clicked:', event);
-        },
-
-        handleMapReady(event) {
-            console.log('SignageMap: Map ready:', event);
-        },
-
         handlePopupOpen(event) {
-            console.log('SignageMap: Popup open, emitting Nova event:', event);
             // Emetti evento Nova come fa il wm-package
             Nova.$emit('signage-map:popup-open', {
                 ...event,
@@ -167,7 +162,6 @@ export default {
         },
 
         handlePopupClose(event) {
-            console.log('SignageMap: Popup close, emitting Nova event:', event);
             Nova.$emit('signage-map:popup-close', event);
         },
 
@@ -179,15 +173,13 @@ export default {
                 this.popupTitle = event.properties?.name || event.properties?.tooltip || `Palo #${event.id}`;
                 // Estrai i dati della segnaletica dalle properties del palo
                 this.signageArrowsData = event.properties?.signage || {};
-                console.log('SignageMap: Signage arrows data:', this.signageArrowsData);
                 this.showPopup = true;
                 // Carica il valore di checkpoint per questo palo specifico
-                await this.loadMetaValue();
+                this.loadMetaValue(event.featuresMap);
             }
         },
 
         onNovaPopupClose(event) {
-            console.log('SignageMap: Nova popup-close received:', event);
             this.closePopup();
         },
 
@@ -205,7 +197,7 @@ export default {
             }
         },
 
-        async loadMetaValue() {
+        loadMetaValue(featuresMap) {
             if (!this.currentPoleId) {
                 this.metaValue = false;
                 return;
@@ -213,43 +205,29 @@ export default {
 
             const poleId = parseInt(this.currentPoleId);
 
-            // Usa le properties cached se disponibili
+            // Usa le properties cached se disponibili (dopo un toggle)
             if (this.cachedProperties) {
                 const checkpoint = this.cachedProperties?.signage?.checkpoint || [];
                 this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
-                console.log('Loaded from cache:', { poleId, checkpoint, metaValue: this.metaValue });
                 return;
             }
 
-            // Altrimenti recupera le properties dal GeoJSON endpoint
-            try {
-                const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
-                const response = await fetch(`/nova-vendor/feature-collection-map/hiking-routes/${id}`);
-                const geojson = await response.json();
-
-                // Trova la feature con le properties (MultiLineString o la prima con signage)
-                let properties = {};
-                for (const feature of geojson.features || []) {
-                    if (feature.properties?.signage) {
-                        properties = { signage: feature.properties.signage };
-                        break;
+            // Cerca nelle featuresMap la feature con signage.checkpoint (è l'HikingRoute)
+            if (featuresMap) {
+                for (const [featureId, feature] of Object.entries(featuresMap)) {
+                    const checkpoint = feature.properties?.signage?.checkpoint;
+                    if (checkpoint && Array.isArray(checkpoint)) {
+                        this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+                        return;
                     }
                 }
-
-                this.cachedProperties = properties;
-                const checkpoint = properties?.signage?.checkpoint || [];
-                this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
-
-                console.log('Loaded from API:', { poleId, checkpoint, metaValue: this.metaValue });
-            } catch (error) {
-                console.error('Error loading properties:', error);
-                this.metaValue = false;
             }
+
+            this.metaValue = false;
         },
 
         async toggleMeta() {
             if (this.isUpdatingMeta || !this.currentPoleId) {
-                console.log('Toggle blocked:', { isUpdatingMeta: this.isUpdatingMeta, currentPoleId: this.currentPoleId });
                 return;
             }
 
@@ -264,8 +242,6 @@ export default {
             try {
                 const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
 
-                console.log('Sending request:', { id, poleId, add: newValue });
-
                 // Aggiorna le properties dell'hikingRoute aggiungendo/rimuovendo l'ID del palo dall'array checkpoint
                 const response = await Nova.request().patch(
                     `/nova-vendor/signage-map/hiking-route/${id}/properties`,
@@ -275,18 +251,16 @@ export default {
                     }
                 );
 
-                console.log('Response received:', response.data);
-
                 // Aggiorna la cache con le properties aggiornate dalla risposta
                 if (response.data && response.data.properties) {
                     this.cachedProperties = response.data.properties;
-                    console.log('Cached properties updated:', this.cachedProperties);
                 }
 
-                console.log('metaValue after response:', this.metaValue);
                 Nova.success(`Checkpoint ${newValue ? 'attivato' : 'disattivato'} con successo`);
+
+                // Forza il refresh della mappa incrementando la key
+                this.mapKey++;
             } catch (error) {
-                console.error('Error updating meta:', error);
                 // Ripristina il valore precedente in caso di errore
                 this.metaValue = oldValue;
                 Nova.error('Errore durante l\'aggiornamento di Meta');

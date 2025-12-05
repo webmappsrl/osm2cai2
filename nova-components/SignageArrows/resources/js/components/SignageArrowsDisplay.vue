@@ -7,14 +7,14 @@
             <div v-if="routeData.forward && routeData.forward.length > 0" class="signage-arrow-wrapper">
                 <div class="signage-arrow forward">
                     <div class="arrow-body">
-                        <div class="route-id-box">{{ routeId }}</div>
+                        <div class="route-id-box">{{ routeData?.ref }}</div>
                         <div class="destinations-list">
                             <div v-for="(destination, idx) in routeData.forward" :key="idx" class="destination-row">
                                 <span class="destination-info">
-                                    <span class="destination-name">{{ destination.name }}</span>
-                                    <span class="destination-distance">{{ formatDistance(destination.distance) }}</span>
+                                    <span class="destination-name">{{ destination?.name }}</span>
+                                    <span class="destination-distance">{{ formatDistance(destination?.distance) }}</span>
                                 </span>
-                                <span class="destination-time">h {{ formatTime(destination.time_hiking) }}</span>
+                                <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
                             </div>
                         </div>
                     </div>
@@ -27,14 +27,14 @@
                 <div class="signage-arrow backward">
                     <div class="arrow-point-left"></div>
                     <div class="arrow-body">
-                        <div class="route-id-box">{{ routeId }}</div>
+                        <div class="route-id-box">{{ routeData?.ref }}</div>
                         <div class="destinations-list">
                             <div v-for="(destination, idx) in routeData.backward" :key="idx" class="destination-row">
                                 <span class="destination-info">
-                                    <span class="destination-name">{{ destination.name }}</span>
-                                    <span class="destination-distance">{{ formatDistance(destination.distance) }}</span>
+                                    <span class="destination-name">{{ destination?.name }}</span>
+                                    <span class="destination-distance">{{ formatDistance(destination?.distance) }}</span>
                                 </span>
-                                <span class="destination-time">h {{ formatTime(destination.time_hiking) }}</span>
+                                <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
                             </div>
                         </div>
                     </div>
@@ -135,6 +135,11 @@ export default {
     min-width: 320px;
     max-width: 400px;
     filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.15));
+}
+
+/* Allinea la parte rettangolare: la freccia forward ha un margine sinistro pari alla larghezza della punta */
+.signage-arrow.forward {
+    margin-left: 30px;
 }
 
 /* Corpo della freccia */
