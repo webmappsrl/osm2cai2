@@ -147,7 +147,6 @@ class UgcPoi extends WmUgcPoi
             'properties.form.info',
             'properties.position.latitude',
             'properties.position.longitude',
-            'properties.form.flow_rate',
             'properties.form.conductivity',
             'properties.form.temperature',
         ];
