@@ -1,5 +1,5 @@
 {
-    "name": "wm/signage-map",
+    "name": "osm2cai/signage-map",
     "description": "A Laravel Nova field for CAI signage map with custom popup.",
     "keywords": [
         "laravel",
@@ -13,13 +13,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Wm\\SignageMap\\": "src/"
+            "Osm2cai\\SignageMap\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Wm\\SignageMap\\FieldServiceProvider"
+                "Osm2cai\\SignageMap\\FieldServiceProvider"
             ]
         }
     },
@@ -29,7 +29,3 @@
     "minimum-stability": "dev",
     "prefer-stable": true
 }
-
-
-
-
