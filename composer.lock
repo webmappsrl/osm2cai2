@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cb42e47f6e6fb591462cd1566209366b",
+    "content-hash": "a3dd496894093d7c7abf43bb188c6148",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -6241,6 +6241,44 @@
             }
         },
         {
+            "name": "osm2cai/signage-map",
+            "version": "dev-luoghi3",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/SignageMap",
+                "reference": "ff5c8a17d9ed7be90cfcdb9ab6eda799fe104012"
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Osm2cai\\SignageMap\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Osm2cai\\SignageMap\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field for CAI signage map with custom popup.",
+            "keywords": [
+                "laravel",
+                "map",
+                "nova",
+                "signage"
+            ],
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "outl1ne/nova-multiselect-field",
             "version": "5.0.1",
             "source": {
@@ -12135,7 +12173,7 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-main",
+            "version": "dev-e467f1f8f7d794594affd6e0cf1e4307072a188e",
             "dist": {
                 "type": "path",
                 "url": "./wm-osmfeatures",
@@ -12617,7 +12655,7 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-main",
+            "version": "dev-luoghi3",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
