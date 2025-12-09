@@ -1,10 +1,10 @@
 <?php
 
-namespace Wm\SignageMap;
+namespace Osm2cai\SignageMap;
 
-use Laravel\Nova\Fields\Field;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
-class SignageMap extends Field
+class SignageMap extends FeatureCollectionMap
 {
     /**
      * The field's component.
@@ -49,9 +49,4 @@ class SignageMap extends Field
     {
         return $this->withMeta(['height' => $height]);
     }
-
 }
-
-
-
-

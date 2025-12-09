@@ -1,6 +1,6 @@
 <?php
 
-namespace Wm\SignageMap;
+namespace Osm2cai\SignageMap;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -17,8 +17,8 @@ class FieldServiceProvider extends ServiceProvider
     public function boot()
     {
         Nova::serving(function (ServingNova $event) {
-            Nova::script('signage-map', __DIR__.'/../dist/js/field.js');
-            Nova::style('signage-map', __DIR__.'/../dist/css/field.css');
+            Nova::script('signage-map', __DIR__ . '/../dist/js/field.js');
+            Nova::style('signage-map', __DIR__ . '/../dist/css/field.css');
         });
 
         // Registra le route del SignageMap
@@ -32,7 +32,7 @@ class FieldServiceProvider extends ServiceProvider
     {
         Route::middleware(['nova'])
             ->prefix('nova-vendor/signage-map')
-            ->group(__DIR__.'/Routes/api.php');
+            ->group(__DIR__ . '/Routes/api.php');
     }
 
     /**
@@ -45,7 +45,3 @@ class FieldServiceProvider extends ServiceProvider
         //
     }
 }
-
-
-
-

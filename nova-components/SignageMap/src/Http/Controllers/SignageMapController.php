@@ -1,6 +1,6 @@
 <?php
 
-namespace Wm\SignageMap\Http\Controllers;
+namespace Osm2cai\SignageMap\Http\Controllers;
 
 use App\Models\HikingRoute;
 use App\Models\Poles;
