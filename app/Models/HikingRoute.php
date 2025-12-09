@@ -1068,17 +1068,6 @@ SQL;
             ->where('id', $this->id)
             ->value(DB::raw('ST_AsGeoJSON(geometry)'));
 
-        // Se esiste geometry_raw_data, fai un merge delle geometrie
-        if (! empty($this->geometry_raw_data)) {
-            $mergedGeojson = DB::table('hiking_routes')
-                ->where('id', $this->id)
-                ->value(DB::raw('ST_AsGeoJSON(ST_Union(geometry::geometry, geometry_raw_data))'));
-
-            if ($mergedGeojson) {
-                $geojson = $mergedGeojson;
-            }
-        }
-
         return Poles::select('poles.*')
             ->whereRaw(
                 'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
