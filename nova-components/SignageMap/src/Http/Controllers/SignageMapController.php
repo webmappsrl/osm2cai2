@@ -69,6 +69,7 @@ class SignageMapController
         $geojson = null;
         try {
             $geojson = $hikingRoute->getFeatureCollectionMap();
+            $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
             $demClient = new DemClient;
             $geojson = $demClient->getPointMatrix($geojson);
             $ref = $hikingRoute->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
@@ -90,6 +91,25 @@ class SignageMapController
             'success' => true,
             'properties' => $hikingRoute->properties,
         ]);
+    }
+
+    /**
+     * Mantiene solo le linee con osmfeatures_id valorizzato, preservando gli altri tipi.
+     */
+    private function filterLineFeaturesWithOsmfeaturesId(array $geojson): array
+    {
+        $geojson['features'] = array_values(array_filter($geojson['features'] ?? [], function ($feature) {
+            $geometryType = strtolower($feature['geometry']['type'] ?? '');
+            $isLine = in_array($geometryType, ['linestring', 'multilinestring'], true);
+
+            if (! $isLine) {
+                return true;
+            }
+
+            return ! empty($feature['properties']['osmfeatures_id']);
+        }));
+
+        return $geojson;
     }
 
     /**

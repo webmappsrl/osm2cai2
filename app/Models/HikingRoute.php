@@ -371,6 +371,7 @@ class HikingRoute extends EcTrack
             'strokeColor' => 'blue',
             'strokeWidth' => 4,
             'id' => $this->id,
+            'osmfeatures_id' => $this->osmfeatures_id,
         ];
         $geojson['features'][0]['properties'] = $properties;
 
@@ -405,6 +406,7 @@ class HikingRoute extends EcTrack
             'strokeColor' => 'red',
             'strokeWidth' => 2,
             'id' => $this->id,
+            'osmfeatures_id' => $this->osmfeatures_id,
         ];
         if (isset($hikingRouteProperties['signage'])) {
             $properties['signage'] = $hikingRouteProperties['signage'];
@@ -1088,17 +1090,6 @@ SQL;
         $geojson = DB::table('hiking_routes')
             ->where('id', $this->id)
             ->value(DB::raw('ST_AsGeoJSON(geometry)'));
-
-        // Se esiste geometry_raw_data, fai un merge delle geometrie
-        if (! empty($this->geometry_raw_data)) {
-            $mergedGeojson = DB::table('hiking_routes')
-                ->where('id', $this->id)
-                ->value(DB::raw('ST_AsGeoJSON(ST_Union(geometry::geometry, geometry_raw_data))'));
-
-            if ($mergedGeojson) {
-                $geojson = $mergedGeojson;
-            }
-        }
 
         return Poles::select('poles.*')
             ->whereRaw(
