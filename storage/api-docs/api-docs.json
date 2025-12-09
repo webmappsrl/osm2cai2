@@ -11,7 +11,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8008",
+            "url": "https://osm2cai.cai.it",
             "description": "API Server"
         }
     ],
@@ -199,7 +199,7 @@
                     {
                         "name": "region_code",
                         "in": "path",
-                        "description": "Regione code according to CAI convention: <br/>\n    <br />A -> Friuli Venezia Giulia\n    <br />B -> Veneto\n    <br />C -> Trentino Alto Adige\n    <br />D -> Lombardia\n    <br />E -> Piemonte\n    <br />F -> Val d'Aosta\n    <br />G -> Liguria\n    <br />H -> Emilia Romagna\n    <br />L -> Toscana\n    <br />M -> Marche\n    <br />N -> Umbria\n    <br />O -> Lazio\n    <br />P -> Abruzzo\n    <br />Q -> Molise\n    <br />S -> Campania\n    <br />R -> Puglia\n    <br />T -> Basilicata\n    <br />U -> Calabria\n    <br />V -> Sicilia\n    <br />Z -> Sardegna",
+                        "description": "Regione code according to CAI convention: <br/>",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -315,7 +315,7 @@
                     {
                         "name": "region_code",
                         "in": "path",
-                        "description": "Regione code according to CAI convention: <br/>\n    <br />A -> Friuli Venezia Giulia\n    <br />B -> Veneto\n    <br />C -> Trentino Alto Adige\n    <br />D -> Lombardia\n    <br />E -> Piemonte\n    <br />F -> Val d'Aosta\n    <br />G -> Liguria\n    <br />H -> Emilia Romagna\n    <br />L -> Toscana\n    <br />M -> Marche\n    <br />N -> Umbria\n    <br />O -> Lazio\n    <br />P -> Abruzzo\n    <br />Q -> Molise\n    <br />S -> Campania\n    <br />R -> Puglia\n    <br />T -> Basilicata\n    <br />U -> Calabria\n    <br />V -> Sicilia\n    <br />Z -> Sardegna",
+                        "description": "Regione code according to CAI convention: <br/>",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -2287,7 +2287,7 @@
                     {
                         "name": "region_code",
                         "in": "path",
-                        "description": "\nRegione code according to CAI convention: <br/>\n<br />A -> Friuli Venezia Giulia\n<br />B -> Veneto\n<br />C -> Trentino Alto Adige\n<br />D -> Lombardia\n<br />E -> Piemonte\n<br />F -> Val d'Aosta\n<br />G -> Liguria\n<br />H -> Emilia Romagna\n<br />L -> Toscana\n<br />M -> Marche\n<br />N -> Umbria\n<br />O -> Lazio\n<br />P -> Abruzzo\n<br />Q -> Molise\n<br />S -> Campania\n<br />R -> Puglia\n<br />T -> Basilicata\n<br />U -> Calabria\n<br />V -> Sicilia\n<br />Z -> Sardegna",
+                        "description": "Regione code according to CAI convention",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -2340,7 +2340,7 @@
                     {
                         "name": "region_code",
                         "in": "path",
-                        "description": "\nRegione code according to CAI convention: <br/>\n<br />A -> Friuli Venezia Giulia\n<br />B -> Veneto\n<br />C -> Trentino Alto Adige\n<br />D -> Lombardia\n<br />E -> Piemonte\n<br />F -> Val d'Aosta\n<br />G -> Liguria\n<br />H -> Emilia Romagna\n<br />L -> Toscana\n<br />M -> Marche\n<br />N -> Umbria\n<br />O -> Lazio\n<br />P -> Abruzzo\n<br />Q -> Molise\n<br />S -> Campania\n<br />R -> Puglia\n<br />T -> Basilicata\n<br />U -> Calabria\n<br />V -> Sicilia\n<br />Z -> Sardegna",
+                        "description": "Regione code according to CAI convention",
                         "required": true,
                         "schema": {
                             "type": "string",
