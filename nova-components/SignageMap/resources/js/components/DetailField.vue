@@ -1,12 +1,26 @@
 <template>
     <PanelItem :index="index" :field="field">
         <template #value>
-            <!-- Usa FeatureCollectionMap dal wm-package -->
-            <FeatureCollectionMap :geojson-url="geojsonUrl" :height="field.height || 500"
-                :show-zoom-controls="field.showZoomControls !== false"
-                :mouse-wheel-zoom="field.mouseWheelZoom !== false" :drag-pan="field.dragPan !== false"
-                :popup-component="'signage-map'"
-                @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
+            <div style="position: relative;">
+                <div style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+                    <button @click="openGeoJSON" type="button" class="btn btn-default btn-primary"
+                        style="background-color: #3490dc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        GeoJSON
+                    </button>
+                </div>
+                <!-- Usa FeatureCollectionMap dal wm-package -->
+                <FeatureCollectionMap :geojson-url="geojsonUrl" :height="field.height || 500"
+                    :show-zoom-controls="field.showZoomControls !== false"
+                    :mouse-wheel-zoom="field.mouseWheelZoom !== false" :drag-pan="field.dragPan !== false"
+                    :popup-component="'signage-map'" @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
+            </div>
 
             <!-- Custom Signage Popup -->
             <Teleport to="body">
@@ -33,14 +47,10 @@
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Meta
                                 </label>
-                                <button
-                                    type="button"
-                                    @click="toggleMeta"
-                                    :disabled="isUpdatingMeta"
+                                <button type="button" @click="toggleMeta" :disabled="isUpdatingMeta"
                                     class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     :class="[metaValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']"
-                                    role="switch"
-                                    :aria-checked="metaValue">
+                                    role="switch" :aria-checked="metaValue">
                                     <span
                                         class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                                         :style="{ transform: metaValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
@@ -153,6 +163,9 @@ export default {
     },
 
     methods: {
+        openGeoJSON() {
+            window.open(this.geojsonUrl, '_blank');
+        },
         handlePopupOpen(event) {
             // Emetti evento Nova come fa il wm-package
             Nova.$emit('signage-map:popup-open', {
