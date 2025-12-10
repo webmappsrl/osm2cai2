@@ -58,6 +58,45 @@
                                 </button>
                             </div>
 
+                            <!-- Campo Nome Località (visibile solo quando Meta è attivo) -->
+                            <div v-if="metaValue" class="mt-4">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                    Nome Località
+                                    <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento suggerimento...)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    v-model="placeName"
+                                    :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
+                                    :disabled="isLoadingSuggestion"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50"
+                                />
+                            </div>
+
+                            <!-- Campo Descrizione Località (visibile solo quando Meta è attivo) -->
+                            <div v-if="metaValue" class="mt-4">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                    Descrizione aggiuntiva
+                                </label>
+                                <textarea
+                                    v-model="placeDescription"
+                                    placeholder="Inserisci una descrizione della località"
+                                    rows="3"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
+                                ></textarea>
+                            </div>
+
+                            <!-- Bottone Aggiorna -->
+                            <div class="mt-4">
+                                <button
+                                    type="button"
+                                    @click="saveChanges"
+                                    :disabled="isUpdatingMeta || (metaValue && (!placeName || !placeName.trim()))"
+                                    class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {{ isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna' }}
+                                </button>
+                            </div>
+
                             <!-- Frecce Segnaletica -->
                             <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4">
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
@@ -116,6 +155,9 @@ export default {
             cachedProperties: null, // Cache delle properties dopo il salvataggio
             signageArrowsData: {}, // Dati per le frecce segnaletica
             mapKey: 0, // Chiave per forzare il refresh della mappa
+            placeName: '', // Nome località del palo
+            placeDescription: '', // Descrizione località del palo
+            isLoadingSuggestion: false, // Indica se sta caricando il suggerimento
         };
     },
 
@@ -186,6 +228,9 @@ export default {
                 this.popupTitle = event.properties?.name || event.properties?.tooltip || `Palo #${event.id}`;
                 // Estrai i dati della segnaletica dalle properties del palo
                 this.signageArrowsData = event.properties?.signage || {};
+                // Carica il placeName e placeDescription dalle properties del palo se esistono
+                this.placeName = event.properties?.placeName || '';
+                this.placeDescription = event.properties?.placeDescription || '';
                 this.showPopup = true;
                 // Carica il valore di checkpoint per questo palo specifico
                 this.loadMetaValue(event.featuresMap);
@@ -202,6 +247,8 @@ export default {
             this.popupTitle = '';
             this.metaValue = false;
             this.signageArrowsData = {};
+            this.placeName = '';
+            this.placeDescription = '';
         },
 
         handleKeydown(event) {
@@ -240,27 +287,67 @@ export default {
         },
 
         async toggleMeta() {
+            if (this.isUpdatingMeta) {
+                return;
+            }
+            // Cambia solo il valore locale, il salvataggio avviene tramite il bottone Aggiorna
+            this.metaValue = !this.metaValue;
+            // Se si disattiva Meta, resetta placeName e placeDescription
+            if (!this.metaValue) {
+                this.placeName = '';
+                this.placeDescription = '';
+            } else if (!this.placeName && this.currentPoleId) {
+                // Se si attiva Meta e non c'è già un placeName, suggerisci con Nominatim
+                await this.suggestPlaceName();
+            }
+        },
+
+        async suggestPlaceName() {
+            if (!this.currentPoleId || this.isLoadingSuggestion) {
+                return;
+            }
+
+            this.isLoadingSuggestion = true;
+
+            try {
+                const response = await Nova.request().get(
+                    `/nova-vendor/signage-map/pole/${this.currentPoleId}/suggest-place-name`
+                );
+
+                if (response.data?.success && response.data?.suggestedName) {
+                    this.placeName = response.data.suggestedName;
+                }
+            } catch (error) {
+                console.warn('Could not fetch place name suggestion:', error);
+                // Non mostriamo errore all'utente, il campo rimane vuoto
+            } finally {
+                this.isLoadingSuggestion = false;
+            }
+        },
+
+        async saveChanges() {
+            // Se Meta è attivo, richiedi placeName; altrimenti permetti il salvataggio
             if (this.isUpdatingMeta || !this.currentPoleId) {
+                return;
+            }
+            if (this.metaValue && (!this.placeName || !this.placeName.trim())) {
                 return;
             }
 
             this.isUpdatingMeta = true;
-            const oldValue = this.metaValue;
-            const newValue = !this.metaValue;
             const poleId = parseInt(this.currentPoleId);
-
-            // Aggiorna immediatamente il valore per feedback visivo
-            this.metaValue = newValue;
 
             try {
                 const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
 
-                // Aggiorna le properties dell'hikingRoute aggiungendo/rimuovendo l'ID del palo dall'array checkpoint
+                // Aggiorna le properties dell'hikingRoute con checkpoint, placeName e placeDescription
                 const response = await Nova.request().patch(
                     `/nova-vendor/signage-map/hiking-route/${id}/properties`,
                     {
                         poleId: poleId,
-                        add: newValue
+                        add: this.metaValue,
+                        placeName: this.metaValue ? this.placeName.trim() : null,
+                        placeDescription: this.metaValue ? (this.placeDescription?.trim() || null) : null
                     }
                 );
 
@@ -269,14 +356,12 @@ export default {
                     this.cachedProperties = response.data.properties;
                 }
 
-                Nova.success(`Checkpoint ${newValue ? 'attivato' : 'disattivato'} con successo`);
+                Nova.success(this.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
 
                 // Forza il refresh della mappa incrementando la key
                 this.mapKey++;
             } catch (error) {
-                // Ripristina il valore precedente in caso di errore
-                this.metaValue = oldValue;
-                Nova.error('Errore durante l\'aggiornamento di Meta');
+                Nova.error('Errore durante il salvataggio');
             } finally {
                 this.isUpdatingMeta = false;
             }

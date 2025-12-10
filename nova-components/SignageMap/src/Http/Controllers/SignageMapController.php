@@ -2,18 +2,98 @@
 
 namespace Osm2cai\SignageMap\Http\Controllers;
 
+use App\Http\Clients\NominatimClient;
 use App\Models\HikingRoute;
 use App\Models\Poles;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmPackage\Http\Clients\DemClient;
 
 class SignageMapController
 {
     /**
+     * Suggerisce un nome località per un palo usando Nominatim reverse geocoding
+     */
+    public function suggestPlaceName(int $poleId): JsonResponse
+    {
+        $pole = Poles::find($poleId);
+
+        if (! $pole) {
+            return response()->json(['error' => 'Pole not found'], 404);
+        }
+
+        // Estrai le coordinate dal palo
+        $coordinates = DB::table('poles')
+            ->where('id', $poleId)
+            ->selectRaw('ST_X(geometry::geometry) as lon, ST_Y(geometry::geometry) as lat')
+            ->first();
+
+        if (! $coordinates || ! $coordinates->lat || ! $coordinates->lon) {
+            return response()->json(['error' => 'Could not extract coordinates from pole'], 400);
+        }
+
+        try {
+            $nominatim = new NominatimClient;
+            $result = $nominatim->reverseGeocode((float) $coordinates->lat, (float) $coordinates->lon);
+
+            // Estrai il nome più appropriato dalla risposta di Nominatim
+            $suggestedName = $this->extractPlaceNameFromNominatim($result);
+
+            return response()->json([
+                'success' => true,
+                'suggestedName' => $suggestedName,
+                'nominatimData' => $result,
+            ]);
+        } catch (Exception $e) {
+            Log::warning('Nominatim reverse geocoding failed', [
+                'pole_id' => $poleId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'Nominatim request failed',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Estrae il nome località più appropriato dalla risposta di Nominatim
+     */
+    private function extractPlaceNameFromNominatim(array $nominatimData): string
+    {
+        // Priorità: name > address.hamlet > address.village > address.suburb > address.town > address.city
+        if (! empty($nominatimData['name'])) {
+            return $nominatimData['name'];
+        }
+
+        $address = $nominatimData['address'] ?? [];
+
+        // Ordine di priorità per località
+        $priorities = ['hamlet', 'village', 'suburb', 'town', 'city', 'municipality'];
+
+        foreach ($priorities as $key) {
+            if (! empty($address[$key])) {
+                return $address[$key];
+            }
+        }
+
+        // Fallback al display_name troncato
+        if (! empty($nominatimData['display_name'])) {
+            $parts = explode(',', $nominatimData['display_name']);
+
+            return trim($parts[0]);
+        }
+
+        return '';
+    }
+
+    /**
      * Aggiorna le properties dell'hikingRoute aggiungendo/rimuovendo checkpoint
+     * e salva il placeName nelle properties del Pole
      */
     public function updateProperties(Request $request, int $id): JsonResponse
     {
@@ -31,9 +111,11 @@ class SignageMapController
             $properties['signage']['checkpoint'] = [];
         }
 
-        // Ottieni l'ID del palo e l'azione (add/remove)
+        // Ottieni l'ID del palo, l'azione (add/remove), placeName e placeDescription
         $poleId = $request->input('poleId');
         $add = $request->boolean('add');
+        $placeName = $request->input('placeName');
+        $placeDescription = $request->input('placeDescription');
 
         if ($poleId === null) {
             return response()->json(['error' => 'poleId is required'], 400);
@@ -59,6 +141,22 @@ class SignageMapController
             $properties['signage']['checkpoint'] = array_values(array_filter($properties['signage']['checkpoint'], function ($id) use ($poleId) {
                 return (int) $id !== $poleId && (string) $id !== (string) $poleId;
             }));
+        }
+
+        // Salva placeName e placeDescription nelle properties del Pole se forniti
+        if ($add && ($placeName !== null || $placeDescription !== null)) {
+            $pole = Poles::find($poleId);
+            if ($pole) {
+                $poleProperties = $pole->properties ?? [];
+                if ($placeName !== null) {
+                    $poleProperties['placeName'] = $placeName;
+                }
+                if ($placeDescription !== null) {
+                    $poleProperties['placeDescription'] = $placeDescription;
+                }
+                $pole->properties = $poleProperties;
+                $pole->saveQuietly();
+            }
         }
 
         // Salva le properties aggiornate
@@ -173,29 +271,31 @@ class SignageMapController
                 continue;
             }
 
-            // Calcola forward: prossimi 2 checkpoint + ultimo punto
+            // Calcola forward: prossimi 2 checkpoint + ultimo punto (se non già presente)
             $forward = [];
             for ($j = $i + 1; $j < $pointCount && count($forward) < 2; $j++) {
                 if (isset($checkpointSet[$pointsOrder[$j]])) {
                     $forward[] = $pointsOrder[$j];
                 }
             }
-            if ($pointId !== $lastId) {
+            // Aggiungi l'ultimo punto solo se non è il punto corrente e non è già presente
+            if ($pointId !== $lastId && ! in_array($lastId, $forward)) {
                 $forward[] = $lastId;
             }
 
-            // Calcola backward: precedenti 2 checkpoint + primo punto
+            // Calcola backward: precedenti 2 checkpoint + primo punto (se non già presente)
             $backward = [];
             for ($j = $i - 1; $j >= 0 && count($backward) < 2; $j--) {
                 if (isset($checkpointSet[$pointsOrder[$j]])) {
                     $backward[] = $pointsOrder[$j];
                 }
             }
-            if ($pointId !== $firstId) {
+            // Aggiungi il primo punto solo se non è il punto corrente e non è già presente
+            if ($pointId !== $firstId && ! in_array($firstId, $backward)) {
                 $backward[] = $firstId;
             }
 
-            // Mappa gli ID agli oggetti dalla matrix, aggiungendo id e name del palo target
+            // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, placeName e placeDescription del palo target
             $forwardObjects = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
                     $data = $hikingRouteMatrix[$id] ?? null;
@@ -206,7 +306,8 @@ class SignageMapController
 
                     return array_merge([
                         'id' => (int) $id,
-                        'name' => $targetFeature['properties']['name'] ?? '',
+                        'placeName' => $targetFeature['properties']['placeName'] ?? '',
+                        'placeDescription' => $targetFeature['properties']['placeDescription'] ?? '',
                     ], $data);
                 },
                 $forward
@@ -221,7 +322,8 @@ class SignageMapController
 
                     return array_merge([
                         'id' => (int) $id,
-                        'name' => $targetFeature['properties']['name'] ?? null,
+                        'placeName' => $targetFeature['properties']['placeName'] ?? '',
+                        'placeDescription' => $targetFeature['properties']['placeDescription'] ?? '',
                     ], $data);
                 },
                 $backward

@@ -11,8 +11,8 @@
                         <div class="destinations-list">
                             <div v-for="(destination, idx) in routeData.forward" :key="idx" class="destination-row">
                                 <span class="destination-info">
-                                    <span class="destination-name">{{ destination?.name }}</span>
-                                    <span class="destination-distance">{{ formatDistance(destination?.distance) }}</span>
+                                    <span class="destination-name">{{ destination?.placeName }}</span>
+                                    <span v-if="destination?.placeDescription" class="destination-description">{{ destination?.placeDescription }}</span>
                                 </span>
                                 <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
                             </div>
@@ -31,8 +31,8 @@
                         <div class="destinations-list">
                             <div v-for="(destination, idx) in routeData.backward" :key="idx" class="destination-row">
                                 <span class="destination-info">
-                                    <span class="destination-name">{{ destination?.name }}</span>
-                                    <span class="destination-distance">{{ formatDistance(destination?.distance) }}</span>
+                                    <span class="destination-name">{{ destination?.placeName }}</span>
+                                    <span v-if="destination?.placeDescription" class="destination-description">{{ destination?.placeDescription }}</span>
                                 </span>
                                 <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
                             </div>
@@ -172,10 +172,14 @@ export default {
     border-right: 2px solid #C41E3A;
     padding: 6px 14px;
     min-width: 55px;
+    max-width: 70px;
     font-family: 'Arial', sans-serif;
     font-weight: 700;
     font-size: 20px;
     color: #000000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Backward ha il box a destra */
@@ -208,9 +212,12 @@ export default {
 
 .destination-info {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    max-width: 180px;
 }
 
 .destination-name {
@@ -218,6 +225,22 @@ export default {
     font-weight: 600;
     font-size: 15px;
     color: #000000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.destination-description {
+    font-family: 'Arial', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #666666;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .destination-distance {
@@ -262,45 +285,7 @@ export default {
     text-align: center;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .arrow-body {
-        background: #1F2937;
-    }
 
-    .route-id-box {
-        background: #1F2937;
-        color: #FFFFFF;
-    }
-
-    .destination-name,
-    .destination-time {
-        color: #FFFFFF;
-    }
-
-    .destination-distance {
-        color: #9CA3AF;
-    }
-}
-
-/* Nova dark theme */
-.dark .arrow-body {
-    background: #1F2937;
-}
-
-.dark .route-id-box {
-    background: #1F2937;
-    color: #FFFFFF;
-}
-
-.dark .destination-name,
-.dark .destination-time {
-    color: #FFFFFF;
-}
-
-.dark .destination-distance {
-    color: #9CA3AF;
-}
 </style>
 
 
