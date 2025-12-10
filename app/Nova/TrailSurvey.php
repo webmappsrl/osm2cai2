@@ -91,9 +91,10 @@ class TrailSurvey extends Resource
                 ->nullable()
                 ->rows(3),
 
-            URL::make(__('PDF URL'), 'pdf_url')
+            Text::make(__('PDF URL'), 'pdf_url')
                 ->nullable()
                 ->hideWhenUpdating()
+                ->showOnIndex()
                 ->displayUsing(function ($value) {
                     // Get the path of the PDF file
                     $path = $this->resource->getPdfPath();
