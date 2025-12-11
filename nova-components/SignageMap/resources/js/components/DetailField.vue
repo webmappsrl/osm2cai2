@@ -62,15 +62,13 @@
                             <div v-if="metaValue" class="mt-4">
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                                     Nome Località
-                                    <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento suggerimento...)</span>
+                                    <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento
+                                        suggerimento...)</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    v-model="placeName"
+                                <input type="text" v-model="placeName"
                                     :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
                                     :disabled="isLoadingSuggestion"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50"
-                                />
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50" />
                             </div>
 
                             <!-- Campo Descrizione Località (visibile solo quando Meta è attivo) -->
@@ -78,19 +76,14 @@
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                                     Descrizione aggiuntiva
                                 </label>
-                                <textarea
-                                    v-model="placeDescription"
-                                    placeholder="Inserisci una descrizione della località"
-                                    rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
-                                ></textarea>
+                                <textarea v-model="placeDescription"
+                                    placeholder="Inserisci una descrizione della località" rows="3"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"></textarea>
                             </div>
 
                             <!-- Bottone Aggiorna -->
                             <div class="mt-4">
-                                <button
-                                    type="button"
-                                    @click="saveChanges"
+                                <button type="button" @click="saveChanges"
                                     :disabled="isUpdatingMeta || (metaValue && (!placeName || !placeName.trim()))"
                                     class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                                     {{ isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna' }}
@@ -131,8 +124,8 @@
 
 <script>
 // Importa FeatureCollectionMap dalla copia locale
-import FeatureCollectionMap from './FeatureCollectionMap.vue';
 // Importa SignageArrowsDisplay per mostrare le frecce segnaletica nel popup
+import FeatureCollectionMap from '../../../../../wm-package/src/Nova/Fields/FeatureCollectionMap/resources/js/components/FeatureCollectionMap.vue';
 import SignageArrowsDisplay from '../../../../SignageArrows/resources/js/components/SignageArrowsDisplay.vue';
 
 export default {

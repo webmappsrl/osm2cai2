@@ -1,0 +1,67 @@
+{
+    "signage": {
+        "arrow_order": [
+            "6241-0",
+            "6241-1"
+        ],
+        "6241": {
+            "ref": "100",
+            "arrows": [
+                {
+                    "direction": "forward",
+                    "rows": [
+                        {
+                            "id": 61018,
+                            "name": "100/190",
+                            "ascent": 50,
+                            "descent": 13,
+                            "distance": 2019,
+                            "time_bike": 30,
+                            "time_hiking": 30,
+                            "elevation_to": 318,
+                            "elevation_from": 275
+                        },
+                        {
+                            "id": 61094,
+                            "name": "100/240",
+                            "ascent": 200,
+                            "descent": 436,
+                            "distance": 11543,
+                            "time_bike": 105,
+                            "time_hiking": 165,
+                            "elevation_to": 44,
+                            "elevation_from": 275
+                        },
+                        {
+                            "id": 61088,
+                            "name": "100/300",
+                            "ascent": 277,
+                            "descent": 526,
+                            "distance": 14573,
+                            "time_bike": 135,
+                            "time_hiking": 210,
+                            "elevation_to": 28,
+                            "elevation_from": 275
+                        }
+                    ]
+                },
+                {
+                    "direction": "backward",
+                    "rows": [
+                        {
+                            "id": 61031,
+                            "name": "100/000",
+                            "ascent": 728,
+                            "descent": 986,
+                            "distance": 30745,
+                            "time_bike": 300,
+                            "time_hiking": 465,
+                            "elevation_to": 20,
+                            "elevation_from": 275
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

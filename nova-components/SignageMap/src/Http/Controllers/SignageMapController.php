@@ -336,11 +336,57 @@ class SignageMapController
             }
 
             $poleProperties = $pole->properties ?? [];
+
+            // Inizializza la struttura signage se non esiste
+            if (! isset($poleProperties['signage']) || ! is_array($poleProperties['signage'])) {
+                $poleProperties['signage'] = [];
+            }
+
+            // Inizializza arrow_order se non esiste
+            if (! isset($poleProperties['signage']['arrow_order']) || ! is_array($poleProperties['signage']['arrow_order'])) {
+                $poleProperties['signage']['arrow_order'] = [];
+            }
+
+            // Crea la struttura arrows con direction e rows
+            $arrows = [];
+            if (! empty($forwardObjects)) {
+                $arrows[] = [
+                    'direction' => 'forward',
+                    'rows' => $forwardObjects,
+                ];
+            }
+            if (! empty($backwardObjects)) {
+                $arrows[] = [
+                    'direction' => 'backward',
+                    'rows' => $backwardObjects,
+                ];
+            }
+
+            // Aggiorna la struttura per questo hiking route
             $poleProperties['signage'][$hikingRouteIdStr] = [
                 'ref' => $hikingRouteRef,
-                'forward' => $forwardObjects,
-                'backward' => $backwardObjects,
+                'arrows' => $arrows,
             ];
+
+            // Aggiorna arrow_order: aggiungi le chiavi per questo hiking route se non già presenti
+            $forwardKey = $hikingRouteIdStr . '-0';
+            $backwardKey = $hikingRouteIdStr . '-1';
+
+            // Rimuovi eventuali chiavi esistenti per questo hiking route
+            $poleProperties['signage']['arrow_order'] = array_values(array_filter(
+                $poleProperties['signage']['arrow_order'],
+                function ($key) use ($hikingRouteIdStr) {
+                    return ! str_starts_with($key, $hikingRouteIdStr . '-');
+                }
+            ));
+
+            // Aggiungi le nuove chiavi nell'ordine corretto (forward prima, backward dopo)
+            if (! empty($forwardObjects)) {
+                $poleProperties['signage']['arrow_order'][] = $forwardKey;
+            }
+            if (! empty($backwardObjects)) {
+                $poleProperties['signage']['arrow_order'][] = $backwardKey;
+            }
 
             $pole->properties = $poleProperties;
             $pole->saveQuietly();

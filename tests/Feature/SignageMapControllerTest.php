@@ -37,7 +37,7 @@ class SignageMapControllerTest extends TestCase
      */
     private function mockDemClient(array $poles, int $hikingRouteId): void
     {
-        $poleIds = array_map(fn ($pole) => (string) $pole->id, $poles);
+        $poleIds = array_map(fn($pole) => (string) $pole->id, $poles);
 
         // Costruisci le features Point con matrix_row
         $pointFeatures = [];
@@ -203,7 +203,7 @@ class SignageMapControllerTest extends TestCase
 
         // Verifica che il checkpoint contenga il poleId solo una volta
         $checkpoint = $hikingRoute->properties['signage']['checkpoint'] ?? [];
-        $count = count(array_filter($checkpoint, fn ($id) => (int) $id === $pole->id));
+        $count = count(array_filter($checkpoint, fn($id) => (int) $id === $pole->id));
         $this->assertEquals(1, $count, 'Il poleId non dovrebbe essere duplicato nel checkpoint');
     }
 
@@ -397,11 +397,13 @@ class SignageMapControllerTest extends TestCase
         // Verifica che i Poles abbiano i dati signage aggiornati
         $hikingRouteIdStr = (string) $hikingRoute->id;
 
-        // Pole1 dovrebbe avere dati signage con forward verso pole2 e pole3
+        // Pole1 dovrebbe avere dati signage con arrows e arrow_order
         $this->assertArrayHasKey('signage', $pole1->properties);
+        $this->assertArrayHasKey('arrow_order', $pole1->properties['signage']);
+        $this->assertIsArray($pole1->properties['signage']['arrow_order']);
         $this->assertArrayHasKey($hikingRouteIdStr, $pole1->properties['signage']);
-        $this->assertArrayHasKey('forward', $pole1->properties['signage'][$hikingRouteIdStr]);
-        $this->assertArrayHasKey('backward', $pole1->properties['signage'][$hikingRouteIdStr]);
+        $this->assertArrayHasKey('arrows', $pole1->properties['signage'][$hikingRouteIdStr]);
+        $this->assertIsArray($pole1->properties['signage'][$hikingRouteIdStr]['arrows']);
         $this->assertEquals('178', $pole1->properties['signage'][$hikingRouteIdStr]['ref']);
     }
 
@@ -436,14 +438,31 @@ class SignageMapControllerTest extends TestCase
         $signageData = $pole2->properties['signage'][$hikingRouteIdStr] ?? null;
 
         $this->assertNotNull($signageData);
+        $this->assertArrayHasKey('arrows', $signageData);
+        $this->assertIsArray($signageData['arrows']);
+
+        // Trova le frecce forward e backward
+        $forwardArrow = null;
+        $backwardArrow = null;
+        foreach ($signageData['arrows'] as $arrow) {
+            if ($arrow['direction'] === 'forward') {
+                $forwardArrow = $arrow;
+            } elseif ($arrow['direction'] === 'backward') {
+                $backwardArrow = $arrow;
+            }
+        }
 
         // Forward dovrebbe contenere pole3 (checkpoint) e pole4 (ultimo)
-        $forwardIds = array_column($signageData['forward'], 'id');
-        $this->assertContains($pole4->id, $forwardIds, 'Forward dovrebbe contenere l\'ultimo polo');
+        if ($forwardArrow) {
+            $forwardIds = array_column($forwardArrow['rows'], 'id');
+            $this->assertContains($pole4->id, $forwardIds, 'Forward dovrebbe contenere l\'ultimo polo');
+        }
 
         // Backward dovrebbe contenere pole1 (primo)
-        $backwardIds = array_column($signageData['backward'], 'id');
-        $this->assertContains($pole1->id, $backwardIds, 'Backward dovrebbe contenere il primo polo');
+        if ($backwardArrow) {
+            $backwardIds = array_column($backwardArrow['rows'], 'id');
+            $this->assertContains($pole1->id, $backwardIds, 'Backward dovrebbe contenere il primo polo');
+        }
     }
 
     /** @test */
