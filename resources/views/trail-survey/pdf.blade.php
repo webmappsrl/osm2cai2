@@ -39,6 +39,12 @@
             width: 150px;
         }
 
+        .url-link {
+            color: #0066cc;
+            text-decoration: none;
+            display: inline-block;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -68,7 +74,18 @@
         <div class="section-title">Informazioni Generali</div>
         <div class="info-row">
             <span class="label">Hiking Route:</span>
-            <span>{{ $trailSurvey->hikingRoute->name ?? 'N/A' }}</span>
+            @if ($trailSurvey->hikingRoute)
+                @php
+                    $baseUrl = rtrim(config('app.url') ?: url('/'), '/');
+                    $routeUrl = $baseUrl . '/resources/hiking-routes/' . $trailSurvey->hikingRoute->id;
+                    $routeName = $trailSurvey->hikingRoute->name ?? 'N/A';
+                @endphp
+                <a href="{{ $routeUrl }}" class="url-link">
+                    {{ $routeName }}
+                </a>
+            @else
+                <span>N/A</span>
+            @endif
         </div>
         <div class="info-row">
             <span class="label">Proprietario:</span>
