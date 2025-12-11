@@ -391,6 +391,11 @@ class HikingRoute extends EcTrack
         $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) use ($checkpointPoleIds) {
             $poleFeature = $this->getFeatureMap($pole->geometry);
             $isCheckpoint = in_array($pole->id, $checkpointPoleIds);
+            $osmTags = null;
+            if ($pole->osmfeatures_data && isset($pole->osmfeatures_data['properties']['osm_tags'])) {
+                $osmTags = $pole->osmfeatures_data['properties']['osm_tags'];
+            }
+
             $properties = [
                 'id' => $pole->id,
                 'placeName' => $pole->properties['placeName'] ?? '',
@@ -403,6 +408,7 @@ class HikingRoute extends EcTrack
                 'pointFillColor' => $isCheckpoint ? self::CHECKPOINT_FILL_COLOR : self::POINT_FILL_COLOR,
                 'pointRadius' => $isCheckpoint ? self::CHECKPOINT_RADIUS : self::POINT_RADIUS,
                 'signage' => $pole->properties['signage'] ?? [],
+                'osmTags' => $osmTags,
             ];
             $poleFeature['properties'] = $properties;
 

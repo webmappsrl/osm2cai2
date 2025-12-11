@@ -65,7 +65,30 @@
                                     <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento
                                         suggerimento...)</span>
                                 </label>
-                                <input type="text" v-model="placeName"
+                                <div class="mb-2 flex gap-2 flex-wrap">
+                                    <button
+                                        v-if="hasOsmName"
+                                        type="button"
+                                        @click="recoverOsmName"
+                                        class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border"
+                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;"
+                                    >
+                                        Recupera da OSM
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="suggestPlaceName"
+                                        :disabled="isLoadingSuggestion"
+                                        class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border"
+                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;"
+                                        :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'"
+                                    >
+                                        Suggerisci
+                                    </button>
+                                </div>
+                                <input
+                                    type="text"
+                                    v-model="placeName"
                                     :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
                                     :disabled="isLoadingSuggestion"
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50" />
@@ -151,6 +174,7 @@ export default {
             placeName: '', // Nome località del palo
             placeDescription: '', // Descrizione località del palo
             isLoadingSuggestion: false, // Indica se sta caricando il suggerimento
+            currentPoleOsmTags: null, // Dati osm_tags del palo corrente
         };
     },
 
@@ -180,6 +204,14 @@ export default {
         poleLink() {
             if (!this.currentPoleId) return '#';
             return `/resources/poles/${this.currentPoleId}`;
+        },
+
+        hasOsmName() {
+            return !!(this.currentPoleOsmTags && this.currentPoleOsmTags.name);
+        },
+
+        osmName() {
+            return this.currentPoleOsmTags?.name || '';
         }
     },
 
@@ -224,6 +256,8 @@ export default {
                 // Carica il placeName e placeDescription dalle properties del palo se esistono
                 this.placeName = event.properties?.placeName || '';
                 this.placeDescription = event.properties?.placeDescription || '';
+                // Salva i dati osmTags del palo
+                this.currentPoleOsmTags = event.properties?.osmTags || null;
                 this.showPopup = true;
                 // Carica il valore di checkpoint per questo palo specifico
                 this.loadMetaValue(event.featuresMap);
@@ -242,6 +276,7 @@ export default {
             this.signageArrowsData = {};
             this.placeName = '';
             this.placeDescription = '';
+            this.currentPoleOsmTags = null;
         },
 
         handleKeydown(event) {
@@ -289,9 +324,6 @@ export default {
             if (!this.metaValue) {
                 this.placeName = '';
                 this.placeDescription = '';
-            } else if (!this.placeName && this.currentPoleId) {
-                // Se si attiva Meta e non c'è già un placeName, suggerisci con Nominatim
-                await this.suggestPlaceName();
             }
         },
 
@@ -315,6 +347,13 @@ export default {
                 // Non mostriamo errore all'utente, il campo rimane vuoto
             } finally {
                 this.isLoadingSuggestion = false;
+            }
+        },
+
+        recoverOsmName() {
+            // Recupera il nome da OSM e lo inserisce nel campo placeName
+            if (this.hasOsmName) {
+                this.placeName = this.osmName;
             }
         },
 
