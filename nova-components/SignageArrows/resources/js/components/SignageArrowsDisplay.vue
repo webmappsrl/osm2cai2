@@ -244,8 +244,15 @@ export default {
          * @param {number} arrowIdx - Indice della freccia nell'array orderedArrows
          */
         toggleArrowDirection(routeId, arrowIdx) {
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Metodo chiamato', data: { routeId, arrowIdx }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            // #endregion
+
             const routeData = this.processedSignageData[routeId];
             if (!routeData || !routeData.orderedArrows || !routeData.orderedArrows[arrowIdx]) {
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Route data non valida', data: { routeId, arrowIdx, hasRouteData: !!routeData, hasOrderedArrows: !!(routeData && routeData.orderedArrows) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+                // #endregion
                 return;
             }
 
@@ -254,8 +261,13 @@ export default {
             const currentDirection = this.getArrowDirection(routeId, arrowIdx, arrow.direction);
             const newDirection = currentDirection === 'forward' ? 'backward' : 'forward';
 
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Calcolata nuova direzione', data: { routeId, arrowIdx, currentDirection, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            // #endregion
+
             // Salva la nuova direzione localmente
-            this.$set(this.localArrowDirections, key, newDirection);
+            // In Vue 3, $set non è più necessario - l'assegnazione diretta è reattiva
+            this.localArrowDirections[key] = newDirection;
 
             // Determina se i dati sono nel formato con wrapper "signage" o diretto
             let signage = this.signageData;
@@ -269,6 +281,10 @@ export default {
                 routeSignage.arrows[arrowIdx].direction = newDirection;
             }
 
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Prima di emettere evento', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            // #endregion
+
             // Emetti evento per notificare il cambio
             this.$emit('arrow-direction-changed', {
                 routeId: routeId,
@@ -276,6 +292,10 @@ export default {
                 newDirection: newDirection,
                 fullSignageData: this.signageData
             });
+
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Evento emesso', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            // #endregion
         },
 
         /**

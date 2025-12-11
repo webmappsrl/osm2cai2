@@ -10,3 +10,7 @@ Route::patch('/hiking-route/{id}/properties', [SignageMapController::class, 'upd
 // Route per suggerire un nome località tramite Nominatim reverse geocoding
 Route::get('/pole/{poleId}/suggest-place-name', [SignageMapController::class, 'suggestPlaceName'])
     ->name('signage-map.suggest-place-name');
+
+// Route per aggiornare la direzione di una freccia nella segnaletica di un palo
+Route::patch('/pole/{poleId}/arrow-direction', [SignageMapController::class, 'updateArrowDirection'])
+    ->name('signage-map.update-arrow-direction');

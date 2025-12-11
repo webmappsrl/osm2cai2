@@ -66,29 +66,19 @@
                                         suggerimento...)</span>
                                 </label>
                                 <div class="mb-2 flex gap-2 flex-wrap">
-                                    <button
-                                        v-if="hasOsmName"
-                                        type="button"
-                                        @click="recoverOsmName"
+                                    <button v-if="hasOsmName" type="button" @click="recoverOsmName"
                                         class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border"
-                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;"
-                                    >
+                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;">
                                         Recupera da OSM
                                     </button>
-                                    <button
-                                        type="button"
-                                        @click="suggestPlaceName"
-                                        :disabled="isLoadingSuggestion"
+                                    <button type="button" @click="suggestPlaceName" :disabled="isLoadingSuggestion"
                                         class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border"
                                         style="background-color: #3b82f6; color: white; border-color: #2563eb;"
-                                        :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'"
-                                    >
+                                        :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'">
                                         Suggerisci
                                     </button>
                                 </div>
-                                <input
-                                    type="text"
-                                    v-model="placeName"
+                                <input type="text" v-model="placeName"
                                     :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
                                     :disabled="isLoadingSuggestion"
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50" />
@@ -118,7 +108,8 @@
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                                     Segnaletica
                                 </label>
-                                <SignageArrowsDisplay :signage-data="signageArrowsData" />
+                                <SignageArrowsDisplay :signage-data="signageArrowsData"
+                                    @arrow-direction-changed="handleArrowDirectionChanged" />
                             </div>
 
                             <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">
@@ -396,6 +387,58 @@ export default {
                 Nova.error('Errore durante il salvataggio');
             } finally {
                 this.isUpdatingMeta = false;
+            }
+        },
+
+        async handleArrowDirectionChanged(event) {
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Evento arrow-direction-changed ricevuto', data: { routeId: event.routeId, arrowIndex: event.arrowIndex, newDirection: event.newDirection, currentPoleId: this.currentPoleId }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+            // #endregion
+
+            if (!this.currentPoleId) {
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'currentPoleId mancante, salto salvataggio', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+                // #endregion
+                return;
+            }
+
+            try {
+                const poleId = parseInt(this.currentPoleId);
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Chiamata API per salvare direzione', data: { poleId, routeId: event.routeId, arrowIndex: event.arrowIndex, newDirection: event.newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
+                // #endregion
+
+                const response = await Nova.request().patch(
+                    `/nova-vendor/signage-map/pole/${poleId}/arrow-direction`,
+                    {
+                        routeId: event.routeId,
+                        arrowIndex: event.arrowIndex,
+                        newDirection: event.newDirection
+                    }
+                );
+
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Risposta API ricevuta', data: { success: response.data?.success, status: response.status }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
+                // #endregion
+
+                // Aggiorna i dati locali con la nuova direzione
+                if (response.data?.signageData) {
+                    this.signageArrowsData = response.data.signageData;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'signageArrowsData aggiornato', data: { hasData: !!this.signageArrowsData }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
+                    // #endregion
+                }
+
+                Nova.success('Direzione freccia aggiornata con successo');
+
+                // Forza il refresh della mappa per mostrare i cambiamenti
+                this.mapKey++;
+            } catch (error) {
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Errore durante salvataggio', data: { error: error.message, status: error.response?.status }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
+                // #endregion
+                console.error('Errore durante il salvataggio della direzione:', error);
+                Nova.error('Errore durante il salvataggio della direzione');
             }
         }
     }

@@ -392,4 +392,95 @@ class SignageMapController
             $pole->saveQuietly();
         }
     }
+
+    /**
+     * Aggiorna la direzione di una freccia nella segnaletica di un palo
+     */
+    public function updateArrowDirection(Request $request, int $poleId): JsonResponse
+    {
+        // #region agent log
+        $logPath = base_path('.cursor/debug.log');
+        $logDir = dirname($logPath);
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+        @file_put_contents($logPath, json_encode(['location' => 'SignageMapController.php:updateArrowDirection', 'message' => 'Metodo chiamato', 'data' => ['poleId' => $poleId, 'requestData' => $request->all()], 'timestamp' => time() * 1000, 'sessionId' => 'debug-session', 'runId' => 'run1', 'hypothesisId' => 'E']) . "\n", FILE_APPEND);
+        // #endregion
+
+        $pole = Poles::find($poleId);
+
+        if (! $pole) {
+            // #region agent log
+            @file_put_contents(base_path('.cursor/debug.log'), json_encode(['location' => 'SignageMapController.php:updateArrowDirection', 'message' => 'Palo non trovato', 'data' => ['poleId' => $poleId], 'timestamp' => time() * 1000, 'sessionId' => 'debug-session', 'runId' => 'run1', 'hypothesisId' => 'E']) . "\n", FILE_APPEND);
+            // #endregion
+            return response()->json(['error' => 'Pole not found'], 404);
+        }
+
+        $routeId = $request->input('routeId');
+        $arrowIndex = $request->input('arrowIndex');
+        $newDirection = $request->input('newDirection');
+
+        if ($routeId === null || $arrowIndex === null || $newDirection === null) {
+            // #region agent log
+            @file_put_contents(base_path('.cursor/debug.log'), json_encode(['location' => 'SignageMapController.php:updateArrowDirection', 'message' => 'Parametri mancanti', 'data' => ['routeId' => $routeId, 'arrowIndex' => $arrowIndex, 'newDirection' => $newDirection], 'timestamp' => time() * 1000, 'sessionId' => 'debug-session', 'runId' => 'run1', 'hypothesisId' => 'E']) . "\n", FILE_APPEND);
+            // #endregion
+            return response()->json(['error' => 'routeId, arrowIndex and newDirection are required'], 400);
+        }
+
+        $poleProperties = $pole->properties ?? [];
+
+        // Inizializza la struttura signage se non esiste
+        if (! isset($poleProperties['signage']) || ! is_array($poleProperties['signage'])) {
+            $poleProperties['signage'] = [];
+        }
+
+        // Verifica che la route esista nella struttura signage
+        if (! isset($poleProperties['signage'][$routeId]) || ! is_array($poleProperties['signage'][$routeId])) {
+            // #region agent log
+            $availableRoutes = array_keys($poleProperties['signage'] ?? []);
+            // #endregion
+            return response()->json(['error' => 'Route not found in signage structure'], 404);
+        }
+
+        $routeSignage = &$poleProperties['signage'][$routeId];
+
+        // Verifica che arrows esista e che arrowIndex sia valido
+        if (! isset($routeSignage['arrows']) || ! is_array($routeSignage['arrows'])) {
+            // #region agent log
+            @file_put_contents(base_path('.cursor/debug.log'), json_encode(['location' => 'SignageMapController.php:updateArrowDirection', 'message' => 'Arrows non trovato nella route', 'data' => ['routeId' => $routeId], 'timestamp' => time() * 1000, 'sessionId' => 'debug-session', 'runId' => 'run1', 'hypothesisId' => 'E']) . "\n", FILE_APPEND);
+            // #endregion
+            return response()->json(['error' => 'Arrows not found for this route'], 404);
+        }
+
+        if (! isset($routeSignage['arrows'][$arrowIndex])) {
+            // #region agent log
+            @file_put_contents(base_path('.cursor/debug.log'), json_encode(['location' => 'SignageMapController.php:updateArrowDirection', 'message' => 'Arrow index non valido', 'data' => ['routeId' => $routeId, 'arrowIndex' => $arrowIndex, 'arrowsCount' => count($routeSignage['arrows'])], 'timestamp' => time() * 1000, 'sessionId' => 'debug-session', 'runId' => 'run1', 'hypothesisId' => 'E']) . "\n", FILE_APPEND);
+            // #endregion
+            return response()->json(['error' => 'Invalid arrow index'], 400);
+        }
+
+        // Aggiorna la direzione
+        $routeSignage['arrows'][$arrowIndex]['direction'] = $newDirection;
+
+        // #region agent log
+        @file_put_contents(base_path('.cursor/debug.log'), json_encode(['location' => 'SignageMapController.php:updateArrowDirection', 'message' => 'Direzione aggiornata, salvataggio palo', 'data' => ['routeId' => $routeId, 'arrowIndex' => $arrowIndex, 'newDirection' => $newDirection], 'timestamp' => time() * 1000, 'sessionId' => 'debug-session', 'runId' => 'run1', 'hypothesisId' => 'E']) . "\n", FILE_APPEND);
+        // #endregion
+
+        $pole->properties = $poleProperties;
+        $pole->saveQuietly();
+
+        // Prepara i dati signage per la risposta (formato con wrapper "signage")
+        $signageData = [
+            'signage' => $poleProperties['signage']
+        ];
+
+        // #region agent log
+        @file_put_contents(base_path('.cursor/debug.log'), json_encode(['location' => 'SignageMapController.php:updateArrowDirection', 'message' => 'Salvataggio completato', 'data' => ['success' => true], 'timestamp' => time() * 1000, 'sessionId' => 'debug-session', 'runId' => 'run1', 'hypothesisId' => 'E']) . "\n", FILE_APPEND);
+        // #endregion
+
+        return response()->json([
+            'success' => true,
+            'signageData' => $signageData
+        ]);
+    }
 }

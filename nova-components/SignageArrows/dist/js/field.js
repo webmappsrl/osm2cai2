@@ -24,79 +24,186 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     SignageArrowsDisplay: _SignageArrowsDisplay_vue__WEBPACK_IMPORTED_MODULE_0__["default"]
   },
   props: ['index', 'resource', 'resourceName', 'resourceId', 'field'],
+  data: function data() {
+    return {
+      localSignageData: null // Dati locali aggiornati
+    };
+  },
   computed: {
     signageData: function signageData() {
-      var data = this.field.value || {};
-      console.log('📥 DetailField - signageData received:', data);
-      return data;
-    },
-    poleId: function poleId() {
-      // Estrai l'ID del palo dal resource
-      return this.resourceId || this.resource && this.resource.id && this.resource.id.value;
+      // Usa i dati locali se disponibili, altrimenti usa i dati del campo
+      return this.localSignageData || this.field.value || {};
     }
-  },
-  mounted: function mounted() {
-    console.log('🚀 DetailField mounted!');
-    console.log('📦 Field value:', this.field.value);
   },
   methods: {
     handleArrowDirectionChanged: function handleArrowDirectionChanged(event) {
       var _this = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-        var routeId, arrowIndex, newDirection, fullSignageData, response, _error$response, _error$config, _error$response2, _t;
+        var _response$data, _response$data2, poleId, response, _error$response, _t;
         return _regenerator().w(function (_context) {
           while (1) switch (_context.p = _context.n) {
             case 0:
-              routeId = event.routeId, arrowIndex = event.arrowIndex, newDirection = event.newDirection, fullSignageData = event.fullSignageData;
-              if (_this.poleId) {
-                _context.n = 1;
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  location: 'SignageArrowsDetailField.vue:handleArrowDirectionChanged',
+                  message: 'Evento arrow-direction-changed ricevuto',
+                  data: {
+                    routeId: event.routeId,
+                    arrowIndex: event.arrowIndex,
+                    newDirection: event.newDirection,
+                    resourceId: _this.resourceId,
+                    resourceName: _this.resourceName
+                  },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'F'
+                })
+              })["catch"](function () {});
+              // #endregion
+
+              // Se siamo nella risorsa Poles, usa resourceId come poleId
+              if (!(_this.resourceName === 'poles' && _this.resourceId)) {
+                _context.n = 5;
                 break;
               }
-              console.error('Pole ID not available');
-              Nova.error('Errore: ID palo non disponibile');
-              return _context.a(2);
-            case 1:
-              console.log('🔄 Updating arrow direction:', {
-                poleId: _this.poleId,
-                routeId: routeId,
-                arrowIndex: arrowIndex,
-                newDirection: newDirection,
-                url: "/nova-vendor/signage-map/pole/".concat(_this.poleId, "/arrow-direction")
+              _context.p = 1;
+              poleId = parseInt(_this.resourceId); // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  location: 'SignageArrowsDetailField.vue:handleArrowDirectionChanged',
+                  message: 'Chiamata API per salvare direzione (Pole)',
+                  data: {
+                    poleId: poleId,
+                    routeId: event.routeId,
+                    arrowIndex: event.arrowIndex,
+                    newDirection: event.newDirection
+                  },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'F'
+                })
+              })["catch"](function () {});
+              // #endregion
+              _context.n = 2;
+              return Nova.request().patch("/nova-vendor/signage-map/pole/".concat(poleId, "/arrow-direction"), {
+                routeId: event.routeId,
+                arrowIndex: event.arrowIndex,
+                newDirection: event.newDirection
               });
-              _context.p = 2;
-              _context.n = 3;
-              return Nova.request().patch("/nova-vendor/signage-map/pole/".concat(_this.poleId, "/arrow-direction"), {
-                routeId: routeId,
-                arrowIndex: arrowIndex,
-                direction: newDirection
-              });
-            case 3:
+            case 2:
               response = _context.v;
-              console.log('✅ Arrow direction updated successfully:', response.data);
-              if (response.data && response.data.success) {
-                Nova.success('Direzione freccia aggiornata con successo');
-                // Aggiorna i dati locali se necessario
-                if (response.data.properties) {
-                  // Potresti voler aggiornare il field.value qui se necessario
-                }
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  location: 'SignageArrowsDetailField.vue:handleArrowDirectionChanged',
+                  message: 'Risposta API ricevuta (Pole)',
+                  data: {
+                    success: (_response$data = response.data) === null || _response$data === void 0 ? void 0 : _response$data.success,
+                    status: response.status
+                  },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'F'
+                })
+              })["catch"](function () {});
+              // #endregion
+
+              // Aggiorna i dati locali con la nuova direzione
+              if ((_response$data2 = response.data) !== null && _response$data2 !== void 0 && _response$data2.signageData) {
+                _this.localSignageData = response.data.signageData;
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    location: 'SignageArrowsDetailField.vue:handleArrowDirectionChanged',
+                    message: 'localSignageData aggiornato',
+                    data: {
+                      hasData: !!_this.localSignageData
+                    },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    runId: 'run1',
+                    hypothesisId: 'F'
+                  })
+                })["catch"](function () {});
+                // #endregion
               }
-              _context.n = 5;
+              Nova.success('Direzione freccia aggiornata con successo');
+              _context.n = 4;
               break;
-            case 4:
-              _context.p = 4;
+            case 3:
+              _context.p = 3;
               _t = _context.v;
-              console.error('❌ Error updating arrow direction:', _t);
-              console.error('Error details:', {
-                message: _t.message,
-                response: _t.response,
-                status: (_error$response = _t.response) === null || _error$response === void 0 ? void 0 : _error$response.status,
-                url: (_error$config = _t.config) === null || _error$config === void 0 ? void 0 : _error$config.url
-              });
-              Nova.error("Errore durante il salvataggio della direzione: ".concat(((_error$response2 = _t.response) === null || _error$response2 === void 0 ? void 0 : _error$response2.status) || 'Unknown error'));
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  location: 'SignageArrowsDetailField.vue:handleArrowDirectionChanged',
+                  message: 'Errore durante salvataggio (Pole)',
+                  data: {
+                    error: _t.message,
+                    status: (_error$response = _t.response) === null || _error$response === void 0 ? void 0 : _error$response.status
+                  },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'F'
+                })
+              })["catch"](function () {});
+              // #endregion
+              console.error('Errore durante il salvataggio della direzione:', _t);
+              Nova.error('Errore durante il salvataggio della direzione');
+            case 4:
+              _context.n = 6;
+              break;
             case 5:
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  location: 'SignageArrowsDetailField.vue:handleArrowDirectionChanged',
+                  message: 'Resource non supportato per salvataggio',
+                  data: {
+                    resourceName: _this.resourceName,
+                    resourceId: _this.resourceId
+                  },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'F'
+                })
+              })["catch"](function () {});
+              // #endregion
+              console.warn('Salvataggio direzione non supportato per questa risorsa:', _this.resourceName);
+            case 6:
               return _context.a(2);
           }
-        }, _callee, null, [[2, 4]]);
+        }, _callee, null, [[1, 3]]);
       }))();
     }
   }
@@ -203,10 +310,6 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       "default": function _default() {
         return {};
       }
-    },
-    poleId: {
-      type: [Number, String],
-      "default": null
     }
   },
   computed: {
@@ -370,8 +473,51 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
      * @param {number} arrowIdx - Indice della freccia nell'array orderedArrows
      */
     toggleArrowDirection: function toggleArrowDirection(routeId, arrowIdx) {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          location: 'SignageArrowsDisplay.vue:toggleArrowDirection',
+          message: 'Metodo chiamato',
+          data: {
+            routeId: routeId,
+            arrowIdx: arrowIdx
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'G'
+        })
+      })["catch"](function () {});
+      // #endregion
+
       var routeData = this.processedSignageData[routeId];
       if (!routeData || !routeData.orderedArrows || !routeData.orderedArrows[arrowIdx]) {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            location: 'SignageArrowsDisplay.vue:toggleArrowDirection',
+            message: 'Route data non valida',
+            data: {
+              routeId: routeId,
+              arrowIdx: arrowIdx,
+              hasRouteData: !!routeData,
+              hasOrderedArrows: !!(routeData && routeData.orderedArrows)
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'G'
+          })
+        })["catch"](function () {});
+        // #endregion
         return;
       }
       var arrow = routeData.orderedArrows[arrowIdx];
@@ -379,7 +525,31 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var currentDirection = this.getArrowDirection(routeId, arrowIdx, arrow.direction);
       var newDirection = currentDirection === 'forward' ? 'backward' : 'forward';
 
-      // Salva la nuova direzione localmente (Vue 3: assegnazione diretta)
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          location: 'SignageArrowsDisplay.vue:toggleArrowDirection',
+          message: 'Calcolata nuova direzione',
+          data: {
+            routeId: routeId,
+            arrowIdx: arrowIdx,
+            currentDirection: currentDirection,
+            newDirection: newDirection
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'G'
+        })
+      })["catch"](function () {});
+      // #endregion
+
+      // Salva la nuova direzione localmente
+      // In Vue 3, $set non è più necessario - l'assegnazione diretta è reattiva
       this.localArrowDirections[key] = newDirection;
 
       // Determina se i dati sono nel formato con wrapper "signage" o diretto
@@ -394,6 +564,28 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         routeSignage.arrows[arrowIdx].direction = newDirection;
       }
 
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          location: 'SignageArrowsDisplay.vue:toggleArrowDirection',
+          message: 'Prima di emettere evento',
+          data: {
+            routeId: routeId,
+            arrowIdx: arrowIdx,
+            newDirection: newDirection
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'G'
+        })
+      })["catch"](function () {});
+      // #endregion
+
       // Emetti evento per notificare il cambio
       this.$emit('arrow-direction-changed', {
         routeId: routeId,
@@ -401,6 +593,28 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         newDirection: newDirection,
         fullSignageData: this.signageData
       });
+
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          location: 'SignageArrowsDisplay.vue:toggleArrowDirection',
+          message: 'Evento emesso',
+          data: {
+            routeId: routeId,
+            arrowIdx: arrowIdx,
+            newDirection: newDirection
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'G'
+        })
+      })["catch"](function () {});
+      // #endregion
     },
     /**
      * Formatta il tempo in ore.minuti
@@ -453,9 +667,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     value: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
       return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_SignageArrowsDisplay, {
         "signage-data": $options.signageData,
-        "pole-id": $options.poleId,
         onArrowDirectionChanged: $options.handleArrowDirectionChanged
-      }, null, 8 /* PROPS */, ["signage-data", "pole-id", "onArrowDirectionChanged"])];
+      }, null, 8 /* PROPS */, ["signage-data", "onArrowDirectionChanged"])];
     }),
     _: 1 /* STABLE */
   }, 8 /* PROPS */, ["index", "field"]);
