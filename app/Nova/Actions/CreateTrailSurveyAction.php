@@ -107,7 +107,8 @@ class CreateTrailSurveyAction extends Action
         GeneratePdfJob::dispatchSync($trailSurvey);
 
         // Redirect to the detail of the created TrailSurvey
-        return Action::redirect(Nova::url('/resources/trail-surveys/'.$trailSurvey->id));
+            return Action::redirect(Nova::url('/resources/trail-surveys/'.$trailSurvey->id))
+                ->withMessage(__('A new Trail Survey object has been created and the PDF generation has been started. You will be redirected to the object page.'));
     }
 
     /**
