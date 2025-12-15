@@ -263,5 +263,40 @@ return [
                 'timeout' => 300,
             ],
         ],
+
+        'develop' => [
+            'supervisor-1' => [
+                'connection' => 'redis',
+                'queue' => ['default'],
+                'maxProcesses' => 20,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
+            'supervisor-geometric-computations' => [
+                'connection' => 'redis',
+                'queue' => ['geometric-computations'],
+                'balance' => 'simple',
+                'maxProcesses' => 10,
+                'memory' => 256,
+                'tries' => 1,
+                'timeout' => 300,
+            ],
+            'supervisor-aws' => [
+                'connection' => 'redis',
+                'queue' => ['aws'],
+                'balance' => 'simple',
+                'maxProcesses' => 2,
+                'tries' => 3,
+                'timeout' => 120,
+            ],
+            'supervisor-pbf' => [
+                'connection' => 'redis',
+                'queue' => ['pbf'],
+                'balance' => 'simple',
+                'maxProcesses' => 10,
+                'tries' => 2,
+                'timeout' => 300,
+            ],
+        ],
     ],
 ];

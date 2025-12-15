@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;
+use App\Nova\Actions\CreateTrailSurveyAction;
 use App\Nova\Actions\DeleteHikingRouteAction;
 use App\Nova\Actions\ImportPois;
 use App\Nova\Actions\ManageHikingRouteValidationAction;
@@ -432,6 +433,17 @@ class HikingRoute extends OsmfeaturesResource
 
                     // can only see if admin, itinerary manager or national referent
                     return $user->hasRole(UserRole::Administrator) || $user->hasRole(UserRole::NationalReferent) || $user->hasRole(UserRole::ItineraryManager);
+                })
+                ->canRun(function ($request, $user) {
+                    return true;
+                }),
+            (new CreateTrailSurveyAction($this->model()))
+                ->onlyOnDetail()
+                ->confirmText(__('Create Trail Survey confirmation message'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
+                ->canSee(function ($request) {
+                    return true;
                 })
                 ->canRun(function ($request, $user) {
                     return true;
