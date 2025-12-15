@@ -1,0 +1,27 @@
+/* SignageMap field styles */
+.signage-map-container {
+    position: relative;
+    width: 100%;
+}
+
+.signage-map-container .map-container {
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.signage-map-container .map-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 100;
+}
+
+
+
+

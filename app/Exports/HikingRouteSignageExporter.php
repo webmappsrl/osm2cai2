@@ -1,0 +1,572 @@
+<?php
+
+namespace App\Exports;
+
+use App\Models\HikingRoute;
+use App\Models\Poles;
+use App\Nova\Poles as PolesResource;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Wm\WmPackage\Exporters\ModelExporter;
+
+/**
+ * Exporter per la segnaletica delle HikingRoute con i Poles associati
+ */
+class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
+{
+    protected Collection $hikingRoutes;
+
+    protected array $columns;
+
+    protected array $styles;
+
+    protected array $expandedData = [];
+
+    protected array $poleCoordinates = [];
+
+    protected array $hikingRouteDataCache = [];
+
+    // Intestazioni delle colonne
+    protected const HEADER_ROW_1 = [
+        'Palo',
+        'Soggetto manutentore',
+        'N. Sent.',
+        'Ldp n.',
+        'tab n.',
+        'Sentiero',
+        'Logo lungo it',
+        'Meta 1',
+        'Ore 1',
+        'Meta 2',
+        'Ore 2',
+        'Meta 3',
+        'Ore 3',
+        'Dir.',
+        'Località 1',
+        'Località 2',
+        'Quota',
+        'Codice Ldp',
+    ];
+
+    protected const HEADER_ROW_2 = [
+        '',
+        'Soggetto finanziatore',
+        'Logo 1 meta 1',
+        'Logo 2 meta 1',
+        'Logo 1 meta 2',
+        'Logo 2 meta 2',
+        'Logo 1 meta 3',
+        'Info meta 1',
+        'Km 1',
+        'Info meta 2',
+        'Km 2',
+        'Info meta 3',
+        'Km 3',
+        'Logo 2 meta 3',
+        'Latutudine',
+        'Longitudine',
+        'QR code',
+        'Codice Tabella',
+    ];
+
+    public function __construct(
+        Collection $hikingRoutes,
+        array $columns = [],
+        array $styles = ModelExporter::DEFAULT_STYLE
+    ) {
+        $this->hikingRoutes = $hikingRoutes;
+        $this->columns = $columns;
+        $this->styles = $styles;
+        $this->prepareExpandedData();
+    }
+
+    /**
+     * Prepara i dati espansi per ogni HikingRoute con i suoi Poles e le frecce
+     */
+    protected function prepareExpandedData(): void
+    {
+        $this->expandedData = [];
+
+        $this->hikingRoutes->load('clubs', 'areas');
+
+        $allPoleIds = $this->collectAllPoleIds();
+        $this->loadPoleCoordinates($allPoleIds);
+
+        foreach ($this->hikingRoutes as $hikingRoute) {
+            $this->cacheHikingRouteData($hikingRoute);
+
+            $hrData = $this->hikingRouteDataCache[$hikingRoute->id] ?? [];
+            $pointsOrder = $hrData['points_order'] ?? null;
+
+            // Mappa id palo -> posizione lungo la HikingRoute (1-based)
+            $poleOrderMap = [];
+            if (is_array($pointsOrder)) {
+                foreach ($pointsOrder as $orderIndex => $poleId) {
+                    // orderIndex è 0-based, vogliamo 1-based
+                    $poleOrderMap[(string) $poleId] = $orderIndex + 1;
+                }
+            }
+
+            $poles = $hikingRoute->getPolesWithBuffer();
+
+            foreach ($poles as $index => $pole) {
+                // Se abbiamo points_order, usiamo quella per calcolare l'indice del palo; altrimenti fallback all'indice del foreach
+                $orderIndex = $poleOrderMap[(string) $pole->id] ?? ($index + 1);
+                $ldpN = $this->formatLdpN($orderIndex);
+                $poleProperties = $pole->properties ?? [];
+                $signage = $poleProperties['signage'] ?? [];
+
+                // arrow_order è globale per il palo, condiviso tra tutte le HikingRoute
+                $arrowOrder = $signage['arrow_order'] ?? [];
+
+                foreach ($signage as $routeId => $routeSignage) {
+                    // Salta la chiave speciale arrow_order
+                    if ($routeId === 'arrow_order') {
+                        continue;
+                    }
+
+                    if ((string) $hikingRoute->id !== (string) $routeId) {
+                        continue;
+                    }
+
+                    // Nuova struttura: arrows per questa HikingRoute
+                    $arrows = $routeSignage['arrows'] ?? [];
+
+                    foreach ($arrows as $arrowIndex => $arrow) {
+                        $direction = $arrow['direction'] ?? 'forward';
+                        $rows = $arrow['rows'] ?? [];
+
+                        // Calcola tab_n in base alla posizione globale in arrow_order
+                        $arrowKey = $routeId.'-'.$arrowIndex;
+                        $position = array_search($arrowKey, $arrowOrder, true);
+
+                        // Se trovato in arrow_order, usa la posizione (1-based), altrimenti fallback su arrowIndex+1
+                        $tabN = $position !== false ? (string) ($position + 1) : (string) ($arrowIndex + 1);
+
+                        // Aggiungi righe per questa freccia
+                        $this->addArrowRows($direction, $rows, $hikingRoute, $pole, $routeSignage, $ldpN, $tabN);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Raccoglie tutti gli ID dei Poles da tutte le HikingRoute
+     */
+    protected function collectAllPoleIds(): array
+    {
+        $poleIds = [];
+
+        foreach ($this->hikingRoutes as $hikingRoute) {
+            $poles = $hikingRoute->getPolesWithBuffer();
+            foreach ($poles as $pole) {
+                $poleIds[] = $pole->id;
+            }
+        }
+
+        return array_unique($poleIds);
+    }
+
+    /**
+     * Aggiunge le 2 righe per una freccia (forward o backward)
+     */
+    protected function addArrowRows(
+        string $direction,
+        array $rows,
+        HikingRoute $hikingRoute,
+        Poles $pole,
+        array $routeSignage,
+        string $ldpN,
+        string $tabN
+    ): void {
+        if (empty($rows)) {
+            return;
+        }
+
+        // Prima riga (first): Meta/Ore
+        $this->expandedData[] = [
+            'direction' => $direction,
+            'row_type' => 'first',
+            'hiking_route' => $hikingRoute,
+            'pole' => $pole,
+            'route_signage' => $routeSignage,
+            'destinations' => $rows,
+            'ldp_n' => $ldpN,
+            'tab_n' => $tabN,
+        ];
+
+        // Seconda riga (second): Info/Km
+        $this->expandedData[] = [
+            'direction' => $direction,
+            'row_type' => 'second',
+            'hiking_route' => $hikingRoute,
+            'pole' => $pole,
+            'route_signage' => $routeSignage,
+            'destinations' => $rows,
+            'ldp_n' => $ldpN,
+            'tab_n' => $tabN,
+        ];
+    }
+
+    /**
+     * Cache dei dati della HikingRoute per evitare ricalcoli
+     */
+    protected function cacheHikingRouteData(HikingRoute $hikingRoute): void
+    {
+        if (isset($this->hikingRouteDataCache[$hikingRoute->id])) {
+            return;
+        }
+
+        $hikingRouteProperties = $hikingRoute->properties ?? [];
+        $osmfeaturesData = $this->parseOsmfeaturesData($hikingRoute->osmfeatures_data);
+
+        $this->hikingRouteDataCache[$hikingRoute->id] = [
+            'ref' => $hikingRouteProperties['ref'] ?? ($osmfeaturesData['properties']['ref'] ?? null),
+            'ref_rei' => $hikingRoute->getRefReiAttribute(),
+            'club_name' => $hikingRoute->clubs->first()?->name ?? '',
+            'area_name' => $hikingRoute->areas->first()?->name ?? '',
+            'points_order' => $hikingRouteProperties['dem']['points_order'] ?? null,
+        ];
+    }
+
+    /**
+     * Parse osmfeatures_data in array
+     */
+    protected function parseOsmfeaturesData($osmfeaturesData): array
+    {
+        if (is_array($osmfeaturesData)) {
+            return $osmfeaturesData;
+        }
+
+        if (is_string($osmfeaturesData)) {
+            return json_decode($osmfeaturesData, true) ?? [];
+        }
+
+        return [];
+    }
+
+    /**
+     * Formatta ldpN come "001.00", "002.00", ecc.
+     */
+    protected function formatLdpN(int $index): string
+    {
+        return str_pad($index, 3, '0', STR_PAD_LEFT) . '.00';
+    }
+
+    /**
+     * Carica le coordinate dei poles dalla geometry in una singola query
+     */
+    protected function loadPoleCoordinates(array $poleIds): void
+    {
+        if (empty($poleIds)) {
+            return;
+        }
+
+        $results = DB::table('poles')
+            ->whereIn('id', $poleIds)
+            ->whereNotNull('geometry')
+            ->select('id', DB::raw('ST_Y(geometry::geometry) as latitude'), DB::raw('ST_X(geometry::geometry) as longitude'))
+            ->get();
+
+        foreach ($results as $result) {
+            if ($result->latitude !== null && $result->longitude !== null) {
+                $this->poleCoordinates[$result->id] = [
+                    'latitude' => round((float) $result->latitude, 4),
+                    'longitude' => round((float) $result->longitude, 4),
+                ];
+            }
+        }
+    }
+
+    /**
+     * Get the collection of data to export
+     * Include le 2 righe di intestazione come prime righe
+     */
+    public function collection(): Collection
+    {
+        // Aggiungi le 2 righe di intestazione all'inizio
+        $data = [
+            ['_header_row' => 1],
+            ['_header_row' => 2],
+        ];
+
+        // Aggiungi i dati espansi
+        $data = array_merge($data, $this->expandedData);
+
+        return collect($data);
+    }
+
+    /**
+     * Get the headings for the export
+     * Restituiamo array vuoto perché gestiamo le intestazioni manualmente nella collection
+     */
+    public function headings(): array
+    {
+        return [];
+    }
+
+    /**
+     * Map each row of data
+     */
+    public function map($row): array
+    {
+        // Gestisci le righe di intestazione
+        if (isset($row['_header_row'])) {
+            return $row['_header_row'] === 1 ? self::HEADER_ROW_1 : self::HEADER_ROW_2;
+        }
+
+        return $this->mapDataRow($row);
+    }
+
+    /**
+     * Mappa una riga di dati
+     */
+    protected function mapDataRow(array $row): array
+    {
+        $hikingRoute = $row['hiking_route'];
+        $pole = $row['pole'];
+        $destinations = $row['destinations'];
+        $rowType = $row['row_type'];
+        $direction = $row['direction'] ?? 'forward';
+        $ldpN = $row['ldp_n'] ?? null;
+        $tabN = $row['tab_n'] ?? null;
+
+        // Recupera dati dalla cache
+        $hrData = $this->hikingRouteDataCache[$hikingRoute->id] ?? $this->getHikingRouteData($hikingRoute);
+        $coordinates = $this->poleCoordinates[$pole->id] ?? ['latitude' => null, 'longitude' => null];
+
+        // Prepara i codici
+        $ldpNForCode = str_replace('.', '-', $ldpN);
+        $codiceLdp = $this->buildCodiceLdp($hrData['area_name'], $hrData['ref_rei'], $ldpNForCode);
+        $codiceTabella = $this->buildCodiceTabella($hrData['ref_rei'], $ldpNForCode, $tabN);
+
+        if ($rowType === 'first') {
+            return $this->buildFirstRow($hrData, $ldpN, $tabN, $direction, $destinations, $codiceLdp, $pole);
+        }
+
+        return $this->buildSecondRow($destinations, $coordinates, $codiceTabella, $pole);
+    }
+
+    /**
+     * Recupera i dati della HikingRoute (fallback se non in cache)
+     */
+    protected function getHikingRouteData(HikingRoute $hikingRoute): array
+    {
+        $this->cacheHikingRouteData($hikingRoute);
+
+        return $this->hikingRouteDataCache[$hikingRoute->id];
+    }
+
+    /**
+     * Costruisce il Codice Ldp
+     */
+    protected function buildCodiceLdp(string $areaName, string $refRei, string $ldpNForCode): string
+    {
+        return $areaName . '-' . str_replace('.', '', $refRei) . '-' . $ldpNForCode;
+    }
+
+    /**
+     * Costruisce il Codice Tabella
+     */
+    protected function buildCodiceTabella(string $refRei, string $ldpNForCode, ?string $tabN): string
+    {
+        $codice = str_replace('.', '', $refRei);
+        if ($ldpNForCode !== null) {
+            $codice .= '-' . $ldpNForCode;
+        }
+        if ($tabN !== null) {
+            $codice .= '-' . $tabN;
+        }
+
+        return $codice;
+    }
+
+    /**
+     * Recupera il name da destination o dal pole
+     */
+    protected function getName(Poles $pole, array $destination = []): string
+    {
+        // Prima cerca nel destination (se presente)
+        if (! empty($destination['name'])) {
+            return $destination['name'];
+        }
+
+        // Altrimenti cerca nelle properties del pole
+        $poleProperties = $pole->properties ?? [];
+
+        return $poleProperties['name'] ?? '';
+    }
+
+    /**
+     * Recupera il description da destination o dal pole
+     */
+    protected function getDescription(Poles $pole, array $destination = []): string
+    {
+        // Prima cerca nel destination (se presente)
+        if (! empty($destination['description'])) {
+            return $destination['description'];
+        }
+
+        // Altrimenti cerca nelle properties del pole
+        $poleProperties = $pole->properties ?? [];
+
+        return $poleProperties['description'] ?? '';
+    }
+
+    /**
+     * Costruisce la prima riga (Meta/Ore)
+     */
+    protected function buildFirstRow(array $hrData, ?string $ldpN, ?string $tabN, string $direction, array $destinations, string $codiceLdp, Poles $pole): array
+    {
+        $dir = $direction === 'forward' ? 'D' : 'S';
+        $poleHyperlink = $this->createPoleHyperlink($pole);
+
+        return [
+            $poleHyperlink, // ID Pole (link cliccabile)
+            $hrData['club_name'], // Soggetto manutentore
+            $hrData['ref_rei'], // N. Sent.
+            $ldpN, // Ldp n.
+            $tabN, // tab n.
+            $hrData['ref'], // Sentiero
+            '', // Logo lungo it
+            $this->getName($pole, $destinations[0] ?? []), // Meta 1
+            $this->formatTime($destinations[0]['time_hiking'] ?? null), // Ore 1
+            $this->getName($pole, $destinations[1] ?? []), // Meta 2
+            $this->formatTime($destinations[1]['time_hiking'] ?? null), // Ore 2
+            $this->getName($pole, $destinations[2] ?? []), // Meta 3
+            $this->formatTime($destinations[2]['time_hiking'] ?? null), // Ore 3
+            $dir, // Dir.
+            '', // Località 1
+            '', // Località 2
+            '', // Quota
+            $codiceLdp, // Codice Ldp
+        ];
+    }
+
+    /**
+     * Costruisce la seconda riga (Info/Km)
+     */
+    protected function buildSecondRow(array $destinations, array $coordinates, string $codiceTabella, Poles $pole): array
+    {
+        return [
+            '', // ID Pole (vuoto nella seconda riga)
+            '', // Soggetto finanziatore
+            '', // Logo 1 meta 1
+            '', // Logo 2 meta 1
+            '', // Logo 1 meta 2
+            '', // Logo 2 meta 2
+            '', // Logo 1 meta 3
+            $this->getDescription($pole, $destinations[0] ?? []), // Info meta 1
+            $this->formatDistance($destinations[0]['distance'] ?? null), // Km 1
+            $this->getDescription($pole, $destinations[1] ?? []), // Info meta 2
+            $this->formatDistance($destinations[1]['distance'] ?? null), // Km 2
+            $this->getDescription($pole, $destinations[2] ?? []), // Info meta 3
+            $this->formatDistance($destinations[2]['distance'] ?? null), // Km 3
+            '', // Logo 2 meta 3
+            $coordinates['latitude'], // Latutudine
+            $coordinates['longitude'], // Longitudine
+            '', // QR code
+            $codiceTabella, // Codice Tabella
+        ];
+    }
+
+    /**
+     * Format time_hiking in formato "h H:M"
+     */
+    protected function formatTime(?int $minutes): string
+    {
+        if ($minutes === null || $minutes === '') {
+            return '';
+        }
+
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+
+        return 'h ' . $hours . ':' . str_pad($mins, 2, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Format distance in km con una cifra decimale
+     */
+    protected function formatDistance(?float $distance): string
+    {
+        if ($distance === null || $distance === '') {
+            return '';
+        }
+
+        // Converti da metri a km e arrotonda alla prima cifra decimale
+        $distanceKm = round($distance / 1000, 1);
+
+        return 'km ' . $distanceKm;
+    }
+
+    /**
+     * Crea la formula HYPERLINK per Excel che mostra l'ID del Pole come link cliccabile
+     */
+    protected function createPoleHyperlink(Poles $pole): string
+    {
+        $poleUrl = url('/resources/' . PolesResource::uriKey() . '/' . $pole->id);
+        $poleId = $pole->id;
+
+        return '=HYPERLINK("' . $poleUrl . '", "' . $poleId . '")';
+    }
+
+    /**
+     * Apply styles to the worksheet
+     */
+    public function styles(Worksheet $sheet)
+    {
+        $styles = [];
+
+        // Stile per le 2 righe di intestazione (righe 1 e 2)
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E2E8F0'], // Grigio chiaro
+            ],
+        ];
+
+        $styles[1] = $headerStyle; // Prima riga intestazione
+        $styles[2] = $headerStyle; // Seconda riga intestazione
+
+        // Applica stile alternato alle righe dati per distinguere le frecce
+        $rowIndex = 3; // Inizia dalla riga 3 (dopo le intestazioni)
+
+        foreach ($this->expandedData as $data) {
+            $isFirstRow = $data['row_type'] === 'first';
+
+            $styles[$rowIndex] = [
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => $isFirstRow ? 'FFFFFF' : 'F5F5F5'], // Bianco o grigio chiaro
+                ],
+            ];
+
+            // Applica colore blu solo alla colonna A (Palo) nelle righe "first"
+            if ($isFirstRow) {
+                $cellCoordinate = 'A' . $rowIndex; // Colonna A
+                $styles[$cellCoordinate] = [
+                    'font' => [
+                        'color' => ['rgb' => '0000FF'], // Blu classico per i link
+                    ],
+                ];
+            }
+
+            $rowIndex++;
+        }
+
+        return $styles;
+    }
+}

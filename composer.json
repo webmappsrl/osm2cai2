@@ -29,6 +29,7 @@
         "league/flysystem-aws-s3-v3": "^3.12",
         "m-a-k-o/nova-custom-table-card": "dev-master",
         "maatwebsite/excel": "^3.1",
+        "osm2cai/signage-arrows": "*",
         "outl1ne/nova-multiselect-field": "^5.0.1",
         "predis/predis": "^2.2",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
@@ -43,6 +44,7 @@
         "wm/map-multi-polygon": "*",
         "wm/map-point": "*",
         "wm/osm2cai-map-multi-linestring": "*",
+        "osm2cai/signage-map": "*",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },
@@ -129,6 +131,14 @@
         {
             "type": "path",
             "url": "./nova-components/osm2cai-map-multi-linestring"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/SignageMap"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/SignageArrows"
         },
         {
             "type": "vcs",
