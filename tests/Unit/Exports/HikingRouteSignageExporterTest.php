@@ -391,7 +391,7 @@ class HikingRouteSignageExporterTest extends TestCase
 
         $initialCount = count($this->getProtectedProperty($exporter, 'expandedData'));
 
-        $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', [], $hikingRoute, $pole, [], '001.00');
+        $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', [], $hikingRoute, $pole, [], '001.00', '001');
 
         $finalCount = count($this->getProtectedProperty($exporter, 'expandedData'));
         $this->assertEquals($initialCount, $finalCount);
@@ -407,14 +407,14 @@ class HikingRouteSignageExporterTest extends TestCase
             ['name' => 'Meta1', 'time_hiking' => 60],
         ];
 
-        $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', $destinations, $hikingRoute, $pole, [], '001.00');
+        $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', $destinations, $hikingRoute, $pole, [], '001.00', '001');
 
         $expandedData = $this->getProtectedProperty($exporter, 'expandedData');
         $this->assertCount(2, $expandedData);
         $this->assertEquals('first', $expandedData[0]['row_type']);
         $this->assertEquals('second', $expandedData[1]['row_type']);
-        $this->assertEquals('forward', $expandedData[0]['type']);
-        $this->assertEquals('forward', $expandedData[1]['type']);
+        $this->assertEquals('forward', $expandedData[0]['direction']);
+        $this->assertEquals('forward', $expandedData[1]['direction']);
     }
 
     /** @test */
@@ -427,7 +427,7 @@ class HikingRouteSignageExporterTest extends TestCase
             ['name' => 'Meta1', 'time_hiking' => 60],
         ];
 
-        $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', $destinations, $hikingRoute, $pole, [], '001.00');
+        $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', $destinations, $hikingRoute, $pole, [], '001.00', '001');
 
         $expandedData = $this->getProtectedProperty($exporter, 'expandedData');
         $firstRow = $expandedData[0];
@@ -435,6 +435,7 @@ class HikingRouteSignageExporterTest extends TestCase
         $this->assertEquals($pole, $firstRow['pole']);
         $this->assertEquals($destinations, $firstRow['destinations']);
         $this->assertEquals('001.00', $firstRow['ldp_n']);
+        $this->assertEquals('001', $firstRow['tab_n']);
     }
 
     // ============================================
@@ -477,12 +478,13 @@ class HikingRouteSignageExporterTest extends TestCase
         $this->callProtectedMethod($exporter, 'cacheHikingRouteData', $hikingRoute);
 
         $row = [
-            'type' => 'forward',
+            'direction' => 'forward',
             'row_type' => 'first',
             'hiking_route' => $hikingRoute,
             'pole' => $pole,
             'destinations' => [],
             'ldp_n' => '001.00',
+            'tab_n' => '001',
         ];
 
         $result = $this->callProtectedMethod($exporter, 'mapDataRow', $row);
@@ -509,13 +511,14 @@ class HikingRouteSignageExporterTest extends TestCase
             ['name' => 'Meta3', 'time_hiking' => 120],
         ];
 
-        $result = $this->callProtectedMethod($exporter, 'buildFirstRow', $hrData, '001.00', 'forward', $destinations, 'Area1-123-001-00', $pole);
+        $result = $this->callProtectedMethod($exporter, 'buildFirstRow', $hrData, '001.00', '001', 'forward', $destinations, 'Area1-123-001-00', $pole);
 
         $this->assertCount(18, $result);
         $this->assertStringStartsWith('=HYPERLINK', $result[0]); // Palo
         $this->assertEquals('Club1', $result[1]); // Soggetto manutentore
         $this->assertEquals('123', $result[2]); // N. Sent.
         $this->assertEquals('001.00', $result[3]); // Ldp n.
+        $this->assertEquals('001', $result[4]); // tab n.
         $this->assertEquals('HR123', $result[5]); // Sentiero
         $this->assertEquals('Meta1', $result[7]); // Meta 1
         $this->assertEquals('h 1:00', $result[8]); // Ore 1
@@ -530,7 +533,7 @@ class HikingRouteSignageExporterTest extends TestCase
         $hrData = ['club_name' => '', 'ref_rei' => '', 'ref' => '', 'area_name' => ''];
         $destinations = [];
 
-        $result = $this->callProtectedMethod($exporter, 'buildFirstRow', $hrData, '001.00', 'backward', $destinations, 'code', $pole);
+        $result = $this->callProtectedMethod($exporter, 'buildFirstRow', $hrData, '001.00', '001', 'backward', $destinations, 'code', $pole);
 
         $this->assertEquals('S', $result[13]); // Dir. (backward = S)
     }
@@ -543,7 +546,7 @@ class HikingRouteSignageExporterTest extends TestCase
         $hrData = ['club_name' => '', 'ref_rei' => '', 'ref' => '', 'area_name' => ''];
         $destinations = [];
 
-        $result = $this->callProtectedMethod($exporter, 'buildFirstRow', $hrData, '001.00', 'forward', $destinations, 'code', $pole);
+        $result = $this->callProtectedMethod($exporter, 'buildFirstRow', $hrData, '001.00', '001', 'forward', $destinations, 'code', $pole);
 
         $this->assertEquals('', $result[7]); // Meta 1
         $this->assertEquals('', $result[8]); // Ore 1

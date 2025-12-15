@@ -102,24 +102,57 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         foreach ($this->hikingRoutes as $hikingRoute) {
             $this->cacheHikingRouteData($hikingRoute);
 
+            $hrData = $this->hikingRouteDataCache[$hikingRoute->id] ?? [];
+            $pointsOrder = $hrData['points_order'] ?? null;
+
+            // Mappa id palo -> posizione lungo la HikingRoute (1-based)
+            $poleOrderMap = [];
+            if (is_array($pointsOrder)) {
+                foreach ($pointsOrder as $orderIndex => $poleId) {
+                    // orderIndex è 0-based, vogliamo 1-based
+                    $poleOrderMap[(string) $poleId] = $orderIndex + 1;
+                }
+            }
+
             $poles = $hikingRoute->getPolesWithBuffer();
 
             foreach ($poles as $index => $pole) {
-                $ldpN = $this->formatLdpN($index + 1);
+                // Se abbiamo points_order, usiamo quella per calcolare l'indice del palo; altrimenti fallback all'indice del foreach
+                $orderIndex = $poleOrderMap[(string) $pole->id] ?? ($index + 1);
+                $ldpN = $this->formatLdpN($orderIndex);
                 $poleProperties = $pole->properties ?? [];
                 $signage = $poleProperties['signage'] ?? [];
 
+                // arrow_order è globale per il palo, condiviso tra tutte le HikingRoute
+                $arrowOrder = $signage['arrow_order'] ?? [];
+
                 foreach ($signage as $routeId => $routeSignage) {
+                    // Salta la chiave speciale arrow_order
+                    if ($routeId === 'arrow_order') {
+                        continue;
+                    }
+
                     if ((string) $hikingRoute->id !== (string) $routeId) {
                         continue;
                     }
 
-                    $forward = $routeSignage['forward'] ?? [];
-                    $backward = $routeSignage['backward'] ?? [];
+                    // Nuova struttura: arrows per questa HikingRoute
+                    $arrows = $routeSignage['arrows'] ?? [];
 
-                    // Aggiungi righe per forward e backward
-                    $this->addArrowRows('forward', $forward, $hikingRoute, $pole, $routeSignage, $ldpN);
-                    $this->addArrowRows('backward', $backward, $hikingRoute, $pole, $routeSignage, $ldpN);
+                    foreach ($arrows as $arrowIndex => $arrow) {
+                        $direction = $arrow['direction'] ?? 'forward';
+                        $rows = $arrow['rows'] ?? [];
+
+                        // Calcola tab_n in base alla posizione globale in arrow_order
+                        $arrowKey = $routeId.'-'.$arrowIndex;
+                        $position = array_search($arrowKey, $arrowOrder, true);
+
+                        // Se trovato in arrow_order, usa la posizione (1-based), altrimenti fallback su arrowIndex+1
+                        $tabN = $position !== false ? (string) ($position + 1) : (string) ($arrowIndex + 1);
+
+                        // Aggiungi righe per questa freccia
+                        $this->addArrowRows($direction, $rows, $hikingRoute, $pole, $routeSignage, $ldpN, $tabN);
+                    }
                 }
             }
         }
@@ -146,37 +179,40 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      * Aggiunge le 2 righe per una freccia (forward o backward)
      */
     protected function addArrowRows(
-        string $type,
-        array $destinations,
+        string $direction,
+        array $rows,
         HikingRoute $hikingRoute,
         Poles $pole,
         array $routeSignage,
-        string $ldpN
+        string $ldpN,
+        string $tabN
     ): void {
-        if (empty($destinations)) {
+        if (empty($rows)) {
             return;
         }
 
         // Prima riga (first): Meta/Ore
         $this->expandedData[] = [
-            'type' => $type,
+            'direction' => $direction,
             'row_type' => 'first',
             'hiking_route' => $hikingRoute,
             'pole' => $pole,
             'route_signage' => $routeSignage,
-            'destinations' => $destinations,
+            'destinations' => $rows,
             'ldp_n' => $ldpN,
+            'tab_n' => $tabN,
         ];
 
         // Seconda riga (second): Info/Km
         $this->expandedData[] = [
-            'type' => $type,
+            'direction' => $direction,
             'row_type' => 'second',
             'hiking_route' => $hikingRoute,
             'pole' => $pole,
             'route_signage' => $routeSignage,
-            'destinations' => $destinations,
+            'destinations' => $rows,
             'ldp_n' => $ldpN,
+            'tab_n' => $tabN,
         ];
     }
 
@@ -196,7 +232,8 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
             'ref' => $hikingRouteProperties['ref'] ?? ($osmfeaturesData['properties']['ref'] ?? null),
             'ref_rei' => $hikingRoute->getRefReiAttribute(),
             'club_name' => $hikingRoute->clubs->first()?->name ?? '',
-            'area_name' => $hikingRoute->areas->first()?->name ?? 'CTN',
+            'area_name' => $hikingRoute->areas->first()?->name ?? '',
+            'points_order' => $hikingRouteProperties['dem']['points_order'] ?? null,
         ];
     }
 
@@ -298,8 +335,9 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         $pole = $row['pole'];
         $destinations = $row['destinations'];
         $rowType = $row['row_type'];
-        $type = $row['type'];
+        $direction = $row['direction'] ?? 'forward';
         $ldpN = $row['ldp_n'] ?? null;
+        $tabN = $row['tab_n'] ?? null;
 
         // Recupera dati dalla cache
         $hrData = $this->hikingRouteDataCache[$hikingRoute->id] ?? $this->getHikingRouteData($hikingRoute);
@@ -308,10 +346,10 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         // Prepara i codici
         $ldpNForCode = str_replace('.', '-', $ldpN);
         $codiceLdp = $this->buildCodiceLdp($hrData['area_name'], $hrData['ref_rei'], $ldpNForCode);
-        $codiceTabella = $this->buildCodiceTabella($hrData['ref_rei'], $ldpNForCode, null);
+        $codiceTabella = $this->buildCodiceTabella($hrData['ref_rei'], $ldpNForCode, $tabN);
 
         if ($rowType === 'first') {
-            return $this->buildFirstRow($hrData, $ldpN, $type, $destinations, $codiceLdp, $pole);
+            return $this->buildFirstRow($hrData, $ldpN, $tabN, $direction, $destinations, $codiceLdp, $pole);
         }
 
         return $this->buildSecondRow($destinations, $coordinates, $codiceTabella, $pole);
@@ -386,9 +424,9 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
     /**
      * Costruisce la prima riga (Meta/Ore)
      */
-    protected function buildFirstRow(array $hrData, ?string $ldpN, string $type, array $destinations, string $codiceLdp, Poles $pole): array
+    protected function buildFirstRow(array $hrData, ?string $ldpN, ?string $tabN, string $direction, array $destinations, string $codiceLdp, Poles $pole): array
     {
-        $dir = $type === 'forward' ? 'D' : 'S';
+        $dir = $direction === 'forward' ? 'D' : 'S';
         $poleHyperlink = $this->createPoleHyperlink($pole);
 
         return [
@@ -396,7 +434,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
             $hrData['club_name'], // Soggetto manutentore
             $hrData['ref_rei'], // N. Sent.
             $ldpN, // Ldp n.
-            null, // tab n.
+            $tabN, // tab n.
             $hrData['ref'], // Sentiero
             '', // Logo lungo it
             $this->getName($pole, $destinations[0] ?? []), // Meta 1

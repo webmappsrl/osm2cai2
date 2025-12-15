@@ -170,9 +170,34 @@ class SignageMapController
             $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
             $demClient = new DemClient;
             $geojson = $demClient->getPointMatrix($geojson);
+
+            // Estrai pointFeaturesMap e points_order dal GeoJSON DEM
+            $pointFeaturesMap = [];
+            $pointsOrder = null;
+            foreach ($geojson['features'] ?? [] as $feature) {
+                $geometryType = $feature['geometry']['type'] ?? null;
+
+                if ($geometryType === 'Point') {
+                    $pointId = (string) ($feature['properties']['id'] ?? null);
+                    if ($pointId) {
+                        $pointFeaturesMap[$pointId] = $feature;
+                    }
+                } elseif ($geometryType === 'MultiLineString' && $pointsOrder === null) {
+                    $pointsOrder = $feature['properties']['dem']['points_order'] ?? null;
+                }
+            }
+
+            // Salva points_order in properties->dem->points_order se disponibile
+            if ($pointsOrder && is_array($pointsOrder)) {
+                if (! isset($properties['dem']) || ! is_array($properties['dem'])) {
+                    $properties['dem'] = [];
+                }
+                $properties['dem']['points_order'] = $pointsOrder;
+            }
+
             $ref = $hikingRoute->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
-            // Estrai points_order e checkpoint dal GeoJSON e calcola le direzioni
-            $this->processPointDirections($geojson, $properties, $id, $ref);
+            // Calcola le direzioni usando pointFeaturesMap e pointsOrder (properties viene aggiornata by-ref)
+            $this->processPointDirections($pointFeaturesMap, $pointsOrder, $properties, $id, $ref);
         } catch (Exception $e) {
             Log::warning('DEM point matrix enrichment failed', [
                 'hiking_route_id' => $id,
@@ -213,26 +238,13 @@ class SignageMapController
     /**
      * Processa le direzioni forward e backward per ogni punto basandosi su points_order e checkpoint
      * e salva i dati nei Pole
+     *
+     * @param  array  $pointFeaturesMap  mappa id punto -> feature GeoJSON
+     * @param  array|null  $pointsOrder  array ordinato di id dei punti lungo la traccia
+     * @param  array  $properties  (by-ref) properties dell'HikingRoute che possono essere aggiornate
      */
-    private function processPointDirections(array $geojson, array &$properties, int $hikingRouteId, string $hikingRouteRef): void
+    private function processPointDirections(array $pointFeaturesMap, ?array $pointsOrder, array &$properties, int $hikingRouteId, string $hikingRouteRef): void
     {
-        // Estrai features in un singolo ciclo: Point features map e MultiLineString
-        $pointFeaturesMap = [];
-        $pointsOrder = null;
-
-        foreach ($geojson['features'] ?? [] as $feature) {
-            $geometryType = $feature['geometry']['type'] ?? null;
-
-            if ($geometryType === 'Point') {
-                $pointId = (string) ($feature['properties']['id'] ?? null);
-                if ($pointId) {
-                    $pointFeaturesMap[$pointId] = $feature;
-                }
-            } elseif ($geometryType === 'MultiLineString' && $pointsOrder === null) {
-                $pointsOrder = $feature['properties']['dem']['points_order'] ?? null;
-            }
-        }
-
         if (! $pointsOrder || ! is_array($pointsOrder)) {
             Log::warning('points_order not found in geojson');
 
@@ -400,8 +412,6 @@ class SignageMapController
      */
     public function updateArrowDirection(Request $request, int $poleId): JsonResponse
     {
-
-
         $pole = Poles::find($poleId);
 
         if (! $pole) {
@@ -454,14 +464,14 @@ class SignageMapController
 
         // Prepara i dati signage per la risposta (formato con wrapper "signage")
         $signageData = [
-            'signage' => $poleProperties['signage']
+            'signage' => $poleProperties['signage'],
         ];
 
         // #endregion
 
         return response()->json([
             'success' => true,
-            'signageData' => $signageData
+            'signageData' => $signageData,
         ]);
     }
 
