@@ -74,14 +74,16 @@
         <div class="section-title">Informazioni Generali</div>
         <div class="info-row">
             <span class="label">Hiking Route:</span>
+            <span>{{ $trailSurvey->hikingRoute->name ?? 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">URL:</span>
             @if ($trailSurvey->hikingRoute)
                 @php
-                    $baseUrl = rtrim(config('app.url') ?: url('/'), '/');
-                    $routeUrl = $baseUrl . '/resources/hiking-routes/' . $trailSurvey->hikingRoute->id;
-                    $routeName = $trailSurvey->hikingRoute->name ?? 'N/A';
+                    $routeUrl = url("/resources/hiking-routes/{$trailSurvey->hikingRoute->id}");
                 @endphp
                 <a href="{{ $routeUrl }}" class="url-link">
-                    {{ $routeName }}
+                    {{ $routeUrl }}
                 </a>
             @else
                 <span>N/A</span>
