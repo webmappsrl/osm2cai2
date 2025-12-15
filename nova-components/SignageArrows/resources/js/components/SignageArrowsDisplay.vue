@@ -7,6 +7,18 @@
             <template v-for="(arrow, arrowIdx) in (routeData.orderedArrows || [])" :key="arrowIdx">
                 <div v-if="arrow && arrow.rows && Array.isArray(arrow.rows) && arrow.rows.length > 0"
                     class="signage-arrow-wrapper">
+                    <!-- Pulsanti per riordinare la freccia -->
+                    <div class="arrow-order-controls">
+                        <button class="arrow-order-btn" :disabled="!canMoveUp(routeId, arrowIdx)"
+                            @click="moveArrow(routeId, arrowIdx, 'up')" title="Sposta su">
+                            ▲
+                        </button>
+                        <button class="arrow-order-btn" :disabled="!canMoveDown(routeId, arrowIdx)"
+                            @click="moveArrow(routeId, arrowIdx, 'down')" title="Sposta giù">
+                            ▼
+                        </button>
+                    </div>
+
                     <!-- Pulsante per invertire la direzione della singola freccia -->
                     <div class="arrow-direction-control">
                         <button @click="toggleArrowDirection(routeId, arrowIdx)" class="arrow-direction-btn"
@@ -29,10 +41,9 @@
                             <div class="destinations-list">
                                 <div v-for="(destination, idx) in arrow.rows" :key="idx" class="destination-row">
                                     <span class="destination-info">
-                                        <span class="destination-name">{{ destination?.placeName || destination?.name ||
-                                            `Palo #${destination?.id}` }}</span>
-                                        <span v-if="destination?.placeDescription" class="destination-description">{{
-                                            destination?.placeDescription }}</span>
+                                        <span class="destination-name">{{ formatDestinationName(destination) }}</span>
+                                        <span v-if="destination?.description" class="destination-description">{{
+                                            destination?.description }}</span>
                                     </span>
                                     <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
                                 </div>
@@ -103,6 +114,9 @@ export default {
             // Determina se i dati sono nel formato con wrapper "signage" o diretto
             let signage = this.signageData;
             let arrowOrder = [];
+            const effectiveArrowOrder = (this.localArrowOrder && this.localArrowOrder.length > 0)
+                ? this.localArrowOrder
+                : [];
 
             // Se ha la struttura con "signage" wrapper
             if (this.signageData.signage) {
@@ -112,6 +126,9 @@ export default {
             // Estrai arrow_order se presente
             if (signage.arrow_order && Array.isArray(signage.arrow_order)) {
                 arrowOrder = signage.arrow_order;
+                if (effectiveArrowOrder.length === 0) {
+                    effectiveArrowOrder.push(...arrowOrder);
+                }
             }
 
             const processed = {};
@@ -127,35 +144,41 @@ export default {
 
                 // Se ha il formato nuovo con arrows
                 if (routeData.arrows && Array.isArray(routeData.arrows)) {
-                    // Ordina le arrows secondo arrow_order
+                    // Ordina le arrows secondo arrow_order (o quello locale)
                     const orderedArrows = [];
+                    const currentOrder = (effectiveArrowOrder.length > 0 ? effectiveArrowOrder : arrowOrder)
+                        .filter(key => key && key.startsWith(`${routeId}-`));
 
-                    if (arrowOrder.length > 0) {
-                        // Ordina secondo arrow_order
-                        for (const arrowKey of arrowOrder) {
+                    if (currentOrder.length > 0) {
+                        // Ordina secondo l'ordine calcolato
+                        for (const arrowKey of currentOrder) {
                             const [arrowRouteId, arrowIndex] = arrowKey.split('-');
                             if (arrowRouteId === routeId) {
                                 const index = parseInt(arrowIndex, 10);
-                                if (!isNaN(index) && routeData.arrows[index] &&
-                                    routeData.arrows[index].rows &&
-                                    Array.isArray(routeData.arrows[index].rows)) {
-                                    orderedArrows.push(routeData.arrows[index]);
+                                const currentArrow = routeData.arrows[index];
+                                if (!isNaN(index) && currentArrow &&
+                                    currentArrow.rows &&
+                                    Array.isArray(currentArrow.rows)) {
+                                    orderedArrows.push({
+                                        ...currentArrow,
+                                        __arrowKey: `${routeId}-${index}`,
+                                    });
                                 }
                             }
                         }
                     }
 
-                    // Se arrow_order non è disponibile o non contiene tutte le arrows, aggiungi quelle mancanti
-                    if (orderedArrows.length < routeData.arrows.length) {
-                        for (let i = 0; i < routeData.arrows.length; i++) {
-                            const arrow = routeData.arrows[i];
-                            // Verifica che l'arrow sia valida prima di aggiungerla
-                            if (arrow && arrow.rows && Array.isArray(arrow.rows)) {
-                                // Controlla se questa arrow è già stata aggiunta
-                                const alreadyAdded = orderedArrows.some(a => a === arrow);
-                                if (!alreadyAdded) {
-                                    orderedArrows.push(arrow);
-                                }
+                    // Se l'ordine non contiene tutte le frecce, aggiungi le mancanti
+                    for (let i = 0; i < routeData.arrows.length; i++) {
+                        const arrow = routeData.arrows[i];
+                        const key = `${routeId}-${i}`;
+                        if (arrow && arrow.rows && Array.isArray(arrow.rows)) {
+                            const alreadyAdded = orderedArrows.some(a => a.__arrowKey === key);
+                            if (!alreadyAdded) {
+                                orderedArrows.push({
+                                    ...arrow,
+                                    __arrowKey: key,
+                                });
                             }
                         }
                     }
@@ -173,9 +196,11 @@ export default {
                         // Applica le direzioni modificate localmente
                         const arrowsWithLocalDirections = validArrows.map((arrow, idx) => {
                             const key = `${routeId}-${idx}`;
-                            const localDirection = this.localArrowDirections[key];
+                            const originalKey = arrow.__arrowKey || key;
+                            const localDirection = this.localArrowDirections[originalKey];
                             return {
                                 ...arrow,
+                                __arrowKey: originalKey,
                                 direction: localDirection || arrow.direction
                             };
                         });
@@ -221,7 +246,8 @@ export default {
 
     data() {
         return {
-            localArrowDirections: {} // Mantiene le direzioni modificate: { "routeId-arrowIdx": "forward|backward" }
+            localArrowDirections: {}, // Mantiene le direzioni modificate: { "routeId-arrowIdx": "forward|backward" }
+            localArrowOrder: [] // Mantiene l'ordine modificato: array di chiavi "routeId-index"
         };
     },
 
@@ -234,7 +260,8 @@ export default {
          * @returns {string} - Direzione corrente (forward o backward)
          */
         getArrowDirection(routeId, arrowIdx, originalDirection) {
-            const key = `${routeId}-${arrowIdx}`;
+            const routeData = this.processedSignageData[routeId];
+            const key = routeData?.orderedArrows?.[arrowIdx]?.__arrowKey || `${routeId}-${arrowIdx}`;
             return this.localArrowDirections[key] || originalDirection;
         },
 
@@ -257,7 +284,7 @@ export default {
             }
 
             const arrow = routeData.orderedArrows[arrowIdx];
-            const key = `${routeId}-${arrowIdx}`;
+            const key = arrow.__arrowKey || `${routeId}-${arrowIdx}`;
             const currentDirection = this.getArrowDirection(routeId, arrowIdx, arrow.direction);
             const newDirection = currentDirection === 'forward' ? 'backward' : 'forward';
 
@@ -267,7 +294,10 @@ export default {
 
             // Salva la nuova direzione localmente
             // In Vue 3, $set non è più necessario - l'assegnazione diretta è reattiva
-            this.localArrowDirections[key] = newDirection;
+            this.localArrowDirections = {
+                ...this.localArrowDirections,
+                [key]: newDirection
+            };
 
             // Determina se i dati sono nel formato con wrapper "signage" o diretto
             let signage = this.signageData;
@@ -277,8 +307,9 @@ export default {
 
             // Aggiorna la direzione nell'oggetto arrow originale (per il salvataggio)
             const routeSignage = signage[routeId];
-            if (routeSignage && routeSignage.arrows && routeSignage.arrows[arrowIdx]) {
-                routeSignage.arrows[arrowIdx].direction = newDirection;
+            const originalIndex = parseInt((key.split('-')[1] ?? arrowIdx), 10);
+            if (routeSignage && routeSignage.arrows && routeSignage.arrows[originalIndex]) {
+                routeSignage.arrows[originalIndex].direction = newDirection;
             }
 
             // #region agent log
@@ -288,7 +319,7 @@ export default {
             // Emetti evento per notificare il cambio
             this.$emit('arrow-direction-changed', {
                 routeId: routeId,
-                arrowIndex: arrowIdx,
+                arrowIndex: originalIndex,
                 newDirection: newDirection,
                 fullSignageData: this.signageData
             });
@@ -325,6 +356,123 @@ export default {
             if (!meters && meters !== 0) return '';
 
             return `${meters} m`;
+        },
+
+        /**
+         * Restituisce un titolo pulito per la destinazione.
+         * Ordine: name -> ref -> name -> tooltip -> id. Rimuove eventuale prefisso "id".
+         */
+        formatDestinationName(destination) {
+            console.log('destination', destination);
+            if (!destination || typeof destination !== 'object') {
+                return '-';
+            }
+            if (destination.name) {
+                return destination.name;
+            }
+            if (destination.ref || destination.tooltip) {
+                return 'ref: ' + destination.ref || destination.tooltip;
+            }
+
+            return 'id: ' + destination.id;
+        },
+
+        /**
+         * Restituisce l'ordine corrente (locale o da props)
+         */
+        getCurrentOrder() {
+            if (this.localArrowOrder && this.localArrowOrder.length > 0) {
+                return [...this.localArrowOrder];
+            }
+
+            let signage = this.signageData;
+            if (this.signageData.signage) {
+                signage = this.signageData.signage;
+            }
+
+            if (signage.arrow_order && Array.isArray(signage.arrow_order)) {
+                return [...signage.arrow_order];
+            }
+
+            return [];
+        },
+
+        /**
+         * Verifica se la freccia può essere spostata su
+         */
+        canMoveUp(routeId, arrowIdx) {
+            const routeData = this.processedSignageData[routeId];
+            if (!routeData || !routeData.orderedArrows) return false;
+            const arrow = routeData.orderedArrows[arrowIdx];
+            if (!arrow || !arrow.__arrowKey) return false;
+
+            const order = this.getCurrentOrder().filter(key => key.startsWith(`${routeId}-`));
+            const position = order.indexOf(arrow.__arrowKey);
+            return position > 0;
+        },
+
+        /**
+         * Verifica se la freccia può essere spostata giù
+         */
+        canMoveDown(routeId, arrowIdx) {
+            const routeData = this.processedSignageData[routeId];
+            if (!routeData || !routeData.orderedArrows) return false;
+            const arrow = routeData.orderedArrows[arrowIdx];
+            if (!arrow || !arrow.__arrowKey) return false;
+
+            const order = this.getCurrentOrder().filter(key => key.startsWith(`${routeId}-`));
+            const position = order.indexOf(arrow.__arrowKey);
+            return position !== -1 && position < order.length - 1;
+        },
+
+        /**
+         * Sposta la freccia in alto o in basso nell'ordine
+         */
+        moveArrow(routeId, arrowIdx, direction) {
+            const routeData = this.processedSignageData[routeId];
+            if (!routeData || !routeData.orderedArrows) return;
+
+            const arrow = routeData.orderedArrows[arrowIdx];
+            if (!arrow || !arrow.__arrowKey) return;
+
+            const order = this.getCurrentOrder();
+            if (order.length === 0) {
+                // Se non c'è un ordine, crealo a partire dall'attuale visualizzazione
+                const generated = routeData.orderedArrows.map((a) => a.__arrowKey);
+                order.push(...generated);
+            }
+
+            const routeOrder = order.filter(key => key.startsWith(`${routeId}-`));
+            const pos = routeOrder.indexOf(arrow.__arrowKey);
+            if (pos === -1) return;
+
+            const target = direction === 'up' ? pos - 1 : pos + 1;
+            if (target < 0 || target >= routeOrder.length) return;
+
+            // Scambia le posizioni nell'array di questo routeId
+            [routeOrder[pos], routeOrder[target]] = [routeOrder[target], routeOrder[pos]];
+
+            // Ricostruisci l'array completo mantenendo le altre route
+            let routePointer = 0;
+            const newOrder = order.map(key => {
+                if (key.startsWith(`${routeId}-`)) {
+                    return routeOrder[routePointer++];
+                }
+                return key;
+            });
+
+            // Se l'array originale non conteneva le frecce (caso generato), aggiungile mantenendo anche le altre
+            if (routePointer < routeOrder.length) {
+                newOrder.push(...routeOrder.slice(routePointer));
+            }
+
+            this.localArrowOrder = newOrder;
+
+            this.$emit('arrow-order-changed', {
+                routeId: routeId,
+                arrowOrder: newOrder,
+                fullSignageData: this.signageData
+            });
         }
     }
 };
@@ -354,8 +502,10 @@ export default {
 .signage-arrow {
     display: flex;
     align-items: stretch;
-    min-width: 320px;
+    width: 400px;
+    min-width: 400px;
     max-width: 400px;
+    min-height: 120px;
     filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.15));
 }
 
@@ -422,6 +572,7 @@ export default {
     justify-content: center;
     padding: 6px 0;
     flex-grow: 1;
+    min-height: 100%;
 }
 
 .destination-row {
@@ -510,7 +661,7 @@ export default {
 /* Controllo direzione per ogni freccia */
 .arrow-direction-control {
     position: absolute;
-    left: -35px;
+    left: -48px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
@@ -549,5 +700,39 @@ export default {
 
 .signage-arrow-wrapper {
     position: relative;
+}
+
+.arrow-order-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: absolute;
+    right: -48px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
+.arrow-order-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #f3f4f6;
+    color: #111827;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.arrow-order-btn:hover:enabled {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.arrow-order-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 </style>

@@ -120,7 +120,8 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         // Properties di default per il polo principale
         $defaultProperties = [
-            'tooltip' => $this->ref,                              // Riferimento del polo
+            'tooltip' => $this->ref,
+            'ref' => $this->ref,                              // Riferimento del polo
             'pointStrokeColor' => 'rgb(255, 255, 255)',          // Colore bordo punto
             'pointStrokeWidth' => 2,                             // Spessore bordo punto
             'pointFillColor' => 'rgba(255, 0, 0, 0.8)',          // Colore riempimento punto
@@ -158,7 +159,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         $checkedHikingRouteFeatures = $hikingRoutes->map(function ($route) {
             $routeProperties = [
-                'tooltip' => $route->name . ' (ufficiale)',         // Nome del percorso
+                'tooltip' => $route->name,         // Nome del percorso
                 'link' => url('/resources/hiking-routes/' . $route->id), // Link di navigazione
                 'strokeColor' => 'blue',                          // Colore della linea
                 'strokeWidth' => 6,                               // Spessore della linea

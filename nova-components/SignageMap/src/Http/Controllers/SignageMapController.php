@@ -93,7 +93,7 @@ class SignageMapController
 
     /**
      * Aggiorna le properties dell'hikingRoute aggiungendo/rimuovendo checkpoint
-     * e salva il placeName nelle properties del Pole
+     * e salva il name nelle properties del Pole
      */
     public function updateProperties(Request $request, int $id): JsonResponse
     {
@@ -111,11 +111,11 @@ class SignageMapController
             $properties['signage']['checkpoint'] = [];
         }
 
-        // Ottieni l'ID del palo, l'azione (add/remove), placeName e placeDescription
+        // Ottieni l'ID del palo, l'azione (add/remove), name e description
         $poleId = $request->input('poleId');
         $add = $request->boolean('add');
-        $placeName = $request->input('placeName');
-        $placeDescription = $request->input('placeDescription');
+        $name = $request->input('name');
+        $description = $request->input('description');
 
         if ($poleId === null) {
             return response()->json(['error' => 'poleId is required'], 400);
@@ -143,16 +143,16 @@ class SignageMapController
             }));
         }
 
-        // Salva placeName e placeDescription nelle properties del Pole se forniti
-        if ($add && ($placeName !== null || $placeDescription !== null)) {
+        // Salva name e description nelle properties del Pole se forniti
+        if ($add && ($name !== null || $description !== null)) {
             $pole = Poles::find($poleId);
             if ($pole) {
                 $poleProperties = $pole->properties ?? [];
-                if ($placeName !== null) {
-                    $poleProperties['placeName'] = $placeName;
+                if ($name !== null) {
+                    $poleProperties['name'] = $name;
                 }
-                if ($placeDescription !== null) {
-                    $poleProperties['placeDescription'] = $placeDescription;
+                if ($description !== null) {
+                    $poleProperties['description'] = $description;
                 }
                 $pole->properties = $poleProperties;
                 $pole->saveQuietly();
@@ -295,7 +295,7 @@ class SignageMapController
                 $backward[] = $firstId;
             }
 
-            // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, placeName e placeDescription del palo target
+            // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, name e description del palo target
             $forwardObjects = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
                     $data = $hikingRouteMatrix[$id] ?? null;
@@ -306,8 +306,9 @@ class SignageMapController
 
                     return array_merge([
                         'id' => (int) $id,
-                        'placeName' => $targetFeature['properties']['placeName'] ?? '',
-                        'placeDescription' => $targetFeature['properties']['placeDescription'] ?? '',
+                        'ref' => $targetFeature['properties']['ref'] ?? '',
+                        'name' => $targetFeature['properties']['name'] ?? '',
+                        'description' => $targetFeature['properties']['description'] ?? '',
                     ], $data);
                 },
                 $forward
@@ -322,8 +323,8 @@ class SignageMapController
 
                     return array_merge([
                         'id' => (int) $id,
-                        'placeName' => $targetFeature['properties']['placeName'] ?? '',
-                        'placeDescription' => $targetFeature['properties']['placeDescription'] ?? '',
+                        'name' => $targetFeature['properties']['name'] ?? '',
+                        'description' => $targetFeature['properties']['description'] ?? '',
                     ], $data);
                 },
                 $backward
@@ -456,6 +457,53 @@ class SignageMapController
         ];
 
         // #endregion
+
+        return response()->json([
+            'success' => true,
+            'signageData' => $signageData
+        ]);
+    }
+
+    /**
+     * Aggiorna l'ordine delle frecce per un palo
+     */
+    public function updateArrowOrder(Request $request, int $poleId): JsonResponse
+    {
+        $pole = Poles::find($poleId);
+
+        if (! $pole) {
+            return response()->json(['error' => 'Pole not found'], 404);
+        }
+
+        $routeId = $request->input('routeId');
+        $arrowOrder = $request->input('arrowOrder');
+
+        if ($routeId === null || ! is_array($arrowOrder)) {
+            return response()->json(['error' => 'routeId and arrowOrder are required'], 400);
+        }
+
+        $poleProperties = $pole->properties ?? [];
+
+        // Inizializza la struttura signage se non esiste
+        if (! isset($poleProperties['signage']) || ! is_array($poleProperties['signage'])) {
+            $poleProperties['signage'] = [];
+        }
+
+        // Verifica che la route esista nella struttura signage
+        if (! isset($poleProperties['signage'][$routeId]) || ! is_array($poleProperties['signage'][$routeId])) {
+            return response()->json(['error' => 'Route not found in signage structure'], 404);
+        }
+
+        // Aggiorna l'array arrow_order complessivo
+        $poleProperties['signage']['arrow_order'] = array_values($arrowOrder);
+
+        $pole->properties = $poleProperties;
+        $pole->saveQuietly();
+
+        // Prepara i dati signage per la risposta (formato con wrapper "signage")
+        $signageData = [
+            'signage' => $poleProperties['signage']
+        ];
 
         return response()->json([
             'success' => true,

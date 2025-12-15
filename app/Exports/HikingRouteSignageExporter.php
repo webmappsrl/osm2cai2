@@ -221,7 +221,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function formatLdpN(int $index): string
     {
-        return str_pad($index, 3, '0', STR_PAD_LEFT).'.00';
+        return str_pad($index, 3, '0', STR_PAD_LEFT) . '.00';
     }
 
     /**
@@ -332,7 +332,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function buildCodiceLdp(string $areaName, string $refRei, string $ldpNForCode): string
     {
-        return $areaName.'-'.str_replace('.', '', $refRei).'-'.$ldpNForCode;
+        return $areaName . '-' . str_replace('.', '', $refRei) . '-' . $ldpNForCode;
     }
 
     /**
@@ -342,45 +342,45 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
     {
         $codice = str_replace('.', '', $refRei);
         if ($ldpNForCode !== null) {
-            $codice .= '-'.$ldpNForCode;
+            $codice .= '-' . $ldpNForCode;
         }
         if ($tabN !== null) {
-            $codice .= '-'.$tabN;
+            $codice .= '-' . $tabN;
         }
 
         return $codice;
     }
 
     /**
-     * Recupera il placeName da destination o dal pole
+     * Recupera il name da destination o dal pole
      */
     protected function getName(Poles $pole, array $destination = []): string
     {
         // Prima cerca nel destination (se presente)
-        if (! empty($destination['placeName'])) {
-            return $destination['placeName'];
+        if (! empty($destination['name'])) {
+            return $destination['name'];
         }
 
         // Altrimenti cerca nelle properties del pole
         $poleProperties = $pole->properties ?? [];
 
-        return $poleProperties['placeName'] ?? '';
+        return $poleProperties['name'] ?? '';
     }
 
     /**
-     * Recupera il placeDescription da destination o dal pole
+     * Recupera il description da destination o dal pole
      */
     protected function getDescription(Poles $pole, array $destination = []): string
     {
         // Prima cerca nel destination (se presente)
-        if (! empty($destination['placeDescription'])) {
-            return $destination['placeDescription'];
+        if (! empty($destination['description'])) {
+            return $destination['description'];
         }
 
         // Altrimenti cerca nelle properties del pole
         $poleProperties = $pole->properties ?? [];
 
-        return $poleProperties['placeDescription'] ?? '';
+        return $poleProperties['description'] ?? '';
     }
 
     /**
@@ -452,7 +452,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
 
-        return 'h '.$hours.':'.str_pad($mins, 2, '0', STR_PAD_LEFT);
+        return 'h ' . $hours . ':' . str_pad($mins, 2, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -467,7 +467,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         // Converti da metri a km e arrotonda alla prima cifra decimale
         $distanceKm = round($distance / 1000, 1);
 
-        return 'km '.$distanceKm;
+        return 'km ' . $distanceKm;
     }
 
     /**
@@ -475,10 +475,10 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function createPoleHyperlink(Poles $pole): string
     {
-        $poleUrl = url('/resources/'.PolesResource::uriKey().'/'.$pole->id);
+        $poleUrl = url('/resources/' . PolesResource::uriKey() . '/' . $pole->id);
         $poleId = $pole->id;
 
-        return '=HYPERLINK("'.$poleUrl.'", "'.$poleId.'")';
+        return '=HYPERLINK("' . $poleUrl . '", "' . $poleId . '")';
     }
 
     /**
@@ -518,7 +518,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
 
             // Applica colore blu solo alla colonna A (Palo) nelle righe "first"
             if ($isFirstRow) {
-                $cellCoordinate = 'A'.$rowIndex; // Colonna A
+                $cellCoordinate = 'A' . $rowIndex; // Colonna A
                 $styles[$cellCoordinate] = [
                     'font' => [
                         'color' => ['rgb' => '0000FF'], // Blu classico per i link

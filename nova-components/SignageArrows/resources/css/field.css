@@ -2,3 +2,7 @@
 /* Gli stili principali sono definiti come scoped CSS nel componente Vue */
 
 
+.signage-arrows-container {
+    width: fit-content;
+    place-self: center;
+}

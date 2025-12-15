@@ -1,7 +1,8 @@
 <template>
     <PanelItem :index="index" :field="field">
         <template #value>
-            <SignageArrowsDisplay :signage-data="signageData" @arrow-direction-changed="handleArrowDirectionChanged" />
+            <SignageArrowsDisplay :signage-data="signageData" @arrow-direction-changed="handleArrowDirectionChanged"
+                @arrow-order-changed="handleArrowOrderChanged" />
         </template>
     </PanelItem>
 </template>
@@ -79,6 +80,37 @@ export default {
                 fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDetailField.vue:handleArrowDirectionChanged', message: 'Resource non supportato per salvataggio', data: { resourceName: this.resourceName, resourceId: this.resourceId }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'F' }) }).catch(() => { });
                 // #endregion
                 console.warn('Salvataggio direzione non supportato per questa risorsa:', this.resourceName);
+            }
+        },
+
+        async handleArrowOrderChanged(event) {
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDetailField.vue:handleArrowOrderChanged', message: 'Evento arrow-order-changed ricevuto', data: { routeId: event.routeId, resourceId: this.resourceId, resourceName: this.resourceName }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'F' }) }).catch(() => { });
+            // #endregion
+
+            if (this.resourceName === 'poles' && this.resourceId) {
+                try {
+                    const poleId = parseInt(this.resourceId);
+
+                    const response = await Nova.request().patch(
+                        `/nova-vendor/signage-map/pole/${poleId}/arrow-order`,
+                        {
+                            routeId: event.routeId,
+                            arrowOrder: event.arrowOrder
+                        }
+                    );
+
+                    if (response.data?.signageData) {
+                        this.localSignageData = response.data.signageData;
+                    }
+
+                    Nova.success('Ordine frecce aggiornato con successo');
+                } catch (error) {
+                    console.error('Errore durante il salvataggio dell\'ordine frecce:', error);
+                    Nova.error('Errore durante il salvataggio dell\'ordine frecce');
+                }
+            } else {
+                console.warn('Salvataggio ordine non supportato per questa risorsa:', this.resourceName);
             }
         }
     }

@@ -14,3 +14,7 @@ Route::get('/pole/{poleId}/suggest-place-name', [SignageMapController::class, 's
 // Route per aggiornare la direzione di una freccia nella segnaletica di un palo
 Route::patch('/pole/{poleId}/arrow-direction', [SignageMapController::class, 'updateArrowDirection'])
     ->name('signage-map.update-arrow-direction');
+
+// Route per aggiornare l'ordine delle frecce di un palo
+Route::patch('/pole/{poleId}/arrow-order', [SignageMapController::class, 'updateArrowOrder'])
+    ->name('signage-map.update-arrow-order');

@@ -31,7 +31,7 @@
 
                     <!-- Modal -->
                     <div
-                        class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden w-full max-w-md">
+                        class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden w-full max-w-4xl">
                         <!-- Header -->
                         <div class="bg-primary-500 dark:bg-primary-600 px-6 py-4">
                             <h3 class="text-lg font-semibold text-white">{{ popupTitle }}</h3>
@@ -39,12 +39,12 @@
 
                         <!-- Content -->
                         <div class="px-6 py-4">
-                            <p class="text-gray-600 dark:text-gray-300 text-sm">
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">
                                 Palo selezionato: <strong>{{ popupTitle }}</strong>
                             </p>
                             <!-- Toggle Meta -->
                             <div class="mt-4 flex items-center justify-between">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
                                     Meta
                                 </label>
                                 <button type="button" @click="toggleMeta" :disabled="isUpdatingMeta"
@@ -60,25 +60,26 @@
 
                             <!-- Campo Nome Località (visibile solo quando Meta è attivo) -->
                             <div v-if="metaValue" class="mt-4">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                    Nome Località
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                    Nome
                                     <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento
                                         suggerimento...)</span>
                                 </label>
                                 <div class="mb-2 flex gap-2 flex-wrap">
+                                    <label for="">suggerimenti</label>
                                     <button v-if="hasOsmName" type="button" @click="recoverOsmName"
                                         class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border"
                                         style="background-color: #3b82f6; color: white; border-color: #2563eb;">
-                                        Recupera da OSM
+                                        OSM: {{ osmName }}
                                     </button>
                                     <button type="button" @click="suggestPlaceName" :disabled="isLoadingSuggestion"
                                         class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border"
                                         style="background-color: #3b82f6; color: white; border-color: #2563eb;"
                                         :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'">
-                                        Suggerisci
+                                        da coordinate
                                     </button>
                                 </div>
-                                <input type="text" v-model="placeName"
+                                <input type="text" v-model="name"
                                     :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
                                     :disabled="isLoadingSuggestion"
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50" />
@@ -86,35 +87,32 @@
 
                             <!-- Campo Descrizione Località (visibile solo quando Meta è attivo) -->
                             <div v-if="metaValue" class="mt-4">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                    Descrizione aggiuntiva
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                    Descrizione
                                 </label>
-                                <textarea v-model="placeDescription"
-                                    placeholder="Inserisci una descrizione della località" rows="3"
+                                <textarea v-model="description" placeholder="Inserisci una descrizione della località"
+                                    rows="3"
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"></textarea>
                             </div>
 
                             <!-- Bottone Aggiorna -->
                             <div class="mt-4">
                                 <button type="button" @click="saveChanges"
-                                    :disabled="isUpdatingMeta || (metaValue && (!placeName || !placeName.trim()))"
+                                    :disabled="isUpdatingMeta || (metaValue && (!name || !name.trim()))"
                                     class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                                     {{ isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna' }}
                                 </button>
                             </div>
 
                             <!-- Frecce Segnaletica -->
-                            <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                            <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4 overflow-x-auto pr-2">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block">
                                     Segnaletica
                                 </label>
                                 <SignageArrowsDisplay :signage-data="signageArrowsData"
-                                    @arrow-direction-changed="handleArrowDirectionChanged" />
+                                    @arrow-direction-changed="handleArrowDirectionChanged"
+                                    @arrow-order-changed="handleArrowOrderChanged" />
                             </div>
-
-                            <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">
-                                Clicca sul pulsante per visualizzare i dettagli del palo.
-                            </p>
                         </div>
 
                         <!-- Footer with buttons -->
@@ -162,8 +160,8 @@ export default {
             cachedProperties: null, // Cache delle properties dopo il salvataggio
             signageArrowsData: {}, // Dati per le frecce segnaletica
             mapKey: 0, // Chiave per forzare il refresh della mappa
-            placeName: '', // Nome località del palo
-            placeDescription: '', // Descrizione località del palo
+            name: '', // Nome località del palo
+            description: '', // Descrizione località del palo
             isLoadingSuggestion: false, // Indica se sta caricando il suggerimento
             currentPoleOsmTags: null, // Dati osm_tags del palo corrente
         };
@@ -241,12 +239,15 @@ export default {
             console.log('SignageMap: Nova popup-open received:', event);
             if (event.popupComponent === 'signage-map') {
                 this.currentPoleId = event.id;
-                this.popupTitle = event.properties?.name || event.properties?.tooltip || `Palo #${event.id}`;
+                this.popupTitle = event.properties?.name || event.properties?.tooltip;
                 // Estrai i dati della segnaletica dalle properties del palo
-                this.signageArrowsData = event.properties?.signage || {};
-                // Carica il placeName e placeDescription dalle properties del palo se esistono
-                this.placeName = event.properties?.placeName || '';
-                this.placeDescription = event.properties?.placeDescription || '';
+                this.signageArrowsData = {
+                    ...event.properties?.signage, ...{ ref: event.properties?.ref }
+                } || {};
+                console.log('signageArrowsData', this.signageArrowsData);
+                // Carica il name e description dalle properties del palo se esistono
+                this.name = event.properties?.name || '';
+                this.description = event.properties?.description || '';
                 // Salva i dati osmTags del palo
                 this.currentPoleOsmTags = event.properties?.osmTags || null;
                 this.showPopup = true;
@@ -265,8 +266,8 @@ export default {
             this.popupTitle = '';
             this.metaValue = false;
             this.signageArrowsData = {};
-            this.placeName = '';
-            this.placeDescription = '';
+            this.name = '';
+            this.description = '';
             this.currentPoleOsmTags = null;
         },
 
@@ -311,10 +312,10 @@ export default {
             }
             // Cambia solo il valore locale, il salvataggio avviene tramite il bottone Aggiorna
             this.metaValue = !this.metaValue;
-            // Se si disattiva Meta, resetta placeName e placeDescription
+            // Se si disattiva Meta, resetta name e description
             if (!this.metaValue) {
-                this.placeName = '';
-                this.placeDescription = '';
+                this.name = '';
+                this.description = '';
             }
         },
 
@@ -331,7 +332,7 @@ export default {
                 );
 
                 if (response.data?.success && response.data?.suggestedName) {
-                    this.placeName = response.data.suggestedName;
+                    this.name = response.data.suggestedName;
                 }
             } catch (error) {
                 console.warn('Could not fetch place name suggestion:', error);
@@ -342,18 +343,18 @@ export default {
         },
 
         recoverOsmName() {
-            // Recupera il nome da OSM e lo inserisce nel campo placeName
+            // Recupera il nome da OSM e lo inserisce nel campo name
             if (this.hasOsmName) {
-                this.placeName = this.osmName;
+                this.name = this.osmName;
             }
         },
 
         async saveChanges() {
-            // Se Meta è attivo, richiedi placeName; altrimenti permetti il salvataggio
+            // Se Meta è attivo, richiedi name; altrimenti permetti il salvataggio
             if (this.isUpdatingMeta || !this.currentPoleId) {
                 return;
             }
-            if (this.metaValue && (!this.placeName || !this.placeName.trim())) {
+            if (this.metaValue && (!this.name || !this.name.trim())) {
                 return;
             }
 
@@ -363,14 +364,14 @@ export default {
             try {
                 const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
 
-                // Aggiorna le properties dell'hikingRoute con checkpoint, placeName e placeDescription
+                // Aggiorna le properties dell'hikingRoute con checkpoint, name e description
                 const response = await Nova.request().patch(
                     `/nova-vendor/signage-map/hiking-route/${id}/properties`,
                     {
                         poleId: poleId,
                         add: this.metaValue,
-                        placeName: this.metaValue ? this.placeName.trim() : null,
-                        placeDescription: this.metaValue ? (this.placeDescription?.trim() || null) : null
+                        name: this.metaValue ? this.name.trim() : null,
+                        description: this.metaValue ? (this.description?.trim() || null) : null
                     }
                 );
 
@@ -439,6 +440,37 @@ export default {
                 // #endregion
                 console.error('Errore durante il salvataggio della direzione:', error);
                 Nova.error('Errore durante il salvataggio della direzione');
+            }
+        },
+
+        async handleArrowOrderChanged(event) {
+            if (!this.currentPoleId) {
+                console.warn('currentPoleId mancante, salto salvataggio ordine frecce');
+                return;
+            }
+
+            try {
+                const poleId = parseInt(this.currentPoleId);
+
+                const response = await Nova.request().patch(
+                    `/nova-vendor/signage-map/pole/${poleId}/arrow-order`,
+                    {
+                        routeId: event.routeId,
+                        arrowOrder: event.arrowOrder
+                    }
+                );
+
+                if (response.data?.signageData) {
+                    this.signageArrowsData = response.data.signageData;
+                }
+
+                Nova.success('Ordine frecce aggiornato con successo');
+
+                // Forza il refresh della mappa per mostrare i cambiamenti
+                this.mapKey++;
+            } catch (error) {
+                console.error('Errore durante il salvataggio dell\'ordine frecce:', error);
+                Nova.error('Errore durante il salvataggio dell\'ordine frecce');
             }
         }
     }

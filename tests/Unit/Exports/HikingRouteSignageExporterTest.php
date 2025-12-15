@@ -275,7 +275,7 @@ class HikingRouteSignageExporterTest extends TestCase
     {
         $pole = Poles::factory()->make(['id' => 1, 'properties' => []]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
-        $destination = ['placeName' => 'Nome da destination'];
+        $destination = ['name' => 'Nome da destination'];
 
         $result = $this->callProtectedMethod($exporter, 'getName', $pole, $destination);
 
@@ -287,7 +287,7 @@ class HikingRouteSignageExporterTest extends TestCase
     {
         $pole = Poles::factory()->make([
             'id' => 1,
-            'properties' => ['placeName' => 'Nome da pole properties'],
+            'properties' => ['name' => 'Nome da pole properties'],
         ]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
         $destination = [];
@@ -314,10 +314,10 @@ class HikingRouteSignageExporterTest extends TestCase
     {
         $pole = Poles::factory()->make([
             'id' => 1,
-            'properties' => ['placeName' => 'Nome da pole'],
+            'properties' => ['name' => 'Nome da pole'],
         ]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
-        $destination = ['placeName' => 'Nome da destination'];
+        $destination = ['name' => 'Nome da destination'];
 
         $result = $this->callProtectedMethod($exporter, 'getName', $pole, $destination);
 
@@ -329,7 +329,7 @@ class HikingRouteSignageExporterTest extends TestCase
     {
         $pole = Poles::factory()->make(['id' => 1, 'properties' => []]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
-        $destination = ['placeDescription' => 'Descrizione da destination'];
+        $destination = ['description' => 'Descrizione da destination'];
 
         $result = $this->callProtectedMethod($exporter, 'getDescription', $pole, $destination);
 
@@ -341,7 +341,7 @@ class HikingRouteSignageExporterTest extends TestCase
     {
         $pole = Poles::factory()->make([
             'id' => 1,
-            'properties' => ['placeDescription' => 'Descrizione da pole properties'],
+            'properties' => ['description' => 'Descrizione da pole properties'],
         ]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
         $destination = [];
@@ -368,10 +368,10 @@ class HikingRouteSignageExporterTest extends TestCase
     {
         $pole = Poles::factory()->make([
             'id' => 1,
-            'properties' => ['placeDescription' => 'Descrizione da pole'],
+            'properties' => ['description' => 'Descrizione da pole'],
         ]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
-        $destination = ['placeDescription' => 'Descrizione da destination'];
+        $destination = ['description' => 'Descrizione da destination'];
 
         $result = $this->callProtectedMethod($exporter, 'getDescription', $pole, $destination);
 
@@ -404,7 +404,7 @@ class HikingRouteSignageExporterTest extends TestCase
         $hikingRoute = HikingRoute::factory()->make(['id' => 1]);
         $pole = Poles::factory()->make(['id' => 1]);
         $destinations = [
-            ['placeName' => 'Meta1', 'time_hiking' => 60],
+            ['name' => 'Meta1', 'time_hiking' => 60],
         ];
 
         $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', $destinations, $hikingRoute, $pole, [], '001.00');
@@ -424,7 +424,7 @@ class HikingRouteSignageExporterTest extends TestCase
         $hikingRoute = HikingRoute::factory()->make(['id' => 1]);
         $pole = Poles::factory()->make(['id' => 1]);
         $destinations = [
-            ['placeName' => 'Meta1', 'time_hiking' => 60],
+            ['name' => 'Meta1', 'time_hiking' => 60],
         ];
 
         $this->callProtectedMethod($exporter, 'addArrowRows', 'forward', $destinations, $hikingRoute, $pole, [], '001.00');
@@ -504,9 +504,9 @@ class HikingRouteSignageExporterTest extends TestCase
             'area_name' => 'Area1',
         ];
         $destinations = [
-            ['placeName' => 'Meta1', 'time_hiking' => 60],
-            ['placeName' => 'Meta2', 'time_hiking' => 90],
-            ['placeName' => 'Meta3', 'time_hiking' => 120],
+            ['name' => 'Meta1', 'time_hiking' => 60],
+            ['name' => 'Meta2', 'time_hiking' => 90],
+            ['name' => 'Meta3', 'time_hiking' => 120],
         ];
 
         $result = $this->callProtectedMethod($exporter, 'buildFirstRow', $hrData, '001.00', 'forward', $destinations, 'Area1-123-001-00', $pole);
@@ -556,9 +556,9 @@ class HikingRouteSignageExporterTest extends TestCase
         $pole = Poles::factory()->make(['id' => 1]);
         $coordinates = ['latitude' => 45.1234, 'longitude' => 7.5678];
         $destinations = [
-            ['placeDescription' => 'Info1', 'distance' => 1000],
-            ['placeDescription' => 'Info2', 'distance' => 2000],
-            ['placeDescription' => 'Info3', 'distance' => 3000],
+            ['description' => 'Info1', 'distance' => 1000],
+            ['description' => 'Info2', 'distance' => 2000],
+            ['description' => 'Info3', 'distance' => 3000],
         ];
 
         $result = $this->callProtectedMethod($exporter, 'buildSecondRow', $destinations, $coordinates, '123-001-00', $pole);
