@@ -31,7 +31,7 @@
 
                     <!-- Modal -->
                     <div
-                        class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden w-full max-w-md">
+                        class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden w-full max-w-lg">
                         <!-- Header -->
                         <div class="bg-primary-500 dark:bg-primary-600 px-6 py-4">
                             <h3 class="text-lg font-semibold text-white">{{ popupTitle }}</h3>
@@ -65,23 +65,26 @@
                                     <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento
                                         suggerimento...)</span>
                                 </label>
-                                <div class="mb-2 flex gap-2 flex-wrap">
+                                <input type="text" v-model="placeName"
+                                    :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
+                                    :disabled="isLoadingSuggestion"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50 mb-2" />
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">Suggerimenti:</span>
                                     <button v-if="hasOsmName" type="button" @click="recoverOsmName"
                                         class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border"
-                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;">
-                                        Recupera da OSM
+                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;"
+                                    >
+                                        da OSM "{{ osmName }}"
                                     </button>
                                     <button type="button" @click="suggestPlaceName" :disabled="isLoadingSuggestion"
                                         class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border"
                                         style="background-color: #3b82f6; color: white; border-color: #2563eb;"
-                                        :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'">
-                                        Suggerisci
+                                        :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'"
+                                    >
+                                        da posizione
                                     </button>
                                 </div>
-                                <input type="text" v-model="placeName"
-                                    :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
-                                    :disabled="isLoadingSuggestion"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50" />
                             </div>
 
                             <!-- Campo Descrizione Località (visibile solo quando Meta è attivo) -->
@@ -98,8 +101,8 @@
                             <div class="mt-4">
                                 <button type="button" @click="saveChanges"
                                     :disabled="isUpdatingMeta || (metaValue && (!placeName || !placeName.trim()))"
-                                    class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {{ isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna' }}
+                                    class="w-full bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {{ isUpdatingMeta ? 'Salvataggio...' : 'Salva' }}
                                 </button>
                             </div>
 
@@ -111,15 +114,11 @@
                                 <SignageArrowsDisplay :signage-data="signageArrowsData"
                                     @arrow-direction-changed="handleArrowDirectionChanged" />
                             </div>
-
-                            <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">
-                                Clicca sul pulsante per visualizzare i dettagli del palo.
-                            </p>
                         </div>
 
                         <!-- Footer with buttons -->
                         <div
-                            class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-3 border-t border-gray-200 dark:border-gray-600">
+                            class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600">
                             <button type="button" @click="closePopup"
                                 class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded font-medium cursor-pointer">
                                 Chiudi
