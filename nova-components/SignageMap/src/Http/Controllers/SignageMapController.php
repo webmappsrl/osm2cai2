@@ -323,6 +323,7 @@ class SignageMapController
 
                     return array_merge([
                         'id' => (int) $id,
+                        'ref' => $targetFeature['properties']['ref'] ?? '',
                         'name' => $targetFeature['properties']['name'] ?? '',
                         'description' => $targetFeature['properties']['description'] ?? '',
                     ], $data);
