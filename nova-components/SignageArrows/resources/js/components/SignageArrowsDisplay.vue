@@ -37,15 +37,28 @@
                             class="arrow-point-left"></div>
 
                         <div class="arrow-body">
-                            <div class="route-id-box">{{ routeData?.ref }}</div>
-                            <div class="destinations-list">
-                                <div v-for="(destination, idx) in arrow.rows" :key="idx" class="destination-row">
+                            <div class="route-id-column">
+                                <div class="route-id-red"></div>
+                                <div class="route-id-box">{{ routeData?.ref }}</div>
+                                <div class="route-id-red"></div>
+                            </div>
+                            <div class="destinations-list"
+                                :class="{ 'destinations-list--single': (arrow.rows || []).length === 1 }">
+                                <div v-for="(destination, idx) in arrow.rows"
+                                    :key="idx"
+                                    class="destination-row"
+                                    :class="{ 'destination-row--with-separator': idx < arrow.rows.length - 1 }">
                                     <span class="destination-info">
                                         <span class="destination-name">{{ formatDestinationName(destination) }}</span>
                                         <span v-if="destination?.description" class="destination-description">{{
                                             destination?.description }}</span>
                                     </span>
-                                    <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
+                                    <span class="destination-meta">
+                                        <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
+                                        <span v-if="destination?.distance" class="destination-distance">
+                                            km {{ formatDistance(destination?.distance) }}
+                                        </span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -86,7 +99,7 @@ export default {
          *     }
          *   }
          * }
-         * 
+         *
          * O formato vecchio (retrocompatibilità):
          * {
          *   "routeId": {
@@ -348,14 +361,15 @@ export default {
         },
 
         /**
-         * Formatta la distanza in metri
+         * Formatta la distanza in km con una cifra decimale e virgola
          * @param {number} meters - distanza in metri
-         * @returns {string} - distanza formattata
+         * @returns {string} - distanza formattata in km (es. "7,5")
          */
         formatDistance(meters) {
             if (!meters && meters !== 0) return '';
 
-            return `${meters} m`;
+            const km = meters / 1000;
+            return km.toFixed(1).replace('.', ',');
         },
 
         /**
@@ -505,7 +519,7 @@ export default {
     width: 400px;
     min-width: 400px;
     max-width: 400px;
-    min-height: 120px;
+    height: 150px;
     filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.15));
 }
 
@@ -519,32 +533,47 @@ export default {
     display: flex;
     align-items: stretch;
     background: #FFFFFF;
-    border: 2px solid #C41E3A;
-    border-left: none;
-    border-right: none;
+    border: 1px solid #000;
     flex-grow: 1;
+    height: 100%;
 }
 
-/* Barra rossa laterale per forward (sinistra) */
 .forward .arrow-body {
-    border-left: 10px solid #C41E3A;
+    border-right: none;
 }
 
-/* Barra rossa laterale per backward (destra) */
 .backward .arrow-body {
-    border-right: 10px solid #C41E3A;
+    border-left: none;
 }
 
-/* Box ID Route */
+/* Colonna ID Route con barre rosse sopra e sotto */
+.route-id-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 55px;
+    max-width: 70px;
+}
+
+.route-id-red {
+    flex: 1;
+    background: #C41E3A;
+}
+
+.forward .route-id-red {
+    border-right: 1px solid #000;
+}
+
+.backward .route-id-red {
+    border-left: 1px solid #000;
+}
+
 .route-id-box {
     display: flex;
     align-items: center;
     justify-content: center;
     background: #FFFFFF;
-    border-right: 2px solid #C41E3A;
+    border: 1px solid #000;
     padding: 6px 14px;
-    min-width: 55px;
-    max-width: 70px;
     font-family: 'Arial', sans-serif;
     font-weight: 700;
     font-size: 20px;
@@ -552,13 +581,21 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
 }
 
-/* Backward ha il box a destra */
+.forward .route-id-box {
+    border-left: none;
+}
+
+/* Backward ha il box (e la colonna) a destra */
+.backward .route-id-column {
+    order: 2;
+}
+
 .backward .route-id-box {
     border-right: none;
-    border-left: 2px solid #C41E3A;
-    order: 2;
+
 }
 
 .backward .destinations-list {
@@ -570,24 +607,39 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 6px 0;
+    padding: 4px 0;
     flex-grow: 1;
     min-height: 100%;
+}
+
+.destinations-list--single {
+    justify-content: center;
 }
 
 .destination-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 16px;
+    padding: 2px 16px;
     gap: 30px;
+    position: relative;
+    flex: 1;
+}
+
+.destination-row--with-separator::after {
+    content: '';
+    position: absolute;
+    left: 16px;
+    right: 0;
+    bottom: 0;
+    border-bottom: 1px solid #000000;
 }
 
 .destination-info {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
+    gap: 4px;
     flex: 1;
     min-width: 0;
     max-width: 180px;
@@ -618,18 +670,25 @@ export default {
 
 .destination-distance {
     font-family: 'Arial', sans-serif;
-    font-weight: 400;
-    font-size: 12px;
-    color: #666666;
+    font-weight: 700;
+    font-size: 13px;
+    color: #000000;
 }
 
 .destination-time {
     font-family: 'Arial', sans-serif;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 13px;
     color: #000000;
     min-width: 55px;
     text-align: right;
+}
+
+.destination-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
 }
 
 /* Punta freccia DESTRA (forward) */
