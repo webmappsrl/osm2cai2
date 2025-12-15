@@ -104,7 +104,7 @@
             <div style="margin-bottom: 5px;">
                 <span class="label">Descrizione:</span>
             </div>
-            <div style="padding: 10px; background-color: #f9f9f9; border-left: 3px solid #2c3e50; white-space: pre-wrap; word-wrap: break-word; width: 100%; text-align: justify;">
+            <div style="padding: 10px; background-color: #f9f9f9; border-left: 3px solid #2c3e50; white-space: pre-wrap; word-wrap: break-word; width: 100%;">
                 {{ $trailSurvey->description }}
             </div>
         </div>
