@@ -31,14 +31,14 @@
 
                     <!-- Modal -->
                     <div
-                        class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden w-full max-w-4xl">
+                        class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl flex flex-col signage-map-popup-modal">
                         <!-- Header -->
-                        <div class="bg-primary-500 dark:bg-primary-600 px-6 py-4">
+                        <div class="bg-primary-500 dark:bg-primary-600 px-6 py-4 flex-shrink-0">
                             <h3 class="text-lg font-semibold text-white">{{ popupTitle }}</h3>
                         </div>
 
                         <!-- Content -->
-                        <div class="px-6 py-4">
+                        <div class="px-6 py-4 overflow-y-auto flex-1 min-h-0">
                             <p class="text-gray-600 dark:text-gray-400 text-sm">
                                 Palo selezionato: <strong>{{ popupTitle }}</strong>
                             </p>
@@ -117,7 +117,7 @@
 
                         <!-- Footer with buttons -->
                         <div
-                            class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600">
+                            class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600 flex-shrink-0">
                             <button type="button" @click="closePopup"
                                 class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded font-medium cursor-pointer">
                                 Chiudi

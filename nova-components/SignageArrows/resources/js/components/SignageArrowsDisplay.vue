@@ -629,11 +629,22 @@ export default {
 .destination-row--with-separator::after {
     content: '';
     position: absolute;
-    left: 16px;
     right: 0;
+    left: 16px;
     bottom: 0;
     border-bottom: 1px solid #000000;
 }
+
+.forward .destination-row--with-separator::after {
+    right: 0;
+    left: 16px;
+}
+
+.backward .destination-row--with-separator::after {
+    right: 16px;
+    left: 0;
+}
+
 
 .destination-info {
     display: flex;
