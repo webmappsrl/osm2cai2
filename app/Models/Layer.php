@@ -31,27 +31,30 @@ class Layer extends WmLayer
         $novaResourceName = $this->getNovaResourceName();
 
         foreach ($hikingRoutes as $hikingRoute) {
+            // La geometria è già GeoJSON dalla query, quindi possiamo decodificarla direttamente
             $geometry = json_decode($hikingRoute->geometry, true);
 
-            // Decodifica il JSON del nome e estrai la traduzione italiana o la prima disponibile
-            $nameData = json_decode($hikingRoute->name, true);
+            if (! $geometry) {
+                continue;
+            }
+
+            // Decodifica il JSON del nome una sola volta
+            $nameData = $hikingRoute->name ? json_decode($hikingRoute->name, true) : null;
 
             // Priorità: 1) Italiano, 2) Prima disponibile, 3) Nome non disponibile
             $hikingRouteName = $nameData['it'] ?? (is_array($nameData) && ! empty($nameData) ? reset($nameData) : 'Nome non disponibile');
 
-            if ($geometry) {
-                $routeFeature = [
-                    'type' => 'Feature',
-                    'geometry' => $geometry,
-                    'properties' => [
-                        'tooltip' => $hikingRouteName,
-                        'link' => url('/resources/'.$novaResourceName.'/'.$hikingRoute->id),
-                        'strokeColor' => 'red',
-                        'strokeWidth' => 2,
-                    ],
-                ];
-                $this->addFeaturesForMap([$routeFeature]);
-            }
+            $routeFeature = [
+                'type' => 'Feature',
+                'geometry' => $geometry,
+                'properties' => [
+                    'tooltip' => $hikingRouteName,
+                    'link' => url('/resources/' . $novaResourceName . '/' . $hikingRoute->id),
+                    'strokeColor' => 'red',
+                    'strokeWidth' => 2,
+                ],
+            ];
+            $this->addFeaturesForMap([$routeFeature]);
         }
 
         return [
@@ -62,18 +65,20 @@ class Layer extends WmLayer
 
     private function getOptimizedHikingRoutes()
     {
+        // Query ottimizzata: filtra prima sulla tabella layerables (più piccola) e poi fa il join
+        // Questo sfrutta meglio gli indici esistenti
+        // Nota: per geography type, ST_IsEmpty non è disponibile, quindi usiamo solo IS NOT NULL
         $sql = "
         SELECT 
             hr.id,
             hr.name,
             hr.properties,
             ST_AsGeoJSON(hr.geometry) as geometry
-        FROM hiking_routes hr
-        INNER JOIN layerables l ON hr.id = l.layerable_id
+        FROM layerables l
+        INNER JOIN hiking_routes hr ON hr.id = l.layerable_id
         WHERE l.layer_id = ?
             AND l.layerable_type = ?
             AND hr.geometry IS NOT NULL
-            AND hr.geometry != ''
         ORDER BY hr.id
     ";
 
