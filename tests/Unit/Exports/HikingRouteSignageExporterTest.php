@@ -715,8 +715,6 @@ class HikingRouteSignageExporterTest extends TestCase
     // 5. Test edge cases e integrazione
     // ============================================
 
-    // Test rimosso: constructor_calls_prepare_expanded_data richiede setup complesso
-    // Il fatto che prepareExpandedData venga chiamato è implicito nel costruttore
 
     /** @test */
     public function constructor_handles_empty_collection()
@@ -733,6 +731,110 @@ class HikingRouteSignageExporterTest extends TestCase
 
         $coordinates = $this->getProtectedProperty($exporter, 'poleCoordinates');
         $this->assertEquals([], $coordinates);
+    }
+
+    /** @test */
+    public function order_poles_by_points_order_orders_poles_according_to_points_order()
+    {
+        $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
+        $pole1 = Poles::factory()->make(['id' => 1]);
+        $pole2 = Poles::factory()->make(['id' => 2]);
+        $pole3 = Poles::factory()->make(['id' => 3]);
+
+        $poles = collect([$pole3, $pole1, $pole2]);
+        $pointsOrder = [2, 1, 3];
+
+        $result = $this->callProtectedMethod($exporter, 'orderPolesByPointsOrder', $poles, $pointsOrder);
+
+        $this->assertCount(3, $result);
+        $this->assertEquals(2, $result[0]->id);
+        $this->assertEquals(1, $result[1]->id);
+        $this->assertEquals(3, $result[2]->id);
+    }
+
+    /** @test */
+    public function order_poles_by_points_order_returns_original_order_when_points_order_is_null()
+    {
+        $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
+        $pole1 = Poles::factory()->make(['id' => 1]);
+        $pole2 = Poles::factory()->make(['id' => 2]);
+
+        $poles = collect([$pole1, $pole2]);
+
+        $result = $this->callProtectedMethod($exporter, 'orderPolesByPointsOrder', $poles, null);
+
+        $this->assertCount(2, $result);
+        $this->assertEquals(1, $result[0]->id);
+        $this->assertEquals(2, $result[1]->id);
+    }
+
+    /** @test */
+    public function order_poles_by_points_order_returns_original_order_when_points_order_is_empty()
+    {
+        $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
+        $pole1 = Poles::factory()->make(['id' => 1]);
+        $pole2 = Poles::factory()->make(['id' => 2]);
+
+        $poles = collect([$pole1, $pole2]);
+
+        $result = $this->callProtectedMethod($exporter, 'orderPolesByPointsOrder', $poles, []);
+
+        $this->assertCount(2, $result);
+        $this->assertEquals(1, $result[0]->id);
+        $this->assertEquals(2, $result[1]->id);
+    }
+
+    /** @test */
+    public function order_poles_by_points_order_adds_missing_poles_at_end()
+    {
+        $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
+        $pole1 = Poles::factory()->make(['id' => 1]);
+        $pole2 = Poles::factory()->make(['id' => 2]);
+        $pole3 = Poles::factory()->make(['id' => 3]);
+
+        $poles = collect([$pole1, $pole2, $pole3]);
+        $pointsOrder = [2, 1]; // pole3 non è in points_order
+
+        $result = $this->callProtectedMethod($exporter, 'orderPolesByPointsOrder', $poles, $pointsOrder);
+
+        $this->assertCount(3, $result);
+        $this->assertEquals(2, $result[0]->id);
+        $this->assertEquals(1, $result[1]->id);
+        $this->assertEquals(3, $result[2]->id); // pole3 alla fine
+    }
+
+    /** @test */
+    public function collect_all_pole_ids_collects_unique_pole_ids_from_expanded_data()
+    {
+        $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
+        $pole1 = Poles::factory()->make(['id' => 1]);
+        $pole2 = Poles::factory()->make(['id' => 2]);
+
+        // Simula expandedData con poles
+        $reflection = new ReflectionClass($exporter);
+        $property = $reflection->getProperty('expandedData');
+        $property->setAccessible(true);
+        $property->setValue($exporter, [
+            ['pole' => $pole1],
+            ['pole' => $pole2],
+            ['pole' => $pole1], // duplicato
+        ]);
+
+        $result = $this->callProtectedMethod($exporter, 'collectAllPoleIds');
+
+        $this->assertCount(2, $result);
+        $this->assertContains(1, $result);
+        $this->assertContains(2, $result);
+    }
+
+    /** @test */
+    public function collect_all_pole_ids_returns_empty_array_when_expanded_data_is_empty()
+    {
+        $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
+
+        $result = $this->callProtectedMethod($exporter, 'collectAllPoleIds');
+
+        $this->assertEquals([], $result);
     }
 
     protected function tearDown(): void

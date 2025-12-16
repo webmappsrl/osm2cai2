@@ -383,22 +383,26 @@ class SignageMapController
             ];
 
             // Aggiorna arrow_order: aggiungi le chiavi per questo hiking route se non già presenti
-            $forwardKey = $hikingRouteIdStr . '-0';
-            $backwardKey = $hikingRouteIdStr . '-1';
+            // Calcola dinamicamente gli indici: se non ci sono forwardObjects, backwardKey deve essere -0
+            $hasForward = ! empty($forwardObjects);
+            $hasBackward = ! empty($backwardObjects);
+
+            $forwardKey = $hasForward ? $hikingRouteIdStr.'-0' : null;
+            $backwardKey = $hasBackward ? $hikingRouteIdStr.'-'.($hasForward ? '1' : '0') : null;
 
             // Rimuovi eventuali chiavi esistenti per questo hiking route
             $poleProperties['signage']['arrow_order'] = array_values(array_filter(
                 $poleProperties['signage']['arrow_order'],
                 function ($key) use ($hikingRouteIdStr) {
-                    return ! str_starts_with($key, $hikingRouteIdStr . '-');
+                    return ! str_starts_with($key, $hikingRouteIdStr.'-');
                 }
             ));
 
             // Aggiungi le nuove chiavi nell'ordine corretto (forward prima, backward dopo)
-            if (! empty($forwardObjects)) {
+            if ($forwardKey !== null) {
                 $poleProperties['signage']['arrow_order'][] = $forwardKey;
             }
-            if (! empty($backwardObjects)) {
+            if ($backwardKey !== null) {
                 $poleProperties['signage']['arrow_order'][] = $backwardKey;
             }
 
@@ -513,12 +517,12 @@ class SignageMapController
 
         // Prepara i dati signage per la risposta (formato con wrapper "signage")
         $signageData = [
-            'signage' => $poleProperties['signage']
+            'signage' => $poleProperties['signage'],
         ];
 
         return response()->json([
             'success' => true,
-            'signageData' => $signageData
+            'signageData' => $signageData,
         ]);
     }
 }

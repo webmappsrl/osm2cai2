@@ -89,6 +89,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
 
     /**
      * Prepara i dati espansi per ogni HikingRoute con i suoi Poles e le frecce
+     * Ordinati secondo points_order e arrow_order
      */
     protected function prepareExpandedData(): void
     {
@@ -96,66 +97,153 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
 
         $this->hikingRoutes->load('clubs', 'areas');
 
-        $allPoleIds = $this->collectAllPoleIds();
-        $this->loadPoleCoordinates($allPoleIds);
-
+        // Crea una mappa delle HikingRoute per recupero rapido per ID
+        $hikingRouteMap = [];
         foreach ($this->hikingRoutes as $hikingRoute) {
             $this->cacheHikingRouteData($hikingRoute);
+            $hikingRouteMap[(string) $hikingRoute->id] = $hikingRoute;
+        }
 
+        // Pre-calcola i poles ordinati e le posizioni per ogni HikingRoute (ottimizzazione performance)
+        $hikingRoutePolesCache = [];
+        $hikingRoutePolePositionsCache = [];
+        foreach ($this->hikingRoutes as $hikingRoute) {
+            $poles = $hikingRoute->getPolesWithBuffer();
             $hrData = $this->hikingRouteDataCache[$hikingRoute->id] ?? [];
             $pointsOrder = $hrData['points_order'] ?? null;
+            $orderedPoles = $this->orderPolesByPointsOrder($poles, $pointsOrder);
 
-            // Mappa id palo -> posizione lungo la HikingRoute (1-based)
-            $poleOrderMap = [];
-            if (is_array($pointsOrder)) {
-                foreach ($pointsOrder as $orderIndex => $poleId) {
-                    // orderIndex è 0-based, vogliamo 1-based
-                    $poleOrderMap[(string) $poleId] = $orderIndex + 1;
-                }
+            $hikingRoutePolesCache[(string) $hikingRoute->id] = $orderedPoles;
+
+            // Crea una mappa pole_id -> posizione per accesso rapido
+            $polePositions = [];
+            foreach ($orderedPoles as $pos => $pole) {
+                $polePositions[(string) $pole->id] = $pos;
             }
+            $hikingRoutePolePositionsCache[(string) $hikingRoute->id] = $polePositions;
+        }
 
-            $poles = $hikingRoute->getPolesWithBuffer();
+        // Traccia i poles già processati per evitare duplicati
+        $processedPoles = [];
 
-            foreach ($poles as $index => $pole) {
-                // Se abbiamo points_order, usiamo quella per calcolare l'indice del palo; altrimenti fallback all'indice del foreach
-                $orderIndex = $poleOrderMap[(string) $pole->id] ?? ($index + 1);
-                $ldpN = $this->formatLdpN($orderIndex);
+        foreach ($this->hikingRoutes as $hikingRoute) {
+            // Recupera i Poles per questa HikingRoute dalla cache
+            $orderedPoles = $hikingRoutePolesCache[(string) $hikingRoute->id] ?? [];
+
+            // Per ogni pole ordinato
+            foreach ($orderedPoles as $poleIndex => $pole) {
+                // Salta se il pole è già stato processato
+                $poleId = (string) $pole->id;
+                if (isset($processedPoles[$poleId])) {
+                    continue;
+                }
+
+                // Segna il pole come processato
+                $processedPoles[$poleId] = true;
+                // Recupera arrow_order dal pole (contiene tutte le arrows con formato routeId-index)
                 $poleProperties = $pole->properties ?? [];
                 $signage = $poleProperties['signage'] ?? [];
 
-                // arrow_order è globale per il palo, condiviso tra tutte le HikingRoute
+                // Recupera arrow_order che contiene tutte le arrows
                 $arrowOrder = $signage['arrow_order'] ?? [];
 
-                foreach ($signage as $routeId => $routeSignage) {
-                    // Salta la chiave speciale arrow_order
-                    if ($routeId === 'arrow_order') {
+                if (empty($arrowOrder)) {
+                    continue;
+                }
+
+                // Per ogni entry in arrow_order, recupera l'arrow corrispondente
+                foreach ($arrowOrder as $positionInOrder => $arrowKey) {
+                    // arrowKey ha formato "routeId-index"
+                    $parts = explode('-', $arrowKey, 2);
+                    if (count($parts) !== 2) {
                         continue;
                     }
 
-                    if ((string) $hikingRoute->id !== (string) $routeId) {
+                    $arrowRouteId = $parts[0];
+                    $arrowIndex = (int) $parts[1];
+
+                    // Recupera la HikingRoute a cui appartiene l'arrow
+                    if (! isset($hikingRouteMap[$arrowRouteId])) {
                         continue;
                     }
 
-                    // Nuova struttura: arrows per questa HikingRoute
+                    $arrowHikingRoute = $hikingRouteMap[$arrowRouteId];
+                    $this->cacheHikingRouteData($arrowHikingRoute);
+
+                    // Verifica che esista la struttura per questa routeId
+                    if (! isset($signage[$arrowRouteId]) || ! is_array($signage[$arrowRouteId])) {
+                        continue;
+                    }
+
+                    $routeSignage = $signage[$arrowRouteId];
                     $arrows = $routeSignage['arrows'] ?? [];
 
-                    foreach ($arrows as $arrowIndex => $arrow) {
-                        $direction = $arrow['direction'] ?? 'forward';
-                        $rows = $arrow['rows'] ?? [];
-
-                        // Calcola tab_n in base alla posizione globale in arrow_order
-                        $arrowKey = $routeId.'-'.$arrowIndex;
-                        $position = array_search($arrowKey, $arrowOrder, true);
-
-                        // Se trovato in arrow_order, usa la posizione (1-based), altrimenti fallback su arrowIndex+1
-                        $tabN = $position !== false ? (string) ($position + 1) : (string) ($arrowIndex + 1);
-
-                        // Aggiungi righe per questa freccia
-                        $this->addArrowRows($direction, $rows, $hikingRoute, $pole, $routeSignage, $ldpN, $tabN);
+                    // Verifica che esista l'arrow all'indice specificato
+                    if (! isset($arrows[$arrowIndex])) {
+                        continue;
                     }
+
+                    $arrow = $arrows[$arrowIndex];
+                    $direction = $arrow['direction'] ?? 'forward';
+                    $rows = $arrow['rows'] ?? [];
+
+                    if (empty($rows)) {
+                        continue;
+                    }
+
+                    // Calcola ldpN usando la cache delle posizioni dei poles (ottimizzazione performance)
+                    $polePositions = $hikingRoutePolePositionsCache[$arrowRouteId] ?? [];
+                    $polePosition = $polePositions[$poleId] ?? null;
+
+                    // Se il pole non è trovato, usa l'indice corrente come fallback
+                    $ldpN = $polePosition !== null ? $this->formatLdpN($polePosition + 1) : $this->formatLdpN(1);
+
+                    // Calcola tab_n in base alla posizione in arrow_order (1-based)
+                    $tabN = (string) ($positionInOrder + 1);
+
+                    // Aggiungi righe per questa freccia usando la HikingRoute a cui appartiene l'arrow
+                    $this->addArrowRows($direction, $rows, $arrowHikingRoute, $pole, $routeSignage, $ldpN, $tabN);
                 }
             }
         }
+
+        // Carica le coordinate dei poles dopo aver raccolto tutti gli ID
+        $allPoleIds = $this->collectAllPoleIds();
+        $this->loadPoleCoordinates($allPoleIds);
+    }
+
+    /**
+     * Ordina i poles secondo points_order
+     */
+    protected function orderPolesByPointsOrder(Collection $poles, ?array $pointsOrder): array
+    {
+        if (! is_array($pointsOrder) || empty($pointsOrder)) {
+            // Se non c'è points_order, restituisci i poles nell'ordine originale
+            return $poles->all();
+        }
+
+        // Crea una mappa pole_id -> pole
+        $poleMap = [];
+        foreach ($poles as $pole) {
+            $poleMap[(string) $pole->id] = $pole;
+        }
+
+        // Ordina secondo points_order
+        $orderedPoles = [];
+        foreach ($pointsOrder as $poleId) {
+            $poleIdStr = (string) $poleId;
+            if (isset($poleMap[$poleIdStr])) {
+                $orderedPoles[] = $poleMap[$poleIdStr];
+                unset($poleMap[$poleIdStr]);
+            }
+        }
+
+        // Aggiungi eventuali poles non presenti in points_order alla fine
+        foreach ($poleMap as $pole) {
+            $orderedPoles[] = $pole;
+        }
+
+        return $orderedPoles;
     }
 
     /**
@@ -165,9 +253,9 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
     {
         $poleIds = [];
 
-        foreach ($this->hikingRoutes as $hikingRoute) {
-            $poles = $hikingRoute->getPolesWithBuffer();
-            foreach ($poles as $pole) {
+        foreach ($this->expandedData as $data) {
+            $pole = $data['pole'] ?? null;
+            if ($pole && isset($pole->id)) {
                 $poleIds[] = $pole->id;
             }
         }
@@ -258,7 +346,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function formatLdpN(int $index): string
     {
-        return str_pad($index, 3, '0', STR_PAD_LEFT) . '.00';
+        return str_pad($index, 3, '0', STR_PAD_LEFT).'.00';
     }
 
     /**
@@ -370,7 +458,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function buildCodiceLdp(string $areaName, string $refRei, string $ldpNForCode): string
     {
-        return $areaName . '-' . str_replace('.', '', $refRei) . '-' . $ldpNForCode;
+        return $areaName.'-'.str_replace('.', '', $refRei).'-'.$ldpNForCode;
     }
 
     /**
@@ -380,10 +468,10 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
     {
         $codice = str_replace('.', '', $refRei);
         if ($ldpNForCode !== null) {
-            $codice .= '-' . $ldpNForCode;
+            $codice .= '-'.$ldpNForCode;
         }
         if ($tabN !== null) {
-            $codice .= '-' . $tabN;
+            $codice .= '-'.$tabN;
         }
 
         return $codice;
@@ -490,7 +578,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
 
-        return 'h ' . $hours . ':' . str_pad($mins, 2, '0', STR_PAD_LEFT);
+        return 'h '.$hours.':'.str_pad($mins, 2, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -505,7 +593,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         // Converti da metri a km e arrotonda alla prima cifra decimale
         $distanceKm = round($distance / 1000, 1);
 
-        return 'km ' . $distanceKm;
+        return 'km '.$distanceKm;
     }
 
     /**
@@ -513,10 +601,10 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function createPoleHyperlink(Poles $pole): string
     {
-        $poleUrl = url('/resources/' . PolesResource::uriKey() . '/' . $pole->id);
+        $poleUrl = url('/resources/'.PolesResource::uriKey().'/'.$pole->id);
         $poleId = $pole->id;
 
-        return '=HYPERLINK("' . $poleUrl . '", "' . $poleId . '")';
+        return '=HYPERLINK("'.$poleUrl.'", "'.$poleId.'")';
     }
 
     /**
@@ -556,7 +644,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
 
             // Applica colore blu solo alla colonna A (Palo) nelle righe "first"
             if ($isFirstRow) {
-                $cellCoordinate = 'A' . $rowIndex; // Colonna A
+                $cellCoordinate = 'A'.$rowIndex; // Colonna A
                 $styles[$cellCoordinate] = [
                     'font' => [
                         'color' => ['rgb' => '0000FF'], // Blu classico per i link
