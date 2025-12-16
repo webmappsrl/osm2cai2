@@ -50,7 +50,16 @@ class TrailSurveyPdfController extends Controller
             $dompdf = new Dompdf($options);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
+
+            try {
+                $dompdf->render();
+            } catch (\Exception $e) {
+                Log::error('Errore nel rendering DomPDF: ' . $e->getMessage(), [
+                    'trail_survey_id' => $trailSurvey->id,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                throw $e;
+            }
 
             return $dompdf->output();
         } catch (\Exception $e) {

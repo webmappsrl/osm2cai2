@@ -31,10 +31,10 @@ class GenerateTrailSurveyPdfAction extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         foreach ($models as $trailSurvey) {
-            GeneratePdfJob::dispatch($trailSurvey);
+            GeneratePdfJob::dispatchSync($trailSurvey);
         }
 
-        return Action::message('Generazione PDF avviata per '.$models->count().' Trail Survey');
+        return Action::message('Generazione PDF completata per ' . $models->count() . ' Trail Survey');
     }
 
     /**

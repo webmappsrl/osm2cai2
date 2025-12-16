@@ -25,7 +25,7 @@ class PdfService
     {
         // Verify that the model uses the trait
         if (! in_array(GeneratesPdfTrait::class, class_uses_recursive($model))) {
-            Log::error('Il modello '.get_class($model).' non usa il trait GeneratesPdfTrait');
+            Log::error('Il modello ' . get_class($model) . ' non usa il trait GeneratesPdfTrait');
 
             return null;
         }
@@ -45,7 +45,7 @@ class PdfService
             $pdfContent = $this->generatePdfContent($model);
 
             if (! $pdfContent) {
-                Log::error('Errore nella generazione del PDF per '.get_class($model)." {$model->id}");
+                Log::error('Errore nella generazione del PDF per ' . get_class($model) . " {$model->id}");
 
                 return null;
             }
@@ -53,11 +53,22 @@ class PdfService
             // Generate the path for the PDF
             $path = $model->getPdfPath();
 
+            // Delete old PDF if exists to force regeneration
+            $publicDisk = $this->storageService->getPublicDisk();
+            if ($publicDisk->exists($path)) {
+                $publicDisk->delete($path);
+                Log::info('PDF esistente eliminato per forzare rigenerazione', [
+                    'path' => $path,
+                    'model_class' => get_class($model),
+                    'model_id' => $model->id,
+                ]);
+            }
+
             // Save the PDF using StorageService
-            $savedPath = $this->storageService->getPublicDisk()->put($path, $pdfContent);
+            $savedPath = $publicDisk->put($path, $pdfContent);
 
             if (! $savedPath) {
-                Log::error('Errore nel salvataggio del PDF per '.get_class($model)." {$model->id}");
+                Log::error('Errore nel salvataggio del PDF per ' . get_class($model) . " {$model->id}");
 
                 return null;
             }
@@ -65,19 +76,19 @@ class PdfService
             // Get the public URL of the PDF
             $publicDisk = $this->storageService->getPublicDisk();
             $cleanPath = ltrim($path, '/');
-            $pdfUrl = url('/storage/'.$cleanPath);
+            $pdfUrl = url('/storage/' . $cleanPath);
 
             // Note: pdf_url is not saved to database, it's generated dynamically from the path
             // The URL is generated on-the-fly when needed (e.g., in Nova resources)
 
-            Log::info('PDF generato con successo per '.get_class($model)." {$model->id}", [
+            Log::info('PDF generato con successo per ' . get_class($model) . " {$model->id}", [
                 'pdf_url' => $pdfUrl,
                 'path' => $path,
             ]);
 
             return $pdfUrl;
         } catch (\Exception $e) {
-            Log::error('Errore nella generazione PDF per '.get_class($model)." {$model->id}: ".$e->getMessage());
+            Log::error('Errore nella generazione PDF per ' . get_class($model) . " {$model->id}: " . $e->getMessage());
 
             return null;
         }
@@ -93,7 +104,7 @@ class PdfService
             $freshModel = $model->fresh();
 
             if (! $freshModel) {
-                Log::error(get_class($model).' non trovato nel database');
+                Log::error(get_class($model) . ' non trovato nel database');
 
                 return null;
             }
@@ -137,7 +148,7 @@ class PdfService
 
             return $dompdf->output();
         } catch (\Exception $e) {
-            Log::error('Errore nella generazione PDF: '.$e->getMessage());
+            Log::error('Errore nella generazione PDF: ' . $e->getMessage());
 
             return null;
         }
