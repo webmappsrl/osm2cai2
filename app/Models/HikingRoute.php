@@ -1100,7 +1100,7 @@ SQL;
      */
     public function getPolesWithBuffer(float $bufferDistance = 10)
     {
-        $geojson = $this->getHikingRouteGeojson();
+        $geojson = $this->getHikingRouteGeojson($bufferDistance);
 
         return Poles::select('poles.*')
             ->whereRaw(
@@ -1113,7 +1113,7 @@ SQL;
     public function getUgcPoisWithBuffer(float $bufferDistance = 10, ?string $startDate = null, ?string $endDate = null)
     {
         // Ottieni la geometria principale
-        $geojson = $this->getHikingRouteGeojson();
+        $geojson = $this->getHikingRouteGeojson($bufferDistance);
 
         $query = UgcPoi::select('ugc_pois.*');
 
@@ -1137,7 +1137,7 @@ SQL;
 
     public function getUgcTracksWithBuffer(float $bufferDistance = 10, ?string $startDate = null, ?string $endDate = null)
     {
-        $geojson = $this->getHikingRouteGeojson();
+        $geojson = $this->getHikingRouteGeojson($bufferDistance);
 
         $query = UgcTrack::select('ugc_tracks.*');
 
@@ -1159,21 +1159,14 @@ SQL;
             ->get();
     }
 
-    private function getHikingRouteGeojson(): string
+    private function getHikingRouteGeojson(float $bufferDistance = 10): string
     {
-        $mergedGeojson = null;
-
         // Ottieni la geometria principale
         $geojson = DB::table('hiking_routes')
             ->where('id', $this->id)
             ->value(DB::raw('ST_AsGeoJSON(geometry)'));
 
-        return Poles::select('poles.*')
-            ->whereRaw(
-                'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
-                [$geojson, $bufferDistance]
-            )
-            ->get();
+        return $geojson ?? '{}';
     }
 
     /**

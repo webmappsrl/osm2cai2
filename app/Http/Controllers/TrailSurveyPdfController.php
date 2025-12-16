@@ -43,6 +43,7 @@ class TrailSurveyPdfController extends Controller
             $options = [
                 'isRemoteEnabled' => true,
                 'isHtml5ParserEnabled' => true,
+                'chroot' => storage_path('app/public'),
             ];
 
             // Crea l'istanza DomPDF
@@ -53,7 +54,7 @@ class TrailSurveyPdfController extends Controller
 
             return $dompdf->output();
         } catch (\Exception $e) {
-            Log::error('Errore nella generazione PDF: '.$e->getMessage());
+            Log::error('Errore nella generazione PDF: ' . $e->getMessage());
 
             return null;
         }
@@ -72,6 +73,6 @@ class TrailSurveyPdfController extends Controller
 
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="trail_survey_'.$trailSurvey->id.'.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="trail_survey_' . $trailSurvey->id . '.pdf"');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Jobs\GeneratePdfJob;
 use App\Nova\Actions\GenerateTrailSurveyPdfAction;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
@@ -12,7 +13,8 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\URL;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Wm\WmPackage\Nova\Fields\FeatureCollectionGrid\FeatureCollectionGrid;
+use Illuminate\Support\Facades\Log;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 use Wm\WmPackage\Services\StorageService;
 
 class TrailSurvey extends Resource
@@ -58,27 +60,22 @@ class TrailSurvey extends Resource
     {
         return [
             ID::make()->sortable(),
-
             BelongsTo::make(__('Hiking Route'), 'hikingRoute', HikingRoute::class)
                 ->searchable()
                 ->required()
                 ->readonly(),
-
             BelongsTo::make(__('Owner'), 'owner', User::class)
                 ->searchable()
                 ->readonly()
                 ->required(),
-
             Date::make(__('Start Date'), 'start_date')
                 ->required()
                 ->readonly()
                 ->sortable(),
-
             Date::make(__('End Date'), 'end_date')
                 ->required()
                 ->readonly()
                 ->sortable(),
-
             Text::make(__('Participants'), function () {
                 $participants = $this->resource->getParticipants();
 
@@ -86,11 +83,9 @@ class TrailSurvey extends Resource
             })
                 ->onlyOnDetail()
                 ->readonly(),
-
             Textarea::make(__('Description IT'), 'description')
                 ->nullable()
                 ->rows(3),
-
             Text::make(__('PDF URL'), 'pdf_url')
                 ->nullable()
                 ->hideWhenUpdating()
@@ -108,24 +103,20 @@ class TrailSurvey extends Resource
                         // Build the URL manually using the Laravel url() helper
                         // The path is relative to the root of the public disk, so remove the initial slash if present
                         $cleanPath = ltrim($path, '/');
-                        $link = url('/storage/'.$cleanPath);
+                        $link = url('/storage/' . $cleanPath);
 
-                        return '<a href="'.$link.'" target="_blank">Visualizza PDF</a>';
+                        return '<a href="' . $link . '" target="_blank">Visualizza PDF</a>';
                     }
 
                     return 'Non disponibile';
                 })
                 ->asHtml(),
-
             BelongsToMany::make(__('Ugc Pois'), 'ugcPois', UgcPoi::class)
                 ->searchable(),
-
             BelongsToMany::make(__('Ugc Tracks'), 'ugcTracks', UgcTrack::class)
                 ->searchable(),
-
-            FeatureCollectionGrid::make(__('UGC Features'), null)
-                ->geojsonSource('getFeatureCollectionForGrid')
-                ->syncRelations(['ugcPois', 'ugcTracks']),
+            FeatureCollectionMap::make(__('UGC Features'), null)
+                ->enableScreenshot(),
         ];
     }
 
@@ -201,5 +192,34 @@ class TrailSurvey extends Resource
     public function authorizedToAttachAny(NovaRequest $request, $model)
     {
         return false;
+    }
+
+    /**
+     * Update a BelongsToMany relationship for the given resource.
+     * Override to regenerate PDF when UGC relationships change.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $attribute
+     * @param  string  $requestAttribute
+     * @return void
+     */
+    protected function updateBelongsToMany(NovaRequest $request, $model, $attribute, $requestAttribute)
+    {
+        // Chiama il metodo parent per eseguire l'aggiornamento normale
+        parent::updateBelongsToMany($request, $model, $attribute, $requestAttribute);
+
+        // Controlla se la relazione aggiornata è una delle relazioni UGC
+        $ugcRelations = ['ugcPois', 'ugcTracks'];
+
+        if (in_array($attribute, $ugcRelations)) {
+            Log::info("Relazione UGC '{$attribute}' modificata per TrailSurvey {$model->id}, rigenerazione PDF");
+
+            // Aggiorna il timestamp per forzare il refresh della mappa
+            $model->touch();
+
+            // Rigenera il PDF
+            GeneratePdfJob::dispatchSync($model);
+        }
     }
 }

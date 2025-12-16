@@ -51,6 +51,15 @@ class TrailSurvey extends Model
     }
 
     /**
+     * Get FeatureCollection GeoJSON for FeatureCollectionMap
+     * Uses the same logic as getFeatureCollectionForGrid for compatibility
+     */
+    public function getFeatureCollectionMap(): array
+    {
+        return $this->getFeatureCollectionForGrid();
+    }
+
+    /**
      * Get FeatureCollection GeoJSON combining ugcPois and ugcTracks
      * Each feature has properties with model_type and model_id for synchronization
      */
@@ -197,6 +206,14 @@ class TrailSurvey extends Model
         $endDate = $this->end_date ? $this->end_date->format('Ymd') : 'nodate';
 
         return "trail-surveys/{$this->id}/survey_{$ownerName}_{$startDate}_{$endDate}.pdf";
+    }
+
+    /**
+     * Get the path to the map screenshot
+     */
+    public function getMapScreenshotPath(): string
+    {
+        return "trail-surveys/{$this->id}/map_screenshot.png";
     }
 
     public function getPdfRelationsToLoad(): array

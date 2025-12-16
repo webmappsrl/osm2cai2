@@ -62,6 +62,20 @@
             background-color: #f2f2f2;
             font-weight: bold;
         }
+
+        .map-image {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .map-container {
+            page-break-inside: avoid;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
@@ -79,14 +93,14 @@
         <div class="info-row">
             <span class="label">URL:</span>
             @if ($trailSurvey->hikingRoute)
-                @php
-                    $routeUrl = url("/resources/hiking-routes/{$trailSurvey->hikingRoute->id}");
-                @endphp
-                <a href="{{ $routeUrl }}" class="url-link">
-                    {{ $routeUrl }}
-                </a>
+            @php
+            $routeUrl = url("/resources/hiking-routes/{$trailSurvey->hikingRoute->id}");
+            @endphp
+            <a href="{{ $routeUrl }}" class="url-link">
+                {{ $routeUrl }}
+            </a>
             @else
-                <span>N/A</span>
+            <span>N/A</span>
             @endif
         </div>
         <div class="info-row">
@@ -112,6 +126,58 @@
         </div>
         @endif
     </div>
+
+    @php
+    // Ottieni il percorso dello screenshot della mappa
+    $screenshotPath = $trailSurvey->getMapScreenshotPath();
+    $storage = \Illuminate\Support\Facades\Storage::disk('public');
+    $screenshotExists = $storage->exists($screenshotPath);
+
+    // Converti l'immagine in base64 per DomPDF (metodo più affidabile)
+    $screenshotBase64 = null;
+    if ($screenshotExists) {
+    try {
+    $imageContent = $storage->get($screenshotPath);
+    if ($imageContent && strlen($imageContent) > 0) {
+    $screenshotBase64 = 'data:image/png;base64,' . base64_encode($imageContent);
+    \Illuminate\Support\Facades\Log::info("Screenshot caricato per TrailSurvey {$trailSurvey->id}", [
+    'path' => $screenshotPath,
+    'size' => strlen($imageContent),
+    'base64_length' => strlen($screenshotBase64),
+    ]);
+    } else {
+    \Illuminate\Support\Facades\Log::warning("Screenshot vuoto per TrailSurvey {$trailSurvey->id}", [
+    'path' => $screenshotPath,
+    ]);
+    }
+    } catch (\Exception $e) {
+    \Illuminate\Support\Facades\Log::error("Errore nel caricamento screenshot per TrailSurvey {$trailSurvey->id}: " . $e->getMessage(), [
+    'path' => $screenshotPath,
+    'trace' => $e->getTraceAsString(),
+    ]);
+    }
+    } else {
+    \Illuminate\Support\Facades\Log::warning("Screenshot non trovato per TrailSurvey {$trailSurvey->id}", [
+    'path' => $screenshotPath,
+    ]);
+    }
+    @endphp
+
+    @if($screenshotExists && $screenshotBase64)
+    <div class="section map-container">
+        <div class="section-title">Mappa UGC Features</div>
+        <img src="{{ $screenshotBase64 }}" alt="Mappa UGC Features" class="map-image" style="max-width: 100%; height: auto;" />
+    </div>
+    @else
+    @if($screenshotExists)
+    <div class="section map-container">
+        <div class="section-title">Mappa UGC Features</div>
+        <div style="padding: 20px; background-color: #f5f5f5; border: 1px solid #ddd; text-align: center; color: #666;">
+            Immagine mappa non disponibile
+        </div>
+    </div>
+    @endif
+    @endif
 
     @if($trailSurvey->ugcPois->isNotEmpty())
     <div class="section">
