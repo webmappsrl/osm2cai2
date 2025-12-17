@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Osm2cai\SignageArrows\SignageArrows;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
 class Poles extends OsmfeaturesResource
@@ -48,6 +49,7 @@ class Poles extends OsmfeaturesResource
         return array_merge($parentFields, [
             Text::make(__('Ref'), 'ref')->sortable(),
             FeatureCollectionMap::make(__('Geometry'), 'geometry'),
+            SignageArrows::make(__('Segnaletica'), 'properties.signage'),
         ]);
     }
 }

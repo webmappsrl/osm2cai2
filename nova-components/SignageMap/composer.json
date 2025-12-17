@@ -1,0 +1,31 @@
+{
+    "name": "osm2cai/signage-map",
+    "description": "A Laravel Nova field for CAI signage map with custom popup.",
+    "keywords": [
+        "laravel",
+        "nova",
+        "signage",
+        "map"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Osm2cai\\SignageMap\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Osm2cai\\SignageMap\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

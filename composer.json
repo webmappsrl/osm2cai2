@@ -13,6 +13,7 @@
         "badinansoft/nova-language-switch": "^3.0",
         "cweagans/composer-patches": "^1.7",
         "darkaonline/l5-swagger": "^8.6",
+        "dompdf/dompdf": "^2.0",
         "ebess/advanced-nova-media-library": "^5.0",
         "eminiarts/nova-tabs": "dev-master",
         "guzzlehttp/guzzle": "^7.2",
@@ -28,6 +29,7 @@
         "league/flysystem-aws-s3-v3": "^3.12",
         "m-a-k-o/nova-custom-table-card": "dev-master",
         "maatwebsite/excel": "^3.1",
+        "osm2cai/signage-arrows": "*",
         "outl1ne/nova-multiselect-field": "^5.0.1",
         "predis/predis": "^2.2",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
@@ -42,6 +44,7 @@
         "wm/map-multi-polygon": "*",
         "wm/map-point": "*",
         "wm/osm2cai-map-multi-linestring": "*",
+        "osm2cai/signage-map": "*",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },
@@ -128,6 +131,14 @@
         {
             "type": "path",
             "url": "./nova-components/osm2cai-map-multi-linestring"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/SignageMap"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/SignageArrows"
         },
         {
             "type": "vcs",

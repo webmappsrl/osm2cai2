@@ -1,0 +1,33 @@
+{
+    "name": "osm2cai/signage-arrows",
+    "description": "A Laravel Nova field for CAI signage arrows visualization.",
+    "keywords": [
+        "laravel",
+        "nova",
+        "signage",
+        "arrows",
+        "cai"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Osm2cai\\SignageArrows\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Osm2cai\\SignageArrows\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
+

@@ -54,6 +54,11 @@ return [
 
     'hiking_route_buffer' => 250,
 
+    'nominatim' => [
+        'host' => env('NOMINATIM_HOST', 'https://nominatim.openstreetmap.org'),
+        'user_agent' => env('NOMINATIM_USER_AGENT', 'OSM2CAI/1.0 (https://osm2cai.cai.it)'),
+    ],
+
     'osmTagsMapping' => [
         'amenity' => [
             'monastery' => 'monastery',

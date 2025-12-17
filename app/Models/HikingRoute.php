@@ -32,6 +32,19 @@ class HikingRoute extends EcTrack
     use SpatialDataTrait;
     use TagsMappingTrait;
 
+    // Costanti per lo stile dei punti (pali) sulla mappa
+    protected const POINT_STROKE_COLOR = 'rgb(255, 255, 255)';
+
+    protected const POINT_STROKE_WIDTH = 2;
+
+    protected const POINT_FILL_COLOR = 'rgba(255, 0, 0, 0.8)';
+
+    protected const CHECKPOINT_FILL_COLOR = 'rgb(255, 160, 0)';
+
+    protected const POINT_RADIUS = 4;
+
+    protected const CHECKPOINT_RADIUS = 6;
+
     protected $table = 'hiking_routes';
 
     protected $fillable = [
@@ -364,19 +377,39 @@ class HikingRoute extends EcTrack
             'strokeColor' => 'blue',
             'strokeWidth' => 4,
             'id' => $this->id,
+            'osmfeatures_id' => $this->osmfeatures_id,
         ];
         $geojson['features'][0]['properties'] = $properties;
 
-        $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) {
+        // Aggiungi le properties.signage dell'hikingRoute al GeoJSON per renderle disponibili al frontend
+        $hikingRouteProperties = $this->properties ?? [];
+        if (isset($hikingRouteProperties['signage'])) {
+            $geojson['features'][0]['properties']['signage'] = $hikingRouteProperties['signage'];
+        }
+
+        $checkpointPoleIds = $hikingRouteProperties['signage']['checkpoint'] ?? [];
+        $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) use ($checkpointPoleIds) {
             $poleFeature = $this->getFeatureMap($pole->geometry);
+            $isCheckpoint = in_array($pole->id, $checkpointPoleIds);
+            $osmTags = null;
+            if ($pole->osmfeatures_data && isset($pole->osmfeatures_data['properties']['osm_tags'])) {
+                $osmTags = $pole->osmfeatures_data['properties']['osm_tags'];
+            }
+
             $properties = [
                 'id' => $pole->id,
+                'name' => $pole->name ?? '',
+                'description' => $pole->properties['description'] ?? '',
                 'tooltip' => $pole->ref,
+                'ref' => $pole->ref,
+                'clickAction' => 'popup',
                 'link' => url('/resources/poles/' . $pole->id),
-                'pointStrokeColor' => 'rgb(255, 255, 255)',
-                'pointStrokeWidth' => 2,
-                'pointFillColor' => 'rgba(255, 0, 0, 0.8)',
-                'pointRadius' => 4,
+                'pointStrokeColor' => self::POINT_STROKE_COLOR,
+                'pointStrokeWidth' => self::POINT_STROKE_WIDTH,
+                'pointFillColor' => $isCheckpoint ? self::CHECKPOINT_FILL_COLOR : self::POINT_FILL_COLOR,
+                'pointRadius' => $isCheckpoint ? self::CHECKPOINT_RADIUS : self::POINT_RADIUS,
+                'signage' => $pole->properties['signage'] ?? [],
+                'osmTags' => $osmTags,
             ];
             $poleFeature['properties'] = $properties;
 
@@ -387,7 +420,11 @@ class HikingRoute extends EcTrack
             'strokeColor' => 'red',
             'strokeWidth' => 2,
             'id' => $this->id,
+            'osmfeatures_id' => $this->osmfeatures_id,
         ];
+        if (isset($hikingRouteProperties['signage'])) {
+            $properties['signage'] = $hikingRouteProperties['signage'];
+        }
         $uncheckedGeometryFeature['properties'] = $properties;
 
         $geojson['features'] = array_merge($poleFeatures, [$uncheckedGeometryFeature], $geojson['features']);
@@ -1063,10 +1100,7 @@ SQL;
      */
     public function getPolesWithBuffer(float $bufferDistance = 10)
     {
-        // Ottieni la geometria principale
-        $geojson = DB::table('hiking_routes')
-            ->where('id', $this->id)
-            ->value(DB::raw('ST_AsGeoJSON(geometry)'));
+        $geojson = $this->getHikingRouteGeojson($bufferDistance);
 
         return Poles::select('poles.*')
             ->whereRaw(
@@ -1074,6 +1108,65 @@ SQL;
                 [$geojson, $bufferDistance]
             )
             ->get();
+    }
+
+    public function getUgcPoisWithBuffer(float $bufferDistance = 10, ?string $startDate = null, ?string $endDate = null)
+    {
+        // Ottieni la geometria principale
+        $geojson = $this->getHikingRouteGeojson($bufferDistance);
+
+        $query = UgcPoi::select('ugc_pois.*');
+
+        // Filtro per start_date
+        if ($startDate !== null) {
+            $query->whereDate('ugc_pois.created_at', '>=', $startDate);
+        }
+
+        // Filtro per end_date
+        if ($endDate !== null) {
+            $query->whereDate('ugc_pois.created_at', '<=', $endDate);
+        }
+
+        return $query
+            ->whereRaw(
+                'ST_DWithin(ugc_pois.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                [$geojson, $bufferDistance]
+            )
+            ->get();
+    }
+
+    public function getUgcTracksWithBuffer(float $bufferDistance = 10, ?string $startDate = null, ?string $endDate = null)
+    {
+        $geojson = $this->getHikingRouteGeojson($bufferDistance);
+
+        $query = UgcTrack::select('ugc_tracks.*');
+
+        // Filtro per start_date
+        if ($startDate !== null) {
+            $query->whereDate('ugc_tracks.created_at', '>=', $startDate);
+        }
+
+        // Filtro per end_date
+        if ($endDate !== null) {
+            $query->whereDate('ugc_tracks.created_at', '<=', $endDate);
+        }
+
+        return $query
+            ->whereRaw(
+                'ST_DWithin(ugc_tracks.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                [$geojson, $bufferDistance]
+            )
+            ->get();
+    }
+
+    private function getHikingRouteGeojson(float $bufferDistance = 10): string
+    {
+        // Ottieni la geometria principale
+        $geojson = DB::table('hiking_routes')
+            ->where('id', $this->id)
+            ->value(DB::raw('ST_AsGeoJSON(geometry)'));
+
+        return $geojson ?? '{}';
     }
 
     /**

@@ -31,11 +31,13 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
         'osmfeatures_id',
         'osmfeatures_data',
         'osmfeatures_updated_at',
+        'properties',
     ];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
+        'properties' => 'array',
     ];
 
     /**
@@ -70,7 +72,7 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
         }
 
         if (! $model->osmfeatures_data) {
-            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No osmfeatures_data found for Pole ' . $osmfeaturesId);
 
             return;
         }
@@ -78,21 +80,21 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         // format the geometry
         if ($osmfeaturesData['geometry']) {
-            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('".json_encode($osmfeaturesData['geometry'])."'))")[0]->st_astext;
+            $geometry = DB::select("SELECT ST_AsText(ST_GeomFromGeoJSON('" . json_encode($osmfeaturesData['geometry']) . "'))")[0]->st_astext;
         } else {
-            Log::channel('wm-osmfeatures')->info('No geometry found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No geometry found for Pole ' . $osmfeaturesId);
             $geometry = null;
         }
         $properties = $osmfeaturesData['properties'];
         if (! $properties) {
-            Log::channel('wm-osmfeatures')->info('No properties found for Pole '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No properties found for Pole ' . $osmfeaturesId);
 
             return;
         }
 
         if ($properties['ref'] === null || $properties['ref'] === '') {
-            Log::channel('wm-osmfeatures')->info('No ref found for Pole '.$osmfeaturesId);
-            $ref = 'noname('.$osmfeaturesId.')';
+            Log::channel('wm-osmfeatures')->info('No ref found for Pole ' . $osmfeaturesId);
+            $ref = 'noname(' . $osmfeaturesId . ')';
         } else {
             $ref = $properties['ref'];
         }
@@ -118,7 +120,8 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         // Properties di default per il polo principale
         $defaultProperties = [
-            'tooltip' => $this->ref,                              // Riferimento del polo
+            'tooltip' => $this->ref,
+            'ref' => $this->ref,                              // Riferimento del polo
             'pointStrokeColor' => 'rgb(255, 255, 255)',          // Colore bordo punto
             'pointStrokeWidth' => 2,                             // Spessore bordo punto
             'pointFillColor' => 'rgba(255, 0, 0, 0.8)',          // Colore riempimento punto
@@ -156,8 +159,8 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
 
         $checkedHikingRouteFeatures = $hikingRoutes->map(function ($route) {
             $routeProperties = [
-                'tooltip' => $route->name.' (ufficiale)',         // Nome del percorso
-                'link' => url('/resources/hiking-routes/'.$route->id), // Link di navigazione
+                'tooltip' => $route->name,         // Nome del percorso
+                'link' => url('/resources/hiking-routes/' . $route->id), // Link di navigazione
                 'strokeColor' => 'blue',                          // Colore della linea
                 'strokeWidth' => 6,                               // Spessore della linea
             ];

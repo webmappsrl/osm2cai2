@@ -1,0 +1,225 @@
+<?php
+
+namespace App\Nova;
+
+use App\Jobs\GeneratePdfJob;
+use App\Nova\Actions\GenerateTrailSurveyPdfAction;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\URL;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Illuminate\Support\Facades\Log;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
+use Wm\WmPackage\Services\StorageService;
+
+class TrailSurvey extends Resource
+{
+    /**
+     * The model the resource corresponds to.
+     *
+     * @var class-string<\App\Models\TrailSurvey>
+     */
+    public static $model = \App\Models\TrailSurvey::class;
+
+    /**
+     * The single value that should be used to represent the resource when being displayed.
+     *
+     * @var string
+     */
+    public static $title = 'id';
+
+    /**
+     * The columns that should be searched.
+     *
+     * @var array
+     */
+    public static $search = [
+        'id',
+        'description',
+    ];
+
+    /**
+     * Get the resource label
+     */
+    public static function label()
+    {
+        return __('Trail Surveys');
+    }
+
+    /**
+     * Get the fields displayed by the resource.
+     *
+     * @return array
+     */
+    public function fields(Request $request)
+    {
+        return [
+            ID::make()->sortable(),
+            BelongsTo::make(__('Hiking Route'), 'hikingRoute', HikingRoute::class)
+                ->searchable()
+                ->required()
+                ->readonly(),
+            BelongsTo::make(__('Owner'), 'owner', User::class)
+                ->searchable()
+                ->readonly()
+                ->required(),
+            Date::make(__('Start Date'), 'start_date')
+                ->required()
+                ->readonly()
+                ->sortable(),
+            Date::make(__('End Date'), 'end_date')
+                ->required()
+                ->readonly()
+                ->sortable(),
+            Text::make(__('Participants'), function () {
+                $participants = $this->resource->getParticipants();
+
+                return ! empty($participants) ? implode(', ', $participants) : __('No participants');
+            })
+                ->onlyOnDetail()
+                ->readonly(),
+            Textarea::make(__('Description IT'), 'description')
+                ->nullable()
+                ->rows(3),
+            Text::make(__('PDF URL'), 'pdf_url')
+                ->nullable()
+                ->hideWhenUpdating()
+                ->showOnIndex()
+                ->displayUsing(function ($value) {
+                    // Get the path of the PDF file
+                    $path = $this->resource->getPdfPath();
+
+                    // Check if the file exists and generate the public URL using StorageService
+                    $storageService = app(StorageService::class);
+                    $publicDisk = $storageService->getPublicDisk();
+                    $exists = $publicDisk->exists($path);
+
+                    if ($exists) {
+                        // Build the URL manually using the Laravel url() helper
+                        // The path is relative to the root of the public disk, so remove the initial slash if present
+                        $cleanPath = ltrim($path, '/');
+                        $link = url('/storage/' . $cleanPath);
+
+                        return '<a href="' . $link . '" target="_blank">Visualizza PDF</a>';
+                    }
+
+                    return 'Non disponibile';
+                })
+                ->asHtml(),
+            BelongsToMany::make(__('Ugc Pois'), 'ugcPois', UgcPoi::class)
+                ->searchable(),
+            BelongsToMany::make(__('Ugc Tracks'), 'ugcTracks', UgcTrack::class)
+                ->searchable(),
+            FeatureCollectionMap::make(__('UGC Features'), null)
+                ->enableScreenshot(),
+        ];
+    }
+
+    /**
+     * Get the cards available for the request.
+     *
+     * @return array
+     */
+    public function cards(Request $request)
+    {
+        return [];
+    }
+
+    /**
+     * Get the filters available for the resource.
+     *
+     * @return array
+     */
+    public function filters(Request $request)
+    {
+        return [];
+    }
+
+    /**
+     * Get the lenses available for the resource.
+     *
+     * @return array
+     */
+    public function lenses(Request $request)
+    {
+        return [];
+    }
+
+    /**
+     * Get the actions available for the resource.
+     *
+     * @return array
+     */
+    public function actions(Request $request)
+    {
+        return [
+            new GenerateTrailSurveyPdfAction,
+        ];
+    }
+
+    /**
+     * Determine if the current user can create new models.
+     */
+    public static function authorizedToCreate(Request $request)
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can update the given resource.
+     */
+    public function authorizedToUpdate(Request $request)
+    {
+        return $request->user()->can('update', $this->resource);
+    }
+
+    /**
+     * Determine if the current user can delete the given resource.
+     */
+    public function authorizedToDelete(Request $request)
+    {
+        return $request->user()->can('delete', $this->resource);
+    }
+
+    /**
+     * Determine if the current user can attach any models to the given resource.
+     */
+    public function authorizedToAttachAny(NovaRequest $request, $model)
+    {
+        return false;
+    }
+
+    /**
+     * Update a BelongsToMany relationship for the given resource.
+     * Override to regenerate PDF when UGC relationships change.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $attribute
+     * @param  string  $requestAttribute
+     * @return void
+     */
+    protected function updateBelongsToMany(NovaRequest $request, $model, $attribute, $requestAttribute)
+    {
+        // Chiama il metodo parent per eseguire l'aggiornamento normale
+        parent::updateBelongsToMany($request, $model, $attribute, $requestAttribute);
+
+        // Controlla se la relazione aggiornata è una delle relazioni UGC
+        $ugcRelations = ['ugcPois', 'ugcTracks'];
+
+        if (in_array($attribute, $ugcRelations)) {
+            Log::info("Relazione UGC '{$attribute}' modificata per TrailSurvey {$model->id}, rigenerazione PDF");
+
+            // Aggiorna il timestamp per forzare il refresh della mappa
+            $model->touch();
+
+            // Rigenera il PDF
+            GeneratePdfJob::dispatchSync($model);
+        }
+    }
+}

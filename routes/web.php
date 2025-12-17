@@ -4,6 +4,7 @@ use App\Http\Controllers\CasLoginController;
 use App\Http\Controllers\HikingRouteLoScarponeExportController;
 use App\Http\Controllers\MigrationCheck;
 use App\Http\Controllers\MiturAbruzzoController;
+use App\Http\Controllers\TrailSurveyPdfController;
 use App\Models\HikingRoute;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'nova'])->group(function () {
     Route::get('/migration-check', [MigrationCheck::class, 'show'])->name('migration-check');
+    Route::get('/trail-survey/{trailSurvey}/pdf/download',
+        [TrailSurveyPdfController::class, 'download'])
+        ->name('trail-survey.pdf.download');
 });
 
 Route::get('/logs', [Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
