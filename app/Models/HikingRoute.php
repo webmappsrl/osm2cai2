@@ -398,7 +398,7 @@ class HikingRoute extends EcTrack
 
             $properties = [
                 'id' => $pole->id,
-                'name' => $pole->properties['name'] ?? '',
+                'name' => $pole->name ?? '',
                 'description' => $pole->properties['description'] ?? '',
                 'tooltip' => $pole->ref,
                 'ref' => $pole->ref,

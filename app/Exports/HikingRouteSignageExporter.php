@@ -487,10 +487,8 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
             return $destination['name'];
         }
 
-        // Altrimenti cerca nelle properties del pole
-        $poleProperties = $pole->properties ?? [];
-
-        return $poleProperties['name'] ?? '';
+        // Altrimenti cerca nel name del pole
+        return  $pole->name ?? '';
     }
 
     /**

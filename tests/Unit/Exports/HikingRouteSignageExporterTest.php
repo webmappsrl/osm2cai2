@@ -283,18 +283,18 @@ class HikingRouteSignageExporterTest extends TestCase
     }
 
     /** @test */
-    public function get_name_returns_value_from_pole_properties_when_not_in_destination()
+    public function get_name_returns_value_from_pole_name_when_not_in_destination()
     {
         $pole = Poles::factory()->make([
             'id' => 1,
-            'properties' => ['name' => 'Nome da pole properties'],
+            'name' => 'Nome da pole',
         ]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
         $destination = [];
 
         $result = $this->callProtectedMethod($exporter, 'getName', $pole, $destination);
 
-        $this->assertEquals('Nome da pole properties', $result);
+        $this->assertEquals('Nome da pole', $result);
     }
 
     /** @test */
@@ -314,7 +314,7 @@ class HikingRouteSignageExporterTest extends TestCase
     {
         $pole = Poles::factory()->make([
             'id' => 1,
-            'properties' => ['name' => 'Nome da pole'],
+            'name' => 'Nome da pole',
         ]);
         $exporter = new HikingRouteSignageExporter(new EloquentCollection([]));
         $destination = ['name' => 'Nome da destination'];
@@ -714,7 +714,6 @@ class HikingRouteSignageExporterTest extends TestCase
     // ============================================
     // 5. Test edge cases e integrazione
     // ============================================
-
 
     /** @test */
     public function constructor_handles_empty_collection()

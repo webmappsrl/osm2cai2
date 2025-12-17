@@ -149,7 +149,7 @@ class SignageMapController
             if ($pole) {
                 $poleProperties = $pole->properties ?? [];
                 if ($name !== null) {
-                    $poleProperties['name'] = $name;
+                    $pole->name = $name;
                 }
                 if ($description !== null) {
                     $poleProperties['description'] = $description;
