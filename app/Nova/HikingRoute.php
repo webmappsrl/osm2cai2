@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\EcPoi;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\User;
+use App\Services\OsmService;
 use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;
@@ -125,6 +126,7 @@ class HikingRoute extends OsmfeaturesResource
         return $query;
     }
 
+
     /**
      * Optimize search with support for OSM object IDs.
      *
@@ -172,6 +174,11 @@ class HikingRoute extends OsmfeaturesResource
      */
     public function fields(NovaRequest $request): array
     {
+        // Esegui operazioni sul modello prima del rendering (solo per la vista detail)
+        if ($request->isResourceDetailRequest() && $this->model()) {
+            $this->prepareModelForDetailView($request);
+        }
+
         // Get fields from parent
         $osmfeaturesFields = parent::fields($request);
 
@@ -868,6 +875,51 @@ class HikingRoute extends OsmfeaturesResource
     public function authorizedToForceDelete($request)
     {
         return $request instanceof ActionRequest;
+    }
+
+    /**
+     * Prepare the model before rendering the detail view.
+     * 
+     * Questo metodo viene chiamato automaticamente quando viene aperta la vista detail.
+     * Puoi usarlo per eseguire qualsiasi operazione sul modello prima del rendering.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return void
+     */
+    protected function prepareModelForDetailView(NovaRequest $request)
+    {
+        $model = $this->model();
+
+        // Verifica se la hiking route esiste su OSM (stessa logica del Job CheckHikingRouteExistenceOnOSM)
+        // Controlla solo se deleted_on_osm è false o null per evitare chiamate API inutili
+        if ($model && ($model->deleted_on_osm === false || $model->deleted_on_osm === null)) {
+            try {
+                // Verifica se esiste l'osm_id nei dati
+                $osmId = $model->osmfeatures_data['properties']['osm_id'] ?? null;
+
+                if ($osmId) {
+                    $service = OsmService::getService();
+
+                    // Verifica se la hiking route esiste su OSM
+                    if ($service->hikingRouteExists($osmId) === false) {
+                        // Se non esiste, imposta deleted_on_osm a true
+                        $model->deleted_on_osm = true;
+                        $model->saveQuietly();
+
+                        Log::info('HikingRoute marked as deleted on OSM', [
+                            'hiking_route_id' => $model->id,
+                            'osm_id' => $osmId,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Log dell'errore ma non bloccare il rendering della vista
+                Log::error('Error checking hiking route existence on OSM', [
+                    'hiking_route_id' => $model->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
