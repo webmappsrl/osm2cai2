@@ -38,7 +38,7 @@ class Kernel extends ConsoleKernel
             ->dailyAt('7:00')
             ->description('Calculate region hiking routes intersection');
 
-        $schedule->command('osm2cai:check_hr_existence_on_osm')
+        $schedule->command('osm2cai:check-hr-existence-on-osm')
             ->dailyAt('06:30')
             ->description('Check hiking routes existence on OSM');
 
