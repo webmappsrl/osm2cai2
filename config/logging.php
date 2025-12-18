@@ -73,8 +73,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
         ],
         'hiking-routes-update' => [
-            'driver' => 'stack',
-            'channels' => ['single'],
+            'driver' => 'single',
             'path' => storage_path('logs/hiking-routes-update.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
