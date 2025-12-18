@@ -45,6 +45,65 @@ class HikingRouteSignageExporterTest extends TestCase
         return $property->getValue($object);
     }
 
+    /**
+     * Helper per creare un HikingRoute mockato con getPolesWithBuffer mockato
+     */
+    protected function createMockedHikingRoute(int $id = 1)
+    {
+        $hikingRoute = Mockery::mock(HikingRoute::class)->makePartial();
+        $hikingRoute->id = $id;
+        $hikingRoute->properties = [];
+        $hikingRoute->osmfeatures_data = null;
+        $hikingRoute->shouldReceive('getPolesWithBuffer')->andReturn(collect([]));
+        $hikingRoute->shouldReceive('getRefReiAttribute')->andReturn('');
+        $hikingRoute->shouldReceive('getAttribute')->andReturnUsing(function ($key) {
+            if ($key === 'clubs') {
+                return collect([]);
+            }
+            if ($key === 'areas') {
+                return collect([]);
+            }
+            if ($key === 'properties') {
+                return [];
+            }
+            if ($key === 'osmfeatures_data') {
+                return null;
+            }
+
+            return null;
+        });
+        // Mock delle relazioni per evitare RelationNotFoundException
+        $hikingRoute->shouldReceive('getRelation')->andReturnUsing(function ($key) {
+            if ($key === 'clubs' || $key === 'areas') {
+                return collect([]);
+            }
+
+            return null;
+        });
+        $hikingRoute->shouldReceive('relationLoaded')->andReturn(true);
+        // Le relazioni sono gestite tramite getAttribute e getRelation mockati sopra
+
+        return $hikingRoute;
+    }
+
+    /**
+     * Helper per creare una collection che non chiami load() sul database
+     */
+    protected function createMockedCollection(array $items): EloquentCollection
+    {
+        // Crea una collection normale ma mocka load() per evitare query al database
+        $collection = new class($items) extends EloquentCollection
+        {
+            public function load($relations)
+            {
+                // Non fare nulla, le relazioni sono già mockate sui modelli
+                return $this;
+            }
+        };
+
+        return $collection;
+    }
+
     // ============================================
     // 1. Test dei metodi di formattazione
     // ============================================
@@ -469,12 +528,10 @@ class HikingRouteSignageExporterTest extends TestCase
     /** @test */
     public function map_data_row_converts_ldp_n_from_dot_to_hyphen_for_codes()
     {
-        $hikingRoute = HikingRoute::factory()->make(['id' => 1]);
+        $hikingRoute = $this->createMockedHikingRoute(1);
         $pole = Poles::factory()->make(['id' => 1]);
-        $hikingRoute->setRelation('clubs', collect([]));
-        $hikingRoute->setRelation('areas', collect([]));
 
-        $exporter = new HikingRouteSignageExporter(new EloquentCollection([$hikingRoute]));
+        $exporter = new HikingRouteSignageExporter($this->createMockedCollection([$hikingRoute]));
         $this->callProtectedMethod($exporter, 'cacheHikingRouteData', $hikingRoute);
 
         $row = [
@@ -603,12 +660,10 @@ class HikingRouteSignageExporterTest extends TestCase
     /** @test */
     public function collection_includes_expanded_data_after_headers()
     {
-        $hikingRoute = HikingRoute::factory()->make(['id' => 1]);
+        $hikingRoute = $this->createMockedHikingRoute(1);
         $pole = Poles::factory()->make(['id' => 1]);
-        $hikingRoute->setRelation('clubs', collect([]));
-        $hikingRoute->setRelation('areas', collect([]));
 
-        $exporter = new HikingRouteSignageExporter(new EloquentCollection([$hikingRoute]));
+        $exporter = new HikingRouteSignageExporter($this->createMockedCollection([$hikingRoute]));
 
         // Aggiungi dati manualmente
         $expandedData = $this->getProtectedProperty($exporter, 'expandedData');
@@ -647,12 +702,10 @@ class HikingRouteSignageExporterTest extends TestCase
     /** @test */
     public function styles_applies_alternating_background_to_data_rows()
     {
-        $hikingRoute = HikingRoute::factory()->make(['id' => 1]);
+        $hikingRoute = $this->createMockedHikingRoute(1);
         $pole = Poles::factory()->make(['id' => 1]);
-        $hikingRoute->setRelation('clubs', collect([]));
-        $hikingRoute->setRelation('areas', collect([]));
 
-        $exporter = new HikingRouteSignageExporter(new EloquentCollection([$hikingRoute]));
+        $exporter = new HikingRouteSignageExporter($this->createMockedCollection([$hikingRoute]));
 
         // Aggiungi dati manualmente
         $reflection = new ReflectionClass($exporter);
@@ -675,12 +728,10 @@ class HikingRouteSignageExporterTest extends TestCase
     /** @test */
     public function styles_applies_blue_color_to_column_a_of_first_rows()
     {
-        $hikingRoute = HikingRoute::factory()->make(['id' => 1]);
+        $hikingRoute = $this->createMockedHikingRoute(1);
         $pole = Poles::factory()->make(['id' => 1]);
-        $hikingRoute->setRelation('clubs', collect([]));
-        $hikingRoute->setRelation('areas', collect([]));
 
-        $exporter = new HikingRouteSignageExporter(new EloquentCollection([$hikingRoute]));
+        $exporter = new HikingRouteSignageExporter($this->createMockedCollection([$hikingRoute]));
 
         // Aggiungi dati manualmente
         $reflection = new ReflectionClass($exporter);
