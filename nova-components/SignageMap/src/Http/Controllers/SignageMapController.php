@@ -168,7 +168,7 @@ class SignageMapController
         try {
             $geojson = $hikingRoute->getFeatureCollectionMap();
             $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
-            $demClient = new DemClient;
+            $demClient = app(DemClient::class);
             $geojson = $demClient->getPointMatrix($geojson);
 
             // Estrai pointFeaturesMap e points_order dal GeoJSON DEM

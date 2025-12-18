@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\HikingRoute;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -119,6 +120,10 @@ class UpdateHikingRoutesCommand extends Command
             $hikingRouteData = $detailResponse->json();
 
             // Aggiorna il modello HikingRoute con i dati ottenuti
+            $currentSourceRef = $hikingRoute->osmfeatures_data['properties']['source_ref'] ?? null;
+            $newSourceRef = $hikingRouteData['properties']['source_ref'] ?? null;
+            $sourceRefChanged = $currentSourceRef !== $newSourceRef;
+
             $updateData = [
                 'osmfeatures_data' => $hikingRouteData,
                 'osmfeatures_updated_at' => Carbon::parse($route['updated_at'])->toDateTimeString(),
@@ -139,7 +144,11 @@ class UpdateHikingRoutesCommand extends Command
                 $updateData['osm2cai_status'] = $hikingRouteData['properties']['osm2cai_status'];
             }
 
-            $hikingRoute->update($updateData);
+            $hikingRoute->updateQuietly($updateData);
+
+            if ($sourceRefChanged) {
+                SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
+            }
             $logMessage = "Hiking route with ID: $osmfeaturesId updated successfully.";
             $this->info($logMessage);
             $logger->info($logMessage);
