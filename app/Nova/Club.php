@@ -389,6 +389,28 @@ class Club extends Resource
      */
     public static function authorizedToCreate($request)
     {
-        return false;
+        $user = $request->user();
+
+        return $user && $user->hasRole(UserRole::Administrator);
+    }
+
+    /**
+     * Determine if the current user can update the given resource.
+     */
+    public function authorizedToUpdate(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $user->hasRole(UserRole::Administrator);
+    }
+
+    /**
+     * Determine if the current user can delete the given resource.
+     */
+    public function authorizedToDelete(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $user->hasRole(UserRole::Administrator);
     }
 }
