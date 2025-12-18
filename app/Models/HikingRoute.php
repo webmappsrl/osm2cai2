@@ -181,10 +181,74 @@ class HikingRoute extends EcTrack
      */
     public function getGeometrySyncAttribute(): bool
     {
+        // Usa un attributo cache per evitare query duplicate quando viene chiamato più volte
+        $cacheKey = '_geometry_sync_cached';
+        if (isset($this->attributes[$cacheKey])) {
+            return $this->attributes[$cacheKey];
+        }
+
         $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
         $geom = json_decode($geojson, true);
 
-        return $geom == $this->osmfeatures_data['geometry'];
+        $osmfeaturesGeom = $this->osmfeatures_data['geometry'] ?? null;
+
+        // Normalizza le geometrie rimuovendo la dimensione Z per il confronto
+        // La geometria nel DB ha sempre Z=0 aggiunta da ST_Force3DZ, mentre quella in osmfeatures_data potrebbe non averla
+        $normalizedDbGeom = $this->normalizeGeometry($geom);
+        $normalizedOsmfeaturesGeom = $osmfeaturesGeom ? $this->normalizeGeometry($osmfeaturesGeom) : null;
+
+        // Confronta usando JSON per un confronto robusto di array annidati complessi
+        // Gestisce correttamente il caso in cui una delle due geometrie è null
+        if ($normalizedDbGeom === null && $normalizedOsmfeaturesGeom === null) {
+            $isSync = true;
+        } elseif ($normalizedDbGeom === null || $normalizedOsmfeaturesGeom === null) {
+            $isSync = false;
+        } else {
+            // Confronta le geometrie normalizzate usando JSON per un confronto deterministico
+            $isSync = json_encode($normalizedDbGeom, JSON_UNESCAPED_SLASHES) === json_encode($normalizedOsmfeaturesGeom, JSON_UNESCAPED_SLASHES);
+        }
+
+        // Cache del risultato per questa istanza
+        $this->attributes[$cacheKey] = $isSync;
+
+        return $isSync;
+    }
+
+    /**
+     * Normalizza una geometria rimuovendo la dimensione Z (se presente)
+     * per permettere il confronto tra geometrie con e senza Z
+     */
+    private function normalizeGeometry($geometry): ?array
+    {
+        if (! is_array($geometry)) {
+            return $geometry;
+        }
+
+        if (isset($geometry['coordinates'])) {
+            $geometry['coordinates'] = $this->removeZDimension($geometry['coordinates']);
+        }
+
+        return $geometry;
+    }
+
+    /**
+     * Rimuove la dimensione Z dalle coordinate (terzo elemento di ogni punto)
+     */
+    private function removeZDimension($coordinates): array
+    {
+        if (! is_array($coordinates)) {
+            return $coordinates;
+        }
+
+        // Se è un punto [x, y, z] o [x, y], rimuovi Z
+        if (is_numeric($coordinates[0] ?? null)) {
+            return array_slice($coordinates, 0, 2);
+        }
+
+        // Altrimenti ricorri sugli array annidati
+        return array_map(function ($item) {
+            return $this->removeZDimension($item);
+        }, $coordinates);
     }
 
     /**

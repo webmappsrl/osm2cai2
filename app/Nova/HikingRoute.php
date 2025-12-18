@@ -888,10 +888,14 @@ class HikingRoute extends OsmfeaturesResource
 
         // Verifica se la hiking route esiste su OSM (stessa logica del Job CheckHikingRouteExistenceOnOSM)
         $this->checkAndUpdateOsmExistenceStatus($model);
+
+        // Aggiorna sempre i dati osmfeatures se presenti
+        $this->updateOsmfeaturesData($model);
+
+        // 2. Controllo aggiornamenti da OSM (priorità 2)
+        //  $this->checkAndUpdateFromOsm($model);
         // 1. Controllo aggiornamenti da osmfeatures (priorità 1)
         $this->checkAndUpdateFromOsmfeatures($model);
-        // 2. Controllo aggiornamenti da OSM (priorità 2)
-        $this->checkAndUpdateFromOsm($model);
     }
 
     /**
@@ -919,6 +923,7 @@ class HikingRoute extends OsmfeaturesResource
                         // Se non esiste, imposta deleted_on_osm a true
                         $model->deleted_on_osm = true;
                         $model->saveQuietly();
+                        $model->refresh();
 
                         Log::info('HikingRoute marked as deleted on OSM', [
                             'hiking_route_id' => $model->id,
@@ -958,8 +963,6 @@ class HikingRoute extends OsmfeaturesResource
             if ($model->osm2cai_status > 3) {
                 return;
             }
-
-
             $osmfeaturesId = $model->osmfeatures_id;
             if (! $osmfeaturesId) {
                 Log::warning('checkAndUpdateFromOsmfeatures: Missing osmfeatures_id, skipping', [
@@ -969,78 +972,34 @@ class HikingRoute extends OsmfeaturesResource
                 return;
             }
 
-            // Chiamata API sincrona a osmfeatures
-            $endpoint = HikingRouteModel::getOsmfeaturesEndpoint();
-            $apiUrl = $endpoint . $osmfeaturesId;
-
-            $response = Http::timeout(10)->get($apiUrl);
-
-            if ($response->failed()) {
-                Log::warning('checkAndUpdateFromOsmfeatures: Failed to fetch osmfeatures data', [
+            // Usa i dati già presenti nel modello
+            if (! $model->osmfeatures_data) {
+                Log::warning('checkAndUpdateFromOsmfeatures: Missing osmfeatures_data, skipping', [
                     'hiking_route_id' => $model->id,
-                    'osmfeatures_id' => $osmfeaturesId,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
                 ]);
 
                 return;
             }
 
-            $osmfeaturesData = $response->json();
+            $osmfeaturesData = is_array($model->osmfeatures_data)
+                ? $model->osmfeatures_data
+                : json_decode($model->osmfeatures_data, true);
+
             if (! $osmfeaturesData) {
-                Log::warning('checkAndUpdateFromOsmfeatures: Empty response from osmfeatures API', [
+                Log::warning('checkAndUpdateFromOsmfeatures: Invalid osmfeatures_data, skipping', [
                     'hiking_route_id' => $model->id,
-                    'osmfeatures_id' => $osmfeaturesId,
                 ]);
 
                 return;
             }
 
-            // Log della struttura completa per debugging
-            $hasPropertiesUpdatedAt = isset($osmfeaturesData['properties']) && isset($osmfeaturesData['properties']['updated_at']);
-            $propertiesUpdatedAt = isset($osmfeaturesData['properties']) ? ($osmfeaturesData['properties']['updated_at'] ?? null) : null;
+            // Aggiorna geometria e status se le condizioni lo permettono
+            $updateData = $this->updateModelGeometryAndStatus($model, $osmfeaturesData, $osmfeaturesId);
 
-            // NOTA: Il comando UpdateHikingRoutesCommand usa $route['updated_at'] dalla LISTA,
-            // non dal dettaglio. Per il dettaglio singolo, verifichiamo se è presente.
-            // Proviamo prima a livello root, poi in properties se non trovato
-            $remoteUpdatedAt = $osmfeaturesData['updated_at'] ?? null;
-            if (! $remoteUpdatedAt && isset($osmfeaturesData['properties'])) {
-                $remoteUpdatedAt = $osmfeaturesData['properties']['updated_at'] ?? null;
+            if (! empty($updateData)) {
+                $model->updateQuietly($updateData);
+                $model->refresh();
             }
-
-            if (! $remoteUpdatedAt) {
-                Log::warning('checkAndUpdateFromOsmfeatures: No updated_at found in response, cannot compare timestamps', [
-                    'hiking_route_id' => $model->id,
-                    'osmfeatures_id' => $osmfeaturesId,
-                    'response_structure' => [
-                        'has_root_updated_at' => isset($osmfeaturesData['updated_at']),
-                        'has_properties' => isset($osmfeaturesData['properties']),
-                        'has_properties_updated_at' => isset($osmfeaturesData['properties']['updated_at']),
-                    ],
-                ]);
-                // Senza updated_at non possiamo confrontare, quindi saltiamo l'aggiornamento
-                return;
-            }
-
-            $localUpdatedAt = $model->osmfeatures_updated_at;
-
-            if ($remoteUpdatedAt) {
-                $remoteTimestamp = Carbon::parse($remoteUpdatedAt);
-                $localTimestamp = $localUpdatedAt ? Carbon::parse($localUpdatedAt) : null;
-
-                // Se non c'è un timestamp locale o quello remoto è più recente
-                if (! $localTimestamp || $remoteTimestamp->gt($localTimestamp)) {
-                    // Aggiorna usando la logica simile a osmfeaturesUpdateLocalAfterSync
-                    $this->updateFromOsmfeaturesData($model, $osmfeaturesData, $osmfeaturesId);
-                }
-            } else {
-                Log::warning('checkAndUpdateFromOsmfeatures: No updated_at in response', [
-                    'hiking_route_id' => $model->id,
-                    'osmfeatures_id' => $osmfeaturesId,
-                ]);
-            }
-            // Ricaricare il modello dopo eventuale aggiornamento da osmfeatures
-            $model->refresh();
         } catch (\Exception $e) {
             // Log dell'errore ma non bloccare il rendering della vista
             Log::error('checkAndUpdateFromOsmfeatures: Exception occurred', [
@@ -1054,53 +1013,54 @@ class HikingRoute extends OsmfeaturesResource
     }
 
     /**
-     * Aggiorna il modello con i dati da osmfeatures.
+     * Aggiorna i dati osmfeatures e il timestamp (sempre applicato).
+     * Fa la chiamata API a osmfeatures per ottenere i dati freschi.
      *
      * @param  HikingRouteModel  $model
-     * @param  array  $osmfeaturesData
-     * @param  string  $osmfeaturesId
      * @return void
      */
-    protected function updateFromOsmfeaturesData(HikingRouteModel $model, array $osmfeaturesData, string $osmfeaturesId): void
+    protected function updateOsmfeaturesData(HikingRouteModel $model): void
     {
         try {
-            Log::info('updateFromOsmfeaturesData: Starting update', [
-                'hiking_route_id' => $model->id,
-                'osmfeatures_id' => $osmfeaturesId,
-                'has_geometry' => isset($osmfeaturesData['geometry']),
-                'has_properties' => isset($osmfeaturesData['properties']),
-            ]);
-
-            // Check if the osm2cai_status from osmfeatures is 0
-            if (isset($osmfeaturesData['properties']['osm2cai_status'])) {
-                $incomingStatus = $osmfeaturesData['properties']['osm2cai_status'];
-                Log::debug('updateFromOsmfeaturesData: Checking incoming status', [
+            $osmfeaturesId = $model->osmfeatures_id;
+            if (! $osmfeaturesId) {
+                Log::warning('updateOsmfeaturesData: Missing osmfeatures_id, skipping', [
                     'hiking_route_id' => $model->id,
-                    'incoming_status' => $incomingStatus,
-                    'current_status' => $model->osm2cai_status,
                 ]);
 
-                if ($incomingStatus == 0) {
-                    Log::info('updateFromOsmfeaturesData: HikingRoute has incoming osm2cai_status 0 from osmfeatures, skipping update', [
-                        'hiking_route_id' => $model->id,
-                        'osmfeatures_id' => $osmfeaturesId,
-                    ]);
-                    // Non eliminiamo il modello qui, solo loggiamo
-                    return;
-                }
+                return;
             }
 
-            // Update the geometry if necessary
-            Log::debug('updateFromOsmfeaturesData: Checking geometry updates', [
-                'hiking_route_id' => $model->id,
-            ]);
-            $updateData = HikingRouteModel::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
-            Log::debug('updateFromOsmfeaturesData: Geometry check completed', [
-                'hiking_route_id' => $model->id,
-                'geometry_updated' => isset($updateData['geometry']),
-            ]);
+            // Chiamata API sincrona a osmfeatures
+            $endpoint = HikingRouteModel::getOsmfeaturesEndpoint();
+            $apiUrl = $endpoint . $osmfeaturesId;
 
-            // Update osmfeatures_data
+            $response = Http::timeout(10)->get($apiUrl);
+
+            if ($response->failed()) {
+                Log::warning('updateOsmfeaturesData: Failed to fetch osmfeatures data', [
+                    'hiking_route_id' => $model->id,
+                    'osmfeatures_id' => $osmfeaturesId,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return;
+            }
+
+            $osmfeaturesData = $response->json();
+            if (! $osmfeaturesData) {
+                Log::warning('updateOsmfeaturesData: Empty response from osmfeatures API', [
+                    'hiking_route_id' => $model->id,
+                    'osmfeatures_id' => $osmfeaturesId,
+                ]);
+
+                return;
+            }
+
+            $updateData = [];
+
+            // Aggiorna sempre osmfeatures_data
             $updateData['osmfeatures_data'] = $osmfeaturesData;
 
             // Il comando UpdateHikingRoutesCommand usa $route['updated_at'] dalla lista.
@@ -1109,68 +1069,16 @@ class HikingRoute extends OsmfeaturesResource
                 ?? $osmfeaturesData['properties']['updated_at']
                 ?? now();
 
-            $updateData['osmfeatures_updated_at'] = Carbon::parse($updatedAtValue)->toDateTimeString();
+            // Converti sempre in UTC prima di salvare per evitare problemi di timezone
+            $updateData['osmfeatures_updated_at'] = Carbon::parse($updatedAtValue)->utc()->toDateTimeString();
 
-            Log::debug('updateFromOsmfeaturesData: Setting osmfeatures_updated_at', [
-                'hiking_route_id' => $model->id,
-                'updated_at_value' => $updatedAtValue,
-                'parsed_value' => $updateData['osmfeatures_updated_at'],
-            ]);
-
-            Log::debug('updateFromOsmfeaturesData: Prepared base updates', [
-                'hiking_route_id' => $model->id,
-                'update_fields_so_far' => array_keys($updateData),
-            ]);
-
-            // Update osm2cai_status if necessary (solo se status locale non è 4)
-            if ($model->osm2cai_status != 4) {
-                if (isset($osmfeaturesData['properties']['osm2cai_status']) && $osmfeaturesData['properties']['osm2cai_status'] !== null) {
-                    if ($model->osm2cai_status !== $osmfeaturesData['properties']['osm2cai_status']) {
-                        $updateData['osm2cai_status'] = $osmfeaturesData['properties']['osm2cai_status'];
-                        Log::info('updateFromOsmfeaturesData: osm2cai_status will be updated', [
-                            'hiking_route_id' => $model->id,
-                            'old_status' => $model->osm2cai_status,
-                            'new_status' => $osmfeaturesData['properties']['osm2cai_status'],
-                        ]);
-                    } else {
-                        Log::debug('updateFromOsmfeaturesData: osm2cai_status unchanged', [
-                            'hiking_route_id' => $model->id,
-                            'status' => $model->osm2cai_status,
-                        ]);
-                    }
-                }
-            } else {
-                Log::debug('updateFromOsmfeaturesData: Skipping status update (local status is 4)', [
-                    'hiking_route_id' => $model->id,
-                    'current_status' => $model->osm2cai_status,
-                ]);
-            }
-
-            // Execute the update only if there are data to update
             if (! empty($updateData)) {
-                Log::info('updateFromOsmfeaturesData: Executing update', [
-                    'hiking_route_id' => $model->id,
-                    'osmfeatures_id' => $osmfeaturesId,
-                    'updated_fields' => array_keys($updateData),
-                ]);
-
                 $model->updateQuietly($updateData);
-
-                Log::info('updateFromOsmfeaturesData: Update completed successfully', [
-                    'hiking_route_id' => $model->id,
-                    'osmfeatures_id' => $osmfeaturesId,
-                    'updated_fields' => array_keys($updateData),
-                ]);
-            } else {
-                Log::info('updateFromOsmfeaturesData: No updates to apply', [
-                    'hiking_route_id' => $model->id,
-                    'osmfeatures_id' => $osmfeaturesId,
-                ]);
+                $model->refresh();
             }
         } catch (\Exception $e) {
-            Log::error('updateFromOsmfeaturesData: Exception occurred', [
+            Log::error('updateOsmfeaturesData: Exception occurred', [
                 'hiking_route_id' => $model->id ?? null,
-                'osmfeatures_id' => $osmfeaturesId,
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -1178,6 +1086,35 @@ class HikingRoute extends OsmfeaturesResource
             ]);
         }
     }
+
+    /**
+     * Aggiorna geometria e status del modello se le condizioni lo permettono.
+     *
+     * @param  HikingRouteModel  $model
+     * @param  array  $osmfeaturesData
+     * @param  string  $osmfeaturesId
+     * @return array Array con i dati da aggiornare (vuoto se le condizioni non sono soddisfatte)
+     */
+    protected function updateModelGeometryAndStatus(HikingRouteModel $model, array $osmfeaturesData, string $osmfeaturesId): array
+    {
+        $updateData = [];
+
+        // Aggiorna geometria e status solo se osm2cai_status locale non è 4
+        if ($model->osm2cai_status != 4) {
+            // Aggiorna geometria se presente
+            $geometryUpdate = HikingRouteModel::updateGeometry($model, $osmfeaturesData, $osmfeaturesId);
+            $updateData = array_merge($updateData, $geometryUpdate);
+
+            // Aggiorna osm2cai_status se presente e diverso dal corrente
+            $incomingStatus = $osmfeaturesData['properties']['osm2cai_status'] ?? null;
+            if ($incomingStatus !== null && $model->osm2cai_status !== $incomingStatus) {
+                $updateData['osm2cai_status'] = $incomingStatus;
+            }
+        }
+
+        return $updateData;
+    }
+
 
     /**
      * Controlla e aggiorna il modello da OSM se ci sono aggiornamenti disponibili.
