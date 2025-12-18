@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source .env
-containerName="php81_$APP_NAME"
+containerName="php81-${APP_NAME}"
 
 # Install xdebug without interactive terminal for automated execution
 echo "Installing Xdebug in container $containerName..."
