@@ -28,6 +28,7 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
+use Wm\MapPoint\MapPoint;
 
 class Club extends Resource
 {
@@ -130,6 +131,15 @@ class Club extends Resource
                 return $this->formatUserList($this->users()->get(), null, true);
             })->asHtml()
                 ->onlyOnDetail(),
+            MapPoint::make(__('Geometry'), 'geometry')->withMeta([
+                'center' => [43.7125, 10.4013],
+                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+                'minZoom' => 8,
+                'maxZoom' => 14,
+                'defaultZoom' => 10,
+                'defaultCenter' => [43.7125, 10.4013],
+            ])->hideFromIndex(),
             BelongsToMany::make(__('Club\'s hiking routes'), 'hikingRoutes', HikingRoute::class)
                 ->help(__('Only national referents can add hiking routes to the club')),
             Text::make(__('SDA1'), function () use ($hikingRoutesSDA1) {
