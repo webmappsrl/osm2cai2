@@ -2,3 +2,9 @@ button[dusk='update-and-continue-editing-button'],
 button[dusk='create-and-add-another-button'] {
     display: none;
 }
+
+@media (min-width: 768px) {
+    .flex.md\:hidden{
+        display: none;
+    }
+}
