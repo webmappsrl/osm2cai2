@@ -3,6 +3,44 @@ button[dusk='create-and-add-another-button'] {
     display: none;
 }
 
+/* Hide the "UNREGISTERED" text in Nova */
+a[href*="nova.laravel.com/licenses"],
+a[href*="licenses"].text-red-500.uppercase {
+    display: none !important;
+}
+
+/* Position the "OSM2CAI" text next to the logo */
+header a[href*="/dashboards/main"],
+header a[href*="dashboards"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    margin-right: 16px;
+    min-width: fit-content;
+    padding: 0;
+}
+/* Add the "OSM2CAI" text next to the logo */
+header a[href*="/dashboards/main"]::after,
+header a[href*="dashboards"]::after {
+    content: "OSM2CAI";
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0560C8;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+/* Increase the size of the logo */
+header a[href*="/dashboards/main"] span img,
+header a[href*="dashboards"] span img,
+header a[href*="/dashboards/main"] span svg,
+header a[href*="dashboards"] span svg {
+    width: 60px !important;
+    height: 60px !important;
+}
+
 @media (min-width: 768px) {
     .flex.md\:hidden{
         display: none;
