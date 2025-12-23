@@ -158,6 +158,14 @@ trait UgcCommonFieldsTrait
 
             // Images
             Images::make(__('Image'), 'default')->hideFromIndex(),
+            
+            // Media count in index
+            Text::make(__('Media'))
+            ->resolveUsing(function ($value, $model) {
+                $count = $model->getMedia()->count();
+                return (string) $count;
+            })
+            ->onlyOnIndex(),
 
             // Properties panels
             PropertiesPanel::makeWithModel('Form', 'properties->form', $this, true),
