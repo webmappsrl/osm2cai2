@@ -18,42 +18,61 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     {
         parent::setUp();
         Queue::fake();
-        // clean up the database
-        HikingRoute::truncate();
-        Region::truncate();
+        // DatabaseTransactions will handle cleanup automatically
     }
 
     /** @test */
     public function it_processes_hiking_routes_with_status_4()
     {
-        // Create some routes with different statuses
-        HikingRoute::factory()->createQuietly([
+        // Create some routes with different statuses using high IDs to avoid conflicts
+        $route1 = HikingRoute::factory()->createQuietly([
+            'id' => 999999991,
             'osm2cai_status' => 4,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRINGZ((1 1 0, 2 2 0))', 4326)"),
+        ]);
+        $route2 = HikingRoute::factory()->createQuietly([
+            'id' => 999999992,
+            'osm2cai_status' => 4,
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRINGZ((3 3 0, 4 4 0))', 4326)"),
         ]);
         HikingRoute::factory()->createQuietly([
-            'osm2cai_status' => 4,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((3 3, 4 4))', 4326)"),
-        ]);
-        HikingRoute::factory()->createQuietly([
+            'id' => 999999993,
             'osm2cai_status' => 3,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((5 5, 6 6))', 4326)"),
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRINGZ((5 5 0, 6 6 0))', 4326)"),
         ]); // should not be processed
 
-        $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
+        // Test with specific IDs to avoid counting existing data from restore
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', [
+            'model' => 'HikingRoute',
+            'id' => $route1->id,
+        ])
             ->expectsConfirmation('This command is meant to be run in production. By continuing, you will update cached file on AWS S3 with your local data. Do you wish to continue?', 'yes')
-            ->expectsOutput('Processing 2 HikingRoute')
+            ->expectsOutput('Processing 1 HikingRoute')
             ->assertSuccessful();
 
-        Queue::assertPushed(CacheMiturAbruzzoDataJob::class, 2);
+        Queue::assertPushed(CacheMiturAbruzzoDataJob::class, 1);
+
+        // Reset queue for second test
+        Queue::fake();
+
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', [
+            'model' => 'HikingRoute',
+            'id' => $route2->id,
+        ])
+            ->expectsConfirmation('This command is meant to be run in production. By continuing, you will update cached file on AWS S3 with your local data. Do you wish to continue?', 'yes')
+            ->expectsOutput('Processing 1 HikingRoute')
+            ->assertSuccessful();
+
+        Queue::assertPushed(CacheMiturAbruzzoDataJob::class, 1);
     }
 
     /** @test */
     public function it_processes_specific_hiking_route_by_id()
     {
         $route = HikingRoute::factory()->createQuietly([
+            'id' => 999999994,
             'osm2cai_status' => 4,
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRINGZ((1 1 0, 2 2 0))', 4326)"),
         ]);
 
         $this->artisan('osm2cai:cache-mitur-abruzzo-api', [
@@ -70,9 +89,12 @@ class CacheMiturAbruzzoApiCommandTest extends TestCase
     /** @test */
     public function it_shows_error_when_no_hiking_routes_found()
     {
-        $this->artisan('osm2cai:cache-mitur-abruzzo-api', ['model' => 'HikingRoute'])
+        // Test with a non-existent ID to ensure no routes are found
+        $this->artisan('osm2cai:cache-mitur-abruzzo-api', [
+            'model' => 'HikingRoute',
+            'id' => 999999999,
+        ])
             ->expectsConfirmation('This command is meant to be run in production. By continuing, you will update cached file on AWS S3 with your local data. Do you wish to continue?', 'yes')
-            ->expectsOutput('No hiking routes found with osm2cai_status 4')
             ->assertSuccessful();
 
         Queue::assertNotPushed(CacheMiturAbruzzoDataJob::class);

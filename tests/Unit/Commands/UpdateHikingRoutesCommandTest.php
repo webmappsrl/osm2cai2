@@ -6,9 +6,11 @@ use App\Jobs\SyncClubHikingRouteRelationJob;
 use App\Models\HikingRoute;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class UpdateHikingRoutesCommandTest extends TestCase
@@ -18,7 +20,25 @@ class UpdateHikingRoutesCommandTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Disabilita Scout completamente per evitare connessioni a Elasticsearch
+        config(['scout.driver' => null]);
+
+        // Fake dei job batch per evitare connessioni a Redis
+        Bus::fake();
+
         Queue::fake();
+
+        // Crea le colonne osmfeatures se non esistono
+        if (! Schema::hasColumn('hiking_routes', 'osmfeatures_id')) {
+            DB::statement('ALTER TABLE hiking_routes ADD COLUMN osmfeatures_id varchar(255)');
+        }
+        if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
+            DB::statement('ALTER TABLE hiking_routes ADD COLUMN osmfeatures_data jsonb');
+        }
+        if (! Schema::hasColumn('hiking_routes', 'osmfeatures_updated_at')) {
+            DB::statement('ALTER TABLE hiking_routes ADD COLUMN osmfeatures_updated_at timestamp');
+        }
     }
 
     /**
@@ -41,7 +61,9 @@ class UpdateHikingRoutesCommandTest extends TestCase
             'osm2cai_status' => $status,
             'osmfeatures_data' => $osmfeaturesData,
             'osmfeatures_updated_at' => Carbon::now()->subDay(),
-            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRINGZ((1 1 0, 2 2 0))', 4326)"),
+            'geometry_raw_data' => DB::raw("ST_GeomFromText('MULTILINESTRINGZ((1 1 0, 2 2 0))', 4326)"),
+            'is_geometry_correct' => true,
         ]);
     }
 
@@ -104,7 +126,7 @@ class UpdateHikingRoutesCommandTest extends TestCase
      */
     private function assertJobPushedForHikingRoute(HikingRoute $hikingRoute): void
     {
-        Queue::assertPushed(SyncClubHikingRouteRelationJob::class, function ($job) use ($hikingRoute) {
+        Bus::assertDispatched(SyncClubHikingRouteRelationJob::class, function ($job) use ($hikingRoute) {
             $reflection = new \ReflectionClass($job);
             $modelTypeProp = $reflection->getProperty('modelType');
             $modelTypeProp->setAccessible(true);
@@ -150,7 +172,7 @@ class UpdateHikingRoutesCommandTest extends TestCase
         $this->artisan('osm2cai:update-hiking-routes')
             ->assertSuccessful();
 
-        Queue::assertNotPushed(SyncClubHikingRouteRelationJob::class);
+        Bus::assertNotDispatched(SyncClubHikingRouteRelationJob::class);
     }
 
     /** @test */

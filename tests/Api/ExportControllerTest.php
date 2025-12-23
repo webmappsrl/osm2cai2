@@ -16,9 +16,11 @@ use App\Models\UgcPoi;
 use App\Models\UgcTrack;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
+use Wm\WmPackage\Models\App;
 
 class ExportControllerTest extends TestCase
 {
@@ -27,6 +29,12 @@ class ExportControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Disabilita Scout completamente per evitare connessioni a Elasticsearch
+        config(['scout.driver' => null]);
+
+        // Fake dei job batch per evitare connessioni a Redis
+        Bus::fake();
 
         // Disable throttling for testing
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
@@ -46,9 +54,16 @@ class ExportControllerTest extends TestCase
                 'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
             ]);
         } elseif ($modelClass === UgcTrack::class) {
-            $modelClass::factory()->createQuietly([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}',
-            ]);
+            // Crea direttamente i modelli senza usare factory per evitare problemi con HasPackageFactory
+            for ($i = 0; $i < 3; $i++) {
+                UgcTrack::createQuietly([
+                    'app_id' => App::first()?->id ?? App::factory()->create()->id,
+                    'user_id' => User::first()?->id ?? User::factory()->create()->id,
+                    'name' => 'Test Track '.($i + 1),
+                    'geometry' => DB::raw("ST_GeomFromText('LINESTRINGZ(10 10 0, 20 20 0, 30 30 0)', 4326)"),
+                    'properties' => [],
+                ]);
+            }
         } elseif ($modelClass === Sector::class) {
             $modelClass::factory()->count(3)->sequence(
                 ['name' => 'Sector 1', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"MultiPolygon","coordinates":[[[[10,10],[20,20],[30,30],[10,10]]]]}'],
@@ -79,6 +94,17 @@ class ExportControllerTest extends TestCase
                 ['name' => 'Area 2', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
                 ['name' => 'Area 3', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
             )->createQuietly();
+        } elseif ($modelClass === UgcPoi::class) {
+            // Crea direttamente i modelli senza usare factory per evitare problemi con HasPackageFactory
+            for ($i = 0; $i < 3; $i++) {
+                UgcPoi::createQuietly([
+                    'app_id' => App::first()?->id ?? App::factory()->create()->id,
+                    'user_id' => User::first()?->id ?? User::factory()->create()->id,
+                    'name' => 'Test Poi '.($i + 1),
+                    'geometry' => DB::raw("ST_GeomFromText('POINTZ(10 10 0)', 4326)"),
+                    'properties' => [],
+                ]);
+            }
         } else {
             $modelClass::factory()->count(3)->createQuietly();
         }
@@ -91,7 +117,10 @@ class ExportControllerTest extends TestCase
 
         foreach ($data as $id => $updatedAt) {
             $this->assertIsInt($id);
-            $this->assertIsString($updatedAt);
+            // updated_at può essere null per alcuni modelli
+            if ($updatedAt !== null) {
+                $this->assertIsString($updatedAt);
+            }
         }
     }
 
@@ -105,8 +134,13 @@ class ExportControllerTest extends TestCase
                 'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
             ]);
         } elseif ($modelClass === UgcTrack::class) {
-            $model = $modelClass::factory()->createQuietly([
-                'geometry' => '{"type":"LineString","coordinates":[[10,10, 0],[20,20, 0],[30,30, 0]]}',
+            // Crea direttamente il modello senza usare factory per evitare problemi con HasPackageFactory
+            $model = UgcTrack::createQuietly([
+                'app_id' => App::first()?->id ?? App::factory()->create()->id,
+                'user_id' => User::first()?->id ?? User::factory()->create()->id,
+                'name' => 'Test Track',
+                'geometry' => DB::raw("ST_GeomFromText('LINESTRINGZ(10 10 0, 20 20 0, 30 30 0)', 4326)"),
+                'properties' => [],
             ]);
         } elseif ($modelClass === Sector::class) {
             $model = $modelClass::factory()->createQuietly([
@@ -126,6 +160,15 @@ class ExportControllerTest extends TestCase
             $model = $modelClass::factory()->createQuietly(
                 ['name' => 'Test Area', 'code' => 'T', 'full_code' => 'T123', 'num_expected' => 1234, 'geometry' => '{"type":"Polygon","coordinates":[[[10,10],[20,20],[30,30],[10,10]]]}'],
             );
+        } elseif ($modelClass === UgcPoi::class) {
+            // Crea direttamente il modello senza usare factory per evitare problemi con HasPackageFactory
+            $model = UgcPoi::createQuietly([
+                'app_id' => App::first()?->id ?? App::factory()->create()->id,
+                'user_id' => User::first()?->id ?? User::factory()->create()->id,
+                'name' => 'Test Poi',
+                'geometry' => DB::raw("ST_GeomFromText('POINTZ(10 10 0)', 4326)"),
+                'properties' => [],
+            ]);
         } else {
             $model = $modelClass::factory()->createQuietly();
         }

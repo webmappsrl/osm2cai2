@@ -10,6 +10,7 @@ use App\Models\Sector;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -29,6 +30,12 @@ class CsvControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Disabilita Scout completamente per evitare connessioni a Elasticsearch
+        config(['scout.driver' => null]);
+
+        // Fake dei job batch per evitare connessioni a Redis
+        Bus::fake();
 
         Artisan::call('wm-osmfeatures:initialize-tables', ['--table' => 'hiking_routes']);
 
