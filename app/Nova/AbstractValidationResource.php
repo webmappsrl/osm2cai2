@@ -20,7 +20,7 @@ abstract class AbstractValidationResource extends UgcPoi
 
     public static function indexQuery(Request $request, $query)
     {
-        return $query->where('form_id', static::getFormId());
+        return $query->where('form_id', static::getFormId())->orWhere('properties->form->id', static::getFormId());
     }
 
     public function fields(Request $request): array
