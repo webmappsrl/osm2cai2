@@ -6,6 +6,7 @@ use App\Models\HikingRoute;
 use App\Models\Region;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -17,6 +18,12 @@ class HikingRoutesRegionControllerV1Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Disabilita Scout completamente per evitare connessioni a Elasticsearch
+        config(['scout.driver' => null]);
+
+        // Fake dei job batch per evitare connessioni a Redis
+        Bus::fake();
         // check if osmfeatures_data column exists
         if (! Schema::hasColumn('hiking_routes', 'osmfeatures_data')) {
             Schema::table('hiking_routes', function (Blueprint $table) {
@@ -29,7 +36,9 @@ class HikingRoutesRegionControllerV1Test extends TestCase
 
     private function createTestHikingRoute($id, $osm_id, $status, $geometry = null)
     {
-        return HikingRoute::create([
+        $defaultGeometry = DB::raw("ST_GeomFromText('LINESTRINGZ(10 10 0, 20 20 0)', 4326)");
+
+        return HikingRoute::createQuietly([
             'id' => $id,
             'osm2cai_status' => $status,
             'source' => 'survey:CAI',
@@ -37,7 +46,9 @@ class HikingRoutesRegionControllerV1Test extends TestCase
             'from' => 'Test Start',
             'to' => 'Test End',
             'ref' => '117',
-            'geometry' => DB::raw("ST_GeomFromText('LINESTRING(10 10, 20 20)', 4326)"),
+            'geometry' => $geometry ?? $defaultGeometry,
+            'geometry_raw_data' => $geometry ?? $defaultGeometry,
+            'is_geometry_correct' => true,
             'validation_date' => now(),
             'issues_status' => 'none',
             'issues_description' => '',
@@ -63,7 +74,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
     {
         // Prepara i dati di test
         $region = $this->createTestRegion('L');
-        $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
+        $hikingRoute = $this->createTestHikingRoute(999999, 12345, 4);
 
         // Crea la relazione nella tabella pivot
         DB::table('hiking_route_region')->insert([
@@ -74,9 +85,11 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         // Esegui la richiesta
         $response = $this->get('/api/v1/hiking-routes/region/L/4');
 
-        // Verifica la risposta
-        $response->assertStatus(200)
-            ->assertJson([$hikingRoute->id]);
+        // Verifica la risposta - verifica che l'ID sia presente nell'array
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertIsArray($data);
+        $this->assertContains($hikingRoute->id, $data);
     }
 
     public function test_hiking_route_list_by_region_not_found()
@@ -89,19 +102,20 @@ class HikingRoutesRegionControllerV1Test extends TestCase
 
     public function test_hiking_route_list_by_region_no_routes()
     {
-        $region = $this->createTestRegion('L');
+        $region = $this->createTestRegion('X');
 
-        $response = $this->get('/api/v1/hiking-routes/region/L/4');
+        $response = $this->get('/api/v1/hiking-routes/region/X/4');
 
         $response->assertStatus(404)
-            ->assertJson(['error' => 'No hiking routes found for region L and SDA 4']);
+            ->assertJson(['error' => 'No hiking routes found for region X and SDA 4']);
     }
 
     public function test_hiking_route_osm_list_by_region()
     {
         // Prepara i dati di test
         $region = $this->createTestRegion('L');
-        $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
+        $uniqueOsmId = 99999999; // Usa un OSM ID unico per evitare conflitti
+        $hikingRoute = $this->createTestHikingRoute(999998, $uniqueOsmId, 4);
 
         // Crea la relazione nella tabella pivot
         DB::table('hiking_route_region')->insert([
@@ -112,7 +126,7 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         // Aggiungi osmfeatures_data
         $hikingRoute->osmfeatures_data = [
             'properties' => [
-                'osm_id' => 12345,
+                'osm_id' => $uniqueOsmId,
             ],
         ];
         $hikingRoute->save();
@@ -120,15 +134,17 @@ class HikingRoutesRegionControllerV1Test extends TestCase
         // Esegui la richiesta
         $response = $this->get('/api/v1/hiking-routes-osm/region/L/4');
 
-        // Verifica la risposta
-        $response->assertStatus(200)
-            ->assertJson([12345]);
+        // Verifica la risposta - verifica che l'OSM ID sia presente nell'array
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertIsArray($data);
+        $this->assertContains($uniqueOsmId, $data);
     }
 
     public function test_hiking_route_by_id()
     {
         // Prepara i dati di test
-        $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
+        $hikingRoute = $this->createTestHikingRoute(999997, 12345, 4);
 
         // Esegui la richiesta
         $response = $this->get('/api/v1/hiking-route/'.$hikingRoute->id);
@@ -166,7 +182,8 @@ class HikingRoutesRegionControllerV1Test extends TestCase
     public function test_hiking_route_by_osm_id()
     {
         // Prepara i dati di test
-        $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
+        $uniqueOsmId = 99999998;
+        $hikingRoute = $this->createTestHikingRoute(999996, $uniqueOsmId, 4);
 
         // Esegui la richiesta
         $response = $this->get('/api/v1/hiking-route-osm/'.$hikingRoute->osmfeatures_data['properties']['osm_id']);
@@ -191,33 +208,38 @@ class HikingRoutesRegionControllerV1Test extends TestCase
     public function test_hiking_route_list_by_bounding_box()
     {
         // Prepara i dati di test
-        $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
+        $hikingRoute = $this->createTestHikingRoute(999995, 12345, 4);
 
         // Esegui la richiesta con un bounding box che contiene il percorso
         $response = $this->get('/api/v1/hiking-routes/bb/5,5,25,25/4');
 
-        // Verifica la risposta
-        $response->assertStatus(200)
-            ->assertJson([$hikingRoute->id]);
+        // Verifica la risposta - verifica che l'ID sia presente nell'array
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertIsArray($data);
+        $this->assertContains($hikingRoute->id, $data);
     }
 
     public function test_hiking_route_osm_list_by_bounding_box()
     {
         // Prepara i dati di test
-        $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
+        $uniqueOsmId = 99999997;
+        $hikingRoute = $this->createTestHikingRoute(999994, $uniqueOsmId, 4);
 
         // Esegui la richiesta con un bounding box che contiene il percorso
         $response = $this->get('/api/v1/hiking-routes-osm/bb/5,5,25,25/4');
 
-        // Verifica la risposta
-        $response->assertStatus(200)
-            ->assertJson([$hikingRoute->osmfeatures_data['properties']['osm_id']]);
+        // Verifica la risposta - verifica che l'OSM ID sia presente nell'array
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertIsArray($data);
+        $this->assertContains($uniqueOsmId, $data);
     }
 
     public function test_hiking_route_collection_by_bounding_box()
     {
         // Prepara i dati di test
-        $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
+        $hikingRoute = $this->createTestHikingRoute(999993, 12345, 4);
 
         // Esegui la richiesta con un bounding box valido (area < 0.1)
         $response = $this->get('/api/v1/hiking-routes-collection/bb/10.0,45.0,10.3,45.2/4');

@@ -103,7 +103,7 @@ class GeometryServiceTest extends TestCase
     public function test_text_to_geojson_with_valid_line_string_json()
     {
         $lineStringText = '{
-            "type": "LineString", 
+            "type": "LineString",
             "coordinates": [[0, 0], [1, 1]]
         }';
 
@@ -115,7 +115,7 @@ class GeometryServiceTest extends TestCase
     public function test_text_to_geojson_with_valid_feature_collection_json()
     {
         $featureCollectionText = '{
-            "type": "FeatureCollection", 
+            "type": "FeatureCollection",
             "features": [
                 {"geometry": {"type": "Point", "coordinates": [125.6, 10.1]}}
             ]
@@ -215,13 +215,14 @@ class GeometryServiceTest extends TestCase
 
         DB::shouldReceive('selectOne')
             ->once()
-            ->with(Mockery::on(function ($query) use ($table) {
+            ->with(Mockery::on(function ($query) use ($table, $geometryColumn) {
                 return strpos($query, "FROM {$table}") !== false
-                    && strpos($query, 'CASE') !== false;
+                    && strpos($query, "ST_GeometryType({$geometryColumn}::geometry)") !== false
+                    && strpos($query, "WHERE {$geometryColumn} IS NOT NULL") !== false;
             }))
             ->andReturn((object) ['geom_type' => 'ST_Point']);
 
-        $result = $this->geometryService->getGeometryType($table, $geometryColumn);
+        $result = GeometryService::getGeometryType($table, $geometryColumn);
         $this->assertEquals('Point', $result);
     }
 
@@ -234,11 +235,12 @@ class GeometryServiceTest extends TestCase
             ->once()
             ->with(Mockery::on(function ($query) use ($table, $geometryColumn) {
                 return strpos($query, "FROM {$table}") !== false
-                    && strpos($query, "ST_GeometryType({$geometryColumn})") !== false;
+                    && strpos($query, "ST_GeometryType({$geometryColumn}::geometry)") !== false
+                    && strpos($query, "WHERE {$geometryColumn} IS NOT NULL") !== false;
             }))
             ->andReturn((object) ['geom_type' => 'ST_LineString']);
 
-        $result = $this->geometryService->getGeometryType($table, $geometryColumn);
+        $result = GeometryService::getGeometryType($table, $geometryColumn);
         $this->assertEquals('LineString', $result);
     }
 
