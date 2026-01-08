@@ -105,7 +105,7 @@ trait UgcCommonModelTrait
             }
 
             // Controlla se il campo validated è stato cambiato a VALID
-            if ($ugc->wasChanged('validated') && $ugc->validated === ValidatedStatusEnum::VALID->value) {
+            if ($ugc->isDirty('validated') && $ugc->validated === ValidatedStatusEnum::VALID->value) {
                 $ugc->createEcPoiFromValidatedUgc();
             }
         });
