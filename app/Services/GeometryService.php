@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Symm\Gisconverter\Exceptions\InvalidText;
 use Symm\Gisconverter\Gisconverter;
+use Wm\WmPackage\Services\GeometryComputationService;
 
 class GeometryService
 {
@@ -20,15 +21,7 @@ class GeometryService
 
     public function geojsonToGeometry($geojson)
     {
-        if (empty($geojson)) {
-            return null;
-        }
-
-        if (is_array($geojson)) {
-            $geojson = json_encode($geojson);
-        }
-
-        return DB::select("select (ST_Force3D(ST_GeomFromGeoJSON('".$geojson."'))) as g ")[0]->g;
+        return GeometryComputationService::make()->geojsonToGeometry($geojson);
     }
 
     /**
@@ -157,7 +150,7 @@ class GeometryService
             return null;
         }
 
-        $geometry = $this->geojsonToGeometry($geometry);
+        $geometry = GeometryComputationService::make()->geojsonToGeometry($geometry);
 
         return DB::select("select ST_AsGeoJSON(ST_Centroid('".$geometry."')) as g")[0]->g;
     }

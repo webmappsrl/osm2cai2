@@ -72,25 +72,15 @@ trait UgcCommonModelTrait
 
         // Quando si salva un UGC, sincronizza geometry in properties.position e controlla se è stato validato
         static::saved(function ($ugc) {
-            // Sincronizza geometry in properties.position in base al tipo di geometria
+            // Sincronizza geometry in properties.position
             if ($ugc->geometry !== null && $ugc->id) {
                 try {
-                    $table = $ugc->getTable();
-
-                    // Leggi properties dal database per avere i valori aggiornati
-                    $currentProperties = DB::table($table)
-                        ->where('id', $ugc->id)
-                        ->value('properties');
-
-                    $properties = is_string($currentProperties)
-                        ? json_decode($currentProperties, true) ?? []
-                        : ($currentProperties ?? []);
-
                     // Estrai latitude e longitude usando GeometryComputationService del wm-package
                     $coordinates = self::extractCoordinatesFromUgcModel($ugc);
 
                     // Salva solo latitude e longitude in properties.position
                     if ($coordinates !== null) {
+                        $properties = $ugc->properties ?? [];
                         $currentLat = $properties['position']['latitude'] ?? null;
                         $currentLon = $properties['position']['longitude'] ?? null;
 
@@ -101,13 +91,8 @@ trait UgcCommonModelTrait
                                 'longitude' => $coordinates['longitude'],
                             ];
 
-                            // Aggiorna properties senza triggerare altri observer per evitare loop
-                            DB::table($table)
-                                ->where('id', $ugc->id)
-                                ->update(['properties' => json_encode($properties)]);
-
-                            // Aggiorna anche l'attributo del modello per mantenere la sincronizzazione
-                            $ugc->setAttribute('properties', $properties);
+                            // Usa updateQuietly per evitare loop di eventi
+                            $ugc->updateQuietly(['properties' => $properties]);
                         }
                     }
                 } catch (\Exception $e) {
