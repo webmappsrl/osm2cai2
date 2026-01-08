@@ -25,20 +25,38 @@ class UgcAttributeDistribution extends Partition
     protected string $modelClass;
 
     /**
+     * Se true, conta utenti univoci basati sull'ultima versione utilizzata
+     */
+    protected bool $countUniqueUsers = false;
+
+    /**
      * Costruttore parametrico
      */
-    public function __construct(string $label, string $path, string $modelClass)
+    public function __construct(string $label, string $path, string $modelClass, bool $countUniqueUsers = false)
     {
         parent::__construct();
         $this->customLabel = $label;
         $this->path = $path;
         $this->modelClass = $modelClass;
+        $this->countUniqueUsers = $countUniqueUsers;
     }
 
     /**
      * Calculate the value of the metric.
      */
     public function calculate(NovaRequest $request): PartitionResult
+    {
+        if ($this->countUniqueUsers) {
+            return $this->calculateUniqueUsers();
+        }
+
+        return $this->calculateStandard();
+    }
+
+    /**
+     * Calcolo standard: conta tutte le occorrenze
+     */
+    protected function calculateStandard(): PartitionResult
     {
         $data = $this->modelClass::query()
             ->selectRaw("{$this->path} as value, count(*) as count")
@@ -47,6 +65,52 @@ class UgcAttributeDistribution extends Partition
             ->pluck('count', 'value')
             ->toArray();
 
+        return $this->normalizeAndFormatData($data);
+    }
+
+    /**
+     * Calcolo per utenti univoci: conta utenti basati sull'ultima versione utilizzata
+     *
+     * Per ogni utente, identifica l'ultima versione dell'app con cui ha creato UGC
+     * e conta l'utente solo in quella versione. Questo garantisce che la somma
+     * delle fette corrisponda al numero totale di utenti unici.
+     */
+    protected function calculateUniqueUsers(): PartitionResult
+    {
+        // Query per ottenere l'ultima versione dell'app per ogni utente
+        // DISTINCT ON di PostgreSQL restituisce il primo record per ogni user_id
+        // ordinato per updated_at DESC (ultimo UGC creato)
+        $latestVersions = $this->modelClass::query()
+            ->selectRaw("
+                DISTINCT ON (user_id)
+                user_id,
+                {$this->path} as value
+            ")
+            ->whereNotNull('user_id')
+            ->whereRaw("{$this->path} IS NOT NULL")
+            ->orderBy('user_id')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        // Raggruppa per versione e conta gli utenti univoci
+        // Ogni utente viene conteggiato una sola volta nella sua versione più recente
+        $data = [];
+        foreach ($latestVersions as $record) {
+            $value = $record->value;
+            if (! isset($data[$value])) {
+                $data[$value] = 0;
+            }
+            $data[$value]++;
+        }
+
+        return $this->normalizeAndFormatData($data);
+    }
+
+    /**
+     * Normalizza e formatta i dati per il risultato
+     */
+    protected function normalizeAndFormatData(array $data): PartitionResult
+    {
         // Sostituisco chiavi null o vuote con 'No Attribute'
         $normalizedData = [];
         foreach ($data as $key => $count) {
@@ -61,16 +125,24 @@ class UgcAttributeDistribution extends Partition
         // Ordina per conteggio decrescente
         arsort($normalizedData);
 
-        // Calcolo il totale per la percentuale
-        $total = array_sum($normalizedData);
+        // Raggruppa versioni con pochi utenti in "Others"
+        // Usa una soglia assoluta invece della percentuale, più appropriata per il conteggio utenti
+        $threshold = 5; // Versioni con meno di 5 utenti vengono raggruppate
         $others = 0;
+        $keysToRemove = [];
+
         foreach ($normalizedData as $version => $count) {
-            $percent = $total > 0 ? ($count / $total) * 100 : 0;
-            if ($percent < 1) {
+            if ($count < $threshold) {
                 $others += $count;
-                unset($normalizedData[$version]);
+                $keysToRemove[] = $version;
             }
         }
+
+        // Rimuovi le chiavi dopo l'iterazione per evitare problemi
+        foreach ($keysToRemove as $key) {
+            unset($normalizedData[$key]);
+        }
+
         if ($others > 0) {
             $normalizedData['Others'] = $others;
         }
