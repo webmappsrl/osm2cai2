@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.0.0 (2026-01-08)
+
+
+### Features
+
+* **command:** ✨ add InitializePolesNameCommand ([cc12407](https://github.com/webmappsrl/osm2cai2/commit/cc124074496b2f5c8e7254b872209f3f0759d8ec))
+* **command:** ✨ enhance UpdateHikingRoutesCommand with source_ref change detection ([#266](https://github.com/webmappsrl/osm2cai2/issues/266)) ([acae32b](https://github.com/webmappsrl/osm2cai2/commit/acae32bc92b0f02a648c65129a1abc40f3653f51))
+* **CreateTrailSurveyAction:** ✨ add user feedback message upon creation oc:6679 ([#262](https://github.com/webmappsrl/osm2cai2/issues/262)) ([638f9a7](https://github.com/webmappsrl/osm2cai2/commit/638f9a7888d4f0256d7290ed1a47b7f9dbf9c610))
+* **env:** ✨ add EC Track configuration to .env-example ([11c858f](https://github.com/webmappsrl/osm2cai2/commit/11c858f25d5c2164dd1a4f12d8f40f890398eab3))
+* **HikingRouteSignageExporter:** ✨ enhance arrow handling and data structure ([9f9b120](https://github.com/webmappsrl/osm2cai2/commit/9f9b1202bbf389a6d3e38287e401fa417286fa0a))
+* **metrics:** ✨ add unique user counting capability OC:6835 ([#276](https://github.com/webmappsrl/osm2cai2/issues/276)) ([38341bf](https://github.com/webmappsrl/osm2cai2/commit/38341bfbb6c4fb50ae073759c7c5213205b5f5ef))
+* **models:** ✨ add geometry synchronization caching and normalization oc:5628 ([71f25c0](https://github.com/webmappsrl/osm2cai2/commit/71f25c02d86fd41e961d024580499884d66a16fc))
+* **nova:** ✨ add media count display in index view OC:6794 ([#272](https://github.com/webmappsrl/osm2cai2/issues/272)) ([97612f0](https://github.com/webmappsrl/osm2cai2/commit/97612f0908ea7d300a1420de03ca68fc93d4393c))
+* **nova:** ✨ add model preparation for detail view in HikingRoute ([8284637](https://github.com/webmappsrl/osm2cai2/commit/8284637920f95f9bfa8e17b348e924856ef09f89))
+* **pdf:** 🗺️ add map screenshot to Trail Survey PDF ([3b4c7a2](https://github.com/webmappsrl/osm2cai2/commit/3b4c7a27fdda4c1afd8b4359a8b46a7e95f2b0f2))
+* **signage:** ✨ enhance SignageArrowsDisplay and SignageMap components ([1ba8c2e](https://github.com/webmappsrl/osm2cai2/commit/1ba8c2e4fb97f575b1d72e0b6260b82f7d37596c))
+* **SignageArrowsDisplay:** ✨ enhance display and formatting of route information ([17daad1](https://github.com/webmappsrl/osm2cai2/commit/17daad1f0bdb35fae694b00d311cb66c4c7f73da))
+* **SignageMapController:** ✨ add 'ref' property to feature response ([3b4cd2e](https://github.com/webmappsrl/osm2cai2/commit/3b4cd2eeddfd7a12f3e7a3702ba37618bec30b86))
+
+
+### Bug Fixes
+
+* **console:** 🐛 correct command name in schedule OC:6734 ([#264](https://github.com/webmappsrl/osm2cai2/issues/264)) ([f989b7d](https://github.com/webmappsrl/osm2cai2/commit/f989b7d886fe0f4d518d1f9cab965098f04eb52c))
+* **docker:** 🐛 correct container name variable syntax ([cfc970d](https://github.com/webmappsrl/osm2cai2/commit/cfc970d2fc1275b523047c6b6253bbcd43d0fa43))
+* **query:** 🐛 adjust index query to include form ID in nested properties OC:6846 ([#275](https://github.com/webmappsrl/osm2cai2/issues/275)) ([b4d60bf](https://github.com/webmappsrl/osm2cai2/commit/b4d60bf44f80cb73af45f86db01b77d608ecc58b))
+
+
+### Miscellaneous Chores
+
+* **signage-components:** ➕ add .gitignore files for SignageArrows and SignageMap components ([165fa5d](https://github.com/webmappsrl/osm2cai2/commit/165fa5da5fd9fe4226555ed30528bd1e25d62a6c))
+* update branding and logo oc: 5449 ([#270](https://github.com/webmappsrl/osm2cai2/issues/270)) ([8ffeb59](https://github.com/webmappsrl/osm2cai2/commit/8ffeb59efe112bb68737d897ac355ec57b2f9868))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
