@@ -150,7 +150,7 @@ class GeometryService
             return null;
         }
 
-        $geometry = GeometryComputationService::make()->geojsonToGeometry($geometry);
+        $geometry = $this->geojsonToGeometry($geometry);
 
         return DB::select("select ST_AsGeoJSON(ST_Centroid('".$geometry."')) as g")[0]->g;
     }
