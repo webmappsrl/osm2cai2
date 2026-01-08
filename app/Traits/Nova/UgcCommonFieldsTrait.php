@@ -8,6 +8,7 @@ use App\Nova\Filters\RelatedUGCFilter;
 use App\Nova\Filters\ValidatedFilter;
 use App\Nova\Metrics\UgcAppNameDistribution;
 use App\Nova\Metrics\UgcAttributeDistribution;
+use App\Nova\Metrics\UgcAttributeDistributionByLatestUserValue;
 use App\Nova\Metrics\UgcDevicePlatformDistribution;
 use App\Nova\Metrics\UgcValidatedStatusDistribution;
 use App\Nova\User;
@@ -300,7 +301,7 @@ HTML;
         return [
             new TopUgcCreators($model)->width('full')->height('dynamic'),
             new UgcAppNameDistribution($model),
-            new UgcAttributeDistribution('App Version', "properties->'device'->>'appVersion'", $model),
+            new UgcAttributeDistributionByLatestUserValue('App Version', "properties->'device'->>'appVersion'", $model),
             new UgcAttributeDistribution('App Form', "properties->'form'->>'id'", $model),
             new UgcDevicePlatformDistribution($model),
             new UgcValidatedStatusDistribution($model),
