@@ -453,5 +453,6 @@
     "Create Trail Survey confirmation message": "Questa azione creerà un nuovo Rilevamento Percorso per il percorso escursionistico selezionato. È necessario specificare la data di inizio (obbligatoria) e opzionalmente la data di fine. Se la data di fine non viene fornita, verrà automaticamente impostata uguale alla data di inizio. Il sistema assocerà automaticamente tutti i POI e i Tracciati rilevati sul campo entro un raggio di 10m dal percorso che ricadono nell'intervallo di date specificato. Dopo la creazione, potrai eliminare quelli non necessari. Verrà generato un documento PDF e verrai reindirizzato alla pagina di dettaglio del Rilevamento Percorso creato.",
     "Participants": "Partecipanti",
     "No participants": "Nessun partecipante",
-    "A new Trail Survey object has been created and the PDF generation has been started. You will be redirected to the object page.": "E’ stato creato un nuovo oggetto Rilevamento Percorso e ho mandato in esecuzione la creazione del PDF. Verrai rediretto alla pagina dell’oggetto."
+    "A new Trail Survey object has been created and the PDF generation has been started. You will be redirected to the object page.": "E’ stato creato un nuovo oggetto Rilevamento Percorso e ho mandato in esecuzione la creazione del PDF. Verrai rediretto alla pagina dell’oggetto.",
+    "Has Media": "Ha Media"
 }
