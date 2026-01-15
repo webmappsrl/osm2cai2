@@ -58,6 +58,25 @@
                                 </button>
                             </div>
 
+                            <!-- Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) -->
+                            <div v-if="metaValue && availableHikingRoutes.length > 1" class="mt-4">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                    HikingRoute (puoi selezionarne più di una)
+                                </label>
+                                <select v-model="selectedHikingRouteIds" multiple
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm"
+                                    style="min-height: 120px;">
+                                    <option v-for="hr in availableHikingRoutes" :key="hr.id" :value="hr.id">
+                                        {{ hr.name || `HikingRoute #${hr.id}` }}
+                                    </option>
+                                </select>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per
+                                    associare la meta.
+                                    Il bordo del palo sarà multicolore se selezioni più HikingRoute.
+                                </p>
+                            </div>
+
                             <!-- Campo Nome Località (visibile solo quando Meta è attivo) -->
                             <div v-if="metaValue" class="mt-4">
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
@@ -164,6 +183,9 @@ export default {
             description: '', // Descrizione località del palo
             isLoadingSuggestion: false, // Indica se sta caricando il suggerimento
             currentPoleOsmTags: null, // Dati osm_tags del palo corrente
+            currentFeaturesMap: null, // FeaturesMap corrente per trovare l'HikingRoute quando si lavora da SignageProject
+            availableHikingRoutes: [], // Lista delle HikingRoute disponibili per questo palo (quando appartiene a più HikingRoute)
+            selectedHikingRouteIds: [], // Array di HikingRoute selezionate quando il palo appartiene a più HikingRoute (multiselect)
         };
     },
 
@@ -250,9 +272,13 @@ export default {
                 this.description = event.properties?.description || '';
                 // Salva i dati osmTags del palo
                 this.currentPoleOsmTags = event.properties?.osmTags || null;
+                // Salva le featuresMap per poter trovare l'HikingRoute quando si lavora da SignageProject
+                this.currentFeaturesMap = event.featuresMap || null;
                 this.showPopup = true;
                 // Carica il valore di checkpoint per questo palo specifico
                 this.loadMetaValue(event.featuresMap);
+                // Carica le HikingRoute disponibili per questo palo
+                this.loadAvailableHikingRoutes();
             }
         },
 
@@ -269,6 +295,9 @@ export default {
             this.name = '';
             this.description = '';
             this.currentPoleOsmTags = null;
+            this.currentFeaturesMap = null;
+            this.availableHikingRoutes = [];
+            this.selectedHikingRouteIds = [];
         },
 
         handleKeydown(event) {
@@ -304,6 +333,144 @@ export default {
             }
 
             this.metaValue = false;
+        },
+
+        /**
+         * Carica le HikingRoute disponibili per il palo corrente
+         * Quando un palo appartiene a più HikingRoute, le raccoglie tutte
+         */
+        loadAvailableHikingRoutes() {
+            if (!this.currentPoleId || !this.currentFeaturesMap) {
+                this.availableHikingRoutes = [];
+                this.selectedHikingRouteIds = [];
+                return;
+            }
+
+            const poleId = parseInt(this.currentPoleId);
+            const hikingRoutesMap = new Map();
+
+            // Raccogli tutte le HikingRoute che contengono questo palo
+            // Cerca nelle features Point (pali) che hanno hikingRouteId o hikingRouteIds
+            for (const [featureId, feature] of Object.entries(this.currentFeaturesMap)) {
+                const geometryType = feature.geometry?.type?.toLowerCase();
+                const isPoint = geometryType === 'point';
+                const featurePoleId = feature.properties?.id;
+
+                // Se è il palo che stiamo cercando
+                if (isPoint && featurePoleId && parseInt(featurePoleId) === poleId) {
+                    // Prima controlla se c'è un array hikingRouteIds (quando il palo appartiene a più HikingRoute)
+                    const hikingRouteIds = feature.properties?.hikingRouteIds;
+                    if (hikingRouteIds && Array.isArray(hikingRouteIds)) {
+                        // Il palo appartiene a più HikingRoute
+                        for (const hrId of hikingRouteIds) {
+                            if (!hikingRoutesMap.has(hrId)) {
+                                // Cerca il nome dell'HikingRoute nelle features LineString
+                                let hikingRouteName = null;
+                                for (const [lineFeatureId, lineFeature] of Object.entries(this.currentFeaturesMap)) {
+                                    const lineGeometryType = lineFeature.geometry?.type?.toLowerCase();
+                                    const isLine = lineGeometryType === 'linestring' || lineGeometryType === 'multilinestring';
+
+                                    if (isLine && lineFeature.properties?.id && parseInt(lineFeature.properties.id) === hrId) {
+                                        // Prova a ottenere il nome dall'HikingRoute
+                                        hikingRouteName = lineFeature.properties?.name || lineFeature.properties?.tooltip || null;
+                                        break;
+                                    }
+                                }
+
+                                hikingRoutesMap.set(hrId, {
+                                    id: parseInt(hrId),
+                                    name: hikingRouteName || `HikingRoute #${hrId}`
+                                });
+                            }
+                        }
+                    } else {
+                        // Fallback: usa hikingRouteId se presente (singola HikingRoute)
+                        const hikingRouteId = feature.properties?.hikingRouteId;
+                        if (hikingRouteId && !hikingRoutesMap.has(hikingRouteId)) {
+                            // Cerca il nome dell'HikingRoute nelle features LineString
+                            let hikingRouteName = null;
+                            for (const [lineFeatureId, lineFeature] of Object.entries(this.currentFeaturesMap)) {
+                                const lineGeometryType = lineFeature.geometry?.type?.toLowerCase();
+                                const isLine = lineGeometryType === 'linestring' || lineGeometryType === 'multilinestring';
+
+                                if (isLine && lineFeature.properties?.id && parseInt(lineFeature.properties.id) === hikingRouteId) {
+                                    // Prova a ottenere il nome dall'HikingRoute
+                                    hikingRouteName = lineFeature.properties?.name || lineFeature.properties?.tooltip || null;
+                                    break;
+                                }
+                            }
+
+                            hikingRoutesMap.set(hikingRouteId, {
+                                id: parseInt(hikingRouteId),
+                                name: hikingRouteName || `HikingRoute #${hikingRouteId}`
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Se non troviamo hikingRouteId nei pali, cerca nelle LineString che hanno questo palo come checkpoint
+            if (hikingRoutesMap.size === 0) {
+                for (const [featureId, feature] of Object.entries(this.currentFeaturesMap)) {
+                    const geometryType = feature.geometry?.type?.toLowerCase();
+                    const isLine = geometryType === 'linestring' || geometryType === 'multilinestring';
+
+                    if (isLine && feature.properties?.id) {
+                        const checkpoint = feature.properties?.signage?.checkpoint;
+                        if (checkpoint && Array.isArray(checkpoint)) {
+                            const hasPole = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+                            if (hasPole) {
+                                const hikingRouteId = parseInt(feature.properties.id);
+                                if (!hikingRoutesMap.has(hikingRouteId)) {
+                                    hikingRoutesMap.set(hikingRouteId, {
+                                        id: hikingRouteId,
+                                        name: feature.properties?.name || feature.properties?.tooltip || `HikingRoute #${hikingRouteId}`
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.availableHikingRoutes = Array.from(hikingRoutesMap.values());
+
+            // Ordina le HikingRoute per ID per avere un ordine consistente
+            this.availableHikingRoutes.sort((a, b) => a.id - b.id);
+
+            // Trova tutte le HikingRoute per cui il palo è già checkpoint
+            const currentPoleId = parseInt(this.currentPoleId);
+            const checkpointRouteIds = [];
+
+            // Cerca se il palo è già checkpoint per una delle HikingRoute
+            for (const [featureId, feature] of Object.entries(this.currentFeaturesMap)) {
+                const geometryType = feature.geometry?.type?.toLowerCase();
+                const isLine = geometryType === 'linestring' || geometryType === 'multilinestring';
+
+                if (isLine && feature.properties?.id) {
+                    const checkpoint = feature.properties?.signage?.checkpoint;
+                    if (checkpoint && Array.isArray(checkpoint)) {
+                        const hasPole = checkpoint.some(id => parseInt(id) === currentPoleId || String(id) === String(currentPoleId));
+                        if (hasPole) {
+                            const hrId = parseInt(feature.properties.id);
+                            if (this.availableHikingRoutes.some(hr => hr.id === hrId)) {
+                                checkpointRouteIds.push(hrId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Se il palo è già checkpoint per alcune HikingRoute, selezionale
+            // Altrimenti seleziona la prima di default
+            if (checkpointRouteIds.length > 0) {
+                this.selectedHikingRouteIds = checkpointRouteIds;
+            } else if (this.availableHikingRoutes.length > 0) {
+                // Se c'è solo una HikingRoute, selezionala automaticamente
+                this.selectedHikingRouteIds = [this.availableHikingRoutes[0].id];
+            } else {
+                this.selectedHikingRouteIds = [];
+            }
         },
 
         async toggleMeta() {
@@ -349,6 +516,95 @@ export default {
             }
         },
 
+        /**
+         * Trova l'HikingRoute che contiene il palo corrente guardando le featuresMap.
+         * Quando si lavora da SignageProject, cerca le features LineString/MultiLineString
+         * che hanno un id valido (corrisponde all'HikingRoute).
+         * 
+         * Strategia:
+         * 1. Prima cerca le LineString che hanno già il palo come checkpoint
+         * 2. Se non trova, cerca le LineString che hanno signage (hiking routes processate)
+         * 3. Se non trova, prende la prima LineString con id valido
+         * 
+         * @returns {number|null} L'ID dell'HikingRoute o null se non trovato
+         */
+        findHikingRouteFromFeaturesMap(poleId = null) {
+            // Se poleId non è fornito, usa currentPoleId
+            if (poleId === null) {
+                if (!this.currentPoleId) {
+                    return null;
+                }
+                poleId = parseInt(this.currentPoleId);
+            } else {
+                poleId = parseInt(poleId);
+            }
+
+            if (!this.currentFeaturesMap) {
+                return null;
+            }
+
+            // Prima, cerca il palo stesso nelle featuresMap per vedere se ha hikingRouteId
+            // Questo è l'informazione più affidabile perché indica quale HikingRoute contiene questo palo
+            for (const [featureId, feature] of Object.entries(this.currentFeaturesMap)) {
+                const geometryType = feature.geometry?.type?.toLowerCase();
+                const isPoint = geometryType === 'point';
+                const featurePoleId = feature.properties?.id;
+
+                // Se è il palo che stiamo cercando
+                if (isPoint && featurePoleId && parseInt(featurePoleId) === poleId) {
+                    // L'HikingRoute che contiene questo palo è indicata in hikingRouteId
+                    // Questo viene aggiunto da SignageProject quando genera il GeoJSON
+                    const hikingRouteId = feature.properties?.hikingRouteId;
+                    if (hikingRouteId) {
+                        return parseInt(hikingRouteId);
+                    }
+                }
+            }
+
+            const lineFeatures = [];
+
+            // Raccogli tutte le features LineString/MultiLineString con id valido
+            for (const [featureId, feature] of Object.entries(this.currentFeaturesMap)) {
+                const geometryType = feature.geometry?.type?.toLowerCase();
+                const isLine = geometryType === 'linestring' || geometryType === 'multilinestring';
+
+                if (isLine && feature.properties?.id) {
+                    lineFeatures.push({
+                        id: parseInt(feature.properties.id),
+                        feature: feature,
+                        hasSignage: !!feature.properties?.signage,
+                        hasCheckpoint: !!(feature.properties?.signage?.checkpoint && Array.isArray(feature.properties.signage.checkpoint))
+                    });
+                }
+            }
+
+            if (lineFeatures.length === 0) {
+                return null;
+            }
+
+            // 1. Priorità: LineString che ha già questo palo come checkpoint
+            for (const lineFeature of lineFeatures) {
+                if (lineFeature.hasCheckpoint) {
+                    const checkpoint = lineFeature.feature.properties.signage.checkpoint;
+                    const hasPole = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+                    if (hasPole) {
+                        return lineFeature.id;
+                    }
+                }
+            }
+
+            // 2. Seconda priorità: LineString che ha signage (hiking route già processata)
+            for (const lineFeature of lineFeatures) {
+                if (lineFeature.hasSignage) {
+                    return lineFeature.id;
+                }
+            }
+
+            // 3. Fallback: prima LineString con id valido
+            // Quando si lavora da SignageProject, di solito c'è una sola hiking route visibile per palo
+            return lineFeatures[0].id;
+        },
+
         async saveChanges() {
             // Se Meta è attivo, richiedi name; altrimenti permetti il salvataggio
             if (this.isUpdatingMeta || !this.currentPoleId) {
@@ -362,30 +618,109 @@ export default {
             const poleId = parseInt(this.currentPoleId);
 
             try {
-                const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+                const modelName = this.resourceName;
+                let hikingRouteId;
 
-                // Aggiorna le properties dell'hikingRoute con checkpoint, name e description
-                const response = await Nova.request().patch(
-                    `/nova-vendor/signage-map/hiking-route/${id}/properties`,
-                    {
-                        poleId: poleId,
-                        add: this.metaValue,
-                        name: this.metaValue ? this.name.trim() : null,
-                        description: this.metaValue ? (this.description?.trim() || null) : null
+                // Se stiamo lavorando da un SignageProject, gestisci più HikingRoute
+                if (modelName === 'signage-projects') {
+                    // Se il palo appartiene a più HikingRoute e l'utente ne ha selezionate, usa quelle
+                    let hikingRouteIds = [];
+
+                    if (this.availableHikingRoutes.length > 1 && this.selectedHikingRouteIds && this.selectedHikingRouteIds.length > 0) {
+                        // Converti gli ID selezionati in numeri e verifica che siano validi
+                        hikingRouteIds = this.selectedHikingRouteIds
+                            .map(id => typeof id === 'number' ? id : parseInt(id))
+                            .filter(id => {
+                                const isValid = this.availableHikingRoutes.some(hr => hr.id === id);
+                                if (!isValid) {
+                                    console.warn('HikingRoute ID non valido ignorato:', id);
+                                }
+                                return isValid;
+                            });
+
+                        if (hikingRouteIds.length === 0) {
+                            Nova.error('Nessuna HikingRoute valida selezionata. Seleziona almeno un\'opzione valida.');
+                            this.isUpdatingMeta = false;
+                            return;
+                        }
+                    } else {
+                        // Altrimenti, trova automaticamente l'HikingRoute
+                        const autoHikingRouteId = this.findHikingRouteFromFeaturesMap(poleId);
+                        if (autoHikingRouteId) {
+                            hikingRouteIds = [autoHikingRouteId];
+                        }
                     }
-                );
 
-                // Aggiorna la cache con le properties aggiornate dalla risposta
-                if (response.data && response.data.properties) {
-                    this.cachedProperties = response.data.properties;
+                    if (hikingRouteIds.length === 0) {
+                        Nova.error('Impossibile trovare l\'HikingRoute che contiene questo palo');
+                        this.isUpdatingMeta = false;
+                        return;
+                    }
+
+                    // Salva per tutte le HikingRoute selezionate
+                    const promises = hikingRouteIds.map(hikingRouteId => {
+                        const endpoint = `/nova-vendor/signage-map/hiking-route/${hikingRouteId}/properties`;
+                        return Nova.request().patch(
+                            endpoint,
+                            {
+                                poleId: poleId,
+                                add: this.metaValue,
+                                name: this.metaValue ? this.name.trim() : null,
+                                description: this.metaValue ? (this.description?.trim() || null) : null
+                            }
+                        );
+                    });
+
+                    const responses = await Promise.all(promises);
+
+                    // Aggiorna la cache con le properties dell'ultima risposta (o combina se necessario)
+                    if (responses.length > 0 && responses[responses.length - 1].data && responses[responses.length - 1].data.properties) {
+                        this.cachedProperties = responses[responses.length - 1].data.properties;
+                    }
+
+                    const count = hikingRouteIds.length;
+                    Nova.success(
+                        this.metaValue
+                            ? `Dati località salvati con successo per ${count} HikingRoute${count > 1 ? '' : ''}`
+                            : `Meta rimossa con successo da ${count} HikingRoute${count > 1 ? '' : ''}`
+                    );
+                } else {
+                    // Se stiamo lavorando direttamente su un HikingRoute, usa il suo ID
+                    hikingRouteId = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+
+                    if (!hikingRouteId) {
+                        Nova.error('ID HikingRoute non trovato');
+                        this.isUpdatingMeta = false;
+                        return;
+                    }
+
+                    // Usa sempre l'endpoint dell'HikingRoute
+                    const endpoint = `/nova-vendor/signage-map/hiking-route/${hikingRouteId}/properties`;
+
+                    // Aggiorna le properties dell'hikingRoute con checkpoint, name e description
+                    const response = await Nova.request().patch(
+                        endpoint,
+                        {
+                            poleId: poleId,
+                            add: this.metaValue,
+                            name: this.metaValue ? this.name.trim() : null,
+                            description: this.metaValue ? (this.description?.trim() || null) : null
+                        }
+                    );
+
+                    // Aggiorna la cache con le properties aggiornate dalla risposta
+                    if (response.data && response.data.properties) {
+                        this.cachedProperties = response.data.properties;
+                    }
+
+                    Nova.success(this.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
                 }
-
-                Nova.success(this.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
 
                 // Forza il refresh della mappa incrementando la key
                 this.mapKey++;
             } catch (error) {
-                Nova.error('Errore durante il salvataggio');
+                console.error('Errore durante il salvataggio:', error);
+                Nova.error('Errore durante il salvataggio: ' + (error.response?.data?.error || error.message || 'Errore sconosciuto'));
             } finally {
                 this.isUpdatingMeta = false;
             }
