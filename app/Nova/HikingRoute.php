@@ -12,6 +12,7 @@ use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CreateIssue;
 use App\Nova\Actions\CreateTrailSurveyAction;
 use App\Nova\Actions\DeleteHikingRouteAction;
+use App\Nova\Actions\AddHikingRoutesToSignageProject;
 use App\Nova\Actions\ExportHikingRouteSignageTo;
 use App\Nova\Actions\ImportPois;
 use App\Nova\Actions\ManageHikingRouteValidationAction;
@@ -447,6 +448,13 @@ class HikingRoute extends OsmfeaturesResource
                     return true;
                 }),
             (new ExportHikingRouteSignageTo())
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(function ($request, $user) {
+                    return true;
+                }),
+            (new AddHikingRoutesToSignageProject())
                 ->canSee(function ($request) {
                     return true;
                 })

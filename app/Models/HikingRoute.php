@@ -14,6 +14,7 @@ use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -432,6 +433,11 @@ class HikingRoute extends EcTrack
     public function mountainGroups()
     {
         return $this->belongsToMany(MountainGroups::class, 'mountain_group_hiking_route', 'hiking_route_id', 'mountain_group_id');
+    }
+
+    public function signageProjects()
+    {
+        return $this->morphToMany(SignageProject::class, 'signage_projectable')->using(SignageProjectable::class);
     }
 
     public function getFeatureCollectionMap(): array
