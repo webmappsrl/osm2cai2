@@ -95,7 +95,12 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
     {
         $this->expandedData = [];
 
-        $this->hikingRoutes->load('clubs', 'areas');
+        // Carica le relazioni per ogni HikingRoute nella Collection
+        foreach ($this->hikingRoutes as $hikingRoute) {
+            if ($hikingRoute instanceof HikingRoute) {
+                $hikingRoute->loadMissing('clubs', 'areas');
+            }
+        }
 
         // Crea una mappa delle HikingRoute per recupero rapido per ID
         $hikingRouteMap = [];
@@ -346,7 +351,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function formatLdpN(int $index): string
     {
-        return str_pad($index, 3, '0', STR_PAD_LEFT).'.00';
+        return str_pad($index, 3, '0', STR_PAD_LEFT) . '.00';
     }
 
     /**
@@ -458,7 +463,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function buildCodiceLdp(string $areaName, string $refRei, string $ldpNForCode): string
     {
-        return $areaName.'-'.str_replace('.', '', $refRei).'-'.$ldpNForCode;
+        return $areaName . '-' . str_replace('.', '', $refRei) . '-' . $ldpNForCode;
     }
 
     /**
@@ -468,10 +473,10 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
     {
         $codice = str_replace('.', '', $refRei);
         if ($ldpNForCode !== null) {
-            $codice .= '-'.$ldpNForCode;
+            $codice .= '-' . $ldpNForCode;
         }
         if ($tabN !== null) {
-            $codice .= '-'.$tabN;
+            $codice .= '-' . $tabN;
         }
 
         return $codice;
@@ -576,7 +581,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
 
-        return 'h '.$hours.':'.str_pad($mins, 2, '0', STR_PAD_LEFT);
+        return 'h ' . $hours . ':' . str_pad($mins, 2, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -591,7 +596,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         // Converti da metri a km e arrotonda alla prima cifra decimale
         $distanceKm = round($distance / 1000, 1);
 
-        return 'km '.$distanceKm;
+        return 'km ' . $distanceKm;
     }
 
     /**
@@ -599,10 +604,10 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
      */
     protected function createPoleHyperlink(Poles $pole): string
     {
-        $poleUrl = url('/resources/'.PolesResource::uriKey().'/'.$pole->id);
+        $poleUrl = url('/resources/' . PolesResource::uriKey() . '/' . $pole->id);
         $poleId = $pole->id;
 
-        return '=HYPERLINK("'.$poleUrl.'", "'.$poleId.'")';
+        return '=HYPERLINK("' . $poleUrl . '", "' . $poleId . '")';
     }
 
     /**
@@ -642,7 +647,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
 
             // Applica colore blu solo alla colonna A (Palo) nelle righe "first"
             if ($isFirstRow) {
-                $cellCoordinate = 'A'.$rowIndex; // Colonna A
+                $cellCoordinate = 'A' . $rowIndex; // Colonna A
                 $styles[$cellCoordinate] = [
                     'font' => [
                         'color' => ['rgb' => '0000FF'], // Blu classico per i link
