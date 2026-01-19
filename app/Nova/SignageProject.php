@@ -171,7 +171,7 @@ class SignageProject extends AbstractGeometryResource
     public function actions(NovaRequest $request): array
     {
         return [
-            new Actions\ExportSignageProjectSignage(),
+            (new Actions\ExportSignageProjectSignage())->exceptOnIndex(),
         ];
     }
 
