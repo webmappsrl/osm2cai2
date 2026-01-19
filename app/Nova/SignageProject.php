@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Enums\UserRole;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
@@ -33,7 +34,7 @@ class SignageProject extends AbstractGeometryResource
 
     /**
      * Build an "index" query for the given resource.
-     * Ottimizzazione: non carica hikingRoutes nella lista per migliorare le performance.
+     * Ottimizzazione: carica user e count delle hiking routes per la visualizzazione nella index.
      * Mostra tutti i progetti segnaletica (ogni utente può vedere tutti i progetti).
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
@@ -42,8 +43,16 @@ class SignageProject extends AbstractGeometryResource
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
-        // Non caricare hikingRoutes nella lista per migliorare le performance
-        // Mostra tutti i progetti (non filtrati per utente)
+        // Carica l'utente per evitare query N+1
+        $query->with('user');
+        
+        // Aggiungi il count delle hiking routes tramite subquery per ottimizzare
+        $query->withCount([
+            'hikingRoutes' => function ($query) {
+                $query->where('app_id', 1);
+            }
+        ]);
+        
         return $query;
     }
 
@@ -107,6 +116,13 @@ class SignageProject extends AbstractGeometryResource
         $fields =  [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->required(),
+            BelongsTo::make(__('User'), 'user', User::class)
+                ->searchable()
+                ->sortable()
+                ->onlyOnIndex(),
+            Text::make(__('Hiking Routes Count'), 'hiking_routes_count')
+                ->sortable()
+                ->onlyOnIndex(),
             Textarea::make(__('Description'), 'properties->description')
                 ->nullable()
                 ->rows(3)
