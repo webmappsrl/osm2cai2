@@ -234,6 +234,11 @@ class SignageProject extends AbstractGeometryResource
             return false;
         }
 
+        // Gli admin possono sempre aggiungere hiking routes
+        if ($user->hasRole(UserRole::Administrator)) {
+            return true;
+        }
+
         // Altrimenti solo il creatore del progetto può aggiungere hiking routes
         return $model->user_id === $user->id;
     }
@@ -255,7 +260,39 @@ class SignageProject extends AbstractGeometryResource
             return false;
         }
 
+        // Gli admin possono sempre rimuovere hiking routes
+        if ($user->hasRole(UserRole::Administrator)) {
+            return true;
+        }
+
         // Altrimenti solo il creatore del progetto può rimuovere hiking routes
-        return $model->user_id === $user->id;
+        // Usa cast a int per gestire eventuali differenze di tipo
+        return (int) $model->user_id === (int) $user->id;
+    }
+
+    /**
+     * Determine if the current user can detach any hiking routes from this signage project (bulk detach).
+     * Gli admin possono sempre rimuovere hiking routes, altrimenti solo il creatore.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    public function authorizedToDetachAny(NovaRequest $request, $model)
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        // Gli admin possono sempre rimuovere hiking routes
+        if ($user->hasRole(UserRole::Administrator)) {
+            return true;
+        }
+
+        // Altrimenti solo il creatore del progetto può rimuovere hiking routes
+        // Usa cast a int per gestire eventuali differenze di tipo
+        return (int) $model->user_id === (int) $user->id;
     }
 }

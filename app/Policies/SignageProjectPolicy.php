@@ -27,12 +27,71 @@ class SignageProjectPolicy
      *
      * @param  \App\Models\User  $user
      * @param  \App\Models\SignageProject  $signageProject
+     * @param  \App\Models\HikingRoute  $hikingRoute
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function attachHikingRoutes(User $user, SignageProject $signageProject)
+    public function attachHikingRoute(User $user, SignageProject $signageProject, \App\Models\HikingRoute $hikingRoute)
     {
+        // Gli admin possono sempre aggiungere hiking routes
+        if ($user->hasRole(UserRole::Administrator)) {
+            return true;
+        }
+
         // Altrimenti solo il creatore del progetto può aggiungere hiking routes
         return $signageProject->user_id === $user->id;
+    }
+
+    /**
+     * Determine whether the user can attach any hiking routes to the signage project.
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\SignageProject  $signageProject
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function attachAnyHikingRoute(User $user, SignageProject $signageProject)
+    {
+        // Gli admin possono sempre aggiungere hiking routes
+        if ($user->hasRole(UserRole::Administrator)) {
+            return true;
+        }
+
+        // Altrimenti solo il creatore del progetto può aggiungere hiking routes
+        return $signageProject->user_id === $user->id;
+    }
+
+    /**
+     * Determine whether the user can detach a hiking route from the signage project.
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\SignageProject  $signageProject
+     * @param  \App\Models\HikingRoute  $hikingRoute
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function detachHikingRoute(User $user, SignageProject $signageProject, \App\Models\HikingRoute $hikingRoute)
+    {
+        // Gli admin possono sempre rimuovere hiking routes
+        if ($user->hasRole(\App\Enums\UserRole::Administrator)) {
+            return true;
+        }
+
+        // Altrimenti solo il creatore del progetto può rimuovere hiking routes
+        // Usa cast a int per gestire eventuali differenze di tipo
+        return (int) $signageProject->user_id === (int) $user->id;
+    }
+
+    /**
+     * Determine whether the user can detach hiking routes from the signage project (alternate method name).
+     * Nova potrebbe cercare questo metodo usando il nome della relazione (plurale).
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\SignageProject  $signageProject
+     * @param  \App\Models\HikingRoute  $hikingRoute
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function detachHikingRoutes(User $user, SignageProject $signageProject, \App\Models\HikingRoute $hikingRoute)
+    {
+        // Delega al metodo singolare
+        return $this->detachHikingRoute($user, $signageProject, $hikingRoute);
     }
 
     /**
