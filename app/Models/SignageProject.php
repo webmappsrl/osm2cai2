@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,11 @@ class SignageProject extends Polygon
         'description',
         'properties',
         'geometry',
+        'app_id',
+    ];
+
+    protected $casts = [
+        'properties' => 'array',
     ];
 
     protected static function boot()
@@ -51,7 +57,54 @@ class SignageProject extends Polygon
             if (Auth::check() && empty($model->user_id)) {
                 $model->user_id = Auth::id();
             }
+
+            // Imposta app_id a 1 se non è già impostato (sempre 1, stessa app delle hiking routes)
+            if (empty($model->app_id)) {
+                $model->app_id = 1;
+            }
         });
+    }
+
+    /**
+     * Get the description attribute from properties.
+     */
+    public function getDescriptionAttribute()
+    {
+        $properties = $this->properties ?? [];
+        return $properties['description'] ?? null;
+    }
+
+    /**
+     * Set the description attribute in properties.
+     */
+    public function setDescriptionAttribute($value)
+    {
+        // Recupera properties come array (il cast lo gestisce automaticamente)
+        // Se properties non è ancora stato castato, recuperalo dagli attributes
+        if (isset($this->attributes['properties'])) {
+            $properties = is_array($this->attributes['properties']) 
+                ? $this->attributes['properties'] 
+                : (json_decode($this->attributes['properties'], true) ?? []);
+        } else {
+            $properties = $this->properties ?? [];
+        }
+        
+        if ($value !== null && $value !== '') {
+            $properties['description'] = $value;
+        } else {
+            unset($properties['description']);
+        }
+        
+        // Imposta properties come array, Laravel gestirà il cast automaticamente quando salva
+        $this->attributes['properties'] = $properties;
+    }
+
+    /**
+     * Get the user that owns this signage project.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

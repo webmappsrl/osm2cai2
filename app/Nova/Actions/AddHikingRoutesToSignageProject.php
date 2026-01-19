@@ -2,10 +2,12 @@
 
 namespace App\Nova\Actions;
 
+use App\Enums\UserRole;
 use App\Models\SignageProject;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\Select;
@@ -31,11 +33,22 @@ class AddHikingRoutesToSignageProject extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        $user = Auth::user();
+
+        if (! $user) {
+            return Action::danger(__('Utente non autenticato'));
+        }
+
         $signageProjectId = $fields->get('signage_project');
         $signageProject = SignageProject::find($signageProjectId);
 
         if (! $signageProject) {
             return Action::danger(__('Progetto Segnaletica non trovato'));
+        }
+
+        // Verifica che l'utente sia il proprietario del progetto o un admin
+        if ($signageProject->user_id !== $user->id) {
+            return Action::danger(__('Non hai i permessi per aggiungere percorsi a questo progetto. Solo il creatore del progetto o un amministratore possono aggiungere hiking routes.'));
         }
 
         $addedCount = 0;
@@ -66,7 +79,17 @@ class AddHikingRoutesToSignageProject extends Action
         return [
             Select::make(__('Progetto Segnaletica'), 'signage_project')
                 ->options(function () {
-                    return SignageProject::all()
+                    $user = Auth::user();
+
+                    if (! $user) {
+                        return [];
+                    }
+
+                    // Gli admin vedono tutti i progetti, gli altri utenti solo i propri
+                    $query = SignageProject::query();
+                    $query->where('user_id', $user->id);
+
+                    return $query->get()
                         ->mapWithKeys(function ($project) {
                             $name = $project->getStringName();
                             return [$project->id => $name ?: 'Progetto #' . $project->id];
@@ -76,7 +99,13 @@ class AddHikingRoutesToSignageProject extends Action
                 })
                 ->searchable()
                 ->rules('required')
-                ->help(__('Seleziona il progetto segnaletica a cui aggiungere i percorsi')),
+                ->help(function () {
+                    $user = Auth::user();
+                    if ($user) {
+                        return __('Seleziona il progetto segnaletica a cui aggiungere i percorsi. Vedi tutti i progetti.');
+                    }
+                    return __('Seleziona il progetto segnaletica a cui aggiungere i percorsi. Vedi solo i progetti che hai creato.');
+                }),
         ];
     }
 }
