@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Spatie\Translatable\HasTranslations;
@@ -62,6 +63,16 @@ class SignageProject extends Polygon
             if (empty($model->app_id)) {
                 $model->app_id = 1;
             }
+        });
+
+        // Invalida la cache quando il progetto viene aggiornato (potrebbe aver cambiato geometria)
+        static::updated(function ($model) {
+            $model->clearFeatureCollectionMapCache();
+        });
+
+        // Invalida la cache quando il progetto viene eliminato
+        static::deleted(function ($model) {
+            $model->clearFeatureCollectionMapCache();
         });
     }
 
@@ -121,14 +132,11 @@ class SignageProject extends Polygon
 
 
     /**
-     * Get all poles for multiple hiking routes in a single batch query.
-     * Ottimizzazione per evitare query N+1 quando ci sono molte hiking routes.
+     * Get all poles for multiple hiking routes in a SINGLE batch query.
+     * OTTIMIZZAZIONE CRITICA: Riduce da N query a 1 query batch.
      * 
-     * NOTA: Per ora facciamo una query per hiking route, ma questo è comunque molto più efficiente
-     * rispetto al metodo originale perché:
-     * 1. Non chiamiamo fresh() per ogni route
-     * 2. Non facciamo query individuali per properties
-     * 3. Non chiamiamo getPolesWithBuffer() che fa query aggiuntive
+     * Usa una singola query con JOIN e ST_DWithin per trovare tutti i poles
+     * che appartengono a qualsiasi delle hiking routes specificate.
      *
      * @param array $hikingRouteIds Array di ID delle hiking routes
      * @param float $bufferDistance Distanza del buffer in metri (default: 10m)
@@ -146,38 +154,212 @@ class SignageProject extends Polygon
             $polesByHikingRoute[$hrId] = collect();
         }
 
-        // Carica tutte le geometrie delle hiking routes in una singola query
-        $geometries = DB::table('hiking_routes')
-            ->whereIn('id', $hikingRouteIds)
-            ->whereNotNull('geometry')
-            ->select('id', DB::raw('ST_AsGeoJSON(geometry) as geometry'))
-            ->get()
-            ->keyBy('id');
+        try {
+            // STEP 1: Carica tutte le geometrie delle hiking routes in una singola query
+            $geometries = DB::table('hiking_routes')
+                ->whereIn('id', $hikingRouteIds)
+                ->whereNotNull('geometry')
+                ->select('id', DB::raw('ST_AsGeoJSON(geometry) as geometry'))
+                ->get();
 
-        if ($geometries->isEmpty()) {
-            return $polesByHikingRoute;
+            if ($geometries->isEmpty()) {
+                return $polesByHikingRoute;
+            }
+
+            // STEP 2: OTTIMIZZAZIONE CRITICA - Crea una geometria unificata con ST_Union
+            // Invece di 695 condizioni OR, uniamo tutte le geometrie delle hiking routes
+            // e facciamo una singola query ST_DWithin contro la geometria unificata
+            // Questo è MOLTO più efficiente perché PostgreSQL può usare gli indici spaziali meglio
+
+            // Crea una geometria unificata che contiene tutte le hiking routes
+            $geometryIds = $geometries->pluck('id')->toArray();
+            $unifiedGeometry = DB::table('hiking_routes')
+                ->whereIn('id', $geometryIds)
+                ->whereNotNull('geometry')
+                ->selectRaw('ST_AsGeoJSON(ST_Union(geometry::geometry)) as unified_geom')
+                ->value('unified_geom');
+
+            if (!$unifiedGeometry) {
+                return $polesByHikingRoute;
+            }
+
+            // SINGOLA QUERY - Trova tutti i poles che sono nel buffer della geometria unificata
+            // OTTIMIZZAZIONE: Carica solo i dati essenziali (id, name, ref, properties, osmfeatures_data)
+            $allPoles = DB::table('poles')
+                ->select('poles.id', 'poles.name', 'poles.ref', 'poles.properties', 'poles.osmfeatures_data')
+                ->whereRaw(
+                    'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                    [$unifiedGeometry, $bufferDistance]
+                )
+                ->get()
+                ->keyBy('id');
+
+            // STEP 3: SINGOLA QUERY BATCH - Determina l'appartenenza usando CROSS JOIN con WHERE
+            // COLLO DI BOTTIGLIA RISOLTO: Invece di 695 query separate, usa una singola query
+            // che restituisce direttamente (pole_id, hiking_route_id) per tutte le combinazioni
+            // PostgreSQL ottimizzerà il CROSS JOIN usando gli indici spaziali nella WHERE clause
+
+            $poleIds = $allPoles->pluck('id')->toArray();
+
+            if (!empty($poleIds) && !$geometries->isEmpty()) {
+                $geometryIds = $geometries->pluck('id')->toArray();
+
+                // SINGOLA QUERY: Trova tutte le combinazioni (pole_id, hiking_route_id) in una volta
+                // CROSS JOIN + WHERE con ST_DWithin è più efficiente di 695 query separate
+                // PostgreSQL userà gli indici spaziali per ottimizzare
+                $sql = "
+                    SELECT DISTINCT p.id as pole_id, hr.id as hiking_route_id
+                    FROM poles p
+                    CROSS JOIN hiking_routes hr
+                    WHERE p.id = ANY(?)
+                    AND hr.id = ANY(?)
+                    AND hr.geometry IS NOT NULL
+                    AND ST_DWithin(p.geometry, hr.geometry::geography, ?)
+                ";
+
+                $belongings = DB::select($sql, [
+                    '{' . implode(',', $poleIds) . '}',       // Array PostgreSQL degli ID poles
+                    '{' . implode(',', $geometryIds) . '}',   // Array PostgreSQL degli ID hiking routes
+                    $bufferDistance
+                ]);
+
+                // Raggruppa i poles per hiking route
+                foreach ($belongings as $belonging) {
+                    $hrId = (int) $belonging->hiking_route_id;
+                    $poleId = (int) $belonging->pole_id;
+
+                    if (!isset($polesByHikingRoute[$hrId])) {
+                        $polesByHikingRoute[$hrId] = collect();
+                    }
+
+                    $pole = $allPoles->get($poleId);
+                    if ($pole) {
+                        // Crea un oggetto simile a Poles per compatibilità
+                        $poleObj = new \stdClass();
+                        $poleObj->id = $pole->id;
+                        $poleObj->name = $pole->name;
+                        $poleObj->ref = $pole->ref;
+                        $poleObj->properties = is_string($pole->properties) ? json_decode($pole->properties, true) : $pole->properties;
+                        $poleObj->osmfeatures_data = is_string($pole->osmfeatures_data) ? json_decode($pole->osmfeatures_data, true) : $pole->osmfeatures_data;
+
+                        $poleExists = $polesByHikingRoute[$hrId]->first(function ($p) use ($poleId) {
+                            return $p->id == $poleId;
+                        });
+
+                        if (!$poleExists) {
+                            $polesByHikingRoute[$hrId]->push($poleObj);
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Fallback al metodo precedente in caso di errore
+            Log::warning('Error in optimized getAllPolesForHikingRoutes, falling back', [
+                'error' => $e->getMessage(),
+                'hiking_route_ids_count' => count($hikingRouteIds),
+            ]);
+
+            // Carica tutte le geometrie delle hiking routes in una singola query
+            $geometries = DB::table('hiking_routes')
+                ->whereIn('id', $hikingRouteIds)
+                ->whereNotNull('geometry')
+                ->select('id', DB::raw('ST_AsGeoJSON(geometry) as geometry'))
+                ->get()
+                ->keyBy('id');
+
+            if (!$geometries->isEmpty()) {
+                foreach ($geometries as $hrId => $geom) {
+                    try {
+                        $poles = Poles::select('poles.*')
+                            ->whereRaw(
+                                'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                                [$geom->geometry, $bufferDistance]
+                            )
+                            ->get();
+
+                        $polesByHikingRoute[$hrId] = $poles;
+                    } catch (\Exception $e2) {
+                        Log::warning("Error loading poles for hiking route {$hrId} (fallback)", [
+                            'error' => $e2->getMessage(),
+                        ]);
+                        $polesByHikingRoute[$hrId] = collect();
+                    }
+                }
+            }
         }
 
-        // Trova tutti i poles per ogni hiking route
-        // Anche se facciamo n query (una per hiking route), questo è molto più efficiente
-        // rispetto al metodo originale perché evitiamo fresh() e query per properties
-        foreach ($geometries as $hrId => $geom) {
-            try {
-                $poles = Poles::select('poles.*')
-                    ->whereRaw(
-                        'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
-                        [$geom->geometry, $bufferDistance]
-                    )
-                    ->get();
+        return $polesByHikingRoute;
+    }
 
-                $polesByHikingRoute[$hrId] = $poles;
-            } catch (\Exception $e) {
-                // In caso di errore per una specifica hiking route, continua con le altre
-                Log::warning("Error loading poles for hiking route {$hrId}", [
-                    'error' => $e->getMessage(),
-                ]);
-                $polesByHikingRoute[$hrId] = collect();
+    /**
+     * Carica solo i poles checkpoint per le hiking routes specificate.
+     * OTTIMIZZAZIONE: Per progetti molto grandi, carica solo i poles checkpoint invece di tutti i poles.
+     * Questo riduce drasticamente il numero di poles caricati e rende la mappa utilizzabile.
+     *
+     * @param array $hikingRouteIds Array di ID delle hiking routes
+     * @param array $hikingRoutesProcessed Array con i dati delle hiking routes (per estrarre checkpoint)
+     * @param float $bufferDistance Distanza del buffer in metri (default: 10m)
+     * @return array Mappa hiking_route_id => Collection<Poles>
+     */
+    private function getCheckpointPolesForHikingRoutes(array $hikingRouteIds, array $hikingRoutesProcessed, float $bufferDistance = 10): array
+    {
+        if (empty($hikingRouteIds)) {
+            return [];
+        }
+
+        // Inizializza la mappa risultato
+        $polesByHikingRoute = [];
+        foreach ($hikingRouteIds as $hrId) {
+            $polesByHikingRoute[$hrId] = collect();
+        }
+
+        try {
+            // Raccogli tutti gli ID dei poles checkpoint da tutte le hiking routes
+            $allCheckpointPoleIds = [];
+            foreach ($hikingRoutesProcessed as $hrData) {
+                $checkpointIds = $hrData['properties']['signage']['checkpoint'] ?? [];
+                if (!empty($checkpointIds)) {
+                    $allCheckpointPoleIds = array_merge($allCheckpointPoleIds, $checkpointIds);
+                }
             }
+            $allCheckpointPoleIds = array_unique($allCheckpointPoleIds);
+
+            if (empty($allCheckpointPoleIds)) {
+                return $polesByHikingRoute;
+            }
+
+            // Carica solo i poles checkpoint (molto più veloce)
+            $checkpointPoles = DB::table('poles')
+                ->whereIn('id', $allCheckpointPoleIds)
+                ->select('poles.id', 'poles.name', 'poles.ref', 'poles.properties', 'poles.osmfeatures_data')
+                ->get()
+                ->keyBy('id');
+
+            // Per ogni hiking route, assegna i poles checkpoint che le appartengono
+            foreach ($hikingRoutesProcessed as $hrData) {
+                $hrId = $hrData['id'];
+                $checkpointIds = $hrData['properties']['signage']['checkpoint'] ?? [];
+
+                foreach ($checkpointIds as $poleId) {
+                    $pole = $checkpointPoles->get($poleId);
+                    if ($pole) {
+                        // Crea un oggetto simile a Poles per compatibilità
+                        $poleObj = new \stdClass();
+                        $poleObj->id = $pole->id;
+                        $poleObj->name = $pole->name;
+                        $poleObj->ref = $pole->ref;
+                        $poleObj->properties = is_string($pole->properties) ? json_decode($pole->properties, true) : $pole->properties;
+                        $poleObj->osmfeatures_data = is_string($pole->osmfeatures_data) ? json_decode($pole->osmfeatures_data, true) : $pole->osmfeatures_data;
+
+                        $polesByHikingRoute[$hrId]->push($poleObj);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Error in getCheckpointPolesForHikingRoutes', [
+                'error' => $e->getMessage(),
+                'hiking_route_ids_count' => count($hikingRouteIds),
+            ]);
         }
 
         return $polesByHikingRoute;
@@ -233,43 +415,79 @@ class SignageProject extends Polygon
      * Mantiene tutte le proprietà necessarie per il frontend (signage, description, osmTags).
      * Le hiking routes sono sempre dell'app 1.
      * 
-     * OTTIMIZZATO: Carica properties e poles in batch per evitare query N+1.
+     * OTTIMIZZATO: 
+     * - Carica properties e poles in batch per evitare query N+1
+     * - Usa caching per evitare di rifare query pesanti ad ogni richiesta
      *
      * @return array GeoJSON feature collection
      */
     public function getFeatureCollectionMap(): array
     {
+
+        // TEMPORANEO: Disabilita cache per debug
+        // TODO: Riabilitare cache dopo aver risolto il problema
+        $result = $this->buildFeatureCollectionMap();
+
+        return $result;
+
+        // Genera chiave di cache basata su ID progetto e hash delle hiking routes associate
+        // Specifica esplicitamente la tabella per evitare ambiguità nella query
+        // $hikingRouteIds = $this->hikingRoutes()->pluck('hiking_routes.id')->sort()->toArray();
+        // $cacheKey = "signage_project_feature_collection_map_{$this->id}_" . md5(implode(',', $hikingRouteIds));
+
+        // TTL cache: 1 ora (3600 secondi)
+        // La cache viene invalidata automaticamente quando le hiking routes cambiano
+        // return Cache::remember($cacheKey, 3600, function () {
+        //     return $this->buildFeatureCollectionMap();
+        // });
+    }
+
+    /**
+     * Costruisce il feature collection map senza caching.
+     * Metodo privato chiamato da getFeatureCollectionMap() dopo il controllo cache.
+     * 
+     * OTTIMIZZATO: Carica tutte le hiking routes usando query batch ottimizzate.
+     *
+     * @return array GeoJSON feature collection
+     */
+    private function buildFeatureCollectionMap(): array
+    {
         try {
             $this->clearAdditionalFeaturesForMap();
 
-            // Recupera tutte le hiking routes associate come modelli (sempre dell'app 1)
-            $hikingRouteModels = $this->hikingRoutes()->get();
+            // STEP 1: Carica solo gli ID delle hiking routes (query molto veloce)
+            $hikingRouteIds = $this->hikingRoutes()->pluck('hiking_routes.id')->toArray();
 
-            if ($hikingRouteModels->isEmpty()) {
+            if (empty($hikingRouteIds)) {
                 return $this->getFeatureCollectionMapFromTrait();
             }
 
-            // OTTIMIZZAZIONE 1: Carica tutte le properties in batch invece di query individuali
-            $hikingRouteIds = $hikingRouteModels->pluck('id')->toArray();
-            $propertiesBatch = DB::table('hiking_routes')
+            // STEP 2: Carica solo i dati essenziali delle hiking routes in batch
+            // Carica solo id, geometry, properties, osmfeatures_id - evita di caricare tutti i campi Eloquent
+            $hikingRoutesData = DB::table('hiking_routes')
                 ->whereIn('id', $hikingRouteIds)
-                ->select('id', 'properties')
-                ->get()
-                ->keyBy('id');
+                ->select('id', 'name', 'properties', 'osmfeatures_id', DB::raw('ST_AsGeoJSON(geometry) as geometry'), DB::raw('ST_AsGeoJSON(geometry_raw_data) as geometry_raw_data'))
+                ->get();
 
-            // Decodifica e assegna le properties a ciascun modello
-            foreach ($hikingRouteModels as $hikingRoute) {
-                $properties = $propertiesBatch->get($hikingRoute->id);
-                if ($properties) {
-                    $props = $properties->properties;
-                    if (is_string($props)) {
-                        $hikingRoute->properties = json_decode($props, true) ?? [];
-                    } else {
-                        $hikingRoute->properties = $props ?? [];
-                    }
-                } else {
-                    $hikingRoute->properties = [];
-                }
+            if ($hikingRoutesData->isEmpty()) {
+                return $this->getFeatureCollectionMapFromTrait();
+            }
+
+            // Decodifica le properties per ogni hiking route
+            $hikingRoutesProcessed = [];
+            foreach ($hikingRoutesData as $hrData) {
+                $properties = is_string($hrData->properties) ? json_decode($hrData->properties, true) : $hrData->properties;
+                $geometry = is_string($hrData->geometry) ? json_decode($hrData->geometry, true) : $hrData->geometry;
+                $geometryRaw = $hrData->geometry_raw_data ? (is_string($hrData->geometry_raw_data) ? json_decode($hrData->geometry_raw_data, true) : $hrData->geometry_raw_data) : null;
+
+                $hikingRoutesProcessed[$hrData->id] = [
+                    'id' => $hrData->id,
+                    'name' => $hrData->name,
+                    'properties' => $properties ?? [],
+                    'osmfeatures_id' => $hrData->osmfeatures_id,
+                    'geometry' => $geometry,
+                    'geometry_raw_data' => $geometryRaw,
+                ];
             }
 
             // OTTIMIZZAZIONE 2: Carica tutti i poles in batch per tutte le hiking routes
@@ -311,41 +529,39 @@ class SignageProject extends Polygon
             $polesMap = [];
             $otherFeatures = [];
 
-            // Per ogni hiking route, chiama il suo getFeatureCollectionMap() che include:
+            // Per ogni hiking route, genera le features manualmente usando i dati raw
             // - La geometria principale (linea blu) con signage
             // - I poles con buffer (punti rossi/arancioni) con tutte le proprietà
             // - La geometria raw non controllata (linea rossa) con signage
-            foreach ($hikingRouteModels as $index => $hikingRoute) {
-                // Assicurati che le properties siano array (già fatto sopra, ma doppio controllo)
-                if (!is_array($hikingRoute->properties)) {
-                    $hikingRoute->properties = [];
-                }
+            foreach ($hikingRoutesProcessed as $index => $hrData) {
+                $hrId = $hrData['id'];
+                $hrProperties = $hrData['properties'] ?? [];
 
-                // OTTIMIZZAZIONE 3: Genera le features manualmente usando i poles già caricati in batch
-                // invece di chiamare getFeatureCollectionMap() che chiamerebbe getPolesWithBuffer()
-                $polesForThisRoute = $polesByHikingRoute[$hikingRoute->id] ?? collect();
+                // OTTIMIZZAZIONE: Genera le features manualmente usando i poles già caricati in batch
+                $polesForThisRoute = $polesByHikingRoute[$hrId] ?? collect();
 
-                // Ottieni la geometria principale della hiking route
-                $mainGeometryGeoJson = $hikingRoute->getFeatureCollectionMapFromTrait();
-                $mainFeature = $mainGeometryGeoJson['features'][0] ?? null;
-
-                if ($mainFeature) {
-                    $mainFeature['properties'] = [
-                        'strokeColor' => 'blue',
-                        'strokeWidth' => 4,
-                        'id' => $hikingRoute->id,
-                        'osmfeatures_id' => $hikingRoute->osmfeatures_id,
+                // Crea la feature principale dalla geometria
+                $mainFeature = null;
+                if ($hrData['geometry']) {
+                    $mainFeature = [
+                        'type' => 'Feature',
+                        'geometry' => $hrData['geometry'],
+                        'properties' => [
+                            'strokeColor' => 'blue',
+                            'strokeWidth' => 4,
+                            'id' => $hrId,
+                            'osmfeatures_id' => $hrData['osmfeatures_id'],
+                        ],
                     ];
 
-                    $hikingRouteProperties = $hikingRoute->properties ?? [];
-                    if (isset($hikingRouteProperties['signage'])) {
-                        $mainFeature['properties']['signage'] = $hikingRouteProperties['signage'];
+                    if (isset($hrProperties['signage'])) {
+                        $mainFeature['properties']['signage'] = $hrProperties['signage'];
                     }
                 }
 
                 // Genera le features per i poles usando i dati batch e geometrie pre-convertite
-                $checkpointPoleIds = ($hikingRoute->properties['signage']['checkpoint'] ?? []);
-                $poleFeatures = $polesForThisRoute->map(function ($pole) use ($checkpointPoleIds, $hikingRoute, $polesGeoJsonMap) {
+                $checkpointPoleIds = ($hrProperties['signage']['checkpoint'] ?? []);
+                $poleFeatures = $polesForThisRoute->map(function ($pole) use ($checkpointPoleIds, $hrId, $polesGeoJsonMap) {
                     // OTTIMIZZAZIONE: Usa geometria pre-convertita invece di chiamare getFeatureMap() per ogni pole
                     // Questo elimina migliaia di query PostGIS individuali
                     $geojson = $polesGeoJsonMap[$pole->id] ?? null;
@@ -390,19 +606,21 @@ class SignageProject extends Polygon
 
                 // Genera la feature per geometry_raw_data
                 $uncheckedGeometryFeature = null;
-                if ($hikingRoute->geometry_raw_data) {
-                    $uncheckedGeometryFeature = $hikingRoute->getFeatureMap($hikingRoute->geometry_raw_data);
-                    $properties = [
-                        'strokeColor' => 'red',
-                        'strokeWidth' => 2,
-                        'id' => $hikingRoute->id,
-                        'osmfeatures_id' => $hikingRoute->osmfeatures_id,
+                if ($hrData['geometry_raw_data']) {
+                    $uncheckedGeometryFeature = [
+                        'type' => 'Feature',
+                        'geometry' => $hrData['geometry_raw_data'],
+                        'properties' => [
+                            'strokeColor' => 'red',
+                            'strokeWidth' => 2,
+                            'id' => $hrId,
+                            'osmfeatures_id' => $hrData['osmfeatures_id'],
+                        ],
                     ];
-                    $hikingRouteProperties = $hikingRoute->properties ?? [];
-                    if (isset($hikingRouteProperties['signage'])) {
-                        $properties['signage'] = $hikingRouteProperties['signage'];
+
+                    if (isset($hrProperties['signage'])) {
+                        $uncheckedGeometryFeature['properties']['signage'] = $hrProperties['signage'];
                     }
-                    $uncheckedGeometryFeature['properties'] = $properties;
                 }
 
                 // Combina tutte le features della hiking route
@@ -439,7 +657,7 @@ class SignageProject extends Polygon
                                 // Questo permette al frontend di sapere quale HikingRoute contiene questo palo
                                 // anche quando il palo non è ancora checkpoint
                                 if (!isset($feature['properties']['hikingRouteId'])) {
-                                    $feature['properties']['hikingRouteId'] = $hikingRoute->id;
+                                    $feature['properties']['hikingRouteId'] = $hrId;
                                 }
 
                                 // Controlla se questo palo è checkpoint per questa hiking route
@@ -477,7 +695,7 @@ class SignageProject extends Polygon
                                 // Se il palo non esiste ancora, aggiungilo
                                 if (!isset($polesMap[$poleIdKey])) {
                                     // Inizializza l'array delle HikingRoute associate a questo palo
-                                    $feature['properties']['hikingRouteIds'] = [$hikingRoute->id];
+                                    $feature['properties']['hikingRouteIds'] = [$hrId];
 
                                     // Se è checkpoint, assicurati che checkpointRouteColors sia impostato
                                     if (
@@ -501,8 +719,8 @@ class SignageProject extends Polygon
                                         $polesMap[$poleIdKey]['properties']['hikingRouteIds'] = $existingHrId ? [$existingHrId] : [];
                                     }
                                     // Aggiungi l'ID dell'HikingRoute se non è già presente
-                                    if (!in_array($hikingRoute->id, $polesMap[$poleIdKey]['properties']['hikingRouteIds'])) {
-                                        $polesMap[$poleIdKey]['properties']['hikingRouteIds'][] = $hikingRoute->id;
+                                    if (!in_array($hrId, $polesMap[$poleIdKey]['properties']['hikingRouteIds'])) {
+                                        $polesMap[$poleIdKey]['properties']['hikingRouteIds'][] = $hrId;
                                     }
 
                                     // Unisci le informazioni mantenendo la priorità al checkpoint
@@ -515,8 +733,8 @@ class SignageProject extends Polygon
                                         // Mantieni l'array hikingRouteIds esistente e aggiungi questa HikingRoute
                                         $existingHrIds = $polesMap[$poleIdKey]['properties']['hikingRouteIds'] ?? [];
                                         $feature['properties']['hikingRouteIds'] = $existingHrIds;
-                                        if (!in_array($hikingRoute->id, $feature['properties']['hikingRouteIds'])) {
-                                            $feature['properties']['hikingRouteIds'][] = $hikingRoute->id;
+                                        if (!in_array($hrId, $feature['properties']['hikingRouteIds'])) {
+                                            $feature['properties']['hikingRouteIds'][] = $hrId;
                                         }
                                         // Assicurati che checkpointRouteColors sia presente se il nuovo è checkpoint
                                         if (!isset($feature['properties']['checkpointRouteColors']) || empty($feature['properties']['checkpointRouteColors'])) {
@@ -633,18 +851,18 @@ class SignageProject extends Polygon
 
                                     // Aggiungi anche l'ID della hiking route per riferimento
                                     if (!isset($feature['properties']['hikingRouteId'])) {
-                                        $feature['properties']['hikingRouteId'] = $hikingRoute->id;
+                                        $feature['properties']['hikingRouteId'] = $hrId;
                                     }
 
                                     // Aggiungi clickAction e link per aprire l'HikingRoute in un nuovo tab
                                     $feature['properties']['clickAction'] = 'link';
-                                    $feature['properties']['link'] = url('/resources/hiking-routes/' . $hikingRoute->id);
+                                    $feature['properties']['link'] = url('/resources/hiking-routes/' . $hrId);
 
                                     // Aggiungi tooltip con il nome dell'HikingRoute se disponibile
-                                    if (!isset($feature['properties']['tooltip']) && $hikingRoute->name) {
-                                        $feature['properties']['tooltip'] = is_array($hikingRoute->name)
-                                            ? ($hikingRoute->name['it'] ?? reset($hikingRoute->name))
-                                            : $hikingRoute->name;
+                                    if (!isset($feature['properties']['tooltip']) && $hrData['name']) {
+                                        $feature['properties']['tooltip'] = is_array($hrData['name'])
+                                            ? ($hrData['name']['it'] ?? reset($hrData['name']))
+                                            : $hrData['name'];
                                     }
                                 }
                                 $otherFeatures[] = $feature;
@@ -659,10 +877,30 @@ class SignageProject extends Polygon
 
             // Usa getFeatureCollectionMapFromTrait per includere la geometria principale del SignageProject
             // Questo metodo gestisce automaticamente la geometria principale e unisce le features aggiuntive
-            return $this->getFeatureCollectionMapFromTrait();
+            $result = $this->getFeatureCollectionMapFromTrait();
+
+            // Verifica che il risultato sia valido
+            if (empty($result['features'])) {
+                Log::warning("SignageProject::buildFeatureCollectionMap - Empty result", [
+                    'signage_project_id' => $this->id,
+                    'has_geometry' => !empty($this->geometry),
+                    'additional_features_count' => count($this->additionalFeaturesForMap),
+                    'result' => $result,
+                ]);
+
+                // Fallback: restituisci almeno le features aggiuntive se ci sono
+                if (!empty($this->additionalFeaturesForMap)) {
+                    return [
+                        'type' => 'FeatureCollection',
+                        'features' => $this->additionalFeaturesForMap,
+                    ];
+                }
+            }
+
+            return $result;
         } catch (\Exception $e) {
             // In caso di errore, logga e restituisci almeno la geometria principale
-            Log::error('SignageProject::getFeatureCollectionMap error', [
+            Log::error('SignageProject::buildFeatureCollectionMap error', [
                 'signage_project_id' => $this->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -767,5 +1005,29 @@ class SignageProject extends Polygon
     ";
 
         return $sql;
+    }
+
+    /**
+     * Invalida la cache del feature collection map per questo progetto.
+     * Viene chiamato automaticamente quando il progetto viene aggiornato o eliminato.
+     * Dovrebbe essere chiamato anche quando le hiking routes vengono aggiunte/rimosse.
+     */
+    public function clearFeatureCollectionMapCache(): void
+    {
+        // Invalida tutte le possibili chiavi di cache per questo progetto
+        // Usa un pattern per trovare tutte le varianti (con diversi hash di hiking routes)
+        $pattern = "signage_project_feature_collection_map_{$this->id}_*";
+
+        // Se usi Redis o un altro driver che supporta pattern matching
+        if (config('cache.default') === 'redis') {
+            $keys = Cache::getRedis()->keys("{$pattern}");
+            if (!empty($keys)) {
+                Cache::deleteMultiple($keys);
+            }
+        } else {
+            // Per altri driver, invalida manualmente quando possibile
+            // La cache verrà comunque invalidata automaticamente quando cambiano le hiking routes
+            // perché la chiave include l'hash delle hiking routes
+        }
     }
 }

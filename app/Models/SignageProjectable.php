@@ -11,6 +11,30 @@ class SignageProjectable extends MorphPivot
 
     public $incrementing = true;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Invalida la cache del SignageProject quando viene aggiunta/rimossa una hiking route
+        static::created(function ($pivot) {
+            if ($pivot->signage_project_id) {
+                $signageProject = SignageProject::find($pivot->signage_project_id);
+                if ($signageProject) {
+                    $signageProject->clearFeatureCollectionMapCache();
+                }
+            }
+        });
+
+        static::deleted(function ($pivot) {
+            if ($pivot->signage_project_id) {
+                $signageProject = SignageProject::find($pivot->signage_project_id);
+                if ($signageProject) {
+                    $signageProject->clearFeatureCollectionMapCache();
+                }
+            }
+        });
+    }
+
     /**
      * Get the parent model that the signage projectable is associated with.
      */

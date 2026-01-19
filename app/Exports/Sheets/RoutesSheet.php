@@ -98,7 +98,7 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
         // Recupera Regione e Provincia
         $firstRegion = $hikingRoute->regions->first();
         $regione = '';
-        
+
         if ($firstRegion) {
             $regione = $firstRegion->name;
         } else {
@@ -112,7 +112,7 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
                 $regione = $firstProvince->region ? $firstProvince->region->name : '';
             }
         }
-        
+
         $firstProvince = $hikingRoute->provinces->first();
         $provincia = $firstProvince ? $firstProvince->name : '';
 
