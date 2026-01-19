@@ -33,6 +33,7 @@ use App\Nova\Province;
 use App\Nova\Region;
 use App\Nova\Sector;
 use App\Nova\Sign;
+use App\Nova\SignageProject;
 use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
 use App\Nova\TaxonomyPoiType;
@@ -150,6 +151,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                     MenuSection::make(__('Places'), [
                         MenuItem::resource(Poles::class, __('Poles')),
+                        MenuItem::resource(SignageProject::class, __('Progetti Segnaletica')),
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                     MenuSection::make(__('Unità Territoriali'), [
                         MenuItem::resource(Club::class),

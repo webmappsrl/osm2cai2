@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Exports;
+namespace App\Exports\Sheets;
 
+use App\Exports\HikingRouteSignageExporter;
 use App\Models\HikingRoute;
 use App\Models\Poles;
 use App\Nova\Poles as PolesResource;
@@ -12,14 +13,16 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Wm\WmPackage\Exporters\ModelExporter;
 
 /**
- * Exporter per la segnaletica delle HikingRoute con i Poles associati
+ * Sheet per la segnaletica (pali e frecce)
+ * Estratto da HikingRouteSignageExporter per essere usato come sheet in un export multi-tab
  */
-class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
+class SignageSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected Collection $hikingRoutes;
 
@@ -85,6 +88,14 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         $this->columns = $columns;
         $this->styles = $styles;
         $this->prepareExpandedData();
+    }
+
+    /**
+     * @return string
+     */
+    public function title(): string
+    {
+        return 'Segnaletica';
     }
 
     /**
@@ -321,11 +332,14 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         $hikingRouteProperties = $hikingRoute->properties ?? [];
         $osmfeaturesData = $this->parseOsmfeaturesData($hikingRoute->osmfeatures_data);
 
+        $firstClub = $hikingRoute->clubs->first();
+        $firstArea = $hikingRoute->areas->first();
+        
         $this->hikingRouteDataCache[$hikingRoute->id] = [
             'ref' => $hikingRouteProperties['ref'] ?? ($osmfeaturesData['properties']['ref'] ?? null),
             'ref_rei' => $hikingRoute->getRefReiAttribute(),
-            'club_name' => $hikingRoute->clubs->first()?->name ?? '',
-            'area_name' => $hikingRoute->areas->first()?->name ?? '',
+            'club_name' => $firstClub ? $firstClub->name : '',
+            'area_name' => $firstArea ? $firstArea->name : '',
             'points_order' => $hikingRouteProperties['dem']['points_order'] ?? null,
         ];
     }

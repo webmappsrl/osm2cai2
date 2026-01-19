@@ -5,6 +5,7 @@ namespace Osm2cai\SignageMap\Http\Controllers;
 use App\Http\Clients\NominatimClient;
 use App\Models\HikingRoute;
 use App\Models\Poles;
+use App\Models\SignageProject;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -217,6 +218,88 @@ class SignageMapController
     }
 
     /**
+     * Aggiorna le properties dell'HikingRoute associata a un SignageProject
+     * aggiungendo/rimuovendo checkpoint. Trova l'HikingRoute che contiene il palo.
+     */
+    public function updatePropertiesForSignageProject(Request $request, int $id): JsonResponse
+    {
+        // Trova il SignageProject
+        $signageProject = SignageProject::findOrFail($id);
+
+        // Ottieni l'ID del palo, l'azione (add/remove), name e description
+        $poleId = $request->input('poleId');
+        $add = $request->boolean('add');
+        $name = $request->input('name');
+        $description = $request->input('description');
+
+        if ($poleId === null) {
+            return response()->json(['error' => 'poleId is required'], 400);
+        }
+
+        $poleId = (int) $poleId;
+
+        // Trova il palo
+        $pole = Poles::find($poleId);
+        if (! $pole) {
+            return response()->json(['error' => 'Pole not found'], 404);
+        }
+
+        // Trova l'HikingRoute associata che contiene questo palo
+        // Usa ST_DWithin come in getPolesWithBuffer per trovare la hiking route corretta
+        $hikingRoute = null;
+        $hikingRoutes = $signageProject->hikingRoutes()->get();
+
+        foreach ($hikingRoutes as $hr) {
+            if (! $hr->geometry) {
+                continue;
+            }
+
+            // Ottieni la geometria come GeoJSON (come fa getHikingRouteGeojson)
+            $geojson = DB::table('hiking_routes')
+                ->where('id', $hr->id)
+                ->value(DB::raw('ST_AsGeoJSON(geometry)'));
+
+            if (! $geojson) {
+                continue;
+            }
+
+            // Verifica se il palo è nel buffer della hiking route (10 metri come in getPolesWithBuffer)
+            // Usa la stessa query di getPolesWithBuffer
+            $poleInBuffer = DB::table('poles')
+                ->where('poles.id', $poleId)
+                ->whereRaw(
+                    'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
+                    [$geojson, 10]
+                )
+                ->exists();
+
+            if ($poleInBuffer) {
+                $hikingRoute = $hr;
+                break;
+            }
+        }
+
+        if (! $hikingRoute) {
+            return response()->json(['error' => 'HikingRoute containing this pole not found in SignageProject'], 404);
+        }
+
+        // Usa lo stesso metodo di updateProperties per aggiornare l'HikingRoute
+        // Crea una nuova request con l'ID dell'HikingRoute
+        $hikingRouteRequest = Request::create(
+            "/nova-vendor/signage-map/hiking-route/{$hikingRoute->id}/properties",
+            'PATCH',
+            [
+                'poleId' => $poleId,
+                'add' => $add,
+                'name' => $name,
+                'description' => $description,
+            ]
+        );
+
+        return $this->updateProperties($hikingRouteRequest, $hikingRoute->id);
+    }
+
+    /**
      * Mantiene solo le linee con osmfeatures_id valorizzato, preservando gli altri tipi.
      */
     private function filterLineFeaturesWithOsmfeaturesId(array $geojson): array
@@ -387,14 +470,14 @@ class SignageMapController
             $hasForward = ! empty($forwardObjects);
             $hasBackward = ! empty($backwardObjects);
 
-            $forwardKey = $hasForward ? $hikingRouteIdStr.'-0' : null;
-            $backwardKey = $hasBackward ? $hikingRouteIdStr.'-'.($hasForward ? '1' : '0') : null;
+            $forwardKey = $hasForward ? $hikingRouteIdStr . '-0' : null;
+            $backwardKey = $hasBackward ? $hikingRouteIdStr . '-' . ($hasForward ? '1' : '0') : null;
 
             // Rimuovi eventuali chiavi esistenti per questo hiking route
             $poleProperties['signage']['arrow_order'] = array_values(array_filter(
                 $poleProperties['signage']['arrow_order'],
                 function ($key) use ($hikingRouteIdStr) {
-                    return ! str_starts_with($key, $hikingRouteIdStr.'-');
+                    return ! str_starts_with($key, $hikingRouteIdStr . '-');
                 }
             ));
 
