@@ -63,8 +63,8 @@ class OsmtagsFilter extends BooleanFilter
     public function options(NovaRequest $request)
     {
         return [
-            'Yes' => "has_{$this->tag}",
-            'No'  => "no_{$this->tag}",
+            __('Yes') => "has_{$this->tag}",
+            __('No')  => "no_{$this->tag}",
         ];
     }
 }

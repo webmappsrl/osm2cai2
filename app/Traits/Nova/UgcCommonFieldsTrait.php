@@ -91,7 +91,7 @@ trait UgcCommonFieldsTrait
                 ->hideWhenCreating(),
 
             // Name
-            Text::make('Name', function () {
+            Text::make(__('Name'), function () {
                 return data_get($this->properties, 'form.title')
                     ?? data_get($this->properties, 'name');
             })->readonly(),
@@ -301,8 +301,8 @@ HTML;
         return [
             new TopUgcCreators($model)->width('full')->height('dynamic'),
             new UgcAppNameDistribution($model),
-            new UgcAttributeDistributionByLatestUserValue('App Version', "properties->'device'->>'appVersion'", $model),
-            new UgcAttributeDistribution('App Form', "properties->'form'->>'id'", $model),
+            new UgcAttributeDistributionByLatestUserValue(__('App Version'), "properties->'device'->>'appVersion'", $model),
+            new UgcAttributeDistribution(__('App Form'), "properties->'form'->>'id'", $model),
             new UgcDevicePlatformDistribution($model),
             new UgcValidatedStatusDistribution($model),
         ];
