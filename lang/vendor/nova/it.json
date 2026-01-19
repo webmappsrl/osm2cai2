@@ -163,6 +163,7 @@
     "Has Photos": "Ha Immagini",
     "Hiking Route model :id does not have a valid osm_id in osmfeatures_data.": "Il modello Hiking Route :id non ha un osm_id valido in osmfeatures_data.",
     "Hiking Routes": "Percorsi Escursionistici",
+    "Hiking Routes Count": "Numero Percorsi",
     "Huts": "Rifugi",
     "ID": "ID",
     "IMPORT POIS": "Importa Punti di interesse",
