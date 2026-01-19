@@ -45,14 +45,14 @@ class SignageProject extends AbstractGeometryResource
     {
         // Carica l'utente per evitare query N+1
         $query->with('user');
-        
+
         // Aggiungi il count delle hiking routes tramite subquery per ottimizzare
         $query->withCount([
             'hikingRoutes' => function ($query) {
                 $query->where('app_id', 1);
             }
         ]);
-        
+
         return $query;
     }
 
