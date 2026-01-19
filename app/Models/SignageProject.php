@@ -82,19 +82,19 @@ class SignageProject extends Polygon
         // Recupera properties come array (il cast lo gestisce automaticamente)
         // Se properties non è ancora stato castato, recuperalo dagli attributes
         if (isset($this->attributes['properties'])) {
-            $properties = is_array($this->attributes['properties']) 
-                ? $this->attributes['properties'] 
+            $properties = is_array($this->attributes['properties'])
+                ? $this->attributes['properties']
                 : (json_decode($this->attributes['properties'], true) ?? []);
         } else {
             $properties = $this->properties ?? [];
         }
-        
+
         if ($value !== null && $value !== '') {
             $properties['description'] = $value;
         } else {
             unset($properties['description']);
         }
-        
+
         // Imposta properties come array, Laravel gestirà il cast automaticamente quando salva
         $this->attributes['properties'] = $properties;
     }
