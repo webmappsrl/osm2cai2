@@ -25,17 +25,11 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
         $this->hikingRoutes = $hikingRoutes;
     }
 
-    /**
-     * @return string
-     */
     public function title(): string
     {
         return 'Percorsi';
     }
 
-    /**
-     * @return Collection
-     */
     public function collection(): Collection
     {
         // Carica le relazioni necessarie per evitare query N+1
@@ -49,9 +43,6 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
         return $this->hikingRoutes;
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return [
@@ -72,8 +63,7 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
     }
 
     /**
-     * @param HikingRoute $hikingRoute
-     * @return array
+     * @param  HikingRoute  $hikingRoute
      */
     public function map($hikingRoute): array
     {
@@ -125,14 +115,14 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
         $tempoIndietro = $techData['duration_backward'];
 
         // Recupera Link EDIT osm2CAI (cliccabile)
-        $linkEditUrl = url('/resources/hiking-routes/' . $hikingRoute->id);
-        $linkEdit = '=HYPERLINK("' . $linkEditUrl . '", "Modifica")';
+        $linkEditUrl = url('/resources/hiking-routes/'.$hikingRoute->id);
+        $linkEdit = '=HYPERLINK("'.$linkEditUrl.'", "Modifica")';
 
         // Recupera Link OSM (cliccabile)
         $osmId = $osmfeaturesData['properties']['osm_id'] ?? null;
         if ($osmId) {
-            $linkOsmUrl = 'https://www.openstreetmap.org/relation/' . $osmId;
-            $linkOsm = '=HYPERLINK("' . $linkOsmUrl . '", "OSM")';
+            $linkOsmUrl = 'https://www.openstreetmap.org/relation/'.$osmId;
+            $linkOsm = '=HYPERLINK("'.$linkOsmUrl.'", "OSM")';
         } else {
             $linkOsm = '';
         }
@@ -157,9 +147,6 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
     /**
      * Recupera i dati tecnici del percorso
      * Cerca in ordine: tdh -> properties->dem_enrichment -> properties -> distance_comp
-     *
-     * @param HikingRoute $hikingRoute
-     * @return array
      */
     protected function getTechData(HikingRoute $hikingRoute): array
     {
@@ -180,6 +167,7 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
         // Prova da properties->dem_enrichment
         if (! empty($properties['dem_enrichment']) && is_array($properties['dem_enrichment'])) {
             $dem = $properties['dem_enrichment'];
+
             return [
                 'distance' => $this->formatDistance($dem['distance'] ?? null),
                 'ascent' => $this->formatElevation($dem['ascent'] ?? null),
@@ -215,8 +203,7 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
     /**
      * Formatta la distanza in km
      *
-     * @param mixed $distance
-     * @return string
+     * @param  mixed  $distance
      */
     protected function formatDistance($distance): string
     {
@@ -248,8 +235,7 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
     /**
      * Formatta il dislivello in metri
      *
-     * @param mixed $elevation
-     * @return string
+     * @param  mixed  $elevation
      */
     protected function formatElevation($elevation): string
     {
@@ -271,8 +257,7 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
     /**
      * Formatta la durata in formato HH:MM
      *
-     * @param mixed $duration
-     * @return string
+     * @param  mixed  $duration
      */
     protected function formatDuration($duration): string
     {
@@ -289,13 +274,15 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
         if (is_string($duration)) {
             // Cerca pattern come "h 2:30" o "2:30"
             if (preg_match('/(\d{1,2}):(\d{2})/', $duration, $matches)) {
-                return $matches[1] . ':' . $matches[2];
+                return $matches[1].':'.$matches[2];
             }
             // Cerca solo numeri (minuti)
             if (preg_match('/\d+/', $duration, $matches)) {
                 $minutes = (int) $matches[0];
+
                 return $this->minutesToHHMM($minutes);
             }
+
             return '';
         }
 
@@ -309,9 +296,6 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
 
     /**
      * Converte minuti in formato HH:MM
-     *
-     * @param int $minutes
-     * @return string
      */
     protected function minutesToHHMM(int $minutes): string
     {
@@ -322,14 +306,13 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
 
-        return str_pad($hours, 2, '0', STR_PAD_LEFT) . ':' . str_pad($mins, 2, '0', STR_PAD_LEFT);
+        return str_pad($hours, 2, '0', STR_PAD_LEFT).':'.str_pad($mins, 2, '0', STR_PAD_LEFT);
     }
 
     /**
      * Parse osmfeatures_data in array
      *
-     * @param mixed $osmfeaturesData
-     * @return array
+     * @param  mixed  $osmfeaturesData
      */
     protected function parseOsmfeaturesData($osmfeaturesData): array
     {
@@ -347,7 +330,6 @@ class RoutesSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithM
     /**
      * Apply styles to the worksheet
      *
-     * @param Worksheet $sheet
      * @return array
      */
     public function styles(Worksheet $sheet)
