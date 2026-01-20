@@ -473,6 +473,9 @@ class SignageProject extends Polygon
                 return $this->getFeatureCollectionMapFromTrait();
             }
 
+            // Ottieni la lingua corrente dell'applicazione (it, en, ecc.)
+            $currentLocale = app()->getLocale();
+
             // Decodifica le properties per ogni hiking route
             $hikingRoutesProcessed = [];
             foreach ($hikingRoutesData as $hrData) {
@@ -480,9 +483,13 @@ class SignageProject extends Polygon
                 $geometry = is_string($hrData->geometry) ? json_decode($hrData->geometry, true) : $hrData->geometry;
                 $geometryRaw = $hrData->geometry_raw_data ? (is_string($hrData->geometry_raw_data) ? json_decode($hrData->geometry_raw_data, true) : $hrData->geometry_raw_data) : null;
 
+                // Decodifica il name se è una stringa JSON (come viene salvato nel database)
+                // Estrai il nome nella lingua corrente, con fallback a 'it' e poi al primo disponibile
+                $translatedName = $this->extractTranslatedName($hrData->name, $currentLocale);
+
                 $hikingRoutesProcessed[$hrData->id] = [
                     'id' => $hrData->id,
-                    'name' => $hrData->name,
+                    'name' => $translatedName,
                     'properties' => $properties ?? [],
                     'osmfeatures_id' => $hrData->osmfeatures_id,
                     'geometry' => $geometry,
@@ -1029,5 +1036,34 @@ class SignageProject extends Polygon
             // La cache verrà comunque invalidata automaticamente quando cambiano le hiking routes
             // perché la chiave include l'hash delle hiking routes
         }
+    }
+
+    /**
+     * Estrae il nome tradotto dal campo name (che può essere una stringa JSON o una stringa semplice)
+     *
+     * @param  string|null  $name  Il valore del campo name (può essere JSON o stringa)
+     * @param  string  $locale  La lingua corrente (es. 'it', 'en')
+     * @return string Il nome nella lingua corrente, o fallback a 'it' o al primo disponibile
+     */
+    protected function extractTranslatedName(?string $name, string $locale = 'it'): string
+    {
+        if (empty($name)) {
+            return '';
+        }
+
+        // Se è una stringa JSON, decodificala
+        if (is_string($name)) {
+            $decodedName = json_decode($name, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedName)) {
+                // Priorità: 1) Lingua corrente, 2) Italiano, 3) Prima disponibile, 4) Stringa originale
+                return $decodedName[$locale]
+                    ?? $decodedName['it']
+                    ?? (is_array($decodedName) && ! empty($decodedName) ? reset($decodedName) : $name)
+                    ?? $name;
+            }
+        }
+
+        // Se non è JSON o è già una stringa semplice, restituiscila così com'è
+        return $name;
     }
 }
