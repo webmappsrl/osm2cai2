@@ -399,12 +399,19 @@ class SignageMapController
                     }
                     $targetFeature = $pointFeaturesMap[$id] ?? null;
 
-                    return array_merge([
+                    $mergedData = array_merge([
                         'id' => (int) $id,
                         'ref' => $targetFeature['properties']['ref'] ?? '',
                         'name' => $targetFeature['properties']['name'] ?? '',
                         'description' => $targetFeature['properties']['description'] ?? '',
                     ], $data);
+
+                    // Arrotonda time_hiking se presente
+                    if (isset($mergedData['time_hiking'])) {
+                        $mergedData['time_hiking'] = $this->roundTravelTime($mergedData['time_hiking']);
+                    }
+
+                    return $mergedData;
                 },
                 $forward
             )));
@@ -416,12 +423,19 @@ class SignageMapController
                     }
                     $targetFeature = $pointFeaturesMap[$id] ?? null;
 
-                    return array_merge([
+                    $mergedData = array_merge([
                         'id' => (int) $id,
                         'ref' => $targetFeature['properties']['ref'] ?? '',
                         'name' => $targetFeature['properties']['name'] ?? '',
                         'description' => $targetFeature['properties']['description'] ?? '',
                     ], $data);
+
+                    // Arrotonda time_hiking se presente
+                    if (isset($mergedData['time_hiking'])) {
+                        $mergedData['time_hiking'] = $this->roundTravelTime($mergedData['time_hiking']);
+                    }
+
+                    return $mergedData;
                 },
                 $backward
             )));
@@ -607,5 +621,158 @@ class SignageMapController
             'success' => true,
             'signageData' => $signageData,
         ]);
+    }
+
+/**
+     * Arrotonda i tempi di percorrenza secondo le regole CAI
+     *
+     * Regole di arrotondamento:
+     * - Prima ora (0-60 min): mantiene tutti i valori, ma 55-60 > 60
+     * - Seconda ora (61-120 min): arrotonda 5, 25, 35, 55 ai 10 minuti successivi
+     * - Terza/Quarta ora (121-240 min): arrotondamenti più ampi
+     * - Successive (>240 min): arrotondamenti ancora più ampi
+     *
+     * @param  int|null  $minutes  Tempo in minuti
+     * @return int|null Tempo arrotondato in minuti
+     */
+    private function roundTravelTime(?int $minutes): ?int
+    {
+        if ($minutes === null || $minutes <= 0) {
+            return $minutes;
+        }
+
+        // --- Prima ora: 0‑60 minuti ---
+        // Non ha senso mostrare tempi inferiori a 5', li portiamo a 5'.
+        if ($minutes <= 5) {
+            return 5;
+        }
+        if ($minutes <= 10) {
+            return 10;
+        }
+        if ($minutes <= 15) {
+            return 15;
+        }
+        if ($minutes <= 20) {
+            return 20;
+        }
+        if ($minutes <= 25) {
+            return 25;
+        }
+        if ($minutes <= 30) {
+            return 30;
+        }
+        if ($minutes <= 35) {
+            return 35;
+        }
+        if ($minutes <= 40) {
+            return 40;
+        }
+        if ($minutes <= 45) {
+            return 45;
+        }
+        if ($minutes <= 50) {
+            return 50;
+        }
+        if ($minutes <= 60) {
+            return 60;
+        }
+
+        // --- Seconda ora: 61‑120 minuti ---
+        if ($minutes <= 70) {   // 1:05‑1:10 -> 1:10
+            return 70;
+        }
+        if ($minutes <= 75) {   // 1:15
+            return 75;
+        }
+        if ($minutes <= 80) {   // 1:20
+            return 80;
+        }
+        if ($minutes <= 90) {   // 1:25‑1:30
+            return 90;
+        }
+        if ($minutes <= 100) {  // 1:35‑1:40
+            return 100;
+        }
+        if ($minutes <= 105) {  // 1:45
+            return 105;
+        }
+        if ($minutes <= 110) {  // 1:50
+            return 110;
+        }
+        if ($minutes <= 120) {  // 1:55‑2:00
+            return 120;
+        }
+
+        // --- Terza / Quarta ora: 121‑240 minuti ---
+        if ($minutes <= 130) {  // 2:05‑2:10
+            return 130;
+        }
+        if ($minutes <= 135) {  // 2:15
+            return 135;
+        }
+        if ($minutes <= 140) {  // 2:20
+            return 140;
+        }
+        if ($minutes <= 150) {  // 2:25‑2:30
+            return 150;
+        }
+        if ($minutes <= 160) {  // 2:35‑2:40
+            return 160;
+        }
+        if ($minutes <= 180) {  // 2:45‑3:05
+            return 180;
+        }
+        if ($minutes <= 210) {  // 3:10‑3:30
+            return 210;
+        }
+        if ($minutes <= 240) {  // 3:35‑4:00
+            return 240;
+        }
+
+        // --- Ore successive: 241‑600 minuti (fino a 10 ore) ---
+        if ($minutes <= 270) {  // 4:05‑4:30
+            return 270;
+        }
+        if ($minutes <= 300) {  // 4:35‑5:00
+            return 300;
+        }
+        if ($minutes <= 330) {  // 5:05‑5:30
+            return 330;
+        }
+        if ($minutes <= 360) {  // 5:35‑6:00
+            return 360;
+        }
+        if ($minutes <= 390) {  // 6:05‑6:30
+            return 390;
+        }
+        if ($minutes <= 420) {  // 6:35‑7:00
+            return 420;
+        }
+        if ($minutes <= 480) {  // 7:05‑8:00
+            return 480;
+        }
+        if ($minutes <= 540) {  // 8:05‑9:00
+            return 540;
+        }
+        if ($minutes <= 600) {  // 9:05‑10:00
+            return 600;
+        }
+
+        // --- Oltre le 10 ore ---
+        // Dalla tabella (7:05‑8:00 > 8:00, 8:05‑9:00 > 9:00, 9:05‑10:00 > 10:00)
+        // si vede che, superate le ~7 ore, qualsiasi valore con minuti > 0
+        // viene arrotondato ALL'ORA INTERA successiva.
+        //
+        // Per tempi > 10 ore manteniamo la stessa regola:
+        //  - H:00       -> H:00
+        //  - H:01‑H:59  -> (H+1):00
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+
+        if ($mins === 0) {
+            return $hours * 60;
+        }
+
+        return ($hours + 1) * 60;
     }
 }

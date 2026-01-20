@@ -497,7 +497,7 @@ class HikingRoute extends EcTrack
         }
         $uncheckedGeometryFeature['properties'] = $properties;
 
-        $geojson['features'] = array_merge($poleFeatures, [$uncheckedGeometryFeature], $geojson['features']);
+        $geojson['features'] = array_merge($poleFeatures,  $geojson['features'], [$uncheckedGeometryFeature]);
 
         return $geojson;
     }

@@ -345,7 +345,7 @@ export default {
         /**
          * Formatta il tempo in ore.minuti
          * @param {number} minutes - minuti totali
-         * @returns {string} - tempo formattato (es. "1.15" per 1 ora e 15 minuti)
+         * @returns {string} - tempo formattato (es. "1:15" per 1 ora e 15 minuti)
          */
         formatTime(minutes) {
             if (!minutes && minutes !== 0) return '-';
@@ -354,10 +354,10 @@ export default {
             const mins = minutes % 60;
 
             if (hours === 0) {
-                return `0.${mins.toString().padStart(2, '0')}`;
+                return `0:${mins.toString().padStart(2, '0')}`;
             }
 
-            return `${hours}.${mins.toString().padStart(2, '0')}`;
+            return `${hours}:${mins.toString().padStart(2, '0')}`;
         },
 
         /**
