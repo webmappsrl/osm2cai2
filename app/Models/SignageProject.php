@@ -804,15 +804,29 @@ class SignageProject extends Polygon
                                         $newSignage = $feature['properties']['signage'] ?? [];
 
                                         if (!empty($newSignage) && is_array($newSignage)) {
-                                            $mergedSignage = array_merge($existingSignage, $newSignage);
+                                            // Merge intelligente: unisci le chiavi delle hiking routes senza sovrascrivere
+                                            // Se una chiave esiste già in existingSignage, mantienila (è già completa)
+                                            // Aggiungi solo le nuove chiavi da newSignage
+                                            $mergedSignage = $existingSignage;
 
-                                            if (isset($existingSignage['arrow_order']) && isset($newSignage['arrow_order'])) {
-                                                $mergedSignage['arrow_order'] = array_unique(array_merge(
-                                                    $existingSignage['arrow_order'] ?? [],
-                                                    $newSignage['arrow_order'] ?? []
-                                                ));
-                                            } elseif (isset($newSignage['arrow_order'])) {
-                                                $mergedSignage['arrow_order'] = $newSignage['arrow_order'];
+                                            foreach ($newSignage as $key => $value) {
+                                                // Se è arrow_order, unisci gli array rimuovendo duplicati
+                                                if ($key === 'arrow_order') {
+                                                    if (isset($existingSignage['arrow_order']) && is_array($existingSignage['arrow_order'])) {
+                                                        $mergedSignage['arrow_order'] = array_values(array_unique(array_merge(
+                                                            $existingSignage['arrow_order'],
+                                                            is_array($value) ? $value : []
+                                                        )));
+                                                    } elseif (is_array($value)) {
+                                                        $mergedSignage['arrow_order'] = array_values(array_unique($value));
+                                                    }
+                                                } else {
+                                                    // Per le altre chiavi (ID hiking routes), aggiungi solo se non esistono già
+                                                    // Questo evita di sovrascrivere dati già presenti
+                                                    if (!isset($mergedSignage[$key])) {
+                                                        $mergedSignage[$key] = $value;
+                                                    }
+                                                }
                                             }
 
                                             $polesMap[$poleIdKey]['properties']['signage'] = $mergedSignage;
@@ -825,16 +839,29 @@ class SignageProject extends Polygon
 
                                         // Unisci i dati di signage (possono contenere informazioni da diverse hiking routes)
                                         if (!empty($newSignage) && is_array($newSignage)) {
-                                            $mergedSignage = array_merge($existingSignage, $newSignage);
+                                            // Merge intelligente: unisci le chiavi delle hiking routes senza sovrascrivere
+                                            // Se una chiave esiste già in existingSignage, mantienila (è già completa)
+                                            // Aggiungi solo le nuove chiavi da newSignage
+                                            $mergedSignage = $existingSignage;
 
-                                            // Unisci anche arrow_order se presente
-                                            if (isset($existingSignage['arrow_order']) && isset($newSignage['arrow_order'])) {
-                                                $mergedSignage['arrow_order'] = array_unique(array_merge(
-                                                    $existingSignage['arrow_order'] ?? [],
-                                                    $newSignage['arrow_order'] ?? []
-                                                ));
-                                            } elseif (isset($newSignage['arrow_order'])) {
-                                                $mergedSignage['arrow_order'] = $newSignage['arrow_order'];
+                                            foreach ($newSignage as $key => $value) {
+                                                // Se è arrow_order, unisci gli array rimuovendo duplicati
+                                                if ($key === 'arrow_order') {
+                                                    if (isset($existingSignage['arrow_order']) && is_array($existingSignage['arrow_order'])) {
+                                                        $mergedSignage['arrow_order'] = array_values(array_unique(array_merge(
+                                                            $existingSignage['arrow_order'],
+                                                            is_array($value) ? $value : []
+                                                        )));
+                                                    } elseif (is_array($value)) {
+                                                        $mergedSignage['arrow_order'] = array_values(array_unique($value));
+                                                    }
+                                                } else {
+                                                    // Per le altre chiavi (ID hiking routes), aggiungi solo se non esistono già
+                                                    // Questo evita di sovrascrivere dati già presenti
+                                                    if (!isset($mergedSignage[$key])) {
+                                                        $mergedSignage[$key] = $value;
+                                                    }
+                                                }
                                             }
 
                                             $polesMap[$poleIdKey]['properties']['signage'] = $mergedSignage;
