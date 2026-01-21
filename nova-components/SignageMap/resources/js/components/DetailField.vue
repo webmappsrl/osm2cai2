@@ -321,18 +321,34 @@ export default {
                 return;
             }
 
-            // Cerca nelle featuresMap la feature con signage.checkpoint (è l'HikingRoute)
+            // Cerca nelle featuresMap TUTTE le HikingRoute (LineString) che hanno questo palo come checkpoint
+            // Una meta può valere per più HikingRoute, quindi dobbiamo controllare tutte
             if (featuresMap) {
+                // Inizializza a false
+                this.metaValue = false;
+                
+                // Cerca in tutte le features LineString (HikingRoute)
                 for (const [featureId, feature] of Object.entries(featuresMap)) {
-                    const checkpoint = feature.properties?.signage?.checkpoint;
-                    if (checkpoint && Array.isArray(checkpoint)) {
-                        this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
-                        return;
+                    const geometryType = feature.geometry?.type?.toLowerCase();
+                    const isLine = geometryType === 'linestring' || geometryType === 'multilinestring';
+                    
+                    // Controlla solo le LineString (HikingRoute)
+                    if (isLine) {
+                        const checkpoint = feature.properties?.signage?.checkpoint;
+                        if (checkpoint && Array.isArray(checkpoint)) {
+                            // Se almeno una HikingRoute ha questo palo come checkpoint, attiva il booleano
+                            const isCheckpoint = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+                            if (isCheckpoint) {
+                                this.metaValue = true;
+                                // Possiamo fermarci qui perché basta che sia checkpoint per almeno una HikingRoute
+                                break;
+                            }
+                        }
                     }
                 }
+            } else {
+                this.metaValue = false;
             }
-
-            this.metaValue = false;
         },
 
         /**
