@@ -393,7 +393,7 @@ class SignageMapController
             }
 
             // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, name e description del palo target
-            $forwardObjects = array_values(array_filter(array_map(
+            $forwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
                     $data = $hikingRouteMatrix[$id] ?? null;
                     if (! $data) {
@@ -417,7 +417,7 @@ class SignageMapController
                 },
                 $forward
             )));
-            $backwardObjects = array_values(array_filter(array_map(
+            $backwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
                     $data = $hikingRouteMatrix[$id] ?? null;
                     if (! $data) {
@@ -460,18 +460,32 @@ class SignageMapController
                 $poleProperties['signage']['arrow_order'] = [];
             }
 
+            // Recupera eventuali frecce già salvate per questo hiking route
+            $existingRouteSignage = $poleProperties['signage'][$hikingRouteIdStr] ?? null;
+            $existingArrows = [];
+            if (is_array($existingRouteSignage) && isset($existingRouteSignage['arrows']) && is_array($existingRouteSignage['arrows'])) {
+                $existingArrows = $existingRouteSignage['arrows'];
+            }
+
             // Crea la struttura arrows con direction e rows
             $arrows = [];
-            if (! empty($forwardObjects)) {
+            if (! empty($forwardRows)) {
+                // Se esiste già una freccia in posizione 0, mantieni la sua direction
+                $direction = $existingArrows[0]['direction'] ?? 'forward';
                 $arrows[] = [
-                    'direction' => 'forward',
-                    'rows' => $forwardObjects,
+                    'direction' => $direction,
+                    'rows' => $forwardRows,
                 ];
             }
-            if (! empty($backwardObjects)) {
+            if (! empty($backwardRows)) {
+                // Indice dell'arrow "backward" nella struttura esistente:
+                // se esisteva già una freccia "forward", il backward è tipicamente in posizione 1,
+                // altrimenti riusa l'indice 0.
+                $backwardIndex = ! empty($forwardRows) ? 1 : 0;
+                $direction = $existingArrows[$backwardIndex]['direction'] ?? 'backward';
                 $arrows[] = [
-                    'direction' => 'backward',
-                    'rows' => $backwardObjects,
+                    'direction' => $direction,
+                    'rows' => $backwardRows,
                 ];
             }
 
@@ -481,33 +495,70 @@ class SignageMapController
                 'arrows' => $arrows,
             ];
 
-            // Aggiorna arrow_order: aggiungi le chiavi per questo hiking route se non già presenti
-            // Calcola dinamicamente gli indici: se non ci sono forwardObjects, backwardKey deve essere -0
-            $hasForward = ! empty($forwardObjects);
-            $hasBackward = ! empty($backwardObjects);
-
-            $forwardKey = $hasForward ? $hikingRouteIdStr . '-0' : null;
-            $backwardKey = $hasBackward ? $hikingRouteIdStr . '-' . ($hasForward ? '1' : '0') : null;
-
-            // Rimuovi eventuali chiavi esistenti per questo hiking route
-            $poleProperties['signage']['arrow_order'] = array_values(array_filter(
-                $poleProperties['signage']['arrow_order'],
-                function ($key) use ($hikingRouteIdStr) {
-                    return ! str_starts_with($key, $hikingRouteIdStr . '-');
-                }
-            ));
-
-            // Aggiungi le nuove chiavi nell'ordine corretto (forward prima, backward dopo)
-            if ($forwardKey !== null) {
-                $poleProperties['signage']['arrow_order'][] = $forwardKey;
-            }
-            if ($backwardKey !== null) {
-                $poleProperties['signage']['arrow_order'][] = $backwardKey;
-            }
+            // Aggiorna arrow_order preservando l'ordine esistente per questa hiking route
+            $existingOrder = $poleProperties['signage']['arrow_order'] ?? [];
+            $poleProperties['signage']['arrow_order'] = $this->mergeArrowOrderForRoute(
+                $existingOrder,
+                $hikingRouteIdStr,
+                $arrows
+            );
 
             $pole->properties = $poleProperties;
             $pole->saveQuietly();
         }
+    }
+
+    /**
+     * Effettua il merge di arrow_order per una singola hiking route,
+     * preservando l'ordine esistente dove possibile.
+     *
+     * @param  array  $existingOrder  array completo arrow_order del palo
+     * @param  string  $hikingRouteIdStr  id della hiking route come stringa
+     * @param  array  $arrows  array di arrows correnti per la route
+     * @return array nuovo array arrow_order completo
+     */
+    private function mergeArrowOrderForRoute(array $existingOrder, string $hikingRouteIdStr, array $arrows): array
+    {
+        // Calcola l'insieme delle chiavi consentite per questa route in base alle frecce presenti
+        $allowedKeys = [];
+        foreach (array_keys($arrows) as $idx) {
+            $allowedKeys[] = $hikingRouteIdStr.'-'.$idx;
+        }
+
+        // Se non ci sono frecce, rimuovi semplicemente tutte le chiavi di questa route
+        if (empty($allowedKeys)) {
+            return array_values(array_filter(
+                $existingOrder,
+                function ($key) use ($hikingRouteIdStr) {
+                    return ! str_starts_with($key, $hikingRouteIdStr.'-');
+                }
+            ));
+        }
+
+        // 1) Mantieni l'ordine esistente per le chiavi valide di questa route
+        $updatedOrder = [];
+        foreach ($existingOrder as $key) {
+            // Chiavi di altre route rimangono invariate
+            if (! str_starts_with($key, $hikingRouteIdStr.'-')) {
+                $updatedOrder[] = $key;
+                continue;
+            }
+
+            // Per questa route: tieni solo le chiavi ancora valide
+            if (in_array($key, $allowedKeys, true)) {
+                $updatedOrder[] = $key;
+            }
+            // Se non è più valida (es. freccia rimossa), viene scartata
+        }
+
+        // 2) Aggiungi eventuali nuove chiavi mancanti per questa route, in ordine di indice
+        foreach ($allowedKeys as $key) {
+            if (! in_array($key, $updatedOrder, true)) {
+                $updatedOrder[] = $key;
+            }
+        }
+
+        return array_values($updatedOrder);
     }
 
     /**
