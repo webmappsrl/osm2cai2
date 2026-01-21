@@ -269,7 +269,7 @@ class SignageMapController
                 ->where('poles.id', $poleId)
                 ->whereRaw(
                     'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
-                    [$geojson, 10]
+                    [$geojson, 500]
                 )
                 ->exists();
 
@@ -623,7 +623,7 @@ class SignageMapController
         ]);
     }
 
-/**
+    /**
      * Arrotonda i tempi di percorrenza secondo le regole CAI
      *
      * Regole di arrotondamento:

@@ -142,7 +142,7 @@ class SignageProject extends Polygon
      * @param float $bufferDistance Distanza del buffer in metri (default: 10m)
      * @return array Mappa hiking_route_id => Collection<Poles>
      */
-    private function getAllPolesForHikingRoutes(array $hikingRouteIds, float $bufferDistance = 10): array
+    private function getAllPolesForHikingRoutes(array $hikingRouteIds, float $bufferDistance = 15): array
     {
         if (empty($hikingRouteIds)) {
             return [];
