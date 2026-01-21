@@ -393,7 +393,7 @@ class SignageMapController
             }
 
             // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, name e description del palo target
-            $forwardObjects = array_values(array_filter(array_map(
+            $forwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
                     $data = $hikingRouteMatrix[$id] ?? null;
                     if (! $data) {
@@ -417,7 +417,7 @@ class SignageMapController
                 },
                 $forward
             )));
-            $backwardObjects = array_values(array_filter(array_map(
+            $backwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
                     $data = $hikingRouteMatrix[$id] ?? null;
                     if (! $data) {
@@ -460,18 +460,32 @@ class SignageMapController
                 $poleProperties['signage']['arrow_order'] = [];
             }
 
+            // Recupera eventuali frecce già salvate per questo hiking route
+            $existingRouteSignage = $poleProperties['signage'][$hikingRouteIdStr] ?? null;
+            $existingArrows = [];
+            if (is_array($existingRouteSignage) && isset($existingRouteSignage['arrows']) && is_array($existingRouteSignage['arrows'])) {
+                $existingArrows = $existingRouteSignage['arrows'];
+            }
+
             // Crea la struttura arrows con direction e rows
             $arrows = [];
-            if (! empty($forwardObjects)) {
+            if (! empty($forwardRows)) {
+                // Se esiste già una freccia in posizione 0, mantieni la sua direction
+                $direction = $existingArrows[0]['direction'] ?? 'forward';
                 $arrows[] = [
-                    'direction' => 'forward',
-                    'rows' => $forwardObjects,
+                    'direction' => $direction,
+                    'rows' => $forwardRows,
                 ];
             }
-            if (! empty($backwardObjects)) {
+            if (! empty($backwardRows)) {
+                // Indice dell'arrow "backward" nella struttura esistente:
+                // se esisteva già una freccia "forward", il backward è tipicamente in posizione 1,
+                // altrimenti riusa l'indice 0.
+                $backwardIndex = ! empty($forwardObjects) ? 1 : 0;
+                $direction = $existingArrows[$backwardIndex]['direction'] ?? 'backward';
                 $arrows[] = [
-                    'direction' => 'backward',
-                    'rows' => $backwardObjects,
+                    'direction' => $direction,
+                    'rows' => $backwardRows,
                 ];
             }
 
@@ -486,14 +500,14 @@ class SignageMapController
             $hasForward = ! empty($forwardObjects);
             $hasBackward = ! empty($backwardObjects);
 
-            $forwardKey = $hasForward ? $hikingRouteIdStr . '-0' : null;
-            $backwardKey = $hasBackward ? $hikingRouteIdStr . '-' . ($hasForward ? '1' : '0') : null;
+            $forwardKey = $hasForward ? $hikingRouteIdStr.'-0' : null;
+            $backwardKey = $hasBackward ? $hikingRouteIdStr.'-'.($hasForward ? '1' : '0') : null;
 
             // Rimuovi eventuali chiavi esistenti per questo hiking route
             $poleProperties['signage']['arrow_order'] = array_values(array_filter(
                 $poleProperties['signage']['arrow_order'],
                 function ($key) use ($hikingRouteIdStr) {
-                    return ! str_starts_with($key, $hikingRouteIdStr . '-');
+                    return ! str_starts_with($key, $hikingRouteIdStr.'-');
                 }
             ));
 
