@@ -7,6 +7,11 @@ use Laravel\Nova\Filters\Filter;
 
 class WaterFlowValidatedFilter extends ValidatedFilter
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->name = __('Flow Rate Validation Status');
+    }
     /**
      * Apply the filter to the given query.
      *
