@@ -107,7 +107,7 @@ class SourceSurvey extends AbstractValidationResource
     public function filters(Request $request): array
     {
         return [
-            ...parent::filters($request),
+            new ValidatedFilter,
             new WaterFlowValidatedFilter,
         ];
     }
