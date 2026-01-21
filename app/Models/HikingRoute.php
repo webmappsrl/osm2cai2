@@ -1168,7 +1168,7 @@ SQL;
      * @see https://postgis.net/docs/ST_DWithin.html
      * @see https://postgis.net/docs/ST_Union.html
      */
-    public function getPolesWithBuffer(float $bufferDistance = 10)
+    public function getPolesWithBuffer(float $bufferDistance = 15)
     {
         $geojson = $this->getHikingRouteGeojson($bufferDistance);
 
