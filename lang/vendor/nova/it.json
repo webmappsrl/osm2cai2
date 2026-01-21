@@ -168,6 +168,7 @@
     "Find Club Hiking Route Association": "Trova Associazione Percorso Sezione",
     "Flow Rate L/s": "Portata L/s",
     "Flow Rate Validation": "Validazione Portata",
+    "Flow Rate Validation Status": "Stato di Validazione Portata",
     "For correct upload use files smaller than 20MB": "Per un caricamento corretto usa file più piccoli di 20MB",
     "Forcing the synchronization with OpenStreetMap is only possible if the route has an OSM2CAI status less than or equal to 3; if necessary, proceed first with REVERT VALIDATION": "Forzare la sincronizzazione con OpenStreetMap è possibile solo se il percorso ha uno stato OSM2CAI minore o uguale a 3; se necessario, procedi prima con ANNULLA VALIDAZIONE",
     "Form Info": "Info Form",
