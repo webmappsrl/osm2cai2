@@ -154,6 +154,8 @@ class SignageMapController
                 }
                 if ($description !== null) {
                     $poleProperties['description'] = $description;
+                } else {
+                    unset($poleProperties['description']);
                 }
                 $pole->properties = $poleProperties;
                 $pole->saveQuietly();
