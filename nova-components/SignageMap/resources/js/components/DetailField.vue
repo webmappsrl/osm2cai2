@@ -326,12 +326,14 @@ export default {
                 for (const [featureId, feature] of Object.entries(featuresMap)) {
                     const checkpoint = feature.properties?.signage?.checkpoint;
                     if (checkpoint && Array.isArray(checkpoint)) {
-                        this.metaValue = checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId));
-                        return;
+                        if(checkpoint.some(id => parseInt(id) === poleId || String(id) === String(poleId))) {
+                            this.metaValue = true;
+                            return;
+                        }
                     }
                 }
             }
-
+            
             this.metaValue = false;
         },
 
