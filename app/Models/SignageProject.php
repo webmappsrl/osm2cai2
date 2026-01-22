@@ -595,7 +595,7 @@ class SignageProject extends Polygon
                         'id' => $pole->id,
                         'name' => $pole->name ?? '',
                         'description' => $pole->properties['description'] ?? '',
-                        'tooltip' => $pole->ref,
+                        'tooltip' =>  $pole->name ?? $pole->ref ?? '',
                         'ref' => $pole->ref,
                         'clickAction' => 'popup',
                         'link' => url('/resources/poles/' . $pole->id),
