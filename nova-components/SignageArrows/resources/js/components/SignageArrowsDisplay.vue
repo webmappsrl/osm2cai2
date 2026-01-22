@@ -76,6 +76,26 @@
         <div v-if="!hasSignageData" class="no-signage-data">
             Nessun dato segnaletica disponibile
         </div>
+
+        <!-- Modal di conferma -->
+        <div v-if="showConfirmModal" class="confirm-modal-overlay" @click.self="closeConfirmModal">
+            <div class="confirm-modal">
+                <div class="confirm-modal-header">
+                    <h3>Conferma operazione</h3>
+                </div>
+                <div class="confirm-modal-body">
+                    <p>{{ confirmModalMessage }}</p>
+                </div>
+                <div class="confirm-modal-footer">
+                    <button class="confirm-btn confirm-btn--cancel" @click="closeConfirmModal">
+                        Annulla
+                    </button>
+                    <button class="confirm-btn confirm-btn--confirm" @click="executeConfirmedAction">
+                        Conferma
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -115,6 +135,21 @@ export default {
     },
 
     computed: {
+        /**
+         * Messaggio da mostrare nel modal di conferma
+         */
+        confirmModalMessage() {
+            if (!this.pendingAction) return '';
+
+            if (this.pendingAction.type === 'toggle') {
+                return 'Sei sicuro di voler invertire la direzione della freccia?';
+            } else if (this.pendingAction.type === 'move') {
+                return 'Sei sicuro di voler spostare questa freccia?';
+            }
+
+            return 'Sei sicuro di voler eseguire questa operazione?';
+        },
+
         /**
          * Processa i dati signage mantenendo la struttura originale con arrows ordinate
          * Supporta sia il formato con wrapper "signage" che il formato diretto
@@ -260,7 +295,9 @@ export default {
     data() {
         return {
             localArrowDirections: {}, // Mantiene le direzioni modificate: { "routeId-arrowIdx": "forward|backward" }
-            localArrowOrder: [] // Mantiene l'ordine modificato: array di chiavi "routeId-index"
+            localArrowOrder: [], // Mantiene l'ordine modificato: array di chiavi "routeId-index"
+            showConfirmModal: false, // Stato del modal di conferma
+            pendingAction: null // Azione in attesa di conferma: { type: 'toggle'|'move', params: {...} }
         };
     },
 
@@ -279,19 +316,37 @@ export default {
         },
 
         /**
-         * Inverte la direzione di una singola freccia
+         * Apre il modal di conferma per invertire la direzione
          * @param {string} routeId - ID della route
          * @param {number} arrowIdx - Indice della freccia nell'array orderedArrows
          */
         toggleArrowDirection(routeId, arrowIdx) {
+            const routeData = this.processedSignageData[routeId];
+            if (!routeData || !routeData.orderedArrows || !routeData.orderedArrows[arrowIdx]) {
+                return;
+            }
+
+            this.pendingAction = {
+                type: 'toggle',
+                params: { routeId, arrowIdx }
+            };
+            this.showConfirmModal = true;
+        },
+
+        /**
+         * Esegue effettivamente l'inversione della direzione dopo la conferma
+         * @param {string} routeId - ID della route
+         * @param {number} arrowIdx - Indice della freccia nell'array orderedArrows
+         */
+        executeToggleArrowDirection(routeId, arrowIdx) {
             // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Metodo chiamato', data: { routeId, arrowIdx }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Metodo chiamato', data: { routeId, arrowIdx }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
             // #endregion
 
             const routeData = this.processedSignageData[routeId];
             if (!routeData || !routeData.orderedArrows || !routeData.orderedArrows[arrowIdx]) {
                 // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Route data non valida', data: { routeId, arrowIdx, hasRouteData: !!routeData, hasOrderedArrows: !!(routeData && routeData.orderedArrows) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Route data non valida', data: { routeId, arrowIdx, hasRouteData: !!routeData, hasOrderedArrows: !!(routeData && routeData.orderedArrows) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
                 // #endregion
                 return;
             }
@@ -302,7 +357,7 @@ export default {
             const newDirection = currentDirection === 'forward' ? 'backward' : 'forward';
 
             // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Calcolata nuova direzione', data: { routeId, arrowIdx, currentDirection, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Calcolata nuova direzione', data: { routeId, arrowIdx, currentDirection, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
             // #endregion
 
             // Salva la nuova direzione localmente
@@ -326,7 +381,7 @@ export default {
             }
 
             // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Prima di emettere evento', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Prima di emettere evento', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
             // #endregion
 
             // Emetti evento per notificare il cambio
@@ -338,7 +393,7 @@ export default {
             });
 
             // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:toggleArrowDirection', message: 'Evento emesso', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
+            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Evento emesso', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
             // #endregion
         },
 
@@ -440,9 +495,32 @@ export default {
         },
 
         /**
-         * Sposta la freccia in alto o in basso nell'ordine
+         * Apre il modal di conferma per spostare la freccia
+         * @param {string} routeId - ID della route
+         * @param {number} arrowIdx - Indice della freccia nell'array orderedArrows
+         * @param {string} direction - Direzione dello spostamento ('up' o 'down')
          */
         moveArrow(routeId, arrowIdx, direction) {
+            const routeData = this.processedSignageData[routeId];
+            if (!routeData || !routeData.orderedArrows) return;
+
+            const arrow = routeData.orderedArrows[arrowIdx];
+            if (!arrow || !arrow.__arrowKey) return;
+
+            this.pendingAction = {
+                type: 'move',
+                params: { routeId, arrowIdx, direction }
+            };
+            this.showConfirmModal = true;
+        },
+
+        /**
+         * Esegue effettivamente lo spostamento della freccia dopo la conferma
+         * @param {string} routeId - ID della route
+         * @param {number} arrowIdx - Indice della freccia nell'array orderedArrows
+         * @param {string} direction - Direzione dello spostamento ('up' o 'down')
+         */
+        executeMoveArrow(routeId, arrowIdx, direction) {
             const routeData = this.processedSignageData[routeId];
             if (!routeData || !routeData.orderedArrows) return;
 
@@ -487,6 +565,34 @@ export default {
                 arrowOrder: newOrder,
                 fullSignageData: this.signageData
             });
+        },
+
+        /**
+         * Esegue l'azione confermata dal modal
+         */
+        executeConfirmedAction() {
+            if (!this.pendingAction) {
+                this.closeConfirmModal();
+                return;
+            }
+
+            const { type, params } = this.pendingAction;
+
+            if (type === 'toggle') {
+                this.executeToggleArrowDirection(params.routeId, params.arrowIdx);
+            } else if (type === 'move') {
+                this.executeMoveArrow(params.routeId, params.arrowIdx, params.direction);
+            }
+
+            this.closeConfirmModal();
+        },
+
+        /**
+         * Chiude il modal di conferma
+         */
+        closeConfirmModal() {
+            this.showConfirmModal = false;
+            this.pendingAction = null;
         }
     }
 };
@@ -804,5 +910,98 @@ export default {
 .arrow-order-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Modal di conferma */
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.confirm-modal {
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+}
+
+.confirm-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.confirm-modal-header h3 {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.confirm-modal-body {
+    padding: 24px;
+}
+
+.confirm-modal-body p {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.confirm-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.confirm-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.confirm-btn--cancel {
+    background: #FFFFFF;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.confirm-btn--cancel:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.confirm-btn--confirm {
+    background: #3490dc;
+    color: #FFFFFF;
+    border-color: #3490dc;
+}
+
+.confirm-btn--confirm:hover {
+    background: #2779bd;
+    border-color: #2779bd;
+}
+
+.confirm-btn:active {
+    transform: scale(0.98);
 }
 </style>
