@@ -610,40 +610,41 @@ class DashboardCardsHelper
             new Cell(__('SAL')),
         ]);
 
-        // Fetch regions data with caching
+        // Fetch regions data with caching - OTTIMIZZATO: singola query aggregata invece di N+1
         $data = Cache::remember('regions_table_data', 60 * 60 * 24 * 2, function () {
-            $regions = Region::all();
+            // SINGOLA QUERY aggregata per tutte le regioni invece di N+1 query
+            // Questo elimina il problema N+1 caricando tutte le statistiche in una volta
+            $stats = DB::table('hiking_route_region')
+                ->join('hiking_routes', 'hiking_route_region.hiking_route_id', '=', 'hiking_routes.id')
+                ->join('regions', 'hiking_route_region.region_id', '=', 'regions.id')
+                ->select(
+                    'regions.id',
+                    'regions.name',
+                    'regions.code',
+                    'regions.num_expected',
+                    DB::raw('COUNT(CASE WHEN hiking_routes.osm2cai_status = 1 THEN 1 END) as tot1'),
+                    DB::raw('COUNT(CASE WHEN hiking_routes.osm2cai_status = 2 THEN 1 END) as tot2'),
+                    DB::raw('COUNT(CASE WHEN hiking_routes.osm2cai_status = 3 THEN 1 END) as tot3'),
+                    DB::raw('COUNT(CASE WHEN hiking_routes.osm2cai_status = 4 THEN 1 END) as tot4'),
+                    DB::raw('COUNT(*) as tot')
+                )
+                ->groupBy('regions.id', 'regions.name', 'regions.code', 'regions.num_expected')
+                ->get()
+                ->keyBy('id');
+
+            // Carica tutte le regioni per gestire anche quelle senza hiking routes
+            $allRegions = Region::select('id', 'name', 'code', 'num_expected')->get();
             $tableData = [];
 
-            foreach ($regions as $region) {
-                $hikingRoutes = $region->hikingRoutes()->get();
+            foreach ($allRegions as $region) {
+                // Ottieni le statistiche dalla query aggregata, o usa valori di default se non esistono
+                $stat = $stats->get($region->id);
+                $tot1 = $stat->tot1 ?? 0;
+                $tot2 = $stat->tot2 ?? 0;
+                $tot3 = $stat->tot3 ?? 0;
+                $tot4 = $stat->tot4 ?? 0;
+                $tot = $stat->tot ?? 0;
                 $att = $region->num_expected ?? 0;
-
-                $tot1 = 0;
-                $tot2 = 0;
-                $tot3 = 0;
-                $tot4 = 0;
-
-                if ($hikingRoutes->count() > 0) {
-                    foreach ($hikingRoutes as $route) {
-                        switch ($route['osm2cai_status'] ?? 0) {
-                            case 1:
-                                $tot1++;
-                                break;
-                            case 2:
-                                $tot2++;
-                                break;
-                            case 3:
-                                $tot3++;
-                                break;
-                            case 4:
-                                $tot4++;
-                                break;
-                        }
-                    }
-                }
-
-                $tot = count($hikingRoutes);
 
                 // SAL calculation
                 if ($att > 0) {
