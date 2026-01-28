@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.0.0 (2026-01-28)
+
+
+### Features
+
+* **auth:** ✨ add admin privileges for managing hiking routes ([9f03d22](https://github.com/webmappsrl/osm2cai2/commit/9f03d22d5f338786bdf49b6d8440f3ac4210a528))
+* **auth:** ✨ add policy for SignageProject ([c170d57](https://github.com/webmappsrl/osm2cai2/commit/c170d57ac9508fd5368f5ea3791b7bdf0bc7dfa9))
+* **database:** ✨ add migrations for signage projects and projectables ([e4d0a63](https://github.com/webmappsrl/osm2cai2/commit/e4d0a635c50b67af998424239508e50fc2572c8b))
+* **DetailField:** ✨ add multi-select for HikingRoutes ([0d6f3c7](https://github.com/webmappsrl/osm2cai2/commit/0d6f3c7e00bed14c16e6029732107b71ca25deaa))
+* **export:** ✨ add new actions for signage project management ([f064dd6](https://github.com/webmappsrl/osm2cai2/commit/f064dd6145fd163d490cedfbd003331a24eddbd7))
+* **export:** ✨ add signage and routes export with multiple sheets oc 6931 ([519f4f1](https://github.com/webmappsrl/osm2cai2/commit/519f4f1e216e96e6e175ef1f9a5ffdff156e065d))
+* **hikingRoute:** ✨ add signage projects relation and action ([7729102](https://github.com/webmappsrl/osm2cai2/commit/77291026981ff20ff53a83fb30b03f7c39a8817a))
+* **localization:** 🌐 add new localization strings and improve existing translations OC:6890 ([#281](https://github.com/webmappsrl/osm2cai2/issues/281)) ([af86b6d](https://github.com/webmappsrl/osm2cai2/commit/af86b6da22ef207c26127ff82a220031f4b0fca4))
+* **models:** ✨ add optional parameter to getFeatureCollectionMap oc:7022 ([217a210](https://github.com/webmappsrl/osm2cai2/commit/217a210ba85e05bd56ccd981ab43685b436242f9))
+* **models:** 🌐 add locale-based translation for hiking route names OC:6947 ([#283](https://github.com/webmappsrl/osm2cai2/issues/283)) ([6a0c1b8](https://github.com/webmappsrl/osm2cai2/commit/6a0c1b85358ad4ffbf1c8e60ae9d52d7243fceb5))
+* **nova:** ✨ add custom search handling to Poles resource OC:7000 ([#290](https://github.com/webmappsrl/osm2cai2/issues/290)) ([639ab3c](https://github.com/webmappsrl/osm2cai2/commit/639ab3cef2128520b700ade8177fd870b1bd851b))
+* **nova:** ✨ add export signage project signage action exception on index ([dd5256b](https://github.com/webmappsrl/osm2cai2/commit/dd5256befaf0e9fcab43b2294459d19948b1882c))
+* **nova:** ✨ enhance index query and UI for SignageProject ([a45f275](https://github.com/webmappsrl/osm2cai2/commit/a45f2757150a1ac2a622bf4cdb4ca4176a44c91b))
+* **signage-map:** ✨ add CAI travel time rounding rules OC:6927 ([#280](https://github.com/webmappsrl/osm2cai2/issues/280)) ([7897d05](https://github.com/webmappsrl/osm2cai2/commit/7897d05126d2f6c932b8426cebecb8f597399c31))
+* **signage-project:** ✨ implement user-specific project access and permissions ([11aa9ca](https://github.com/webmappsrl/osm2cai2/commit/11aa9cabd352dea888cd86a44b94171bb7a2dc0e))
+* **SignageArrowsDisplay:** ✨ add confirmation modal for arrow direction toggle and move actions ([8a8a3f5](https://github.com/webmappsrl/osm2cai2/commit/8a8a3f5200b277fe5613593aafbb833dbfe7112a))
+* **translations:** 🌐 add Italian translation for "Hiking Routes Count" ([3c7decf](https://github.com/webmappsrl/osm2cai2/commit/3c7decf5f1c093f0bfbdb1bdc3d388ee386b4169))
+
+
+### Bug Fixes
+
+* **HikingRoute:** 🐛 update tooltip to use pole name if available ([c318c94](https://github.com/webmappsrl/osm2cai2/commit/c318c9479835dbb0a8560db79f044ce91dad214d))
+* **model:** 🐛 adjust feature merge order in HikingRoute oc:6917 ([4ddf0d7](https://github.com/webmappsrl/osm2cai2/commit/4ddf0d77e2b9e91da2d30613f5fc8286b79f22a5))
+* **SignageMapController:** 🐛 handle null description by unsetting property oc: 6913 ([71df9f5](https://github.com/webmappsrl/osm2cai2/commit/71df9f5816f9c9fd1778886780d31c28132f023e))
+* **SignageProject:** 🐛 update tooltip logic to handle missing names ([55021a3](https://github.com/webmappsrl/osm2cai2/commit/55021a3f57855253b1777ccaf160c42454e47c97))
+* **translations:** 🐛 correct Italian translation for "Description" ([a4b7a14](https://github.com/webmappsrl/osm2cai2/commit/a4b7a14b0816ba3b268e31ab36d9f6d85b15e773))
+
+
+### Miscellaneous Chores
+
+* add admin pre-authorization in policy oc: 6967 ([#284](https://github.com/webmappsrl/osm2cai2/issues/284)) ([dcca1c2](https://github.com/webmappsrl/osm2cai2/commit/dcca1c25b8d739d16eba6efe97e474f543d195b7))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
