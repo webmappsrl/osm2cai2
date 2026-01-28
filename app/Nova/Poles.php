@@ -38,9 +38,10 @@ class Poles extends OsmfeaturesResource
     /**
      * Apply search to the query.
      *
+     * Extends parent search to include 'ref' field and handle integer overflow.
      * Validates numeric input to prevent integer overflow errors.
      * If the search term is a number that exceeds integer max value,
-     * it will only search in text fields (ref, osmfeatures_id) instead of id.
+     * parent will handle it appropriately (skip id search for very large numbers).
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  string  $search
@@ -49,38 +50,12 @@ class Poles extends OsmfeaturesResource
      */
     protected static function applySearch(Builder $query, string $search): Builder
     {
+        // Apply parent search (handles osmfeatures_id, id, name with proper logic)
+        $query = parent::applySearch($query, $search);
+
         $searchTerm = trim($search);
-
-        // Check if search term is numeric (allows integers, including very large ones)
-        if (is_numeric($searchTerm) && ctype_digit($searchTerm)) {
-            // PostgreSQL integer max value: 2,147,483,647
-            $maxInteger = '2147483647';
-
-            // Compare as strings to avoid PHP integer overflow issues
-            // If the number exceeds integer max, search only in text fields
-            // This prevents "Numeric value out of range" errors
-            if (strlen($searchTerm) > strlen($maxInteger) || 
-                (strlen($searchTerm) === strlen($maxInteger) && strcmp($searchTerm, $maxInteger) > 0)) {
-                // Number is too large for integer type - search only in text fields
-                return $query->where(function ($q) use ($searchTerm) {
-                    $q->where('ref', 'ilike', "%{$searchTerm}%")
-                        ->orWhere('osmfeatures_id', 'ilike', "%{$searchTerm}%");
-                });
-            }
-
-            // Valid integer value - safe to search in id field as well
-            return $query->where(function ($q) use ($searchTerm) {
-                $q->where('id', $searchTerm)
-                    ->orWhere('ref', 'ilike', "%{$searchTerm}%")
-                    ->orWhere('osmfeatures_id', 'ilike', "%{$searchTerm}%");
-            });
-        }
-
-        // For non-numeric search, search only in text fields (ref and osmfeatures_id)
-        return $query->where(function ($q) use ($searchTerm) {
-            $q->where('ref', 'ilike', "%{$searchTerm}%")
-                ->orWhere('osmfeatures_id', 'ilike', "%{$searchTerm}%");
-        });
+        // Also search in ref field
+        return $query->orWhere('ref', 'ilike', "%{$searchTerm}%");
     }
 
     /**

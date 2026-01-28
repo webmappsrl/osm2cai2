@@ -24,13 +24,12 @@ class Municipality extends OsmfeaturesResource
 
     /**
      * The columns that should be searched.
+     * Note: Search is handled by parent OsmfeaturesResource::applySearch()
+     * which searches: osmfeatures_id, id, and name.
      *
      * @var array
      */
-    public static $search = [
-        'id',
-        'name',
-    ];
+    public static $search = [];
 
     /**
      * Get the cards available for the request.

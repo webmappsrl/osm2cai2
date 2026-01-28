@@ -8,6 +8,7 @@ use App\Nova\Filters\OsmtagsFilter;
 use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\SourceFilter;
 use App\Services\GeometryService;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
@@ -129,5 +130,57 @@ abstract class OsmfeaturesResource extends AbstractEcResource
     public function actions(NovaRequest $request): array
     {
         return [];
+    }
+
+    /**
+     * Apply comprehensive search to the query.
+     *
+     * Handles common search fields for all OsmfeaturesResource children:
+     * - osmfeatures_id (with or without OSM type prefix R/N/W)
+     * - id (only if search term is completely numeric)
+     * - name (partial match)
+     *
+     * SEARCH BEHAVIORS:
+     * 1. "R19732" (with OSM type prefix) → searches ONLY in osmfeatures_id + name (NOT in id)
+     * 2. "19732" (without prefix, numeric) → searches in id + osmfeatures_id + name
+     * 3. Text → searches name + osmfeatures_id
+     *
+     * Child classes can override this method to add specific search logic,
+     * but should call parent::applySearch() to include common fields.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     *
+     * @phpstan-ignore-next-line
+     */
+    protected static function applySearch(Builder $query, string $search): Builder
+    {
+        $search = trim($search);
+        $hasOsmPrefix = preg_match('/^([RNW])\s*(\d+)$/i', $search, $matches);
+        $isNumeric = ctype_digit($search);
+
+        // Caso 1: prefisso OSM (R/N/W + numero)
+        if ($hasOsmPrefix) {
+            $osmId = strtoupper($matches[1]).$matches[2];
+
+            return $query->where('osmfeatures_id', 'ilike', "{$osmId}%");
+        }
+
+        // Caso 2: solo numeri
+        if ($isNumeric) {
+            return $query->where(function ($q) use ($search) {
+                // id: match esatto numerico
+                $q->where('id', '=', (int) $search)
+                  // osmfeatures_id con prefisso R/N/W (il formato è sempre [NWR][numero])
+                  ->orWhere('osmfeatures_id', 'ilike', "R{$search}%")
+                  ->orWhere('osmfeatures_id', 'ilike', "N{$search}%")
+                  ->orWhere('osmfeatures_id', 'ilike', "W{$search}%");
+            });
+        }
+
+        // Caso 3: testo libero
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'ilike', "%{$search}%");
+        });
     }
 }
