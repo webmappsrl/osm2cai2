@@ -440,7 +440,7 @@ class HikingRoute extends EcTrack
         return $this->morphToMany(SignageProject::class, 'signage_projectable')->using(SignageProjectable::class);
     }
 
-    public function getFeatureCollectionMap(): array
+    public function getFeatureCollectionMap($uncheckedGeometryFeature = true): array
     {
         $geojson = $this->getFeatureCollectionMapFromTrait();
         $properties = [
@@ -485,20 +485,23 @@ class HikingRoute extends EcTrack
 
             return $poleFeature;
         })->toArray();
-        $uncheckedGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
-        $properties = [
-            'strokeColor' => 'red',
-            'strokeWidth' => 2,
-            'id' => $this->id,
-            'osmfeatures_id' => $this->osmfeatures_id,
-        ];
-        if (isset($hikingRouteProperties['signage'])) {
-            $properties['signage'] = $hikingRouteProperties['signage'];
+        if ($uncheckedGeometryFeature) {
+            $uncheckedGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
+            $properties = [
+                'strokeColor' => 'red',
+                'strokeWidth' => 2,
+                'id' => $this->id,
+                'osmfeatures_id' => $this->osmfeatures_id,
+            ];
+            if (isset($hikingRouteProperties['signage'])) {
+                $properties['signage'] = $hikingRouteProperties['signage'];
+            }
+            $uncheckedGeometryFeature['properties'] = $properties;
+
+            $geojson['features'] = array_merge($poleFeatures,  $geojson['features'], [$uncheckedGeometryFeature]);
+        } else {
+            $geojson['features'] = array_merge($poleFeatures, $geojson['features']);
         }
-        $uncheckedGeometryFeature['properties'] = $properties;
-
-        $geojson['features'] = array_merge($poleFeatures,  $geojson['features'], [$uncheckedGeometryFeature]);
-
         return $geojson;
     }
 

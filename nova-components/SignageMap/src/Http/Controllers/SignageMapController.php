@@ -169,7 +169,7 @@ class SignageMapController
         // Ottieni il GeoJSON e chiama il DEM per arricchire con point matrix
         $geojson = null;
         try {
-            $geojson = $hikingRoute->getFeatureCollectionMap();
+            $geojson = $hikingRoute->getFeatureCollectionMap(false);
             $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
             $demClient = app(DemClient::class);
             $geojson = $demClient->getPointMatrix($geojson);
@@ -522,7 +522,7 @@ class SignageMapController
         // Calcola l'insieme delle chiavi consentite per questa route in base alle frecce presenti
         $allowedKeys = [];
         foreach (array_keys($arrows) as $idx) {
-            $allowedKeys[] = $hikingRouteIdStr.'-'.$idx;
+            $allowedKeys[] = $hikingRouteIdStr . '-' . $idx;
         }
 
         // Se non ci sono frecce, rimuovi semplicemente tutte le chiavi di questa route
@@ -530,7 +530,7 @@ class SignageMapController
             return array_values(array_filter(
                 $existingOrder,
                 function ($key) use ($hikingRouteIdStr) {
-                    return ! str_starts_with($key, $hikingRouteIdStr.'-');
+                    return ! str_starts_with($key, $hikingRouteIdStr . '-');
                 }
             ));
         }
@@ -539,7 +539,7 @@ class SignageMapController
         $updatedOrder = [];
         foreach ($existingOrder as $key) {
             // Chiavi di altre route rimangono invariate
-            if (! str_starts_with($key, $hikingRouteIdStr.'-')) {
+            if (! str_starts_with($key, $hikingRouteIdStr . '-')) {
                 $updatedOrder[] = $key;
                 continue;
             }
