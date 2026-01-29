@@ -9268,8 +9268,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _wm_package_src_Nova_Fields_FeatureCollectionMap_resources_js_components_FeatureCollectionMap_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../../wm-package/src/Nova/Fields/FeatureCollectionMap/resources/js/components/FeatureCollectionMap.vue */ "../../wm-package/src/Nova/Fields/FeatureCollectionMap/resources/js/components/FeatureCollectionMap.vue");
 /* harmony import */ var _SignageArrows_resources_js_components_SignageArrowsDisplay_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../SignageArrows/resources/js/components/SignageArrowsDisplay.vue */ "../SignageArrows/resources/js/components/SignageArrowsDisplay.vue");
-/* harmony import */ var ol_style__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ol/style */ "./node_modules/ol/style/Icon.js");
-/* harmony import */ var ol_style__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ol/style */ "./node_modules/ol/style/Style.js");
+/* harmony import */ var ol_style__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ol/style */ "./node_modules/ol/style/Circle.js");
+/* harmony import */ var ol_style__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ol/style */ "./node_modules/ol/style/Fill.js");
+/* harmony import */ var ol_style__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ol/style */ "./node_modules/ol/style/Icon.js");
+/* harmony import */ var ol_style__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ol/style */ "./node_modules/ol/style/Style.js");
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
@@ -9383,17 +9385,33 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
       var scale = refResolution / Math.max(resolution, 0.2);
       return Math.max(0.25, Math.min(1.2, scale));
     },
-    /** Callback per FeatureCollectionMap: stili aggiuntivi sui punti (X sui pali con exportIgnore) */getAdditionalPointStyles: function getAdditionalPointStyles(feature, resolution) {
+    /** Callback per FeatureCollectionMap: stili aggiuntivi sui punti (X sui pali con exportIgnore, punto bianco sui pali proposed) */getAdditionalPointStyles: function getAdditionalPointStyles(feature, resolution) {
       var props = feature.getProperties();
-      if (props.exportIgnore !== true) return null;
-      var scale = this.getExportIgnoreIconScale(resolution);
-      return new ol_style__WEBPACK_IMPORTED_MODULE_3__["default"]({
-        image: new ol_style__WEBPACK_IMPORTED_MODULE_2__["default"]({
-          src: X_ICON_DATA_URL,
-          scale: scale,
-          anchor: [0.5, 0.5]
-        })
-      });
+      var styles = [];
+      if (props.exportIgnore === true) {
+        var scale = this.getExportIgnoreIconScale(resolution);
+        styles.push(new ol_style__WEBPACK_IMPORTED_MODULE_5__["default"]({
+          image: new ol_style__WEBPACK_IMPORTED_MODULE_4__["default"]({
+            src: X_ICON_DATA_URL,
+            scale: scale,
+            anchor: [0.5, 0.5]
+          })
+        }));
+      }
+      if (props.proposed === true) {
+        var baseRadius = props.pointRadius || 6;
+        var innerRadius = Math.max(2, baseRadius / 2);
+        styles.push(new ol_style__WEBPACK_IMPORTED_MODULE_5__["default"]({
+          image: new ol_style__WEBPACK_IMPORTED_MODULE_2__["default"]({
+            radius: innerRadius,
+            fill: new ol_style__WEBPACK_IMPORTED_MODULE_3__["default"]({
+              color: 'rgba(255, 255, 255, 1)'
+            })
+          })
+        }));
+      }
+      if (styles.length === 0) return null;
+      return styles.length === 1 ? styles[0] : styles;
     },
     openGeoJSON: function openGeoJSON() {
       window.open(this.geojsonUrl, '_blank');
@@ -10572,10 +10590,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
 /***/ }),
 
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=template&id=0224618e":
-/*!*********************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=template&id=0224618e ***!
-  \*********************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=template&id=0224618e&scoped=true":
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=template&id=0224618e&scoped=true ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -10593,6 +10611,7 @@ function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 
 var _hoisted_1 = {
+  "class": "signage-map-wrapper",
   style: {
     "position": "relative"
   }
@@ -10622,70 +10641,73 @@ var _hoisted_3 = {
   }
 };
 var _hoisted_4 = {
+  "class": "signage-map-legend"
+};
+var _hoisted_5 = {
   key: 0,
   "class": "fixed inset-0 z-[9999] flex items-center justify-center p-4",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_5 = {
+var _hoisted_6 = {
   "class": "relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl flex flex-col signage-map-popup-modal"
 };
-var _hoisted_6 = {
+var _hoisted_7 = {
   "class": "bg-primary-500 dark:bg-primary-600 px-6 py-4 flex-shrink-0"
 };
-var _hoisted_7 = {
+var _hoisted_8 = {
   "class": "text-lg font-semibold text-white"
 };
-var _hoisted_8 = {
+var _hoisted_9 = {
   "class": "px-6 py-4 overflow-y-auto flex-1 min-h-0"
 };
-var _hoisted_9 = {
+var _hoisted_10 = {
   "class": "text-gray-600 dark:text-gray-400 text-sm"
 };
-var _hoisted_10 = {
+var _hoisted_11 = {
   "class": "mt-4 flex items-center justify-between"
 };
-var _hoisted_11 = ["disabled", "aria-checked"];
-var _hoisted_12 = {
+var _hoisted_12 = ["disabled", "aria-checked"];
+var _hoisted_13 = {
   "class": "mt-4 flex items-center justify-between gap-4"
 };
-var _hoisted_13 = ["disabled", "aria-checked"];
-var _hoisted_14 = {
+var _hoisted_14 = ["disabled", "aria-checked"];
+var _hoisted_15 = {
   key: 0,
   "class": "mt-4"
 };
-var _hoisted_15 = ["value"];
-var _hoisted_16 = {
+var _hoisted_16 = ["value"];
+var _hoisted_17 = {
   key: 1,
   "class": "mt-4"
 };
-var _hoisted_17 = {
+var _hoisted_18 = {
   "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
 };
-var _hoisted_18 = {
+var _hoisted_19 = {
   key: 0,
   "class": "text-xs text-gray-400 ml-2"
 };
-var _hoisted_19 = {
+var _hoisted_20 = {
   "class": "mb-2 flex gap-2 flex-wrap"
 };
-var _hoisted_20 = ["disabled"];
-var _hoisted_21 = ["placeholder", "disabled"];
-var _hoisted_22 = {
+var _hoisted_21 = ["disabled"];
+var _hoisted_22 = ["placeholder", "disabled"];
+var _hoisted_23 = {
   key: 2,
   "class": "mt-4"
 };
-var _hoisted_23 = {
+var _hoisted_24 = {
   "class": "mt-4"
 };
-var _hoisted_24 = ["disabled"];
-var _hoisted_25 = {
+var _hoisted_25 = ["disabled"];
+var _hoisted_26 = {
   "class": "mt-4 border-t border-gray-200 dark:border-gray-600 pt-4 overflow-x-auto pr-2"
 };
-var _hoisted_26 = {
+var _hoisted_27 = {
   "class": "px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600 flex-shrink-0"
 };
-var _hoisted_27 = ["href"];
+var _hoisted_28 = ["href"];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_FeatureCollectionMap = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("FeatureCollectionMap");
   var _component_SignageArrowsDisplay = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("SignageArrowsDisplay");
@@ -10719,7 +10741,51 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         y1: "14",
         x2: "21",
         y2: "3"
-      }, null, -1 /* CACHED */)])))), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" GeoJSON ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FeatureCollectionMap, {
+      }, null, -1 /* CACHED */)])))), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" GeoJSON ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Legenda simboli mappa (nascosta quando il popup è aperto) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, _toConsumableArray(_cache[13] || (_cache[13] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "signage-map-legend-title"
+      }, "Legenda", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "signage-map-legend-row"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-symbol signage-map-legend-pole",
+        title: "Palo"
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-label"
+      }, "Palo")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "signage-map-legend-row"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-symbol signage-map-legend-checkpoint",
+        title: "Meta"
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-label"
+      }, "Meta")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "signage-map-legend-row"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-symbol signage-map-legend-checkpoint-multi",
+        title: "Meta su più percorsi"
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-label"
+      }, "Meta (più percorsi)")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "signage-map-legend-row"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-symbol signage-map-legend-export-ignore",
+        title: "Escluso da export"
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-label"
+      }, "Escluso da export")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "signage-map-legend-row"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-symbol signage-map-legend-proposed",
+        title: "Proposto"
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-label"
+      }, "Proposto")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "signage-map-legend-row"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-line signage-map-legend-route",
+        title: "Percorso"
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-label"
+      }, "Percorso")], -1 /* CACHED */)])), 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.showPopup]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FeatureCollectionMap, {
         "geojson-url": $options.geojsonUrl,
         height: $props.field.height || 500,
         "show-zoom-controls": $props.field.showZoomControls !== false,
@@ -10731,12 +10797,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onPopupClose: $options.handlePopupClose
       }, null, 8 /* PROPS */, ["geojson-url", "height", "show-zoom-controls", "mouse-wheel-zoom", "drag-pan", "get-additional-point-styles", "onPopupOpen", "onPopupClose"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Custom Signage Popup "), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Teleport, {
         to: "body"
-      }, [$data.showPopup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Backdrop "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, [$data.showPopup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Backdrop "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75",
         onClick: _cache[1] || (_cache[1] = function () {
           return $options.closePopup && $options.closePopup.apply($options, arguments);
         })
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Modal "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", _hoisted_7, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_9, [_cache[13] || (_cache[13] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Palo selezionato: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Meta "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Modal "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", _hoisted_8, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_10, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Palo selezionato: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Meta "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [_cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
       }, " Meta ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         type: "button",
@@ -10752,7 +10818,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           transform: $data.metaValue ? 'translateX(1.25rem)' : 'translateX(0)'
         })
-      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_11)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [_cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_12)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "flex-1 min-w-0"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
@@ -10772,7 +10838,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           transform: $data.ignoreValue ? 'translateX(1.25rem)' : 'translateX(0)'
         })
-      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_13)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) "), $data.metaValue && $data.availableHikingRoutes.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_14, [_cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_14)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) "), $data.metaValue && $data.availableHikingRoutes.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_15, [_cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
       }, " HikingRoute (puoi selezionarne più di una) ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
         "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
@@ -10787,10 +10853,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
           key: hr.id,
           value: hr.id
-        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(hr.name || "HikingRoute #".concat(hr.id)), 9 /* TEXT, PROPS */, _hoisted_15);
-      }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedHikingRouteIds]]), _cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(hr.name || "HikingRoute #".concat(hr.id)), 9 /* TEXT, PROPS */, _hoisted_16);
+      }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedHikingRouteIds]]), _cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
         "class": "text-xs text-gray-500 dark:text-gray-400 mt-1"
-      }, " Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per associare la meta. Il bordo del palo sarà multicolore se selezioni più HikingRoute. ", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Nome Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_17, [_cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Nome ", -1 /* CACHED */)), $data.isLoadingSuggestion ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_18, "(caricamento suggerimento...)")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [_cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, " Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per associare la meta. Il bordo del palo sarà multicolore se selezioni più HikingRoute. ", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Nome Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_18, [_cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Nome ", -1 /* CACHED */)), $data.isLoadingSuggestion ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_19, "(caricamento suggerimento...)")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [_cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "for": ""
       }, "suggerimenti", -1 /* CACHED */)), $options.hasOsmName ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
@@ -10816,7 +10882,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
           "color": "white",
           "border-color": "#2563eb"
         }, $data.isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'])
-      }, " da coordinate ", 12 /* STYLE, PROPS */, _hoisted_20)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+      }, " da coordinate ", 12 /* STYLE, PROPS */, _hoisted_21)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
         type: "text",
         "onUpdate:modelValue": _cache[7] || (_cache[7] = function ($event) {
           return $data.name = $event;
@@ -10824,7 +10890,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         placeholder: $data.isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località',
         disabled: $data.isLoadingSuggestion,
         "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50"
-      }, null, 8 /* PROPS */, _hoisted_21), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.name]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Descrizione Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_22, [_cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, null, 8 /* PROPS */, _hoisted_22), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.name]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Descrizione Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [_cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
       }, " Descrizione ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("textarea", {
         "onUpdate:modelValue": _cache[8] || (_cache[8] = function ($event) {
@@ -10833,20 +10899,20 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         placeholder: "Inserisci una descrizione della località",
         rows: "3",
         "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
-      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.description]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Bottone Aggiorna "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.description]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Bottone Aggiorna "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         type: "button",
         onClick: _cache[9] || (_cache[9] = function () {
           return $options.saveChanges && $options.saveChanges.apply($options, arguments);
         }),
         disabled: $data.isUpdatingMeta || $data.metaValue && (!$data.name || !$data.name.trim()),
         "class": "w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna'), 9 /* TEXT, PROPS */, _hoisted_24)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Frecce Segnaletica "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [_cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna'), 9 /* TEXT, PROPS */, _hoisted_25)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Frecce Segnaletica "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[22] || (_cache[22] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block"
       }, " Segnaletica ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_SignageArrowsDisplay, {
         "signage-data": $data.signageArrowsData,
         onArrowDirectionChanged: $options.handleArrowDirectionChanged,
         onArrowOrderChanged: $options.handleArrowOrderChanged
-      }, null, 8 /* PROPS */, ["signage-data", "onArrowDirectionChanged", "onArrowOrderChanged"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer with buttons "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 8 /* PROPS */, ["signage-data", "onArrowDirectionChanged", "onArrowOrderChanged"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer with buttons "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         type: "button",
         onClick: _cache[10] || (_cache[10] = function () {
           return $options.closePopup && $options.closePopup.apply($options, arguments);
@@ -10856,7 +10922,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         href: $options.poleLink,
         target: "_blank",
         "class": "bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded font-medium no-underline cursor-pointer inline-block"
-      }, " Vai al Palo ", 8 /* PROPS */, _hoisted_27)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))];
+      }, " Vai al Palo ", 8 /* PROPS */, _hoisted_28)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))];
     }),
     _: 1 /* STABLE */
   }, 8 /* PROPS */, ["index", "field"]);
@@ -11800,6 +11866,30 @@ __webpack_require__.r(__webpack_exports__);
 var ___CSS_LOADER_EXPORT___ = _SignageMap_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
 ___CSS_LOADER_EXPORT___.push([module.id, "\n.signage-arrows-container[data-v-17c3cc78] {\n    display: flex;\n    flex-direction: column;\n    gap: 20px;\n    padding: 12px 0;\n}\n.route-signage-block[data-v-17c3cc78] {\n    display: flex;\n    flex-direction: column;\n    gap: 12px;\n}\n.signage-arrow-wrapper[data-v-17c3cc78] {\n    display: flex;\n    justify-content: flex-start;\n    position: relative;\n}\n\n/* Stile base freccia */\n.signage-arrow[data-v-17c3cc78] {\n    display: flex;\n    align-items: stretch;\n    width: 400px;\n    min-width: 400px;\n    max-width: 400px;\n    height: 150px;\n    filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.15));\n}\n\n/* Allinea la parte rettangolare: la freccia forward ha un margine sinistro pari alla larghezza della punta */\n.signage-arrow.forward[data-v-17c3cc78] {\n    margin-left: 30px;\n}\n\n/* Corpo della freccia */\n.arrow-body[data-v-17c3cc78] {\n    display: flex;\n    align-items: stretch;\n    background: #FFFFFF;\n    border: 1px solid #000;\n    flex-grow: 1;\n    height: 100%;\n}\n.forward .arrow-body[data-v-17c3cc78] {\n    border-right: none;\n}\n.backward .arrow-body[data-v-17c3cc78] {\n    border-left: none;\n}\n\n/* Colonna ID Route con barre rosse sopra e sotto */\n.route-id-column[data-v-17c3cc78] {\n    display: flex;\n    flex-direction: column;\n    min-width: 55px;\n    max-width: 70px;\n}\n.route-id-red[data-v-17c3cc78] {\n    flex: 1;\n    background: #C41E3A;\n}\n.forward .route-id-red[data-v-17c3cc78] {\n    border-right: 1px solid #000;\n}\n.backward .route-id-red[data-v-17c3cc78] {\n    border-left: 1px solid #000;\n}\n.route-id-box[data-v-17c3cc78] {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background: #FFFFFF;\n    border: 1px solid #000;\n    padding: 6px 14px;\n    font-family: 'Arial', sans-serif;\n    font-weight: 700;\n    font-size: 20px;\n    color: #000000;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    flex: 1;\n}\n.forward .route-id-box[data-v-17c3cc78] {\n    border-left: none;\n}\n\n/* Backward ha il box (e la colonna) a destra */\n.backward .route-id-column[data-v-17c3cc78] {\n    order: 2;\n}\n.backward .route-id-box[data-v-17c3cc78] {\n    border-right: none;\n}\n.backward .destinations-list[data-v-17c3cc78] {\n    order: 1;\n}\n\n/* Lista destinazioni */\n.destinations-list[data-v-17c3cc78] {\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    padding: 4px 0;\n    flex-grow: 1;\n    min-height: 100%;\n}\n.destinations-list--single[data-v-17c3cc78] {\n    justify-content: center;\n}\n.destination-row[data-v-17c3cc78] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 2px 16px;\n    gap: 30px;\n    position: relative;\n    flex: 1;\n}\n.destination-row--with-separator[data-v-17c3cc78]::after {\n    content: '';\n    position: absolute;\n    right: 0;\n    left: 16px;\n    bottom: 0;\n    border-bottom: 1px solid #000000;\n}\n.forward .destination-row--with-separator[data-v-17c3cc78]::after {\n    right: 0;\n    left: 16px;\n}\n.backward .destination-row--with-separator[data-v-17c3cc78]::after {\n    right: 16px;\n    left: 0;\n}\n.destination-info[data-v-17c3cc78] {\n    display: flex;\n    flex-direction: column;\n    align-items: flex-start;\n    gap: 4px;\n    flex: 1;\n    min-width: 0;\n    max-width: 180px;\n}\n.destination-name[data-v-17c3cc78] {\n    font-family: 'Arial', sans-serif;\n    font-weight: 600;\n    font-size: 15px;\n    color: #000000;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 100%;\n}\n.destination-description[data-v-17c3cc78] {\n    font-family: 'Arial', sans-serif;\n    font-weight: 400;\n    font-size: 10px;\n    color: #666666;\n    line-height: 1.2;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 100%;\n}\n.destination-distance[data-v-17c3cc78] {\n    font-family: 'Arial', sans-serif;\n    font-weight: 700;\n    font-size: 13px;\n    color: #000000;\n}\n.destination-time[data-v-17c3cc78] {\n    font-family: 'Arial', sans-serif;\n    font-weight: 700;\n    font-size: 13px;\n    color: #000000;\n    min-width: 55px;\n    text-align: right;\n}\n.destination-meta[data-v-17c3cc78] {\n    display: flex;\n    flex-direction: column;\n    align-items: flex-end;\n    gap: 2px;\n}\n\n/* Punta freccia DESTRA (forward) */\n.arrow-point-right[data-v-17c3cc78] {\n    width: 30px;\n    min-width: 30px;\n    background: #C41E3A;\n    clip-path: polygon(0 0, 0 100%, 100% 50%);\n    align-self: stretch;\n}\n\n/* Punta freccia SINISTRA (backward) */\n.arrow-point-left[data-v-17c3cc78] {\n    width: 30px;\n    min-width: 30px;\n    background: #C41E3A;\n    clip-path: polygon(100% 0, 100% 100%, 0 50%);\n    align-self: stretch;\n}\n\n/* Messaggio nessun dato */\n.no-signage-data[data-v-17c3cc78] {\n    color: #6B7280;\n    font-style: italic;\n    padding: 16px;\n    text-align: center;\n}\n\n/* Controllo direzione per ogni freccia */\n.arrow-direction-control[data-v-17c3cc78] {\n    position: absolute;\n    left: -48px;\n    top: 50%;\n    transform: translateY(-50%);\n    z-index: 10;\n}\n.arrow-direction-btn[data-v-17c3cc78] {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    width: 28px;\n    height: 28px;\n    padding: 0;\n    background: #3490dc;\n    color: white;\n    border: none;\n    border-radius: 50%;\n    cursor: pointer;\n    transition: all 0.2s;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);\n}\n.arrow-direction-btn[data-v-17c3cc78]:hover {\n    background: #2779bd;\n    transform: scale(1.1);\n}\n.arrow-direction-btn[data-v-17c3cc78]:active {\n    background: #1c6ca8;\n    transform: scale(0.95);\n}\n.arrow-direction-btn svg[data-v-17c3cc78] {\n    width: 14px;\n    height: 14px;\n}\n.signage-arrow-wrapper[data-v-17c3cc78] {\n    position: relative;\n}\n.arrow-order-controls[data-v-17c3cc78] {\n    display: flex;\n    flex-direction: column;\n    gap: 6px;\n    position: absolute;\n    right: -48px;\n    top: 50%;\n    transform: translateY(-50%);\n    z-index: 10;\n}\n.arrow-order-btn[data-v-17c3cc78] {\n    width: 26px;\n    height: 26px;\n    border-radius: 6px;\n    border: 1px solid #d1d5db;\n    background: #f3f4f6;\n    color: #111827;\n    cursor: pointer;\n    font-size: 12px;\n    line-height: 1;\n    transition: background 0.15s ease, transform 0.15s ease;\n}\n.arrow-order-btn[data-v-17c3cc78]:hover:enabled {\n    background: #e5e7eb;\n    transform: translateY(-1px);\n}\n.arrow-order-btn[data-v-17c3cc78]:disabled {\n    opacity: 0.5;\n    cursor: not-allowed;\n}\n\n/* Modal di conferma */\n.confirm-modal-overlay[data-v-17c3cc78] {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    background: rgba(0, 0, 0, 0.5);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    z-index: 1000;\n}\n.confirm-modal[data-v-17c3cc78] {\n    background: #FFFFFF;\n    border-radius: 8px;\n    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);\n    width: 90%;\n    max-width: 500px;\n    overflow: hidden;\n}\n.confirm-modal-header[data-v-17c3cc78] {\n    padding: 20px 24px;\n    border-bottom: 1px solid #e5e7eb;\n}\n.confirm-modal-header h3[data-v-17c3cc78] {\n    margin: 0;\n    font-family: 'Arial', sans-serif;\n    font-size: 18px;\n    font-weight: 600;\n    color: #111827;\n}\n.confirm-modal-body[data-v-17c3cc78] {\n    padding: 24px;\n}\n.confirm-modal-body p[data-v-17c3cc78] {\n    margin: 0;\n    font-family: 'Arial', sans-serif;\n    font-size: 14px;\n    color: #374151;\n    line-height: 1.5;\n}\n.confirm-modal-footer[data-v-17c3cc78] {\n    padding: 16px 24px;\n    border-top: 1px solid #e5e7eb;\n    display: flex;\n    justify-content: flex-end;\n    gap: 12px;\n}\n.confirm-btn[data-v-17c3cc78] {\n    padding: 8px 16px;\n    border-radius: 6px;\n    font-family: 'Arial', sans-serif;\n    font-size: 14px;\n    font-weight: 500;\n    cursor: pointer;\n    transition: all 0.2s;\n    border: 1px solid transparent;\n}\n.confirm-btn--cancel[data-v-17c3cc78] {\n    background: #FFFFFF;\n    color: #374151;\n    border-color: #d1d5db;\n}\n.confirm-btn--cancel[data-v-17c3cc78]:hover {\n    background: #f9fafb;\n    border-color: #9ca3af;\n}\n.confirm-btn--confirm[data-v-17c3cc78] {\n    background: #3490dc;\n    color: #FFFFFF;\n    border-color: #3490dc;\n}\n.confirm-btn--confirm[data-v-17c3cc78]:hover {\n    background: #2779bd;\n    border-color: #2779bd;\n}\n.confirm-btn[data-v-17c3cc78]:active {\n    transform: scale(0.98);\n}\n", ""]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css":
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__);
+// Imports
+
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, "\n.signage-map-legend[data-v-0224618e] {\n    position: absolute;\n    bottom: 12px;\n    left: 12px;\n    z-index: 1000;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid #e2e8f0;\n    border-radius: 6px;\n    padding: 10px 12px;\n    font-size: 12px;\n    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.signage-map-legend-title[data-v-0224618e] {\n    font-weight: 600;\n    margin-bottom: 8px;\n    color: #334155;\n}\n.signage-map-legend-row[data-v-0224618e] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    margin-bottom: 4px;\n}\n.signage-map-legend-row[data-v-0224618e]:last-child {\n    margin-bottom: 0;\n}\n.signage-map-legend-symbol[data-v-0224618e],\n.signage-map-legend-line[data-v-0224618e] {\n    flex-shrink: 0;\n}\n.signage-map-legend-label[data-v-0224618e] {\n    color: #475569;\n}\n\n/* Palo: cerchio rosso, bordo bianco */\n.signage-map-legend-pole[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta: cerchio arancione, bordo bianco */\n.signage-map-legend-checkpoint[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta (più percorsi): cerchio arancione con anello multicolore */\n.signage-map-legend-checkpoint-multi[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 3px #3b82f6, 0 0 0 4px #fff, 0 0 0 5.5px #22c55e;\n}\n\n/* Escluso da export: cerchio con X */\n/* Escluso da export: solo X (senza tondino) */\n.signage-map-legend-export-ignore[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    position: relative;\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::before,\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 10px;\n    height: 2px;\n    background: #c00;\n    transform: translate(-50%, -50%) rotate(45deg);\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    transform: translate(-50%, -50%) rotate(-45deg);\n}\n\n/* Proposto: cerchio con punto bianco interno */\n.signage-map-legend-proposed[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    position: relative;\n}\n.signage-map-legend-proposed[data-v-0224618e]::before {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 6px;\n    height: 6px;\n    margin: -3px 0 0 -3px;\n    border-radius: 50%;\n    background: #fff;\n}\n\n/* Percorso: linea blu */\n.signage-map-legend-line.signage-map-legend-route[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 4px;\n    background: blue;\n    border-radius: 2px;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -63429,6 +63519,36 @@ var update = _SignageMap_node_modules_style_loader_dist_runtime_injectStylesInto
 
 /***/ }),
 
+/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css":
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_style_index_0_id_0224618e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css");
+
+            
+
+var options = {};
+
+options.insert = "head";
+options.singleton = false;
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_style_index_0_id_0224618e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_style_index_0_id_0224618e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js":
 /*!****************************************************************************!*\
   !*** ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js ***!
@@ -63754,15 +63874,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _DetailField_vue_vue_type_template_id_0224618e__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DetailField.vue?vue&type=template&id=0224618e */ "./resources/js/components/DetailField.vue?vue&type=template&id=0224618e");
+/* harmony import */ var _DetailField_vue_vue_type_template_id_0224618e_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DetailField.vue?vue&type=template&id=0224618e&scoped=true */ "./resources/js/components/DetailField.vue?vue&type=template&id=0224618e&scoped=true");
 /* harmony import */ var _DetailField_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DetailField.vue?vue&type=script&lang=js */ "./resources/js/components/DetailField.vue?vue&type=script&lang=js");
-/* harmony import */ var _Users_bongiu_Documents_geobox2_osm2cai2_nova_components_SignageMap_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var _DetailField_vue_vue_type_style_index_0_id_0224618e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css */ "./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css");
+/* harmony import */ var _Users_bongiu_Documents_geobox2_osm2cai2_nova_components_SignageMap_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
 
 ;
-const __exports__ = /*#__PURE__*/(0,_Users_bongiu_Documents_geobox2_osm2cai2_nova_components_SignageMap_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_DetailField_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_DetailField_vue_vue_type_template_id_0224618e__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/components/DetailField.vue"]])
+
+
+const __exports__ = /*#__PURE__*/(0,_Users_bongiu_Documents_geobox2_osm2cai2_nova_components_SignageMap_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_DetailField_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_DetailField_vue_vue_type_template_id_0224618e_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-0224618e"],['__file',"resources/js/components/DetailField.vue"]])
 /* hot reload */
 if (false) // removed by dead control flow
 {}
@@ -63788,18 +63911,31 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/DetailField.vue?vue&type=template&id=0224618e":
-/*!*******************************************************************************!*\
-  !*** ./resources/js/components/DetailField.vue?vue&type=template&id=0224618e ***!
-  \*******************************************************************************/
+/***/ "./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css":
+/*!*********************************************************************************************************!*\
+  !*** ./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css ***!
+  \*********************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_style_index_0_id_0224618e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader/dist/cjs.js!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=style&index=0&id=0224618e&scoped=true&lang=css");
+
+
+/***/ }),
+
+/***/ "./resources/js/components/DetailField.vue?vue&type=template&id=0224618e&scoped=true":
+/*!*******************************************************************************************!*\
+  !*** ./resources/js/components/DetailField.vue?vue&type=template&id=0224618e&scoped=true ***!
+  \*******************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_template_id_0224618e__WEBPACK_IMPORTED_MODULE_0__.render)
+/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_template_id_0224618e_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render)
 /* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_template_id_0224618e__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./DetailField.vue?vue&type=template&id=0224618e */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=template&id=0224618e");
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DetailField_vue_vue_type_template_id_0224618e_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./DetailField.vue?vue&type=template&id=0224618e&scoped=true */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/DetailField.vue?vue&type=template&id=0224618e&scoped=true");
 
 
 /***/ }),

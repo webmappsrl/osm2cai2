@@ -1,7 +1,7 @@
 <template>
     <PanelItem :index="index" :field="field">
         <template #value>
-            <div style="position: relative;">
+            <div class="signage-map-wrapper" style="position: relative;">
                 <div style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
                     <button @click="openGeoJSON" type="button" class="btn btn-default btn-primary"
                         style="background-color: #3490dc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
@@ -14,6 +14,36 @@
                         </svg>
                         GeoJSON
                     </button>
+                </div>
+                <!-- Legenda simboli mappa (nascosta quando il popup è aperto) -->
+                <div class="signage-map-legend" v-show="!showPopup">
+                    <div class="signage-map-legend-title">Legenda</div>
+                    <div class="signage-map-legend-row">
+                        <span class="signage-map-legend-symbol signage-map-legend-pole" title="Palo"></span>
+                        <span class="signage-map-legend-label">Palo</span>
+                    </div>
+                    <div class="signage-map-legend-row">
+                        <span class="signage-map-legend-symbol signage-map-legend-checkpoint" title="Meta"></span>
+                        <span class="signage-map-legend-label">Meta</span>
+                    </div>
+                    <div class="signage-map-legend-row">
+                        <span class="signage-map-legend-symbol signage-map-legend-checkpoint-multi"
+                            title="Meta su più percorsi"></span>
+                        <span class="signage-map-legend-label">Meta (più percorsi)</span>
+                    </div>
+                    <div class="signage-map-legend-row">
+                        <span class="signage-map-legend-symbol signage-map-legend-export-ignore"
+                            title="Escluso da export"></span>
+                        <span class="signage-map-legend-label">Escluso da export</span>
+                    </div>
+                    <div class="signage-map-legend-row">
+                        <span class="signage-map-legend-symbol signage-map-legend-proposed" title="Proposto"></span>
+                        <span class="signage-map-legend-label">Proposto</span>
+                    </div>
+                    <div class="signage-map-legend-row">
+                        <span class="signage-map-legend-line signage-map-legend-route" title="Percorso"></span>
+                        <span class="signage-map-legend-label">Percorso</span>
+                    </div>
                 </div>
                 <!-- Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export -->
                 <FeatureCollectionMap :geojson-url="geojsonUrl" :height="field.height || 500"
@@ -182,7 +212,7 @@
 // OpenLayers per stili aggiuntivi sui punti (X sui pali esclusi da export)
 import FeatureCollectionMap from '../../../../../wm-package/src/Nova/Fields/FeatureCollectionMap/resources/js/components/FeatureCollectionMap.vue';
 import SignageArrowsDisplay from '../../../../SignageArrows/resources/js/components/SignageArrowsDisplay.vue';
-import { Style, Icon } from 'ol/style';
+import { Style, Icon, Fill, Circle as CircleStyle } from 'ol/style';
 
 // Icona X per pali esclusi da export (custom SignageMap)
 const X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent(
@@ -283,18 +313,32 @@ export default {
             return Math.max(0.25, Math.min(1.2, scale));
         },
 
-        /** Callback per FeatureCollectionMap: stili aggiuntivi sui punti (X sui pali con exportIgnore) */
+        /** Callback per FeatureCollectionMap: stili aggiuntivi sui punti (X sui pali con exportIgnore, punto bianco sui pali proposed) */
         getAdditionalPointStyles(feature, resolution) {
             const props = feature.getProperties();
-            if (props.exportIgnore !== true) return null;
-            const scale = this.getExportIgnoreIconScale(resolution);
-            return new Style({
-                image: new Icon({
-                    src: X_ICON_DATA_URL,
-                    scale,
-                    anchor: [0.5, 0.5]
-                })
-            });
+            const styles = [];
+            if (props.exportIgnore === true) {
+                const scale = this.getExportIgnoreIconScale(resolution);
+                styles.push(new Style({
+                    image: new Icon({
+                        src: X_ICON_DATA_URL,
+                        scale,
+                        anchor: [0.5, 0.5]
+                    })
+                }));
+            }
+            if (props.proposed === true) {
+                const baseRadius = props.pointRadius || 6;
+                const innerRadius = Math.max(2, baseRadius / 2);
+                styles.push(new Style({
+                    image: new CircleStyle({
+                        radius: innerRadius,
+                        fill: new Fill({ color: 'rgba(255, 255, 255, 1)' })
+                    })
+                }));
+            }
+            if (styles.length === 0) return null;
+            return styles.length === 1 ? styles[0] : styles;
         },
 
         openGeoJSON() {
@@ -928,3 +972,134 @@ export default {
     }
 };
 </script>
+
+<style scoped>
+.signage-map-legend {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.signage-map-legend-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #334155;
+}
+
+.signage-map-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.signage-map-legend-row:last-child {
+    margin-bottom: 0;
+}
+
+.signage-map-legend-symbol,
+.signage-map-legend-line {
+    flex-shrink: 0;
+}
+
+.signage-map-legend-label {
+    color: #475569;
+}
+
+/* Palo: cerchio rosso, bordo bianco */
+.signage-map-legend-pole {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 0, 0, 0.8);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Meta: cerchio arancione, bordo bianco */
+.signage-map-legend-checkpoint {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgb(255, 160, 0);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Meta (più percorsi): cerchio arancione con anello multicolore */
+.signage-map-legend-checkpoint-multi {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgb(255, 160, 0);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 3px #3b82f6, 0 0 0 4px #fff, 0 0 0 5.5px #22c55e;
+}
+
+/* Escluso da export: cerchio con X */
+/* Escluso da export: solo X (senza tondino) */
+.signage-map-legend-export-ignore {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    position: relative;
+}
+
+.signage-map-legend-export-ignore::before,
+.signage-map-legend-export-ignore::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 10px;
+    height: 2px;
+    background: #c00;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.signage-map-legend-export-ignore::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* Proposto: cerchio con punto bianco interno */
+.signage-map-legend-proposed {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 0, 0, 0.8);
+    border: 2px solid #fff;
+    position: relative;
+}
+
+.signage-map-legend-proposed::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* Percorso: linea blu */
+.signage-map-legend-line.signage-map-legend-route {
+    display: inline-block;
+    width: 24px;
+    height: 4px;
+    background: blue;
+    border-radius: 2px;
+}
+</style>

@@ -600,6 +600,11 @@ class SignageProject extends Polygon
                         }
                     }
 
+                    $isProposed = $osmTags && (
+                        ($osmTags['lifecycle'] ?? null) === 'proposed'
+                        || ($osmTags['proposed'] ?? null) === 'yes'
+                    );
+
                     $properties = [
                         'id' => $pole->id,
                         'name' => $pole->name ?? '',
@@ -615,6 +620,7 @@ class SignageProject extends Polygon
                         'signage' => $pole->properties['signage'] ?? [],
                         'osmTags' => $osmTags,
                         'exportIgnore' => $isExportIgnored,
+                        'proposed' => $isProposed,
                     ];
                     $poleFeature['properties'] = $properties;
 
