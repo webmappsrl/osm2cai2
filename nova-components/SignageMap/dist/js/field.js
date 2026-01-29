@@ -10645,69 +10645,73 @@ var _hoisted_4 = {
 };
 var _hoisted_5 = {
   key: 0,
+  "class": "signage-map-legend-row"
+};
+var _hoisted_6 = {
+  key: 0,
   "class": "fixed inset-0 z-[9999] flex items-center justify-center p-4",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_6 = {
+var _hoisted_7 = {
   "class": "relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl flex flex-col signage-map-popup-modal"
 };
-var _hoisted_7 = {
+var _hoisted_8 = {
   "class": "bg-primary-500 dark:bg-primary-600 px-6 py-4 flex-shrink-0"
 };
-var _hoisted_8 = {
+var _hoisted_9 = {
   "class": "text-lg font-semibold text-white"
 };
-var _hoisted_9 = {
+var _hoisted_10 = {
   "class": "px-6 py-4 overflow-y-auto flex-1 min-h-0"
 };
-var _hoisted_10 = {
+var _hoisted_11 = {
   "class": "text-gray-600 dark:text-gray-400 text-sm"
 };
-var _hoisted_11 = {
+var _hoisted_12 = {
   "class": "mt-4 flex items-center justify-between"
 };
-var _hoisted_12 = ["disabled", "aria-checked"];
-var _hoisted_13 = {
+var _hoisted_13 = ["disabled", "aria-checked"];
+var _hoisted_14 = {
   "class": "mt-4 flex items-center justify-between gap-4"
 };
-var _hoisted_14 = ["disabled", "aria-checked"];
-var _hoisted_15 = {
+var _hoisted_15 = ["disabled", "aria-checked"];
+var _hoisted_16 = {
   key: 0,
   "class": "mt-4"
 };
-var _hoisted_16 = ["value"];
-var _hoisted_17 = {
+var _hoisted_17 = ["value"];
+var _hoisted_18 = {
   key: 1,
   "class": "mt-4"
 };
-var _hoisted_18 = {
+var _hoisted_19 = {
   "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
 };
-var _hoisted_19 = {
+var _hoisted_20 = {
   key: 0,
   "class": "text-xs text-gray-400 ml-2"
 };
-var _hoisted_20 = {
+var _hoisted_21 = {
   "class": "mb-2 flex gap-2 flex-wrap"
 };
-var _hoisted_21 = ["disabled"];
-var _hoisted_22 = ["placeholder", "disabled"];
-var _hoisted_23 = {
+var _hoisted_22 = ["disabled"];
+var _hoisted_23 = ["placeholder", "disabled"];
+var _hoisted_24 = {
   key: 2,
   "class": "mt-4"
 };
-var _hoisted_24 = {
+var _hoisted_25 = {
   "class": "mt-4"
 };
-var _hoisted_25 = ["disabled"];
-var _hoisted_26 = {
+var _hoisted_26 = ["disabled"];
+var _hoisted_27 = {
   "class": "mt-4 border-t border-gray-200 dark:border-gray-600 pt-4 overflow-x-auto pr-2"
 };
-var _hoisted_27 = {
+var _hoisted_28 = {
   "class": "px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600 flex-shrink-0"
 };
-var _hoisted_28 = ["href"];
+var _hoisted_29 = ["href"];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_FeatureCollectionMap = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("FeatureCollectionMap");
   var _component_SignageArrowsDisplay = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("SignageArrowsDisplay");
@@ -10741,51 +10745,56 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         y1: "14",
         x2: "21",
         y2: "3"
-      }, null, -1 /* CACHED */)])))), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" GeoJSON ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Legenda simboli mappa (nascosta quando il popup è aperto) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, _toConsumableArray(_cache[13] || (_cache[13] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, -1 /* CACHED */)])))), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" GeoJSON ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Legenda simboli mappa (nascosta quando il popup è aperto) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "signage-map-legend-title"
-      }, "Legenda", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, "Legenda", -1 /* CACHED */)), _cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "signage-map-legend-row"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-symbol signage-map-legend-pole",
         title: "Palo"
       }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-label"
-      }, "Palo")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, "Palo")], -1 /* CACHED */)), _cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "signage-map-legend-row"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-symbol signage-map-legend-checkpoint",
         title: "Meta"
       }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-label"
-      }, "Meta")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, "Meta")], -1 /* CACHED */)), _cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "signage-map-legend-row"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-symbol signage-map-legend-checkpoint-multi",
         title: "Meta su più percorsi"
       }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-label"
-      }, "Meta (più percorsi)")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, "Meta (più percorsi)")], -1 /* CACHED */)), _cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "signage-map-legend-row"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-symbol signage-map-legend-export-ignore",
         title: "Escluso da export"
       }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-label"
-      }, "Escluso da export")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, "Escluso da export")], -1 /* CACHED */)), _cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "signage-map-legend-row"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-symbol signage-map-legend-proposed",
         title: "Proposto"
       }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-label"
-      }, "Proposto")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, "Proposto")], -1 /* CACHED */)), _cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "signage-map-legend-row"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-line signage-map-legend-route",
-        title: "Percorso"
+        title: "OSM2CAI/OSM percorso"
       }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "signage-map-legend-label"
-      }, "Percorso")], -1 /* CACHED */)])), 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.showPopup]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FeatureCollectionMap, {
+      }, "Percorso OSM/OSM2CAI")], -1 /* CACHED */)), $props.resourceName === 'hiking-routes' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, _toConsumableArray(_cache[13] || (_cache[13] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-line signage-map-legend-unchecked",
+        title: "Percorso caricato dall'utente"
+      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "signage-map-legend-label"
+      }, "Percorso caricato dall'utente", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.showPopup]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FeatureCollectionMap, {
         "geojson-url": $options.geojsonUrl,
         height: $props.field.height || 500,
         "show-zoom-controls": $props.field.showZoomControls !== false,
@@ -10797,12 +10806,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onPopupClose: $options.handlePopupClose
       }, null, 8 /* PROPS */, ["geojson-url", "height", "show-zoom-controls", "mouse-wheel-zoom", "drag-pan", "get-additional-point-styles", "onPopupOpen", "onPopupClose"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Custom Signage Popup "), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Teleport, {
         to: "body"
-      }, [$data.showPopup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Backdrop "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, [$data.showPopup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Backdrop "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75",
         onClick: _cache[1] || (_cache[1] = function () {
           return $options.closePopup && $options.closePopup.apply($options, arguments);
         })
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Modal "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", _hoisted_8, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_10, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Palo selezionato: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Meta "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [_cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Modal "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_11, [_cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Palo selezionato: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Meta "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [_cache[22] || (_cache[22] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
       }, " Meta ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         type: "button",
@@ -10818,7 +10827,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           transform: $data.metaValue ? 'translateX(1.25rem)' : 'translateX(0)'
         })
-      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_12)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_13)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[23] || (_cache[23] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "flex-1 min-w-0"
       }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
@@ -10838,7 +10847,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           transform: $data.ignoreValue ? 'translateX(1.25rem)' : 'translateX(0)'
         })
-      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_14)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) "), $data.metaValue && $data.availableHikingRoutes.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_15, [_cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_15)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) "), $data.metaValue && $data.availableHikingRoutes.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_16, [_cache[24] || (_cache[24] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
       }, " HikingRoute (puoi selezionarne più di una) ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
         "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
@@ -10853,10 +10862,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
           key: hr.id,
           value: hr.id
-        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(hr.name || "HikingRoute #".concat(hr.id)), 9 /* TEXT, PROPS */, _hoisted_16);
-      }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedHikingRouteIds]]), _cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(hr.name || "HikingRoute #".concat(hr.id)), 9 /* TEXT, PROPS */, _hoisted_17);
+      }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedHikingRouteIds]]), _cache[25] || (_cache[25] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
         "class": "text-xs text-gray-500 dark:text-gray-400 mt-1"
-      }, " Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per associare la meta. Il bordo del palo sarà multicolore se selezioni più HikingRoute. ", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Nome Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_18, [_cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Nome ", -1 /* CACHED */)), $data.isLoadingSuggestion ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_19, "(caricamento suggerimento...)")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [_cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, " Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per associare la meta. Il bordo del palo sarà multicolore se selezioni più HikingRoute. ", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Nome Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_19, [_cache[26] || (_cache[26] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Nome ", -1 /* CACHED */)), $data.isLoadingSuggestion ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_20, "(caricamento suggerimento...)")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [_cache[27] || (_cache[27] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "for": ""
       }, "suggerimenti", -1 /* CACHED */)), $options.hasOsmName ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
@@ -10882,7 +10891,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
           "color": "white",
           "border-color": "#2563eb"
         }, $data.isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'])
-      }, " da coordinate ", 12 /* STYLE, PROPS */, _hoisted_21)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+      }, " da coordinate ", 12 /* STYLE, PROPS */, _hoisted_22)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
         type: "text",
         "onUpdate:modelValue": _cache[7] || (_cache[7] = function ($event) {
           return $data.name = $event;
@@ -10890,7 +10899,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         placeholder: $data.isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località',
         disabled: $data.isLoadingSuggestion,
         "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50"
-      }, null, 8 /* PROPS */, _hoisted_22), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.name]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Descrizione Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [_cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, null, 8 /* PROPS */, _hoisted_23), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.name]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Descrizione Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_24, [_cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
       }, " Descrizione ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("textarea", {
         "onUpdate:modelValue": _cache[8] || (_cache[8] = function ($event) {
@@ -10899,20 +10908,20 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         placeholder: "Inserisci una descrizione della località",
         rows: "3",
         "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
-      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.description]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Bottone Aggiorna "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.description]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Bottone Aggiorna "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         type: "button",
         onClick: _cache[9] || (_cache[9] = function () {
           return $options.saveChanges && $options.saveChanges.apply($options, arguments);
         }),
         disabled: $data.isUpdatingMeta || $data.metaValue && (!$data.name || !$data.name.trim()),
         "class": "w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna'), 9 /* TEXT, PROPS */, _hoisted_25)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Frecce Segnaletica "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[22] || (_cache[22] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna'), 9 /* TEXT, PROPS */, _hoisted_26)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Frecce Segnaletica "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [_cache[29] || (_cache[29] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
         "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block"
       }, " Segnaletica ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_SignageArrowsDisplay, {
         "signage-data": $data.signageArrowsData,
         onArrowDirectionChanged: $options.handleArrowDirectionChanged,
         onArrowOrderChanged: $options.handleArrowOrderChanged
-      }, null, 8 /* PROPS */, ["signage-data", "onArrowDirectionChanged", "onArrowOrderChanged"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer with buttons "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 8 /* PROPS */, ["signage-data", "onArrowDirectionChanged", "onArrowOrderChanged"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer with buttons "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         type: "button",
         onClick: _cache[10] || (_cache[10] = function () {
           return $options.closePopup && $options.closePopup.apply($options, arguments);
@@ -10922,7 +10931,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         href: $options.poleLink,
         target: "_blank",
         "class": "bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded font-medium no-underline cursor-pointer inline-block"
-      }, " Vai al Palo ", 8 /* PROPS */, _hoisted_28)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))];
+      }, " Vai al Palo ", 8 /* PROPS */, _hoisted_29)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))];
     }),
     _: 1 /* STABLE */
   }, 8 /* PROPS */, ["index", "field"]);
@@ -11889,7 +11898,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.signage-map-legend[data-v-0224618e] {\n    position: absolute;\n    bottom: 12px;\n    left: 12px;\n    z-index: 1000;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid #e2e8f0;\n    border-radius: 6px;\n    padding: 10px 12px;\n    font-size: 12px;\n    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.signage-map-legend-title[data-v-0224618e] {\n    font-weight: 600;\n    margin-bottom: 8px;\n    color: #334155;\n}\n.signage-map-legend-row[data-v-0224618e] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    margin-bottom: 4px;\n}\n.signage-map-legend-row[data-v-0224618e]:last-child {\n    margin-bottom: 0;\n}\n.signage-map-legend-symbol[data-v-0224618e],\n.signage-map-legend-line[data-v-0224618e] {\n    flex-shrink: 0;\n}\n.signage-map-legend-label[data-v-0224618e] {\n    color: #475569;\n}\n\n/* Palo: cerchio rosso, bordo bianco */\n.signage-map-legend-pole[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta: cerchio arancione, bordo bianco */\n.signage-map-legend-checkpoint[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta (più percorsi): cerchio arancione con anello multicolore */\n.signage-map-legend-checkpoint-multi[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 3px #3b82f6, 0 0 0 4px #fff, 0 0 0 5.5px #22c55e;\n}\n\n/* Escluso da export: cerchio con X */\n/* Escluso da export: solo X (senza tondino) */\n.signage-map-legend-export-ignore[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    position: relative;\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::before,\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 10px;\n    height: 2px;\n    background: #c00;\n    transform: translate(-50%, -50%) rotate(45deg);\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    transform: translate(-50%, -50%) rotate(-45deg);\n}\n\n/* Proposto: cerchio con punto bianco interno */\n.signage-map-legend-proposed[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    position: relative;\n}\n.signage-map-legend-proposed[data-v-0224618e]::before {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 6px;\n    height: 6px;\n    margin: -3px 0 0 -3px;\n    border-radius: 50%;\n    background: #fff;\n}\n\n/* Percorso: linea blu */\n.signage-map-legend-line.signage-map-legend-route[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 4px;\n    background: blue;\n    border-radius: 2px;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n.signage-map-legend[data-v-0224618e] {\n    position: absolute;\n    bottom: 12px;\n    left: 12px;\n    z-index: 1000;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid #e2e8f0;\n    border-radius: 6px;\n    padding: 10px 12px;\n    font-size: 12px;\n    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.signage-map-legend-title[data-v-0224618e] {\n    font-weight: 600;\n    margin-bottom: 8px;\n    color: #334155;\n}\n.signage-map-legend-row[data-v-0224618e] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    margin-bottom: 4px;\n}\n.signage-map-legend-row[data-v-0224618e]:last-child {\n    margin-bottom: 0;\n}\n.signage-map-legend-symbol[data-v-0224618e],\n.signage-map-legend-line[data-v-0224618e] {\n    flex-shrink: 0;\n}\n.signage-map-legend-label[data-v-0224618e] {\n    color: #475569;\n}\n\n/* Palo: cerchio rosso, bordo bianco */\n.signage-map-legend-pole[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta: cerchio arancione, bordo bianco */\n.signage-map-legend-checkpoint[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta (più percorsi): cerchio arancione con anello multicolore */\n.signage-map-legend-checkpoint-multi[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 3px #3b82f6, 0 0 0 4px #fff, 0 0 0 5.5px #22c55e;\n}\n\n/* Escluso da export: cerchio con X */\n/* Escluso da export: solo X (senza tondino) */\n.signage-map-legend-export-ignore[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    position: relative;\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::before,\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 10px;\n    height: 2px;\n    background: #c00;\n    transform: translate(-50%, -50%) rotate(45deg);\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    transform: translate(-50%, -50%) rotate(-45deg);\n}\n\n/* Proposto: cerchio con punto bianco interno */\n.signage-map-legend-proposed[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    position: relative;\n}\n.signage-map-legend-proposed[data-v-0224618e]::before {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 6px;\n    height: 6px;\n    margin: -3px 0 0 -3px;\n    border-radius: 50%;\n    background: #fff;\n}\n\n/* OSM2CAI/OSM percorso: linea blu */\n.signage-map-legend-line.signage-map-legend-route[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 4px;\n    background: blue;\n    border-radius: 2px;\n}\n\n/* Percorso caricato dall'utente: linea rossa (solo per HikingRoute) */\n.signage-map-legend-line.signage-map-legend-unchecked[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 3px;\n    background: red;\n    border-radius: 2px;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
