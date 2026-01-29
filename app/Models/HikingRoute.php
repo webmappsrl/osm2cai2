@@ -458,9 +458,17 @@ class HikingRoute extends EcTrack
         }
 
         $checkpointPoleIds = $hikingRouteProperties['signage']['checkpoint'] ?? [];
-        $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) use ($checkpointPoleIds) {
+        $exportIgnorePoleIds = $hikingRouteProperties['signage']['export_ignore'] ?? [];
+        $poleFeatures = $this->getPolesWithBuffer()->map(function ($pole) use ($checkpointPoleIds, $exportIgnorePoleIds) {
             $poleFeature = $this->getFeatureMap($pole->geometry);
             $isCheckpoint = in_array($pole->id, $checkpointPoleIds);
+            $isExportIgnored = false;
+            foreach ($exportIgnorePoleIds as $ignoredId) {
+                if ((int) $ignoredId === (int) $pole->id || (string) $ignoredId === (string) $pole->id) {
+                    $isExportIgnored = true;
+                    break;
+                }
+            }
             $osmTags = null;
             if ($pole->osmfeatures_data && isset($pole->osmfeatures_data['properties']['osm_tags'])) {
                 $osmTags = $pole->osmfeatures_data['properties']['osm_tags'];
@@ -480,6 +488,7 @@ class HikingRoute extends EcTrack
                 'pointRadius' => $isCheckpoint ? self::CHECKPOINT_RADIUS : self::POINT_RADIUS,
                 'signage' => $pole->properties['signage'] ?? [],
                 'osmTags' => $osmTags,
+                'exportIgnore' => $isExportIgnored,
             ];
             $poleFeature['properties'] = $properties;
 
