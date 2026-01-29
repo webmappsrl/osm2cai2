@@ -41,8 +41,14 @@
                         <span class="signage-map-legend-label">Proposto</span>
                     </div>
                     <div class="signage-map-legend-row">
-                        <span class="signage-map-legend-line signage-map-legend-route" title="Percorso"></span>
-                        <span class="signage-map-legend-label">Percorso</span>
+                        <span class="signage-map-legend-line signage-map-legend-route"
+                            title="OSM2CAI/OSM percorso"></span>
+                        <span class="signage-map-legend-label">Percorso OSM/OSM2CAI</span>
+                    </div>
+                    <div v-if="resourceName === 'hiking-routes'" class="signage-map-legend-row">
+                        <span class="signage-map-legend-line signage-map-legend-unchecked"
+                            title="Percorso caricato dall'utente"></span>
+                        <span class="signage-map-legend-label">Percorso caricato dall'utente</span>
                     </div>
                 </div>
                 <!-- Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export -->
@@ -1094,12 +1100,21 @@ export default {
     background: #fff;
 }
 
-/* Percorso: linea blu */
+/* OSM2CAI/OSM percorso: linea blu */
 .signage-map-legend-line.signage-map-legend-route {
     display: inline-block;
     width: 24px;
     height: 4px;
     background: blue;
+    border-radius: 2px;
+}
+
+/* Percorso caricato dall'utente: linea rossa (solo per HikingRoute) */
+.signage-map-legend-line.signage-map-legend-unchecked {
+    display: inline-block;
+    width: 24px;
+    height: 3px;
+    background: red;
     border-radius: 2px;
 }
 </style>
