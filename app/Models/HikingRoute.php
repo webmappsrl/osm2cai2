@@ -474,6 +474,11 @@ class HikingRoute extends EcTrack
                 $osmTags = $pole->osmfeatures_data['properties']['osm_tags'];
             }
 
+            $isProposed = $osmTags && (
+                ($osmTags['lifecycle'] ?? null) === 'proposed'
+                || ($osmTags['proposed'] ?? null) === 'yes'
+            );
+
             $properties = [
                 'id' => $pole->id,
                 'name' => $pole->name ?? '',
@@ -489,6 +494,7 @@ class HikingRoute extends EcTrack
                 'signage' => $pole->properties['signage'] ?? [],
                 'osmTags' => $osmTags,
                 'exportIgnore' => $isExportIgnored,
+                'proposed' => $isProposed,
             ];
             $poleFeature['properties'] = $properties;
 
