@@ -15,11 +15,12 @@
                         GeoJSON
                     </button>
                 </div>
-                <!-- Usa FeatureCollectionMap dal wm-package -->
+                <!-- Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export -->
                 <FeatureCollectionMap :geojson-url="geojsonUrl" :height="field.height || 500"
                     :show-zoom-controls="field.showZoomControls !== false"
                     :mouse-wheel-zoom="field.mouseWheelZoom !== false" :drag-pan="field.dragPan !== false"
-                    :popup-component="'signage-map'" @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
+                    :popup-component="'signage-map'" :get-additional-point-styles="getAdditionalPointStyles"
+                    @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
             </div>
 
             <!-- Custom Signage Popup -->
@@ -54,6 +55,28 @@
                                     <span
                                         class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                                         :style="{ transform: metaValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione -->
+                            <div class="mt-4 flex items-center justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                        Escludi da export
+                                    </label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        Se attivo, il palo e le relative frecce non vengono inclusi nell'export
+                                        Segnaletica CSV/Excel (la numerazione di posizione resta invariata).
+                                    </p>
+                                </div>
+                                <button type="button" @click="toggleIgnore" :disabled="isUpdatingMeta"
+                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :class="[ignoreValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']"
+                                    role="switch" :aria-checked="ignoreValue">
+                                    <span
+                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                        :style="{ transform: ignoreValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
                                     </span>
                                 </button>
                             </div>
@@ -156,8 +179,18 @@
 <script>
 // Importa FeatureCollectionMap dalla copia locale
 // Importa SignageArrowsDisplay per mostrare le frecce segnaletica nel popup
+// OpenLayers per stili aggiuntivi sui punti (X sui pali esclusi da export)
 import FeatureCollectionMap from '../../../../../wm-package/src/Nova/Fields/FeatureCollectionMap/resources/js/components/FeatureCollectionMap.vue';
 import SignageArrowsDisplay from '../../../../SignageArrows/resources/js/components/SignageArrowsDisplay.vue';
+import { Style, Icon } from 'ol/style';
+
+// Icona X per pali esclusi da export (custom SignageMap)
+const X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">' +
+    '<line x1="2" y1="2" x2="18" y2="18" stroke="#c00" stroke-width="2" stroke-linecap="round"/>' +
+    '<line x1="18" y1="2" x2="2" y2="18" stroke="#c00" stroke-width="2" stroke-linecap="round"/>' +
+    '</svg>'
+);
 
 export default {
     name: 'SignageMapDetailField',
@@ -186,6 +219,7 @@ export default {
             currentFeaturesMap: null, // FeaturesMap corrente per trovare l'HikingRoute quando si lavora da SignageProject
             availableHikingRoutes: [], // Lista delle HikingRoute disponibili per questo palo (quando appartiene a più HikingRoute)
             selectedHikingRouteIds: [], // Array di HikingRoute selezionate quando il palo appartiene a più HikingRoute (multiselect)
+            ignoreValue: false, // Escludi da export CSV/Excel: se true, il palo e le frecce non vengono esportati (numerazione preservata)
         };
     },
 
@@ -241,6 +275,28 @@ export default {
     },
 
     methods: {
+        /** Scala l'icona X in base alla risoluzione: con zoom bassi (risoluzione alta) la X è più piccola */
+        getExportIgnoreIconScale(resolution) {
+            if (resolution == null || resolution <= 0) return 1;
+            const refResolution = 2;
+            const scale = refResolution / Math.max(resolution, 0.2);
+            return Math.max(0.25, Math.min(1.2, scale));
+        },
+
+        /** Callback per FeatureCollectionMap: stili aggiuntivi sui punti (X sui pali con exportIgnore) */
+        getAdditionalPointStyles(feature, resolution) {
+            const props = feature.getProperties();
+            if (props.exportIgnore !== true) return null;
+            const scale = this.getExportIgnoreIconScale(resolution);
+            return new Style({
+                image: new Icon({
+                    src: X_ICON_DATA_URL,
+                    scale,
+                    anchor: [0.5, 0.5]
+                })
+            });
+        },
+
         openGeoJSON() {
             window.open(this.geojsonUrl, '_blank');
         },
@@ -277,6 +333,8 @@ export default {
                 this.showPopup = true;
                 // Carica il valore di checkpoint per questo palo specifico
                 this.loadMetaValue(event.featuresMap);
+                // Carica il valore "escludi da export" per questo palo
+                this.loadIgnoreValue(event.featuresMap);
                 // Carica le HikingRoute disponibili per questo palo
                 this.loadAvailableHikingRoutes();
             }
@@ -298,6 +356,7 @@ export default {
             this.currentFeaturesMap = null;
             this.availableHikingRoutes = [];
             this.selectedHikingRouteIds = [];
+            this.ignoreValue = false;
         },
 
         handleKeydown(event) {
@@ -326,12 +385,12 @@ export default {
             if (featuresMap) {
                 // Inizializza a false
                 this.metaValue = false;
-                
+
                 // Cerca in tutte le features LineString (HikingRoute)
                 for (const [featureId, feature] of Object.entries(featuresMap)) {
                     const geometryType = feature.geometry?.type?.toLowerCase();
                     const isLine = geometryType === 'linestring' || geometryType === 'multilinestring';
-                    
+
                     // Controlla solo le LineString (HikingRoute)
                     if (isLine) {
                         const checkpoint = feature.properties?.signage?.checkpoint;
@@ -348,6 +407,39 @@ export default {
                 }
             } else {
                 this.metaValue = false;
+            }
+        },
+
+        loadIgnoreValue(featuresMap) {
+            if (!this.currentPoleId) {
+                this.ignoreValue = false;
+                return;
+            }
+
+            const poleId = parseInt(this.currentPoleId);
+
+            if (this.cachedProperties) {
+                const exportIgnore = this.cachedProperties?.signage?.export_ignore || [];
+                this.ignoreValue = exportIgnore.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+                return;
+            }
+
+            this.ignoreValue = false;
+            if (featuresMap) {
+                for (const [featureId, feature] of Object.entries(featuresMap)) {
+                    const geometryType = feature.geometry?.type?.toLowerCase();
+                    const isLine = geometryType === 'linestring' || geometryType === 'multilinestring';
+                    if (isLine) {
+                        const exportIgnore = feature.properties?.signage?.export_ignore;
+                        if (exportIgnore && Array.isArray(exportIgnore)) {
+                            const isIgnored = exportIgnore.some(id => parseInt(id) === poleId || String(id) === String(poleId));
+                            if (isIgnored) {
+                                this.ignoreValue = true;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         },
 
@@ -500,6 +592,13 @@ export default {
                 this.name = '';
                 this.description = '';
             }
+        },
+
+        toggleIgnore() {
+            if (this.isUpdatingMeta) {
+                return;
+            }
+            this.ignoreValue = !this.ignoreValue;
         },
 
         async suggestPlaceName() {
@@ -682,7 +781,8 @@ export default {
                                 poleId: poleId,
                                 add: this.metaValue,
                                 name: this.metaValue ? this.name.trim() : null,
-                                description: this.metaValue ? (this.description?.trim() || null) : null
+                                description: this.metaValue ? (this.description?.trim() || null) : null,
+                                export_ignore: this.ignoreValue
                             }
                         );
                     });
@@ -713,14 +813,15 @@ export default {
                     // Usa sempre l'endpoint dell'HikingRoute
                     const endpoint = `/nova-vendor/signage-map/hiking-route/${hikingRouteId}/properties`;
 
-                    // Aggiorna le properties dell'hikingRoute con checkpoint, name e description
+                    // Aggiorna le properties dell'hikingRoute con checkpoint, name, description e export_ignore
                     const response = await Nova.request().patch(
                         endpoint,
                         {
                             poleId: poleId,
                             add: this.metaValue,
                             name: this.metaValue ? this.name.trim() : null,
-                            description: this.metaValue ? (this.description?.trim() || null) : null
+                            description: this.metaValue ? (this.description?.trim() || null) : null,
+                            export_ignore: this.ignoreValue
                         }
                     );
 
