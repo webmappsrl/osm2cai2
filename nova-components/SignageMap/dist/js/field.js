@@ -10611,13 +10611,14 @@ function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Sym
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 
-var _hoisted_1 = {
+var _hoisted_1 = ["dusk"];
+var _hoisted_2 = {
   "class": "signage-map-wrapper",
   style: {
     "position": "relative"
   }
 };
-var _hoisted_2 = {
+var _hoisted_3 = {
   style: {
     "position": "absolute",
     "top": "10px",
@@ -10625,7 +10626,7 @@ var _hoisted_2 = {
     "z-index": "1000"
   }
 };
-var _hoisted_3 = {
+var _hoisted_4 = {
   xmlns: "http://www.w3.org/2000/svg",
   width: "16",
   height: "16",
@@ -10641,301 +10642,251 @@ var _hoisted_3 = {
     "margin-right": "4px"
   }
 };
-var _hoisted_4 = {
+var _hoisted_5 = {
   "class": "signage-map-legend"
 };
-var _hoisted_5 = {
+var _hoisted_6 = {
   key: 0,
   "class": "signage-map-legend-row"
 };
-var _hoisted_6 = {
+var _hoisted_7 = {
   key: 0,
   "class": "fixed inset-0 z-[9999] flex items-center justify-center p-4",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_7 = {
+var _hoisted_8 = {
   "class": "relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl flex flex-col signage-map-popup-modal"
 };
-var _hoisted_8 = {
+var _hoisted_9 = {
   "class": "bg-primary-500 dark:bg-primary-600 px-6 py-4 flex-shrink-0"
 };
-var _hoisted_9 = {
+var _hoisted_10 = {
   "class": "text-lg font-semibold text-white"
 };
-var _hoisted_10 = {
+var _hoisted_11 = {
   "class": "px-6 py-4 overflow-y-auto flex-1 min-h-0"
 };
-var _hoisted_11 = {
+var _hoisted_12 = {
   "class": "text-gray-600 dark:text-gray-400 text-sm"
 };
-var _hoisted_12 = {
+var _hoisted_13 = {
   "class": "mt-4 flex items-center justify-between"
 };
-var _hoisted_13 = ["disabled", "aria-checked"];
-var _hoisted_14 = {
+var _hoisted_14 = ["disabled", "aria-checked"];
+var _hoisted_15 = {
   "class": "mt-4 flex items-center justify-between gap-4"
 };
-var _hoisted_15 = ["disabled", "aria-checked"];
-var _hoisted_16 = {
+var _hoisted_16 = ["disabled", "aria-checked"];
+var _hoisted_17 = {
   key: 0,
   "class": "mt-4"
 };
-var _hoisted_17 = ["value"];
-var _hoisted_18 = {
+var _hoisted_18 = ["value"];
+var _hoisted_19 = {
   key: 1,
   "class": "mt-4"
 };
-var _hoisted_19 = {
+var _hoisted_20 = {
   "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
 };
-var _hoisted_20 = {
+var _hoisted_21 = {
   key: 0,
   "class": "text-xs text-gray-400 ml-2"
 };
-var _hoisted_21 = {
+var _hoisted_22 = {
   "class": "mb-2 flex gap-2 flex-wrap"
 };
-var _hoisted_22 = ["disabled"];
-var _hoisted_23 = ["placeholder", "disabled"];
-var _hoisted_24 = {
+var _hoisted_23 = ["disabled"];
+var _hoisted_24 = ["placeholder", "disabled"];
+var _hoisted_25 = {
   key: 2,
   "class": "mt-4"
 };
-var _hoisted_25 = {
+var _hoisted_26 = {
   "class": "mt-4"
 };
-var _hoisted_26 = ["disabled"];
-var _hoisted_27 = {
+var _hoisted_27 = ["disabled"];
+var _hoisted_28 = {
   "class": "mt-4 border-t border-gray-200 dark:border-gray-600 pt-4 overflow-x-auto pr-2"
 };
-var _hoisted_28 = {
+var _hoisted_29 = {
   "class": "px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600 flex-shrink-0"
 };
-var _hoisted_29 = ["href"];
+var _hoisted_30 = ["href"];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_FeatureCollectionMap = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("FeatureCollectionMap");
   var _component_SignageArrowsDisplay = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("SignageArrowsDisplay");
-  var _component_PanelItem = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("PanelItem");
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_PanelItem, {
-    index: $props.index,
-    field: $props.field
-  }, {
-    value: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        onClick: _cache[0] || (_cache[0] = function () {
-          return $options.openGeoJSON && $options.openGeoJSON.apply($options, arguments);
-        }),
-        type: "button",
-        "class": "btn btn-default btn-primary",
-        style: {
-          "background-color": "#3490dc",
-          "color": "white",
-          "border": "none",
-          "padding": "8px 16px",
-          "border-radius": "4px",
-          "cursor": "pointer",
-          "font-size": "14px"
-        }
-      }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg", _hoisted_3, _toConsumableArray(_cache[11] || (_cache[11] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path", {
-        d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("polyline", {
-        points: "15 3 21 3 21 9"
-      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("line", {
-        x1: "10",
-        y1: "14",
-        x2: "21",
-        y2: "3"
-      }, null, -1 /* CACHED */)])))), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" GeoJSON ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Legenda simboli mappa (nascosta quando il popup è aperto) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "signage-map-legend-title"
-      }, "Legenda", -1 /* CACHED */)), _cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "signage-map-legend-row"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-symbol signage-map-legend-pole",
-        title: "Palo"
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-label"
-      }, "Palo")], -1 /* CACHED */)), _cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "signage-map-legend-row"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-symbol signage-map-legend-checkpoint",
-        title: "Meta"
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-label"
-      }, "Meta")], -1 /* CACHED */)), _cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "signage-map-legend-row"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-symbol signage-map-legend-checkpoint-multi",
-        title: "Meta su più percorsi"
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-label"
-      }, "Meta (più percorsi)")], -1 /* CACHED */)), _cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "signage-map-legend-row"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-symbol signage-map-legend-export-ignore",
-        title: "Escluso da export"
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-label"
-      }, "Escluso da export")], -1 /* CACHED */)), _cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "signage-map-legend-row"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-symbol signage-map-legend-proposed",
-        title: "Proposto"
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-label"
-      }, "Proposto")], -1 /* CACHED */)), _cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "signage-map-legend-row"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-line signage-map-legend-route",
-        title: "OSM2CAI/OSM percorso"
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-label"
-      }, "Percorso OSM/OSM2CAI")], -1 /* CACHED */)), $props.resourceName === 'hiking-routes' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, _toConsumableArray(_cache[13] || (_cache[13] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-line signage-map-legend-unchecked",
-        title: "Percorso caricato dall'utente"
-      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "signage-map-legend-label"
-      }, "Percorso caricato dall'utente", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.showPopup]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FeatureCollectionMap, {
-        "geojson-url": $options.geojsonUrl,
-        height: $props.field.height || 500,
-        "show-zoom-controls": $props.field.showZoomControls !== false,
-        "mouse-wheel-zoom": $props.field.mouseWheelZoom !== false,
-        "drag-pan": $props.field.dragPan !== false,
-        "popup-component": 'signage-map',
-        "get-additional-point-styles": $options.getAdditionalPointStyles,
-        onPopupOpen: $options.handlePopupOpen,
-        onPopupClose: $options.handlePopupClose
-      }, null, 8 /* PROPS */, ["geojson-url", "height", "show-zoom-controls", "mouse-wheel-zoom", "drag-pan", "get-additional-point-styles", "onPopupOpen", "onPopupClose"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Custom Signage Popup "), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Teleport, {
-        to: "body"
-      }, [$data.showPopup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Backdrop "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75",
-        onClick: _cache[1] || (_cache[1] = function () {
-          return $options.closePopup && $options.closePopup.apply($options, arguments);
-        })
-      }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Modal "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_11, [_cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Palo selezionato: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Meta "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [_cache[22] || (_cache[22] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-        "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
-      }, " Meta ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        type: "button",
-        onClick: _cache[2] || (_cache[2] = function () {
-          return $options.toggleMeta && $options.toggleMeta.apply($options, arguments);
-        }),
-        disabled: $data.isUpdatingMeta,
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed", [$data.metaValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']]),
-        role: "switch",
-        "aria-checked": $data.metaValue
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-        style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
-          transform: $data.metaValue ? 'translateX(1.25rem)' : 'translateX(0)'
-        })
-      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_13)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[23] || (_cache[23] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "flex-1 min-w-0"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-        "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
-      }, " Escludi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-        "class": "text-xs text-gray-500 dark:text-gray-400"
-      }, " Se attivo, il palo e le relative frecce non vengono inclusi nell'export Segnaletica CSV/Excel (la numerazione di posizione resta invariata). ")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        type: "button",
-        onClick: _cache[3] || (_cache[3] = function () {
-          return $options.toggleIgnore && $options.toggleIgnore.apply($options, arguments);
-        }),
-        disabled: $data.isUpdatingMeta,
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed", [$data.ignoreValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']]),
-        role: "switch",
-        "aria-checked": $data.ignoreValue
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-        style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
-          transform: $data.ignoreValue ? 'translateX(1.25rem)' : 'translateX(0)'
-        })
-      }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_15)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) "), $data.metaValue && $data.availableHikingRoutes.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_16, [_cache[24] || (_cache[24] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-        "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
-      }, " HikingRoute (puoi selezionarne più di una) ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-        "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
-          return $data.selectedHikingRouteIds = $event;
-        }),
-        multiple: "",
-        "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm",
-        style: {
-          "min-height": "120px"
-        }
-      }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.availableHikingRoutes, function (hr) {
-        return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-          key: hr.id,
-          value: hr.id
-        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(hr.name || "HikingRoute #".concat(hr.id)), 9 /* TEXT, PROPS */, _hoisted_17);
-      }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedHikingRouteIds]]), _cache[25] || (_cache[25] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-        "class": "text-xs text-gray-500 dark:text-gray-400 mt-1"
-      }, " Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per associare la meta. Il bordo del palo sarà multicolore se selezioni più HikingRoute. ", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Nome Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_19, [_cache[26] || (_cache[26] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Nome ", -1 /* CACHED */)), $data.isLoadingSuggestion ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_20, "(caricamento suggerimento...)")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [_cache[27] || (_cache[27] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-        "for": ""
-      }, "suggerimenti", -1 /* CACHED */)), $options.hasOsmName ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
-        key: 0,
-        type: "button",
-        onClick: _cache[5] || (_cache[5] = function () {
-          return $options.recoverOsmName && $options.recoverOsmName.apply($options, arguments);
-        }),
-        "class": "px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border",
-        style: {
-          "background-color": "#3b82f6",
-          "color": "white",
-          "border-color": "#2563eb"
-        }
-      }, " OSM: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.osmName), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        type: "button",
-        onClick: _cache[6] || (_cache[6] = function () {
-          return $options.suggestPlaceName && $options.suggestPlaceName.apply($options, arguments);
-        }),
-        disabled: $data.isLoadingSuggestion,
-        "class": "px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border",
-        style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)([{
-          "background-color": "#3b82f6",
-          "color": "white",
-          "border-color": "#2563eb"
-        }, $data.isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'])
-      }, " da coordinate ", 12 /* STYLE, PROPS */, _hoisted_22)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-        type: "text",
-        "onUpdate:modelValue": _cache[7] || (_cache[7] = function ($event) {
-          return $data.name = $event;
-        }),
-        placeholder: $data.isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località',
-        disabled: $data.isLoadingSuggestion,
-        "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50"
-      }, null, 8 /* PROPS */, _hoisted_23), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.name]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Descrizione Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_24, [_cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-        "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
-      }, " Descrizione ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("textarea", {
-        "onUpdate:modelValue": _cache[8] || (_cache[8] = function ($event) {
-          return $data.description = $event;
-        }),
-        placeholder: "Inserisci una descrizione della località",
-        rows: "3",
-        "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
-      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.description]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Bottone Aggiorna "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        type: "button",
-        onClick: _cache[9] || (_cache[9] = function () {
-          return $options.saveChanges && $options.saveChanges.apply($options, arguments);
-        }),
-        disabled: $data.isUpdatingMeta || $data.metaValue && (!$data.name || !$data.name.trim()),
-        "class": "w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna'), 9 /* TEXT, PROPS */, _hoisted_26)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Frecce Segnaletica "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [_cache[29] || (_cache[29] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-        "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block"
-      }, " Segnaletica ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_SignageArrowsDisplay, {
-        "signage-data": $data.signageArrowsData,
-        onArrowDirectionChanged: $options.handleArrowDirectionChanged,
-        onArrowOrderChanged: $options.handleArrowOrderChanged
-      }, null, 8 /* PROPS */, ["signage-data", "onArrowDirectionChanged", "onArrowOrderChanged"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer with buttons "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        type: "button",
-        onClick: _cache[10] || (_cache[10] = function () {
-          return $options.closePopup && $options.closePopup.apply($options, arguments);
-        }),
-        "class": "bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded font-medium cursor-pointer"
-      }, " Chiudi "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-        href: $options.poleLink,
-        target: "_blank",
-        "class": "bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded font-medium no-underline cursor-pointer inline-block"
-      }, " Vai al Palo ", 8 /* PROPS */, _hoisted_29)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))];
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Contenitore a tutta larghezza: nessuna etichetta \"Geometria\", la mappa usa tutto lo spazio disponibile (estende ai bordi della Card con -mx-6) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    dusk: $props.field.attribute,
+    "class": "signage-map-full-width w-full -mx-6 py-2"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[0] || (_cache[0] = function () {
+      return $options.openGeoJSON && $options.openGeoJSON.apply($options, arguments);
     }),
-    _: 1 /* STABLE */
-  }, 8 /* PROPS */, ["index", "field"]);
+    type: "button",
+    "class": "btn btn-default btn-primary",
+    style: {
+      "background-color": "#3490dc",
+      "color": "white",
+      "border": "none",
+      "padding": "8px 16px",
+      "border-radius": "4px",
+      "cursor": "pointer",
+      "font-size": "14px"
+    }
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg", _hoisted_4, _toConsumableArray(_cache[11] || (_cache[11] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path", {
+    d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("polyline", {
+    points: "15 3 21 3 21 9"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("line", {
+    x1: "10",
+    y1: "14",
+    x2: "21",
+    y2: "3"
+  }, null, -1 /* CACHED */)])))), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" GeoJSON ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Legenda simboli mappa (nascosta quando il popup è aperto) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"signage-map-legend-title\" data-v-0224618e>Legenda</div><div class=\"signage-map-legend-row\" data-v-0224618e><span class=\"signage-map-legend-symbol signage-map-legend-pole\" title=\"Palo\" data-v-0224618e></span><span class=\"signage-map-legend-label\" data-v-0224618e>Palo</span></div><div class=\"signage-map-legend-row\" data-v-0224618e><span class=\"signage-map-legend-symbol signage-map-legend-checkpoint\" title=\"Meta\" data-v-0224618e></span><span class=\"signage-map-legend-label\" data-v-0224618e>Meta</span></div><div class=\"signage-map-legend-row\" data-v-0224618e><span class=\"signage-map-legend-symbol signage-map-legend-checkpoint-multi\" title=\"Meta su più percorsi\" data-v-0224618e></span><span class=\"signage-map-legend-label\" data-v-0224618e>Meta (più percorsi)</span></div><div class=\"signage-map-legend-row\" data-v-0224618e><span class=\"signage-map-legend-symbol signage-map-legend-export-ignore\" title=\"Escluso da export\" data-v-0224618e></span><span class=\"signage-map-legend-label\" data-v-0224618e>Escluso da export</span></div><div class=\"signage-map-legend-row\" data-v-0224618e><span class=\"signage-map-legend-symbol signage-map-legend-proposed\" title=\"Proposto\" data-v-0224618e></span><span class=\"signage-map-legend-label\" data-v-0224618e>Proposto</span></div><div class=\"signage-map-legend-row\" data-v-0224618e><span class=\"signage-map-legend-line signage-map-legend-route\" title=\"OSM2CAI/OSM percorso\" data-v-0224618e></span><span class=\"signage-map-legend-label\" data-v-0224618e>Percorso OSM/OSM2CAI</span></div>", 7)), $props.resourceName === 'hiking-routes' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, _toConsumableArray(_cache[13] || (_cache[13] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "signage-map-legend-line signage-map-legend-unchecked",
+    title: "Percorso caricato dall'utente"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "signage-map-legend-label"
+  }, "Percorso caricato dall'utente", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.showPopup]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FeatureCollectionMap, {
+    "geojson-url": $options.geojsonUrl,
+    height: $props.field.height || 500,
+    "show-zoom-controls": $props.field.showZoomControls !== false,
+    "mouse-wheel-zoom": $props.field.mouseWheelZoom !== false,
+    "drag-pan": $props.field.dragPan !== false,
+    "popup-component": 'signage-map',
+    "get-additional-point-styles": $options.getAdditionalPointStyles,
+    onPopupOpen: $options.handlePopupOpen,
+    onPopupClose: $options.handlePopupClose
+  }, null, 8 /* PROPS */, ["geojson-url", "height", "show-zoom-controls", "mouse-wheel-zoom", "drag-pan", "get-additional-point-styles", "onPopupOpen", "onPopupClose"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Custom Signage Popup "), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Teleport, {
+    to: "body"
+  }, [$data.showPopup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Backdrop "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75",
+    onClick: _cache[1] || (_cache[1] = function () {
+      return $options.closePopup && $options.closePopup.apply($options, arguments);
+    })
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Modal "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", _hoisted_10, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_12, [_cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Palo selezionato: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.popupTitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Meta "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
+  }, " Meta ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    type: "button",
+    onClick: _cache[2] || (_cache[2] = function () {
+      return $options.toggleMeta && $options.toggleMeta.apply($options, arguments);
+    }),
+    disabled: $data.isUpdatingMeta,
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed", [$data.metaValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']]),
+    role: "switch",
+    "aria-checked": $data.metaValue
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+    style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+      transform: $data.metaValue ? 'translateX(1.25rem)' : 'translateX(0)'
+    })
+  }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_14)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "flex-1 min-w-0"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
+  }, " Escludi da export "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+    "class": "text-xs text-gray-500 dark:text-gray-400"
+  }, " Se attivo, il palo e le relative frecce non vengono inclusi nell'export Segnaletica CSV/Excel (la numerazione di posizione resta invariata). ")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    type: "button",
+    onClick: _cache[3] || (_cache[3] = function () {
+      return $options.toggleIgnore && $options.toggleIgnore.apply($options, arguments);
+    }),
+    disabled: $data.isUpdatingMeta,
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed", [$data.ignoreValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']]),
+    role: "switch",
+    "aria-checked": $data.ignoreValue
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+    style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+      transform: $data.ignoreValue ? 'translateX(1.25rem)' : 'translateX(0)'
+    })
+  }, null, 4 /* STYLE */)], 10 /* CLASS, PROPS */, _hoisted_16)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) "), $data.metaValue && $data.availableHikingRoutes.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, [_cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
+  }, " HikingRoute (puoi selezionarne più di una) ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
+      return $data.selectedHikingRouteIds = $event;
+    }),
+    multiple: "",
+    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm",
+    style: {
+      "min-height": "120px"
+    }
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.availableHikingRoutes, function (hr) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: hr.id,
+      value: hr.id
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(hr.name || "HikingRoute #".concat(hr.id)), 9 /* TEXT, PROPS */, _hoisted_18);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedHikingRouteIds]]), _cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+    "class": "text-xs text-gray-500 dark:text-gray-400 mt-1"
+  }, " Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per associare la meta. Il bordo del palo sarà multicolore se selezioni più HikingRoute. ", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Nome Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_20, [_cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Nome ", -1 /* CACHED */)), $data.isLoadingSuggestion ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_21, "(caricamento suggerimento...)")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [_cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "for": ""
+  }, "suggerimenti", -1 /* CACHED */)), $options.hasOsmName ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+    key: 0,
+    type: "button",
+    onClick: _cache[5] || (_cache[5] = function () {
+      return $options.recoverOsmName && $options.recoverOsmName.apply($options, arguments);
+    }),
+    "class": "px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border",
+    style: {
+      "background-color": "#3b82f6",
+      "color": "white",
+      "border-color": "#2563eb"
+    }
+  }, " OSM: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.osmName), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    type: "button",
+    onClick: _cache[6] || (_cache[6] = function () {
+      return $options.suggestPlaceName && $options.suggestPlaceName.apply($options, arguments);
+    }),
+    disabled: $data.isLoadingSuggestion,
+    "class": "px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border",
+    style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)([{
+      "background-color": "#3b82f6",
+      "color": "white",
+      "border-color": "#2563eb"
+    }, $data.isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'])
+  }, " da coordinate ", 12 /* STYLE, PROPS */, _hoisted_23)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "text",
+    "onUpdate:modelValue": _cache[7] || (_cache[7] = function ($event) {
+      return $data.name = $event;
+    }),
+    placeholder: $data.isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località',
+    disabled: $data.isLoadingSuggestion,
+    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50"
+  }, null, 8 /* PROPS */, _hoisted_24), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.name]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Campo Descrizione Località (visibile solo quando Meta è attivo) "), $data.metaValue ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_25, [_cache[22] || (_cache[22] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block"
+  }, " Descrizione ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("textarea", {
+    "onUpdate:modelValue": _cache[8] || (_cache[8] = function ($event) {
+      return $data.description = $event;
+    }),
+    placeholder: "Inserisci una descrizione della località",
+    rows: "3",
+    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.description]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Bottone Aggiorna "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    type: "button",
+    onClick: _cache[9] || (_cache[9] = function () {
+      return $options.saveChanges && $options.saveChanges.apply($options, arguments);
+    }),
+    disabled: $data.isUpdatingMeta || $data.metaValue && (!$data.name || !$data.name.trim()),
+    "class": "w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna'), 9 /* TEXT, PROPS */, _hoisted_27)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Frecce Segnaletica "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [_cache[23] || (_cache[23] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": "text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block"
+  }, " Segnaletica ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_SignageArrowsDisplay, {
+    "signage-data": $data.signageArrowsData,
+    onArrowDirectionChanged: $options.handleArrowDirectionChanged,
+    onArrowOrderChanged: $options.handleArrowOrderChanged
+  }, null, 8 /* PROPS */, ["signage-data", "onArrowDirectionChanged", "onArrowOrderChanged"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer with buttons "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    type: "button",
+    onClick: _cache[10] || (_cache[10] = function () {
+      return $options.closePopup && $options.closePopup.apply($options, arguments);
+    }),
+    "class": "bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded font-medium cursor-pointer"
+  }, " Chiudi "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: $options.poleLink,
+    target: "_blank",
+    "class": "bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded font-medium no-underline cursor-pointer inline-block"
+  }, " Vai al Palo ", 8 /* PROPS */, _hoisted_30)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))], 8 /* PROPS */, _hoisted_1)], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */);
 }
 
 /***/ }),

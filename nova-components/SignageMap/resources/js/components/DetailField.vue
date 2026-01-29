@@ -1,215 +1,213 @@
 <template>
-    <PanelItem :index="index" :field="field">
-        <template #value>
-            <div class="signage-map-wrapper" style="position: relative;">
-                <div style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
-                    <button @click="openGeoJSON" type="button" class="btn btn-default btn-primary"
-                        style="background-color: #3490dc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                        GeoJSON
-                    </button>
-                </div>
-                <!-- Legenda simboli mappa (nascosta quando il popup è aperto) -->
-                <div class="signage-map-legend" v-show="!showPopup">
-                    <div class="signage-map-legend-title">Legenda</div>
-                    <div class="signage-map-legend-row">
-                        <span class="signage-map-legend-symbol signage-map-legend-pole" title="Palo"></span>
-                        <span class="signage-map-legend-label">Palo</span>
-                    </div>
-                    <div class="signage-map-legend-row">
-                        <span class="signage-map-legend-symbol signage-map-legend-checkpoint" title="Meta"></span>
-                        <span class="signage-map-legend-label">Meta</span>
-                    </div>
-                    <div class="signage-map-legend-row">
-                        <span class="signage-map-legend-symbol signage-map-legend-checkpoint-multi"
-                            title="Meta su più percorsi"></span>
-                        <span class="signage-map-legend-label">Meta (più percorsi)</span>
-                    </div>
-                    <div class="signage-map-legend-row">
-                        <span class="signage-map-legend-symbol signage-map-legend-export-ignore"
-                            title="Escluso da export"></span>
-                        <span class="signage-map-legend-label">Escluso da export</span>
-                    </div>
-                    <div class="signage-map-legend-row">
-                        <span class="signage-map-legend-symbol signage-map-legend-proposed" title="Proposto"></span>
-                        <span class="signage-map-legend-label">Proposto</span>
-                    </div>
-                    <div class="signage-map-legend-row">
-                        <span class="signage-map-legend-line signage-map-legend-route"
-                            title="OSM2CAI/OSM percorso"></span>
-                        <span class="signage-map-legend-label">Percorso OSM/OSM2CAI</span>
-                    </div>
-                    <div v-if="resourceName === 'hiking-routes'" class="signage-map-legend-row">
-                        <span class="signage-map-legend-line signage-map-legend-unchecked"
-                            title="Percorso caricato dall'utente"></span>
-                        <span class="signage-map-legend-label">Percorso caricato dall'utente</span>
-                    </div>
-                </div>
-                <!-- Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export -->
-                <FeatureCollectionMap :geojson-url="geojsonUrl" :height="field.height || 500"
-                    :show-zoom-controls="field.showZoomControls !== false"
-                    :mouse-wheel-zoom="field.mouseWheelZoom !== false" :drag-pan="field.dragPan !== false"
-                    :popup-component="'signage-map'" :get-additional-point-styles="getAdditionalPointStyles"
-                    @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
+    <!-- Contenitore a tutta larghezza: nessuna etichetta "Geometria", la mappa usa tutto lo spazio disponibile (estende ai bordi della Card con -mx-6) -->
+    <div :dusk="field.attribute" class="signage-map-full-width w-full -mx-6 py-2">
+        <div class="signage-map-wrapper" style="position: relative;">
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+                <button @click="openGeoJSON" type="button" class="btn btn-default btn-primary"
+                    style="background-color: #3490dc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    GeoJSON
+                </button>
             </div>
+            <!-- Legenda simboli mappa (nascosta quando il popup è aperto) -->
+            <div class="signage-map-legend" v-show="!showPopup">
+                <div class="signage-map-legend-title">Legenda</div>
+                <div class="signage-map-legend-row">
+                    <span class="signage-map-legend-symbol signage-map-legend-pole" title="Palo"></span>
+                    <span class="signage-map-legend-label">Palo</span>
+                </div>
+                <div class="signage-map-legend-row">
+                    <span class="signage-map-legend-symbol signage-map-legend-checkpoint" title="Meta"></span>
+                    <span class="signage-map-legend-label">Meta</span>
+                </div>
+                <div class="signage-map-legend-row">
+                    <span class="signage-map-legend-symbol signage-map-legend-checkpoint-multi"
+                        title="Meta su più percorsi"></span>
+                    <span class="signage-map-legend-label">Meta (più percorsi)</span>
+                </div>
+                <div class="signage-map-legend-row">
+                    <span class="signage-map-legend-symbol signage-map-legend-export-ignore"
+                        title="Escluso da export"></span>
+                    <span class="signage-map-legend-label">Escluso da export</span>
+                </div>
+                <div class="signage-map-legend-row">
+                    <span class="signage-map-legend-symbol signage-map-legend-proposed" title="Proposto"></span>
+                    <span class="signage-map-legend-label">Proposto</span>
+                </div>
+                <div class="signage-map-legend-row">
+                    <span class="signage-map-legend-line signage-map-legend-route" title="OSM2CAI/OSM percorso"></span>
+                    <span class="signage-map-legend-label">Percorso OSM/OSM2CAI</span>
+                </div>
+                <div v-if="resourceName === 'hiking-routes'" class="signage-map-legend-row">
+                    <span class="signage-map-legend-line signage-map-legend-unchecked"
+                        title="Percorso caricato dall'utente"></span>
+                    <span class="signage-map-legend-label">Percorso caricato dall'utente</span>
+                </div>
+            </div>
+            <!-- Usa FeatureCollectionMap dal wm-package; getAdditionalPointStyles disegna la X sui pali esclusi da export -->
+            <FeatureCollectionMap :geojson-url="geojsonUrl" :height="field.height || 500"
+                :show-zoom-controls="field.showZoomControls !== false"
+                :mouse-wheel-zoom="field.mouseWheelZoom !== false" :drag-pan="field.dragPan !== false"
+                :popup-component="'signage-map'" :get-additional-point-styles="getAdditionalPointStyles"
+                @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
+        </div>
 
-            <!-- Custom Signage Popup -->
-            <Teleport to="body">
-                <div v-if="showPopup" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" role="dialog"
-                    aria-modal="true">
-                    <!-- Backdrop -->
-                    <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75" @click="closePopup"></div>
+        <!-- Custom Signage Popup -->
+        <Teleport to="body">
+            <div v-if="showPopup" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" role="dialog"
+                aria-modal="true">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75" @click="closePopup"></div>
 
-                    <!-- Modal -->
-                    <div
-                        class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl flex flex-col signage-map-popup-modal">
-                        <!-- Header -->
-                        <div class="bg-primary-500 dark:bg-primary-600 px-6 py-4 flex-shrink-0">
-                            <h3 class="text-lg font-semibold text-white">{{ popupTitle }}</h3>
+                <!-- Modal -->
+                <div
+                    class="relative z-10 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl flex flex-col signage-map-popup-modal">
+                    <!-- Header -->
+                    <div class="bg-primary-500 dark:bg-primary-600 px-6 py-4 flex-shrink-0">
+                        <h3 class="text-lg font-semibold text-white">{{ popupTitle }}</h3>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="px-6 py-4 overflow-y-auto flex-1 min-h-0">
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                            Palo selezionato: <strong>{{ popupTitle }}</strong>
+                        </p>
+                        <!-- Toggle Meta -->
+                        <div class="mt-4 flex items-center justify-between">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                Meta
+                            </label>
+                            <button type="button" @click="toggleMeta" :disabled="isUpdatingMeta"
+                                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                :class="[metaValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']" role="switch"
+                                :aria-checked="metaValue">
+                                <span
+                                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                    :style="{ transform: metaValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
+                                </span>
+                            </button>
                         </div>
 
-                        <!-- Content -->
-                        <div class="px-6 py-4 overflow-y-auto flex-1 min-h-0">
-                            <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                Palo selezionato: <strong>{{ popupTitle }}</strong>
-                            </p>
-                            <!-- Toggle Meta -->
-                            <div class="mt-4 flex items-center justify-between">
+                        <!-- Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione -->
+                        <div class="mt-4 flex items-center justify-between gap-4">
+                            <div class="flex-1 min-w-0">
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
-                                    Meta
+                                    Escludi da export
                                 </label>
-                                <button type="button" @click="toggleMeta" :disabled="isUpdatingMeta"
-                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    :class="[metaValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']"
-                                    role="switch" :aria-checked="metaValue">
-                                    <span
-                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                                        :style="{ transform: metaValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
-                                    </span>
-                                </button>
-                            </div>
-
-                            <!-- Toggle Escludi da export (ignore): se attivo, il palo e le sue frecce non vengono esportati nel CSV/Excel, preservando la numerazione -->
-                            <div class="mt-4 flex items-center justify-between gap-4">
-                                <div class="flex-1 min-w-0">
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
-                                        Escludi da export
-                                    </label>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        Se attivo, il palo e le relative frecce non vengono inclusi nell'export
-                                        Segnaletica CSV/Excel (la numerazione di posizione resta invariata).
-                                    </p>
-                                </div>
-                                <button type="button" @click="toggleIgnore" :disabled="isUpdatingMeta"
-                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    :class="[ignoreValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']"
-                                    role="switch" :aria-checked="ignoreValue">
-                                    <span
-                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                                        :style="{ transform: ignoreValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
-                                    </span>
-                                </button>
-                            </div>
-
-                            <!-- Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) -->
-                            <div v-if="metaValue && availableHikingRoutes.length > 1" class="mt-4">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
-                                    HikingRoute (puoi selezionarne più di una)
-                                </label>
-                                <select v-model="selectedHikingRouteIds" multiple
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm"
-                                    style="min-height: 120px;">
-                                    <option v-for="hr in availableHikingRoutes" :key="hr.id" :value="hr.id">
-                                        {{ hr.name || `HikingRoute #${hr.id}` }}
-                                    </option>
-                                </select>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per
-                                    associare la meta.
-                                    Il bordo del palo sarà multicolore se selezioni più HikingRoute.
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    Se attivo, il palo e le relative frecce non vengono inclusi nell'export
+                                    Segnaletica CSV/Excel (la numerazione di posizione resta invariata).
                                 </p>
                             </div>
+                            <button type="button" @click="toggleIgnore" :disabled="isUpdatingMeta"
+                                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                :class="[ignoreValue ? 'bg-primary-500' : 'bg-gray-200 dark:bg-gray-600']" role="switch"
+                                :aria-checked="ignoreValue">
+                                <span
+                                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                    :style="{ transform: ignoreValue ? 'translateX(1.25rem)' : 'translateX(0)' }">
+                                </span>
+                            </button>
+                        </div>
 
-                            <!-- Campo Nome Località (visibile solo quando Meta è attivo) -->
-                            <div v-if="metaValue" class="mt-4">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
-                                    Nome
-                                    <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento
-                                        suggerimento...)</span>
-                                </label>
-                                <div class="mb-2 flex gap-2 flex-wrap">
-                                    <label for="">suggerimenti</label>
-                                    <button v-if="hasOsmName" type="button" @click="recoverOsmName"
-                                        class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border"
-                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;">
-                                        OSM: {{ osmName }}
-                                    </button>
-                                    <button type="button" @click="suggestPlaceName" :disabled="isLoadingSuggestion"
-                                        class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border"
-                                        style="background-color: #3b82f6; color: white; border-color: #2563eb;"
-                                        :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'">
-                                        da coordinate
-                                    </button>
-                                </div>
-                                <input type="text" v-model="name"
-                                    :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
-                                    :disabled="isLoadingSuggestion"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50" />
-                            </div>
+                        <!-- Selettore HikingRoute (visibile solo se il palo appartiene a più HikingRoute) -->
+                        <div v-if="metaValue && availableHikingRoutes.length > 1" class="mt-4">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                HikingRoute (puoi selezionarne più di una)
+                            </label>
+                            <select v-model="selectedHikingRouteIds" multiple
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm"
+                                style="min-height: 120px;">
+                                <option v-for="hr in availableHikingRoutes" :key="hr.id" :value="hr.id">
+                                    {{ hr.name || `HikingRoute #${hr.id}` }}
+                                </option>
+                            </select>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Questo palo appartiene a più HikingRoute. Seleziona una o più HikingRoute per
+                                associare la meta.
+                                Il bordo del palo sarà multicolore se selezioni più HikingRoute.
+                            </p>
+                        </div>
 
-                            <!-- Campo Descrizione Località (visibile solo quando Meta è attivo) -->
-                            <div v-if="metaValue" class="mt-4">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
-                                    Descrizione
-                                </label>
-                                <textarea v-model="description" placeholder="Inserisci una descrizione della località"
-                                    rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"></textarea>
-                            </div>
-
-                            <!-- Bottone Aggiorna -->
-                            <div class="mt-4">
-                                <button type="button" @click="saveChanges"
-                                    :disabled="isUpdatingMeta || (metaValue && (!name || !name.trim()))"
-                                    class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {{ isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna' }}
+                        <!-- Campo Nome Località (visibile solo quando Meta è attivo) -->
+                        <div v-if="metaValue" class="mt-4">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                Nome
+                                <span v-if="isLoadingSuggestion" class="text-xs text-gray-400 ml-2">(caricamento
+                                    suggerimento...)</span>
+                            </label>
+                            <div class="mb-2 flex gap-2 flex-wrap">
+                                <label for="">suggerimenti</label>
+                                <button v-if="hasOsmName" type="button" @click="recoverOsmName"
+                                    class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer transition-colors shadow-sm border"
+                                    style="background-color: #3b82f6; color: white; border-color: #2563eb;">
+                                    OSM: {{ osmName }}
+                                </button>
+                                <button type="button" @click="suggestPlaceName" :disabled="isLoadingSuggestion"
+                                    class="px-2 py-0.5 text-xs rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border"
+                                    style="background-color: #3b82f6; color: white; border-color: #2563eb;"
+                                    :style="isLoadingSuggestion ? 'opacity: 0.5;' : 'background-color: #3b82f6; color: white; border-color: #2563eb;'">
+                                    da coordinate
                                 </button>
                             </div>
-
-                            <!-- Frecce Segnaletica -->
-                            <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4 overflow-x-auto pr-2">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block">
-                                    Segnaletica
-                                </label>
-                                <SignageArrowsDisplay :signage-data="signageArrowsData"
-                                    @arrow-direction-changed="handleArrowDirectionChanged"
-                                    @arrow-order-changed="handleArrowOrderChanged" />
-                            </div>
+                            <input type="text" v-model="name"
+                                :placeholder="isLoadingSuggestion ? 'Caricamento...' : 'Inserisci il nome della località'"
+                                :disabled="isLoadingSuggestion"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50" />
                         </div>
 
-                        <!-- Footer with buttons -->
-                        <div
-                            class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600 flex-shrink-0">
-                            <button type="button" @click="closePopup"
-                                class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded font-medium cursor-pointer">
-                                Chiudi
+                        <!-- Campo Descrizione Località (visibile solo quando Meta è attivo) -->
+                        <div v-if="metaValue" class="mt-4">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 block">
+                                Descrizione
+                            </label>
+                            <textarea v-model="description" placeholder="Inserisci una descrizione della località"
+                                rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white text-sm resize-none"></textarea>
+                        </div>
+
+                        <!-- Bottone Aggiorna -->
+                        <div class="mt-4">
+                            <button type="button" @click="saveChanges"
+                                :disabled="isUpdatingMeta || (metaValue && (!name || !name.trim()))"
+                                class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                {{ isUpdatingMeta ? 'Salvataggio...' : 'Aggiorna' }}
                             </button>
-                            <a :href="poleLink" target="_blank"
-                                class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded font-medium no-underline cursor-pointer inline-block">
-                                Vai al Palo
-                            </a>
+                        </div>
+
+                        <!-- Frecce Segnaletica -->
+                        <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4 overflow-x-auto pr-2">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block">
+                                Segnaletica
+                            </label>
+                            <SignageArrowsDisplay :signage-data="signageArrowsData"
+                                @arrow-direction-changed="handleArrowDirectionChanged"
+                                @arrow-order-changed="handleArrowOrderChanged" />
                         </div>
                     </div>
+
+                    <!-- Footer with buttons -->
+                    <div
+                        class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-end items-center gap-4 border-t border-gray-200 dark:border-gray-600 flex-shrink-0">
+                        <button type="button" @click="closePopup"
+                            class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded font-medium cursor-pointer">
+                            Chiudi
+                        </button>
+                        <a :href="poleLink" target="_blank"
+                            class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded font-medium no-underline cursor-pointer inline-block">
+                            Vai al Palo
+                        </a>
+                    </div>
                 </div>
-            </Teleport>
-        </template>
-    </PanelItem>
+            </div>
+        </Teleport>
+    </div>
 </template>
 
 <script>
