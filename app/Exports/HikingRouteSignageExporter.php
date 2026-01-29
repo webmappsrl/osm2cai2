@@ -143,6 +143,20 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
                     continue;
                 }
 
+                // Salta il palo (e le sue frecce) se è in export_ignore per questa HikingRoute: non esportare nell'export CSV/Excel, preservando la numerazione di posizione
+                $hrProperties = $hikingRoute->properties ?? [];
+                $exportIgnorePoleIds = $hrProperties['signage']['export_ignore'] ?? [];
+                $isExportIgnored = false;
+                foreach ($exportIgnorePoleIds as $ignoredId) {
+                    if ((int) $ignoredId === (int) $pole->id || (string) $ignoredId === $poleId) {
+                        $isExportIgnored = true;
+                        break;
+                    }
+                }
+                if ($isExportIgnored) {
+                    continue;
+                }
+
                 // Segna il pole come processato
                 $processedPoles[$poleId] = true;
                 // Recupera arrow_order dal pole (contiene tutte le arrows con formato routeId-index)
