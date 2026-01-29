@@ -261,24 +261,22 @@ export default {
 
     computed: {
         geojsonUrl() {
+            let url;
             if (this.field.geojsonUrl) {
-                return this.field.geojsonUrl;
+                url = this.field.geojsonUrl;
+            } else {
+                const modelName = this.resourceName;
+                const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+                const baseUrl = `/nova-vendor/feature-collection-map/${modelName}/${id}`;
+                url = baseUrl;
+                if (this.field.demEnrichment) {
+                    url = `${baseUrl}?dem_enrichment=1`;
+                }
             }
-
-            const modelName = this.resourceName;
-            const id = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
-            const baseUrl = `/nova-vendor/feature-collection-map/${modelName}/${id}`;
-            let url = baseUrl;
-
-            if (this.field.demEnrichment) {
-                url = `${baseUrl}?dem_enrichment=1`;
-            }
-
-            // Aggiungi timestamp solo se mapKey > 0 (dopo un toggle)
+            // Cache-bust: quando mapKey cambia (dopo Aggiorna / toggle meta o escludi da export) la mappa deve ricaricare il GeoJSON
             if (this.mapKey > 0) {
                 url += `${url.includes('?') ? '&' : '?'}_t=${this.mapKey}`;
             }
-
             return url;
         },
 
