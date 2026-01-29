@@ -111,12 +111,16 @@ class SignageMapController
         if (! isset($properties['signage']['checkpoint']) || ! is_array($properties['signage']['checkpoint'])) {
             $properties['signage']['checkpoint'] = [];
         }
+        if (! isset($properties['signage']['export_ignore']) || ! is_array($properties['signage']['export_ignore'])) {
+            $properties['signage']['export_ignore'] = [];
+        }
 
-        // Ottieni l'ID del palo, l'azione (add/remove), name e description
+        // Ottieni l'ID del palo, l'azione (add/remove), name, description e flag export_ignore
         $poleId = $request->input('poleId');
         $add = $request->boolean('add');
         $name = $request->input('name');
         $description = $request->input('description');
+        $exportIgnore = $request->boolean('export_ignore');
 
         if ($poleId === null) {
             return response()->json(['error' => 'poleId is required'], 400);
@@ -140,6 +144,24 @@ class SignageMapController
         } else {
             // Rimuovi l'ID se presente (confronta sia come intero che come stringa)
             $properties['signage']['checkpoint'] = array_values(array_filter($properties['signage']['checkpoint'], function ($id) use ($poleId) {
+                return (int) $id !== $poleId && (string) $id !== (string) $poleId;
+            }));
+        }
+
+        // Aggiorna export_ignore: se true aggiungi il palo alla lista (non esportare nell'export CSV/Excel), se false rimuovilo
+        if ($exportIgnore) {
+            $exists = false;
+            foreach ($properties['signage']['export_ignore'] as $existingId) {
+                if ((int) $existingId === $poleId || (string) $existingId === (string) $poleId) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (! $exists) {
+                $properties['signage']['export_ignore'][] = $poleId;
+            }
+        } else {
+            $properties['signage']['export_ignore'] = array_values(array_filter($properties['signage']['export_ignore'], function ($id) use ($poleId) {
                 return (int) $id !== $poleId && (string) $id !== (string) $poleId;
             }));
         }
@@ -287,6 +309,7 @@ class SignageMapController
 
         // Usa lo stesso metodo di updateProperties per aggiornare l'HikingRoute
         // Crea una nuova request con l'ID dell'HikingRoute
+        $exportIgnore = $request->boolean('export_ignore');
         $hikingRouteRequest = Request::create(
             "/nova-vendor/signage-map/hiking-route/{$hikingRoute->id}/properties",
             'PATCH',
@@ -295,6 +318,7 @@ class SignageMapController
                 'add' => $add,
                 'name' => $name,
                 'description' => $description,
+                'export_ignore' => $exportIgnore,
             ]
         );
 
