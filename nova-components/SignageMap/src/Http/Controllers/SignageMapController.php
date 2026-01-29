@@ -326,6 +326,81 @@ class SignageMapController
     }
 
     /**
+     * Se la hiking route non ha checkpoint, imposta come checkpoint il primo e l'ultimo palo
+     * nell'ordine della traccia (points_order da DEM) e ricalcola le direzioni frecce.
+     * Usato quando si associa una hiking route a un SignageProject.
+     */
+    public function setDefaultCheckpointsAndRefreshDirections(HikingRoute $hikingRoute): void
+    {
+        $properties = $hikingRoute->properties ?? [];
+        if (! isset($properties['signage']) || ! is_array($properties['signage'])) {
+            $properties['signage'] = [];
+        }
+        $checkpoints = $properties['signage']['checkpoint'] ?? [];
+        if (! is_array($checkpoints)) {
+            $checkpoints = [];
+        }
+        if (! empty($checkpoints)) {
+            return;
+        }
+
+        try {
+            $geojson = $hikingRoute->getFeatureCollectionMap(false);
+            $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
+            $demClient = app(DemClient::class);
+            $geojson = $demClient->getPointMatrix($geojson);
+
+            $pointFeaturesMap = [];
+            $pointsOrder = null;
+            foreach ($geojson['features'] ?? [] as $feature) {
+                $geometryType = $feature['geometry']['type'] ?? null;
+                if ($geometryType === 'Point') {
+                    $pointId = (string) ($feature['properties']['id'] ?? null);
+                    if ($pointId) {
+                        $pointFeaturesMap[$pointId] = $feature;
+                    }
+                } elseif ($geometryType === 'MultiLineString' && $pointsOrder === null) {
+                    $pointsOrder = $feature['properties']['dem']['points_order'] ?? null;
+                }
+            }
+
+            if (! $pointsOrder || ! is_array($pointsOrder) || count($pointsOrder) < 1) {
+                Log::info('setDefaultCheckpointsAndRefreshDirections: no points_order or empty', [
+                    'hiking_route_id' => $hikingRoute->id,
+                ]);
+
+                return;
+            }
+
+            $pointsOrder = array_map('strval', $pointsOrder);
+            $firstPoleId = (int) $pointsOrder[0];
+            $lastPoleId = (int) $pointsOrder[count($pointsOrder) - 1];
+            $properties['signage']['checkpoint'] = $firstPoleId === $lastPoleId
+                ? [$firstPoleId]
+                : [$firstPoleId, $lastPoleId];
+
+            if (isset($properties['dem']) && is_array($properties['dem'])) {
+                $properties['dem']['points_order'] = $pointsOrder;
+            } else {
+                $properties['dem'] = ['points_order' => $pointsOrder];
+            }
+
+            $hikingRoute->properties = $properties;
+            $hikingRoute->saveQuietly();
+
+            $ref = $hikingRoute->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
+            $this->processPointDirections($pointFeaturesMap, $pointsOrder, $properties, $hikingRoute->id, $ref);
+            $hikingRoute->properties = $properties;
+            $hikingRoute->saveQuietly();
+        } catch (Exception $e) {
+            Log::warning('setDefaultCheckpointsAndRefreshDirections failed', [
+                'hiking_route_id' => $hikingRoute->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Mantiene solo le linee con osmfeatures_id valorizzato, preservando gli altri tipi.
      */
     private function filterLineFeaturesWithOsmfeaturesId(array $geojson): array
@@ -374,9 +449,22 @@ class SignageMapController
         $checkpointSet = array_flip($checkpoints);
         $hikingRouteIdStr = (string) $hikingRouteId;
 
+        // Trova primo e ultimo checkpoint nell'ordine della traccia
+        $firstCheckpointId = null;
+        $lastCheckpointId = null;
+        foreach ($pointsOrder as $pointId) {
+            if (isset($checkpointSet[$pointId])) {
+                if ($firstCheckpointId === null) {
+                    $firstCheckpointId = $pointId;
+                }
+                $lastCheckpointId = $pointId; // Aggiorna sempre l'ultimo checkpoint trovato
+            }
+        }
+
         // Prepara riferimenti per direzioni
-        $lastId = end($pointsOrder);
-        $firstId = reset($pointsOrder);
+        // Usa i checkpoint invece dei punti geometrici
+        $lastId = $lastCheckpointId ?? end($pointsOrder); // Fallback all'ultimo punto se non ci sono checkpoint
+        $firstId = $firstCheckpointId ?? reset($pointsOrder); // Fallback al primo punto se non ci sono checkpoint
         $pointCount = count($pointsOrder);
 
         // Carica tutti i Poles in una singola query
@@ -392,28 +480,56 @@ class SignageMapController
                 continue;
             }
 
-            // Calcola forward: prossimi 2 checkpoint + ultimo punto (se non già presente)
-            $forward = [];
-            for ($j = $i + 1; $j < $pointCount && count($forward) < 2; $j++) {
-                if (isset($checkpointSet[$pointsOrder[$j]])) {
-                    $forward[] = $pointsOrder[$j];
-                }
-            }
-            // Aggiungi l'ultimo punto solo se non è il punto corrente e non è già presente
-            if ($pointId !== $lastId && ! in_array($lastId, $forward)) {
-                $forward[] = $lastId;
-            }
+            // Verifica se ci sono checkpoint start ed end definiti
+            // Se ci sono, mostra solo quelle due mete (start e end) nelle frecce
+            $hasStartAndEnd = ($firstCheckpointId !== null && $lastCheckpointId !== null && $firstCheckpointId !== $lastCheckpointId);
 
-            // Calcola backward: precedenti 2 checkpoint + primo punto (se non già presente)
-            $backward = [];
-            for ($j = $i - 1; $j >= 0 && count($backward) < 2; $j--) {
-                if (isset($checkpointSet[$pointsOrder[$j]])) {
-                    $backward[] = $pointsOrder[$j];
+            if ($hasStartAndEnd) {
+                // CASO: Ci sono start ed end checkpoint definiti
+                // Mostra solo le due mete (start ed end) nelle frecce
+
+                // Forward: mostra solo l'ultima meta (end) se non è il punto corrente
+                $forward = [];
+                if ($lastId !== null && $pointId !== $lastId) {
+                    $forward[] = $lastId;
                 }
-            }
-            // Aggiungi il primo punto solo se non è il punto corrente e non è già presente
-            if ($pointId !== $firstId && ! in_array($firstId, $backward)) {
-                $backward[] = $firstId;
+
+                // Backward: mostra solo la prima meta (start) se non è il punto corrente
+                $backward = [];
+                if ($firstId !== null && $pointId !== $firstId) {
+                    $backward[] = $firstId;
+                }
+            } else {
+                // CASO: Non ci sono start ed end definiti, usa la logica normale
+                // Calcola forward: prossimi 2 checkpoint + ultima meta (checkpoint) (se non già presente)
+                $forward = [];
+                for ($j = $i + 1; $j < $pointCount && count($forward) < 2; $j++) {
+                    if (isset($checkpointSet[$pointsOrder[$j]])) {
+                        $forward[] = $pointsOrder[$j];
+                    }
+                }
+                // Aggiungi l'ultima meta (checkpoint) solo se:
+                // 1. Non è il punto corrente
+                // 2. Non è già presente nei prossimi checkpoint
+                // 3. Non ci sono già 2 checkpoint più vicini (per evitare di mostrare sempre l'ultima meta quando ci sono già destinazioni vicine)
+                if ($lastId !== null && $pointId !== $lastId && ! in_array($lastId, $forward) && count($forward) < 2) {
+                    $forward[] = $lastId;
+                }
+
+                // Calcola backward: precedenti 2 checkpoint + prima meta (checkpoint) (se non già presente)
+                $backward = [];
+                for ($j = $i - 1; $j >= 0 && count($backward) < 2; $j--) {
+                    if (isset($checkpointSet[$pointsOrder[$j]])) {
+                        $backward[] = $pointsOrder[$j];
+                    }
+                }
+                // Aggiungi la prima meta (checkpoint) solo se:
+                // 1. Non è il punto corrente
+                // 2. Non è già presente nei checkpoint precedenti
+                // 3. Non ci sono già 2 checkpoint più vicini (per evitare di mostrare sempre la prima meta quando ci sono già destinazioni vicine)
+                if ($firstId !== null && $pointId !== $firstId && ! in_array($firstId, $backward) && count($backward) < 2) {
+                    $backward[] = $firstId;
+                }
             }
 
             // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, name e description del palo target
