@@ -9337,18 +9337,19 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
   },
   computed: {
     geojsonUrl: function geojsonUrl() {
+      var url;
       if (this.field.geojsonUrl) {
-        return this.field.geojsonUrl;
+        url = this.field.geojsonUrl;
+      } else {
+        var modelName = this.resourceName;
+        var id = this.resourceId || this.resource && this.resource.id && this.resource.id.value;
+        var baseUrl = "/nova-vendor/feature-collection-map/".concat(modelName, "/").concat(id);
+        url = baseUrl;
+        if (this.field.demEnrichment) {
+          url = "".concat(baseUrl, "?dem_enrichment=1");
+        }
       }
-      var modelName = this.resourceName;
-      var id = this.resourceId || this.resource && this.resource.id && this.resource.id.value;
-      var baseUrl = "/nova-vendor/feature-collection-map/".concat(modelName, "/").concat(id);
-      var url = baseUrl;
-      if (this.field.demEnrichment) {
-        url = "".concat(baseUrl, "?dem_enrichment=1");
-      }
-
-      // Aggiungi timestamp solo se mapKey > 0 (dopo un toggle)
+      // Cache-bust: quando mapKey cambia (dopo Aggiorna / toggle meta o escludi da export) la mappa deve ricaricare il GeoJSON
       if (this.mapKey > 0) {
         url += "".concat(url.includes('?') ? '&' : '?', "_t=").concat(this.mapKey);
       }
