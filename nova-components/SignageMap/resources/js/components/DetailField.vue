@@ -60,8 +60,8 @@
 
         <!-- Custom Signage Popup (z-index massimo per restare sempre sopra notifiche Nova e resto della UI) -->
         <Teleport to="body">
-            <div v-if="showPopup" class="signage-popup-overlay fixed inset-0 flex items-center justify-center p-4" role="dialog"
-                aria-modal="true">
+            <div v-if="showPopup" class="signage-popup-overlay fixed inset-0 flex items-center justify-center p-4"
+                role="dialog" aria-modal="true">
                 <!-- Backdrop -->
                 <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75" @click="closePopup"></div>
 
@@ -633,11 +633,8 @@ export default {
             }
             // Cambia solo il valore locale, il salvataggio avviene tramite il bottone Aggiorna
             this.metaValue = !this.metaValue;
-            // Se si disattiva Meta, resetta name e description
-            if (!this.metaValue) {
-                this.name = '';
-                this.description = '';
-            }
+            // Non resettare name/description quando si disattiva Meta: così se l'utente riattiva Meta
+            // i campi sono ancora compilati e il pulsante Aggiorna resta abilitato
         },
 
         toggleIgnore() {
@@ -818,8 +815,13 @@ export default {
                         return;
                     }
 
-                    // Salva per tutte le HikingRoute selezionate
-                    const promises = hikingRouteIds.map(hikingRouteId => {
+                    // HikingRoute deselezionate: rimuovi il palo da checkpoint (add: false)
+                    const selectedIdsSet = new Set(hikingRouteIds);
+                    const deselectedRouteIds = this.availableHikingRoutes
+                        .map(hr => hr.id)
+                        .filter(id => !selectedIdsSet.has(id));
+
+                    const promisesAdd = hikingRouteIds.map(hikingRouteId => {
                         const endpoint = `/nova-vendor/signage-map/hiking-route/${hikingRouteId}/properties`;
                         return Nova.request().patch(
                             endpoint,
@@ -833,10 +835,21 @@ export default {
                         );
                     });
 
-                    const responses = await Promise.all(promises);
+                    const promisesRemove = deselectedRouteIds.map(hikingRouteId => {
+                        const endpoint = `/nova-vendor/signage-map/hiking-route/${hikingRouteId}/properties`;
+                        return Nova.request().patch(
+                            endpoint,
+                            {
+                                poleId: poleId,
+                                add: false
+                            }
+                        );
+                    });
 
-                    // Aggiorna la cache con le properties dell'ultima risposta (o combina se necessario)
-                    const lastResponse = responses.length > 0 ? responses[responses.length - 1] : null;
+                    const responses = await Promise.all([...promisesAdd, ...promisesRemove]);
+
+                    // Aggiorna la cache con le properties dell'ultima risposta "add" (le remove potrebbero avere properties diverse)
+                    const lastResponse = promisesAdd.length > 0 ? responses[promisesAdd.length - 1] : (responses.length > 0 ? responses[0] : null);
                     if (lastResponse?.data?.properties) {
                         this.cachedProperties = lastResponse.data.properties;
                     }
