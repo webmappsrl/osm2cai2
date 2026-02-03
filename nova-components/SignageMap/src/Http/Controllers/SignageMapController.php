@@ -480,62 +480,42 @@ class SignageMapController
                 continue;
             }
 
-            // Verifica se ci sono checkpoint start ed end definiti
-            // Se ci sono, mostra solo quelle due mete (start e end) nelle frecce
-            $hasStartAndEnd = ($firstCheckpointId !== null && $lastCheckpointId !== null && $firstCheckpointId !== $lastCheckpointId);
+            // Normalizza le chiavi della matrice a stringhe per evitare problemi di tipo
+            $normalizedMatrix = [];
+            foreach ($hikingRouteMatrix as $key => $value) {
+                $normalizedMatrix[(string) $key] = $value;
+            }
+            $hikingRouteMatrix = $normalizedMatrix;
 
-            if ($hasStartAndEnd) {
-                // CASO: Ci sono start ed end checkpoint definiti
-                // Mostra solo le due mete (start ed end) nelle frecce
+            // Forward: max 3 righe. Riga 1 = meta più vicina, 2 = intermedia, 3 = meta finale (sempre presente se non siamo alla fine)
+            $forward = [];
+            for ($j = $i + 1; $j < $pointCount && count($forward) < 2; $j++) {
+                if (isset($checkpointSet[$pointsOrder[$j]])) {
+                    $forward[] = $pointsOrder[$j];
+                }
+            }
+            // Aggiungi sempre la meta finale come ultima riga (se non già presente)
+            if ($lastId !== null && $pointId !== $lastId && ! in_array($lastId, $forward)) {
+                $forward[] = $lastId;
+            }
 
-                // Forward: mostra solo l'ultima meta (end) se non è il punto corrente
-                $forward = [];
-                if ($lastId !== null && $pointId !== $lastId) {
-                    $forward[] = $lastId;
+            // Backward: max 3 righe. Riga 1 = meta più vicina indietro, 2 = intermedia, 3 = partenza (sempre presente se non siamo all'inizio)
+            $backward = [];
+            for ($j = $i - 1; $j >= 0 && count($backward) < 2; $j--) {
+                if (isset($checkpointSet[$pointsOrder[$j]])) {
+                    $backward[] = $pointsOrder[$j];
                 }
-
-                // Backward: mostra solo la prima meta (start) se non è il punto corrente
-                $backward = [];
-                if ($firstId !== null && $pointId !== $firstId) {
-                    $backward[] = $firstId;
-                }
-            } else {
-                // CASO: Non ci sono start ed end definiti, usa la logica normale
-                // Calcola forward: prossimi 2 checkpoint + ultima meta (checkpoint) (se non già presente)
-                $forward = [];
-                for ($j = $i + 1; $j < $pointCount && count($forward) < 2; $j++) {
-                    if (isset($checkpointSet[$pointsOrder[$j]])) {
-                        $forward[] = $pointsOrder[$j];
-                    }
-                }
-                // Aggiungi l'ultima meta (checkpoint) solo se:
-                // 1. Non è il punto corrente
-                // 2. Non è già presente nei prossimi checkpoint
-                // 3. Non ci sono già 2 checkpoint più vicini (per evitare di mostrare sempre l'ultima meta quando ci sono già destinazioni vicine)
-                if ($lastId !== null && $pointId !== $lastId && ! in_array($lastId, $forward) && count($forward) < 2) {
-                    $forward[] = $lastId;
-                }
-
-                // Calcola backward: precedenti 2 checkpoint + prima meta (checkpoint) (se non già presente)
-                $backward = [];
-                for ($j = $i - 1; $j >= 0 && count($backward) < 2; $j--) {
-                    if (isset($checkpointSet[$pointsOrder[$j]])) {
-                        $backward[] = $pointsOrder[$j];
-                    }
-                }
-                // Aggiungi la prima meta (checkpoint) solo se:
-                // 1. Non è il punto corrente
-                // 2. Non è già presente nei checkpoint precedenti
-                // 3. Non ci sono già 2 checkpoint più vicini (per evitare di mostrare sempre la prima meta quando ci sono già destinazioni vicine)
-                if ($firstId !== null && $pointId !== $firstId && ! in_array($firstId, $backward) && count($backward) < 2) {
-                    $backward[] = $firstId;
-                }
+            }
+            // Aggiungi sempre la partenza come ultima riga (se non già presente)
+            if ($firstId !== null && $pointId !== $firstId && ! in_array($firstId, $backward)) {
+                $backward[] = $firstId;
             }
 
             // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, name e description del palo target
             $forwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
-                    $data = $hikingRouteMatrix[$id] ?? null;
+                    // Cerca nella matrice normalizzata (chiavi sempre stringhe)
+                    $data = $hikingRouteMatrix[(string) $id] ?? null;
                     if (! $data) {
                         return null;
                     }
@@ -559,7 +539,8 @@ class SignageMapController
             )));
             $backwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
-                    $data = $hikingRouteMatrix[$id] ?? null;
+                    // Cerca nella matrice normalizzata (chiavi sempre stringhe)
+                    $data = $hikingRouteMatrix[(string) $id] ?? null;
                     if (! $data) {
                         return null;
                     }
