@@ -58,9 +58,9 @@
                 @popup-open="handlePopupOpen" @popup-close="handlePopupClose" />
         </div>
 
-        <!-- Custom Signage Popup -->
+        <!-- Custom Signage Popup (z-index massimo per restare sempre sopra notifiche Nova e resto della UI) -->
         <Teleport to="body">
-            <div v-if="showPopup" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" role="dialog"
+            <div v-if="showPopup" class="signage-popup-overlay fixed inset-0 flex items-center justify-center p-4" role="dialog"
                 aria-modal="true">
                 <!-- Backdrop -->
                 <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75" @click="closePopup"></div>
@@ -836,8 +836,13 @@ export default {
                     const responses = await Promise.all(promises);
 
                     // Aggiorna la cache con le properties dell'ultima risposta (o combina se necessario)
-                    if (responses.length > 0 && responses[responses.length - 1].data && responses[responses.length - 1].data.properties) {
-                        this.cachedProperties = responses[responses.length - 1].data.properties;
+                    const lastResponse = responses.length > 0 ? responses[responses.length - 1] : null;
+                    if (lastResponse?.data?.properties) {
+                        this.cachedProperties = lastResponse.data.properties;
+                    }
+                    // Aggiorna le frecce segnaletica nel popup senza dover chiudere/riaprire
+                    if (lastResponse?.data?.poleSignage) {
+                        this.signageArrowsData = { ...this.signageArrowsData, ...lastResponse.data.poleSignage };
                     }
 
                     const count = hikingRouteIds.length;
@@ -872,8 +877,12 @@ export default {
                     );
 
                     // Aggiorna la cache con le properties aggiornate dalla risposta
-                    if (response.data && response.data.properties) {
+                    if (response.data?.properties) {
                         this.cachedProperties = response.data.properties;
+                    }
+                    // Aggiorna le frecce segnaletica nel popup senza dover chiudere/riaprire
+                    if (response.data?.poleSignage) {
+                        this.signageArrowsData = { ...this.signageArrowsData, ...response.data.poleSignage };
                     }
 
                     Nova.success(this.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
@@ -976,6 +985,11 @@ export default {
 </script>
 
 <style scoped>
+/* z-index massimo (max 32-bit) così il popup resta sempre sopra notifiche Nova e qualsiasi altro elemento */
+.signage-popup-overlay {
+    z-index: 2147483647;
+}
+
 .signage-map-legend {
     position: absolute;
     bottom: 12px;
