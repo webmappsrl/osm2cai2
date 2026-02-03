@@ -9933,7 +9933,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
     saveChanges: function saveChanges() {
       var _this5 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-        var poleId, modelName, hikingRouteId, hikingRouteIds, autoHikingRouteId, promises, responses, count, _this5$description2, endpoint, response, _error$response, _t2;
+        var poleId, modelName, hikingRouteId, _lastResponse$data, _lastResponse$data2, hikingRouteIds, autoHikingRouteId, promises, responses, lastResponse, count, _this5$description2, _response$data3, _response$data4, endpoint, response, _error$response, _t2;
         return _regenerator().w(function (_context4) {
           while (1) switch (_context4.p = _context4.n) {
             case 0:
@@ -10017,8 +10017,13 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
             case 8:
               responses = _context4.v;
               // Aggiorna la cache con le properties dell'ultima risposta (o combina se necessario)
-              if (responses.length > 0 && responses[responses.length - 1].data && responses[responses.length - 1].data.properties) {
-                _this5.cachedProperties = responses[responses.length - 1].data.properties;
+              lastResponse = responses.length > 0 ? responses[responses.length - 1] : null;
+              if (lastResponse !== null && lastResponse !== void 0 && (_lastResponse$data = lastResponse.data) !== null && _lastResponse$data !== void 0 && _lastResponse$data.properties) {
+                _this5.cachedProperties = lastResponse.data.properties;
+              }
+              // Aggiorna le frecce segnaletica nel popup senza dover chiudere/riaprire
+              if (lastResponse !== null && lastResponse !== void 0 && (_lastResponse$data2 = lastResponse.data) !== null && _lastResponse$data2 !== void 0 && _lastResponse$data2.poleSignage) {
+                _this5.signageArrowsData = _objectSpread(_objectSpread({}, _this5.signageArrowsData), lastResponse.data.poleSignage);
               }
               count = hikingRouteIds.length;
               Nova.success(_this5.metaValue ? "Dati localit\xE0 salvati con successo per ".concat(count, " HikingRoute").concat(count > 1 ? '' : '') : "Meta rimossa con successo da ".concat(count, " HikingRoute").concat(count > 1 ? '' : ''));
@@ -10048,8 +10053,12 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
             case 11:
               response = _context4.v;
               // Aggiorna la cache con le properties aggiornate dalla risposta
-              if (response.data && response.data.properties) {
+              if ((_response$data3 = response.data) !== null && _response$data3 !== void 0 && _response$data3.properties) {
                 _this5.cachedProperties = response.data.properties;
+              }
+              // Aggiorna le frecce segnaletica nel popup senza dover chiudere/riaprire
+              if ((_response$data4 = response.data) !== null && _response$data4 !== void 0 && _response$data4.poleSignage) {
+                _this5.signageArrowsData = _objectSpread(_objectSpread({}, _this5.signageArrowsData), response.data.poleSignage);
               }
               Nova.success(_this5.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
             case 12:
@@ -10075,7 +10084,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
     handleArrowDirectionChanged: function handleArrowDirectionChanged(event) {
       var _this6 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-        var _response$data3, _response$data4, poleId, response, _error$response2, _t3;
+        var _response$data5, _response$data6, poleId, response, _error$response2, _t3;
         return _regenerator().w(function (_context5) {
           while (1) switch (_context5.p = _context5.n) {
             case 0:
@@ -10165,7 +10174,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
                   location: 'DetailField.vue:handleArrowDirectionChanged',
                   message: 'Risposta API ricevuta',
                   data: {
-                    success: (_response$data3 = response.data) === null || _response$data3 === void 0 ? void 0 : _response$data3.success,
+                    success: (_response$data5 = response.data) === null || _response$data5 === void 0 ? void 0 : _response$data5.success,
                     status: response.status
                   },
                   timestamp: Date.now(),
@@ -10177,7 +10186,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               // #endregion
 
               // Aggiorna i dati locali con la nuova direzione
-              if ((_response$data4 = response.data) !== null && _response$data4 !== void 0 && _response$data4.signageData) {
+              if ((_response$data6 = response.data) !== null && _response$data6 !== void 0 && _response$data6.signageData) {
                 _this6.signageArrowsData = response.data.signageData;
                 // #region agent log
                 fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
@@ -10239,7 +10248,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
     handleArrowOrderChanged: function handleArrowOrderChanged(event) {
       var _this7 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
-        var _response$data5, poleId, response, _t4;
+        var _response$data7, poleId, response, _t4;
         return _regenerator().w(function (_context6) {
           while (1) switch (_context6.p = _context6.n) {
             case 0:
@@ -10259,7 +10268,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               });
             case 2:
               response = _context6.v;
-              if ((_response$data5 = response.data) !== null && _response$data5 !== void 0 && _response$data5.signageData) {
+              if ((_response$data7 = response.data) !== null && _response$data7 !== void 0 && _response$data7.signageData) {
                 _this7.signageArrowsData = response.data.signageData;
               }
               Nova.success('Ordine frecce aggiornato con successo');
@@ -10651,7 +10660,7 @@ var _hoisted_6 = {
 };
 var _hoisted_7 = {
   key: 0,
-  "class": "fixed inset-0 z-[9999] flex items-center justify-center p-4",
+  "class": "signage-popup-overlay fixed inset-0 flex items-center justify-center p-4",
   role: "dialog",
   "aria-modal": "true"
 };
@@ -10759,7 +10768,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "get-additional-point-styles": $options.getAdditionalPointStyles,
     onPopupOpen: $options.handlePopupOpen,
     onPopupClose: $options.handlePopupClose
-  }, null, 8 /* PROPS */, ["geojson-url", "height", "show-zoom-controls", "mouse-wheel-zoom", "drag-pan", "get-additional-point-styles", "onPopupOpen", "onPopupClose"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Custom Signage Popup "), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Teleport, {
+  }, null, 8 /* PROPS */, ["geojson-url", "height", "show-zoom-controls", "mouse-wheel-zoom", "drag-pan", "get-additional-point-styles", "onPopupOpen", "onPopupClose"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Custom Signage Popup (z-index massimo per restare sempre sopra notifiche Nova e resto della UI) "), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Teleport, {
     to: "body"
   }, [$data.showPopup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Backdrop "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75",
@@ -11850,7 +11859,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.signage-map-legend[data-v-0224618e] {\n    position: absolute;\n    bottom: 12px;\n    left: 12px;\n    z-index: 1000;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid #e2e8f0;\n    border-radius: 6px;\n    padding: 10px 12px;\n    font-size: 12px;\n    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.signage-map-legend-title[data-v-0224618e] {\n    font-weight: 600;\n    margin-bottom: 8px;\n    color: #334155;\n}\n.signage-map-legend-row[data-v-0224618e] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    margin-bottom: 4px;\n}\n.signage-map-legend-row[data-v-0224618e]:last-child {\n    margin-bottom: 0;\n}\n.signage-map-legend-symbol[data-v-0224618e],\n.signage-map-legend-line[data-v-0224618e] {\n    flex-shrink: 0;\n}\n.signage-map-legend-label[data-v-0224618e] {\n    color: #475569;\n}\n\n/* Palo: cerchio rosso, bordo bianco */\n.signage-map-legend-pole[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta: cerchio arancione, bordo bianco */\n.signage-map-legend-checkpoint[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta (più percorsi): cerchio arancione con anello multicolore */\n.signage-map-legend-checkpoint-multi[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 3px #3b82f6, 0 0 0 4px #fff, 0 0 0 5.5px #22c55e;\n}\n\n/* Escluso da export: cerchio con X */\n/* Escluso da export: solo X (senza tondino) */\n.signage-map-legend-export-ignore[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    position: relative;\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::before,\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 10px;\n    height: 2px;\n    background: #c00;\n    transform: translate(-50%, -50%) rotate(45deg);\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    transform: translate(-50%, -50%) rotate(-45deg);\n}\n\n/* Proposto: cerchio con punto bianco interno */\n.signage-map-legend-proposed[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    position: relative;\n}\n.signage-map-legend-proposed[data-v-0224618e]::before {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 6px;\n    height: 6px;\n    margin: -3px 0 0 -3px;\n    border-radius: 50%;\n    background: #fff;\n}\n\n/* OSM2CAI/OSM percorso: linea blu */\n.signage-map-legend-line.signage-map-legend-route[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 4px;\n    background: blue;\n    border-radius: 2px;\n}\n\n/* Percorso caricato dall'utente: linea rossa (solo per HikingRoute) */\n.signage-map-legend-line.signage-map-legend-unchecked[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 3px;\n    background: red;\n    border-radius: 2px;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* z-index massimo (max 32-bit) così il popup resta sempre sopra notifiche Nova e qualsiasi altro elemento */\n.signage-popup-overlay[data-v-0224618e] {\n    z-index: 2147483647;\n}\n.signage-map-legend[data-v-0224618e] {\n    position: absolute;\n    bottom: 12px;\n    left: 12px;\n    z-index: 1000;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid #e2e8f0;\n    border-radius: 6px;\n    padding: 10px 12px;\n    font-size: 12px;\n    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.signage-map-legend-title[data-v-0224618e] {\n    font-weight: 600;\n    margin-bottom: 8px;\n    color: #334155;\n}\n.signage-map-legend-row[data-v-0224618e] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    margin-bottom: 4px;\n}\n.signage-map-legend-row[data-v-0224618e]:last-child {\n    margin-bottom: 0;\n}\n.signage-map-legend-symbol[data-v-0224618e],\n.signage-map-legend-line[data-v-0224618e] {\n    flex-shrink: 0;\n}\n.signage-map-legend-label[data-v-0224618e] {\n    color: #475569;\n}\n\n/* Palo: cerchio rosso, bordo bianco */\n.signage-map-legend-pole[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta: cerchio arancione, bordo bianco */\n.signage-map-legend-checkpoint[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);\n}\n\n/* Meta (più percorsi): cerchio arancione con anello multicolore */\n.signage-map-legend-checkpoint-multi[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    border-radius: 50%;\n    background: rgb(255, 160, 0);\n    border: 2px solid #fff;\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 3px #3b82f6, 0 0 0 4px #fff, 0 0 0 5.5px #22c55e;\n}\n\n/* Escluso da export: cerchio con X */\n/* Escluso da export: solo X (senza tondino) */\n.signage-map-legend-export-ignore[data-v-0224618e] {\n    display: inline-block;\n    width: 16px;\n    height: 16px;\n    position: relative;\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::before,\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 10px;\n    height: 2px;\n    background: #c00;\n    transform: translate(-50%, -50%) rotate(45deg);\n}\n.signage-map-legend-export-ignore[data-v-0224618e]::after {\n    transform: translate(-50%, -50%) rotate(-45deg);\n}\n\n/* Proposto: cerchio con punto bianco interno */\n.signage-map-legend-proposed[data-v-0224618e] {\n    display: inline-block;\n    width: 14px;\n    height: 14px;\n    border-radius: 50%;\n    background: rgba(255, 0, 0, 0.8);\n    border: 2px solid #fff;\n    position: relative;\n}\n.signage-map-legend-proposed[data-v-0224618e]::before {\n    content: '';\n    position: absolute;\n    left: 50%;\n    top: 50%;\n    width: 6px;\n    height: 6px;\n    margin: -3px 0 0 -3px;\n    border-radius: 50%;\n    background: #fff;\n}\n\n/* OSM2CAI/OSM percorso: linea blu */\n.signage-map-legend-line.signage-map-legend-route[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 4px;\n    background: blue;\n    border-radius: 2px;\n}\n\n/* Percorso caricato dall'utente: linea rossa (solo per HikingRoute) */\n.signage-map-legend-line.signage-map-legend-unchecked[data-v-0224618e] {\n    display: inline-block;\n    width: 24px;\n    height: 3px;\n    background: red;\n    border-radius: 2px;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
