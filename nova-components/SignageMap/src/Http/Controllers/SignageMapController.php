@@ -235,9 +235,14 @@ class SignageMapController
         $hikingRoute->properties = $properties;
         $hikingRoute->saveQuietly();
 
+        // Ricarica il palo per restituire la segnaletica aggiornata (così il frontend può aggiornare le frecce senza chiudere il popup)
+        $pole = Poles::find($poleId);
+        $poleSignage = $pole ? ($pole->properties['signage'] ?? []) : [];
+
         return response()->json([
             'success' => true,
             'properties' => $hikingRoute->properties,
+            'poleSignage' => $poleSignage,
         ]);
     }
 
