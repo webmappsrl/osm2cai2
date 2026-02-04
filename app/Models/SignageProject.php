@@ -568,7 +568,8 @@ class SignageProject extends Polygon
 
                 // Genera le features per i poles usando i dati batch e geometrie pre-convertite
                 $checkpointPoleIds = ($hrProperties['signage']['checkpoint'] ?? []);
-                $poleFeatures = $polesForThisRoute->map(function ($pole) use ($checkpointPoleIds, $hrId, $polesGeoJsonMap) {
+                $exportIgnorePoleIds = ($hrProperties['signage']['export_ignore'] ?? []);
+                $poleFeatures = $polesForThisRoute->map(function ($pole) use ($checkpointPoleIds, $exportIgnorePoleIds, $hrId, $polesGeoJsonMap) {
                     // OTTIMIZZAZIONE: Usa geometria pre-convertita invece di chiamare getFeatureMap() per ogni pole
                     // Questo elimina migliaia di query PostGIS individuali
                     $geojson = $polesGeoJsonMap[$pole->id] ?? null;
@@ -591,6 +592,19 @@ class SignageProject extends Polygon
                         $osmTags = $pole->osmfeatures_data['properties']['osm_tags'];
                     }
 
+                    $isExportIgnored = false;
+                    foreach ($exportIgnorePoleIds as $ignoredId) {
+                        if ((int) $ignoredId === (int) $pole->id || (string) $ignoredId === (string) $pole->id) {
+                            $isExportIgnored = true;
+                            break;
+                        }
+                    }
+
+                    $isProposed = $osmTags && (
+                        ($osmTags['lifecycle'] ?? null) === 'proposed'
+                        || ($osmTags['proposed'] ?? null) === 'yes'
+                    );
+
                     $properties = [
                         'id' => $pole->id,
                         'name' => $pole->name ?? '',
@@ -605,6 +619,8 @@ class SignageProject extends Polygon
                         'pointRadius' => $isCheckpoint ? self::CHECKPOINT_RADIUS : self::POINT_RADIUS,
                         'signage' => $pole->properties['signage'] ?? [],
                         'osmTags' => $osmTags,
+                        'exportIgnore' => $isExportIgnored,
+                        'proposed' => $isProposed,
                     ];
                     $poleFeature['properties'] = $properties;
 
@@ -699,6 +715,13 @@ class SignageProject extends Polygon
 
                                 $poleIdKey = (string) $poleId;
 
+                                // Segna exportIgnore se questo palo è in export_ignore per questa route
+                                $isExportIgnoredForThisRoute = in_array($poleId, $exportIgnorePoleIds = ($hrProperties['signage']['export_ignore'] ?? []))
+                                    || in_array((string) $poleId, array_map('strval', $exportIgnorePoleIds));
+                                if ($isExportIgnoredForThisRoute) {
+                                    $feature['properties']['exportIgnore'] = true;
+                                }
+
                                 // Se il palo non esiste ancora, aggiungilo
                                 if (!isset($polesMap[$poleIdKey])) {
                                     // Inizializza l'array delle HikingRoute associate a questo palo
@@ -728,6 +751,10 @@ class SignageProject extends Polygon
                                     // Aggiungi l'ID dell'HikingRoute se non è già presente
                                     if (!in_array($hrId, $polesMap[$poleIdKey]['properties']['hikingRouteIds'])) {
                                         $polesMap[$poleIdKey]['properties']['hikingRouteIds'][] = $hrId;
+                                    }
+                                    // Mantieni exportIgnore true se era già true o se questa route lo ha
+                                    if (!empty($feature['properties']['exportIgnore'])) {
+                                        $polesMap[$poleIdKey]['properties']['exportIgnore'] = true;
                                     }
 
                                     // Unisci le informazioni mantenendo la priorità al checkpoint
