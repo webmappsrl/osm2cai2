@@ -27,7 +27,7 @@ class Itinerary extends Resource
         return $this->name;
     }
 
-    public static $perPageViaRelationshipOptions = 50;
+    public static $perPageViaRelationship = 50;
 
     public static function label()
     {
