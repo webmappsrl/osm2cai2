@@ -512,27 +512,40 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
 
     /**
      * Recupera il description da destination o dal pole
+     * 
+     * Se viene passata una destination specifica, restituisce solo la description della destination.
+     * Non usa il fallback dal pole per evitare di mostrare descrizioni non pertinenti.
      */
     protected function getDescription(Poles $pole, array $destination = []): string
     {
-        // Prima cerca nel destination (se presente)
-        if (! empty($destination['description'])) {
-            return $destination['description'];
+        // Se viene passata una destination (anche vuota), restituisci solo la description della destination
+        // Non usare il fallback dal pole per evitare di mostrare descrizioni non pertinenti alla meta
+        if (isset($destination['description'])) {
+            return (string) $destination['description'];
         }
 
-        // Altrimenti cerca nelle properties del pole
-        $poleProperties = $pole->properties ?? [];
-
-        return $poleProperties['description'] ?? '';
+        // Se la destination non ha description, restituisci stringa vuota
+        return '';
     }
 
     /**
      * Costruisce la prima riga (Meta/Ore)
+     * 
+     * Ogni colonna "Meta N" contiene i dati della riga N (row N) dell'array $destinations.
+     * Quindi: Meta 1 = row 1 (indice 0), Meta 2 = row 2 (indice 1), Meta 3 = row 3 (indice 2)
+     * Se una riga non esiste, Meta N deve essere vuota (non usare fallback dal pole)
      */
     protected function buildFirstRow(array $hrData, ?string $ldpN, ?string $tabN, string $direction, array $destinations, string $codiceLdp, Poles $pole): array
     {
         $dir = $direction === 'forward' ? 'D' : 'S';
         $poleHyperlink = $this->createPoleHyperlink($pole);
+
+        // Meta 1 = row 1 (indice 0)
+        $row1 = isset($destinations[0]) ? $destinations[0] : null;
+        // Meta 2 = row 2 (indice 1)
+        $row2 = isset($destinations[1]) ? $destinations[1] : null;
+        // Meta 3 = row 3 (indice 2)
+        $row3 = isset($destinations[2]) ? $destinations[2] : null;
 
         return [
             $poleHyperlink, // ID Pole (link cliccabile)
@@ -542,12 +555,12 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
             $tabN, // tab n.
             $hrData['ref'], // Sentiero
             '', // Logo lungo it
-            $this->getName($pole, $destinations[0] ?? []), // Meta 1
-            $this->formatTime($destinations[0]['time_hiking'] ?? null), // Ore 1
-            $this->getName($pole, $destinations[1] ?? []), // Meta 2
-            $this->formatTime($destinations[1]['time_hiking'] ?? null), // Ore 2
-            $this->getName($pole, $destinations[2] ?? []), // Meta 3
-            $this->formatTime($destinations[2]['time_hiking'] ?? null), // Ore 3
+            $row1 !== null ? $this->getName($pole, $row1) : '', // Meta 1 (row 1)
+            $row1 !== null ? $this->formatTime($row1['time_hiking'] ?? null) : '', // Ore 1 (row 1)
+            $row2 !== null ? $this->getName($pole, $row2) : '', // Meta 2 (row 2)
+            $row2 !== null ? $this->formatTime($row2['time_hiking'] ?? null) : '', // Ore 2 (row 2)
+            $row3 !== null ? $this->getName($pole, $row3) : '', // Meta 3 (row 3)
+            $row3 !== null ? $this->formatTime($row3['time_hiking'] ?? null) : '', // Ore 3 (row 3)
             $dir, // Dir.
             '', // Località 1
             '', // Località 2
@@ -558,9 +571,20 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
 
     /**
      * Costruisce la seconda riga (Info/Km)
+     * 
+     * Ogni colonna "Info meta N" e "Km N" contiene i dati della riga N (row N) dell'array $destinations.
+     * Quindi: Info meta 1 = row 1 (indice 0), Info meta 2 = row 2 (indice 1), Info meta 3 = row 3 (indice 2)
+     * Se una riga non esiste, Info meta N e Km N devono essere vuoti (non usare fallback dal pole)
      */
     protected function buildSecondRow(array $destinations, array $coordinates, string $codiceTabella, Poles $pole): array
     {
+        // Info meta 1 = row 1 (indice 0)
+        $row1 = isset($destinations[0]) ? $destinations[0] : null;
+        // Info meta 2 = row 2 (indice 1)
+        $row2 = isset($destinations[1]) ? $destinations[1] : null;
+        // Info meta 3 = row 3 (indice 2)
+        $row3 = isset($destinations[2]) ? $destinations[2] : null;
+
         return [
             '', // ID Pole (vuoto nella seconda riga)
             '', // Soggetto finanziatore
@@ -569,12 +593,12 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
             '', // Logo 1 meta 2
             '', // Logo 2 meta 2
             '', // Logo 1 meta 3
-            $this->getDescription($pole, $destinations[0] ?? []), // Info meta 1
-            $this->formatDistance($destinations[0]['distance'] ?? null), // Km 1
-            $this->getDescription($pole, $destinations[1] ?? []), // Info meta 2
-            $this->formatDistance($destinations[1]['distance'] ?? null), // Km 2
-            $this->getDescription($pole, $destinations[2] ?? []), // Info meta 3
-            $this->formatDistance($destinations[2]['distance'] ?? null), // Km 3
+            $row1 !== null ? $this->getDescription($pole, $row1) : '', // Info meta 1 (row 1)
+            $row1 !== null ? $this->formatDistance($row1['distance'] ?? null) : '', // Km 1 (row 1)
+            $row2 !== null ? $this->getDescription($pole, $row2) : '', // Info meta 2 (row 2)
+            $row2 !== null ? $this->formatDistance($row2['distance'] ?? null) : '', // Km 2 (row 2)
+            $row3 !== null ? $this->getDescription($pole, $row3) : '', // Info meta 3 (row 3)
+            $row3 !== null ? $this->formatDistance($row3['distance'] ?? null) : '', // Km 3 (row 3)
             '', // Logo 2 meta 3
             $coordinates['latitude'], // Latutudine
             $coordinates['longitude'], // Longitudine
