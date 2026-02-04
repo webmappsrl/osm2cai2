@@ -30,7 +30,7 @@ class SignageProject extends AbstractGeometryResource
      *
      * @var int
      */
-    public static $perPageViaRelationship = 25;
+    public static $perPageViaRelationshipOptions = 25;
 
     /**
      * Build an "index" query for the given resource.

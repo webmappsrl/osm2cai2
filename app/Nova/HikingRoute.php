@@ -83,6 +83,13 @@ class HikingRoute extends OsmfeaturesResource
         'osmfeatures_data->properties->osm_id',
     ];
 
+    /**
+     * The pagination per-page options used by the resource via relationships.
+     *
+     * @var int
+     */
+    public static $perPageViaRelationshipOptions = 25;
+
     public function title()
     {
         $supplementaryString = ' - ';
