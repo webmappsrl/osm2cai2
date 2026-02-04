@@ -111,12 +111,16 @@ class SignageMapController
         if (! isset($properties['signage']['checkpoint']) || ! is_array($properties['signage']['checkpoint'])) {
             $properties['signage']['checkpoint'] = [];
         }
+        if (! isset($properties['signage']['export_ignore']) || ! is_array($properties['signage']['export_ignore'])) {
+            $properties['signage']['export_ignore'] = [];
+        }
 
-        // Ottieni l'ID del palo, l'azione (add/remove), name e description
+        // Ottieni l'ID del palo, l'azione (add/remove), name, description e flag export_ignore
         $poleId = $request->input('poleId');
         $add = $request->boolean('add');
         $name = $request->input('name');
         $description = $request->input('description');
+        $exportIgnore = $request->boolean('export_ignore');
 
         if ($poleId === null) {
             return response()->json(['error' => 'poleId is required'], 400);
@@ -140,6 +144,24 @@ class SignageMapController
         } else {
             // Rimuovi l'ID se presente (confronta sia come intero che come stringa)
             $properties['signage']['checkpoint'] = array_values(array_filter($properties['signage']['checkpoint'], function ($id) use ($poleId) {
+                return (int) $id !== $poleId && (string) $id !== (string) $poleId;
+            }));
+        }
+
+        // Aggiorna export_ignore: se true aggiungi il palo alla lista (non esportare nell'export CSV/Excel), se false rimuovilo
+        if ($exportIgnore) {
+            $exists = false;
+            foreach ($properties['signage']['export_ignore'] as $existingId) {
+                if ((int) $existingId === $poleId || (string) $existingId === (string) $poleId) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (! $exists) {
+                $properties['signage']['export_ignore'][] = $poleId;
+            }
+        } else {
+            $properties['signage']['export_ignore'] = array_values(array_filter($properties['signage']['export_ignore'], function ($id) use ($poleId) {
                 return (int) $id !== $poleId && (string) $id !== (string) $poleId;
             }));
         }
@@ -213,9 +235,14 @@ class SignageMapController
         $hikingRoute->properties = $properties;
         $hikingRoute->saveQuietly();
 
+        // Ricarica il palo per restituire la segnaletica aggiornata (così il frontend può aggiornare le frecce senza chiudere il popup)
+        $pole = Poles::find($poleId);
+        $poleSignage = $pole ? ($pole->properties['signage'] ?? []) : [];
+
         return response()->json([
             'success' => true,
             'properties' => $hikingRoute->properties,
+            'poleSignage' => $poleSignage,
         ]);
     }
 
@@ -287,6 +314,7 @@ class SignageMapController
 
         // Usa lo stesso metodo di updateProperties per aggiornare l'HikingRoute
         // Crea una nuova request con l'ID dell'HikingRoute
+        $exportIgnore = $request->boolean('export_ignore');
         $hikingRouteRequest = Request::create(
             "/nova-vendor/signage-map/hiking-route/{$hikingRoute->id}/properties",
             'PATCH',
@@ -295,10 +323,86 @@ class SignageMapController
                 'add' => $add,
                 'name' => $name,
                 'description' => $description,
+                'export_ignore' => $exportIgnore,
             ]
         );
 
         return $this->updateProperties($hikingRouteRequest, $hikingRoute->id);
+    }
+
+    /**
+     * Se la hiking route non ha checkpoint, imposta come checkpoint il primo e l'ultimo palo
+     * nell'ordine della traccia (points_order da DEM) e ricalcola le direzioni frecce.
+     * Usato quando si associa una hiking route a un SignageProject.
+     */
+    public function setDefaultCheckpointsAndRefreshDirections(HikingRoute $hikingRoute): void
+    {
+        $properties = $hikingRoute->properties ?? [];
+        if (! isset($properties['signage']) || ! is_array($properties['signage'])) {
+            $properties['signage'] = [];
+        }
+        $checkpoints = $properties['signage']['checkpoint'] ?? [];
+        if (! is_array($checkpoints)) {
+            $checkpoints = [];
+        }
+        if (! empty($checkpoints)) {
+            return;
+        }
+
+        try {
+            $geojson = $hikingRoute->getFeatureCollectionMap(false);
+            $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
+            $demClient = app(DemClient::class);
+            $geojson = $demClient->getPointMatrix($geojson);
+
+            $pointFeaturesMap = [];
+            $pointsOrder = null;
+            foreach ($geojson['features'] ?? [] as $feature) {
+                $geometryType = $feature['geometry']['type'] ?? null;
+                if ($geometryType === 'Point') {
+                    $pointId = (string) ($feature['properties']['id'] ?? null);
+                    if ($pointId) {
+                        $pointFeaturesMap[$pointId] = $feature;
+                    }
+                } elseif ($geometryType === 'MultiLineString' && $pointsOrder === null) {
+                    $pointsOrder = $feature['properties']['dem']['points_order'] ?? null;
+                }
+            }
+
+            if (! $pointsOrder || ! is_array($pointsOrder) || count($pointsOrder) < 1) {
+                Log::info('setDefaultCheckpointsAndRefreshDirections: no points_order or empty', [
+                    'hiking_route_id' => $hikingRoute->id,
+                ]);
+
+                return;
+            }
+
+            $pointsOrder = array_map('strval', $pointsOrder);
+            $firstPoleId = (int) $pointsOrder[0];
+            $lastPoleId = (int) $pointsOrder[count($pointsOrder) - 1];
+            $properties['signage']['checkpoint'] = $firstPoleId === $lastPoleId
+                ? [$firstPoleId]
+                : [$firstPoleId, $lastPoleId];
+
+            if (isset($properties['dem']) && is_array($properties['dem'])) {
+                $properties['dem']['points_order'] = $pointsOrder;
+            } else {
+                $properties['dem'] = ['points_order' => $pointsOrder];
+            }
+
+            $hikingRoute->properties = $properties;
+            $hikingRoute->saveQuietly();
+
+            $ref = $hikingRoute->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
+            $this->processPointDirections($pointFeaturesMap, $pointsOrder, $properties, $hikingRoute->id, $ref);
+            $hikingRoute->properties = $properties;
+            $hikingRoute->saveQuietly();
+        } catch (Exception $e) {
+            Log::warning('setDefaultCheckpointsAndRefreshDirections failed', [
+                'hiking_route_id' => $hikingRoute->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -350,9 +454,22 @@ class SignageMapController
         $checkpointSet = array_flip($checkpoints);
         $hikingRouteIdStr = (string) $hikingRouteId;
 
+        // Trova primo e ultimo checkpoint nell'ordine della traccia
+        $firstCheckpointId = null;
+        $lastCheckpointId = null;
+        foreach ($pointsOrder as $pointId) {
+            if (isset($checkpointSet[$pointId])) {
+                if ($firstCheckpointId === null) {
+                    $firstCheckpointId = $pointId;
+                }
+                $lastCheckpointId = $pointId; // Aggiorna sempre l'ultimo checkpoint trovato
+            }
+        }
+
         // Prepara riferimenti per direzioni
-        $lastId = end($pointsOrder);
-        $firstId = reset($pointsOrder);
+        // Usa i checkpoint invece dei punti geometrici
+        $lastId = $lastCheckpointId ?? end($pointsOrder); // Fallback all'ultimo punto se non ci sono checkpoint
+        $firstId = $firstCheckpointId ?? reset($pointsOrder); // Fallback al primo punto se non ci sono checkpoint
         $pointCount = count($pointsOrder);
 
         // Carica tutti i Poles in una singola query
@@ -368,34 +485,42 @@ class SignageMapController
                 continue;
             }
 
-            // Calcola forward: prossimi 2 checkpoint + ultimo punto (se non già presente)
+            // Normalizza le chiavi della matrice a stringhe per evitare problemi di tipo
+            $normalizedMatrix = [];
+            foreach ($hikingRouteMatrix as $key => $value) {
+                $normalizedMatrix[(string) $key] = $value;
+            }
+            $hikingRouteMatrix = $normalizedMatrix;
+
+            // Forward: max 3 righe. Riga 1 = meta più vicina, 2 = intermedia, 3 = meta finale (sempre presente se non siamo alla fine)
             $forward = [];
             for ($j = $i + 1; $j < $pointCount && count($forward) < 2; $j++) {
                 if (isset($checkpointSet[$pointsOrder[$j]])) {
                     $forward[] = $pointsOrder[$j];
                 }
             }
-            // Aggiungi l'ultimo punto solo se non è il punto corrente e non è già presente
-            if ($pointId !== $lastId && ! in_array($lastId, $forward)) {
+            // Aggiungi sempre la meta finale come ultima riga (se non già presente)
+            if ($lastId !== null && $pointId !== $lastId && ! in_array($lastId, $forward)) {
                 $forward[] = $lastId;
             }
 
-            // Calcola backward: precedenti 2 checkpoint + primo punto (se non già presente)
+            // Backward: max 3 righe. Riga 1 = meta più vicina indietro, 2 = intermedia, 3 = partenza (sempre presente se non siamo all'inizio)
             $backward = [];
             for ($j = $i - 1; $j >= 0 && count($backward) < 2; $j--) {
                 if (isset($checkpointSet[$pointsOrder[$j]])) {
                     $backward[] = $pointsOrder[$j];
                 }
             }
-            // Aggiungi il primo punto solo se non è il punto corrente e non è già presente
-            if ($pointId !== $firstId && ! in_array($firstId, $backward)) {
+            // Aggiungi sempre la partenza come ultima riga (se non già presente)
+            if ($firstId !== null && $pointId !== $firstId && ! in_array($firstId, $backward)) {
                 $backward[] = $firstId;
             }
 
             // Mappa gli ID agli oggetti dalla matrix, aggiungendo id, name e description del palo target
             $forwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
-                    $data = $hikingRouteMatrix[$id] ?? null;
+                    // Cerca nella matrice normalizzata (chiavi sempre stringhe)
+                    $data = $hikingRouteMatrix[(string) $id] ?? null;
                     if (! $data) {
                         return null;
                     }
@@ -419,7 +544,8 @@ class SignageMapController
             )));
             $backwardRows = array_values(array_filter(array_map(
                 function ($id) use ($hikingRouteMatrix, $pointFeaturesMap) {
-                    $data = $hikingRouteMatrix[$id] ?? null;
+                    // Cerca nella matrice normalizzata (chiavi sempre stringhe)
+                    $data = $hikingRouteMatrix[(string) $id] ?? null;
                     if (! $data) {
                         return null;
                     }

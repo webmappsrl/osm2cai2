@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Osm2cai\SignageMap\Http\Controllers\SignageMapController;
 
 class SignageProjectable extends MorphPivot
 {
@@ -23,7 +24,20 @@ class SignageProjectable extends MorphPivot
                     $signageProject->clearFeatureCollectionMapCache();
                 }
             }
+
+            // Se è una hiking route associata al progetto e non ha checkpoint, imposta primo e ultimo palo come checkpoint
+            if ($pivot->signage_projectable_type === HikingRoute::class && $pivot->signage_projectable_id) {
+                $hikingRoute = HikingRoute::find($pivot->signage_projectable_id);
+                if ($hikingRoute) {
+                    $checkpoints = $hikingRoute->properties['signage']['checkpoint'] ?? [];
+                    if (empty($checkpoints) || ! is_array($checkpoints)) {
+                        app(SignageMapController::class)->setDefaultCheckpointsAndRefreshDirections($hikingRoute);
+                    }
+                }
+            }
         });
+
+
 
         static::deleted(function ($pivot) {
             if ($pivot->signage_project_id) {
