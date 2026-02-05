@@ -141,45 +141,53 @@ class HikingRoute extends OsmfeaturesResource
 
 
     /**
-     * Optimize search with support for OSM object IDs.
+     * Optimize search with support for ref and ref_REI fields.
      *
-     * SEARCH BEHAVIORS:
-     * 1. "#1234" or direct number → searches internal ID (exact match)
-     * 2. "R19" / "N19" / "W19" (with OSM type prefix) → searches by osm_type + osm_id starting with "19" (PARTIAL search)
-     * 3. "19" (without prefix) → searches exactly OSM ID "19" (EXACT match)
-     * 4. Text → searches ref, ref_REI, and other fields (default Nova behavior)
+     * Extends parent search to include searches in ref and ref_REI JSON fields.
+     * Parent already handles: osmfeatures_id (includes osm_type + osm_id), id, and name.
+     * 
+     * NOTE: JSON searches are slower than column searches, but ref/ref_REI are only
+     * stored in JSON. Consider extracting them to separate columns for better performance.
      *
-     * OSM Types: N=Node, W=Way, R=Relation
-     * Nova searches JSON fields `osmfeatures_data->properties->osm_type` and `osm_id`.
-     * Users often paste OSM objects with type prefix (e.g., "R19361944", "N123", "W456").
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $search
+     * @return \Illuminate\Database\Eloquent\Builder
+     * @phpstan-ignore-next-line
      */
     protected static function applySearch(Builder $query, string $search): Builder
     {
         $searchTerm = trim($search);
+        
+        // Raggruppa tutte le condizioni di ricerca in una singola where clause
+        // per garantire che ref e ref_REI vengano cercati correttamente insieme alle altre condizioni
+        return $query->where(function ($q) use ($searchTerm, $search) {
+            // Implementa la logica del parent (osmfeatures_id, id, name) direttamente qui
+            // per poter raggruppare correttamente con le condizioni per ref/ref_REI
+            $hasOsmPrefix = preg_match('/^([RNW])\s*(\d+)$/i', $search, $matches);
+            $isNumeric = ctype_digit($search);
 
-        // OSM object search with type prefix (N/W/R) - PARTIAL search enabled
-        if (preg_match('/^\s*([NnWwRr])\s*(\d+)\s*$/', $searchTerm, $m)) {
-            $osmType = strtoupper($m[1]);
-            $osmId = $m[2];
-
-            // Search by both osm_type (stored as "N"/"W"/"R") and osm_id (partial match)
-            return $query->whereRaw(
-                "osmfeatures_data->'properties'->>'osm_type' = ? AND osmfeatures_data->'properties'->>'osm_id' LIKE ?",
-                [$osmType, $osmId . '%']
-            );
-        }
-
-        // Pure numeric search (without prefix) - PARTIAL match on osm_id (all types)
-        // "197" finds all types (N/W/R) with osm_id starting with "197"
-        if (preg_match('/^\d+$/', $searchTerm) === 1) {
-            return $query->whereRaw(
-                "osmfeatures_data->'properties'->>'osm_id' LIKE ?",
-                [$searchTerm . '%']
-            );
-        }
-
-        // Default search for ref, ref_REI, and other text fields
-        return parent::applySearch($query, $searchTerm);
+            if ($hasOsmPrefix) {
+                // Caso 1: prefisso OSM (R/N/W + numero) - cerca solo in osmfeatures_id
+                $osmId = strtoupper($matches[1]).$matches[2];
+                $q->where('osmfeatures_id', 'ilike', "{$osmId}%");
+            } elseif ($isNumeric) {
+                // Caso 2: solo numeri - cerca in id, osmfeatures_id con prefissi R/N/W, e ref/ref_REI
+                $searchInt = (int) $search;
+                $q->where(function ($subQ) use ($searchInt, $search, $searchTerm) {
+                    $subQ->where('id', '=', $searchInt)
+                         ->orWhere('osmfeatures_id', 'ilike', "R{$search}%")
+                         ->orWhere('osmfeatures_id', 'ilike', "N{$search}%")
+                         ->orWhere('osmfeatures_id', 'ilike', "W{$search}%")
+                         ->orWhereRaw("osmfeatures_data->'properties'->>'ref' ILIKE ?", ["%{$searchTerm}%"])
+                         ->orWhereRaw("osmfeatures_data->'properties'->>'ref_REI' ILIKE ?", ["%{$searchTerm}%"]);
+                });
+            } else {
+                // Caso 3: testo libero - cerca in name, ref e ref_REI
+                $q->where('name', 'ilike', "%{$searchTerm}%")
+                  ->orWhereRaw("osmfeatures_data->'properties'->>'ref' ILIKE ?", ["%{$searchTerm}%"])
+                  ->orWhereRaw("osmfeatures_data->'properties'->>'ref_REI' ILIKE ?", ["%{$searchTerm}%"]);
+            }
+        });
     }
 
     /**
