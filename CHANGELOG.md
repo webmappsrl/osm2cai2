@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.0.0 (2026-02-05)
+
+
+### Features
+
+* **controller:** ✨ update signage map with pole signage data ([0abc32a](https://github.com/webmappsrl/osm2cai2/commit/0abc32abbf2ec3c60519683402009589accb142e))
+* **controller:** ✨ update signage map with pole signage data ([825046f](https://github.com/webmappsrl/osm2cai2/commit/825046f1b1d3a772b7c8aaae8d34edad10fe53eb))
+* **export:** ✨ add export ignore feature for hiking route signage ([83d7b96](https://github.com/webmappsrl/osm2cai2/commit/83d7b96874a6d857796b3e36b9fb1a5a998cc08e))
+* **export:** ✨ add export ignore feature for hiking route signage ([85a0fb5](https://github.com/webmappsrl/osm2cai2/commit/85a0fb5807dc4da6473b1c033f3593cad4ff86ed))
+* **map:** ✨ add proposed state for map features ([22b1624](https://github.com/webmappsrl/osm2cai2/commit/22b1624ca43b768364a4b1101b46419df31b116f))
+* **map:** ✨ add proposed state for map features ([c76ab36](https://github.com/webmappsrl/osm2cai2/commit/c76ab368ffcfa9d52e6448a649d8971b9af79182))
+* **migrations:** ✨ add default app_id to hiking_routes table ([2ea57f0](https://github.com/webmappsrl/osm2cai2/commit/2ea57f0606b54e3bde34044fec20900a392b9583))
+* **models:** ✨ add export_ignore functionality for poles ([13439b4](https://github.com/webmappsrl/osm2cai2/commit/13439b4f168c00333ee5d17df31aa905faa95b9b))
+* **models:** ✨ add export_ignore functionality for poles ([9bd86da](https://github.com/webmappsrl/osm2cai2/commit/9bd86da7c98932a9596dc34a01abff60f82a621a))
+* **models:** ✨ add optional parameter to getFeatureCollectionMap oc:7022 ([217a210](https://github.com/webmappsrl/osm2cai2/commit/217a210ba85e05bd56ccd981ab43685b436242f9))
+* **nova:** ✨ add custom search handling to Poles resource OC:7000 ([#290](https://github.com/webmappsrl/osm2cai2/issues/290)) ([639ab3c](https://github.com/webmappsrl/osm2cai2/commit/639ab3cef2128520b700ade8177fd870b1bd851b))
+* **signage-map:** ✨ add user-uploaded route legend ([338f3f9](https://github.com/webmappsrl/osm2cai2/commit/338f3f963c06dc483d44e27547f729a6fed7470d))
+* **signage-map:** ✨ add user-uploaded route legend ([d4fde6b](https://github.com/webmappsrl/osm2cai2/commit/d4fde6b5551ae9fd290b407f31d589e1c99c6394))
+* **signage:** ✨ add default checkpoint setup for hiking routes ([ceb67ce](https://github.com/webmappsrl/osm2cai2/commit/ceb67ceb3250e72cce7e6be61f50583054d9e2ad))
+* **signage:** ✨ add default checkpoint setup for hiking routes ([7d739d0](https://github.com/webmappsrl/osm2cai2/commit/7d739d010107f29c7fd45f56f668b7366e9a6070))
+* **SignageArrowsDisplay:** ✨ add confirmation modal for arrow direction toggle and move actions ([8a8a3f5](https://github.com/webmappsrl/osm2cai2/commit/8a8a3f5200b277fe5613593aafbb833dbfe7112a))
+* **SignageMap:** ✨ add export ignore feature with visual indicator ([3930165](https://github.com/webmappsrl/osm2cai2/commit/3930165424d93a2cf8a1deca7ff7d00789ebc887))
+* **SignageMap:** ✨ add export ignore feature with visual indicator ([dac6d86](https://github.com/webmappsrl/osm2cai2/commit/dac6d86fdf4957e8e45f9991392a6b03660e4dc3))
+* **SignageMap:** ✨ enhance hiking route management in DetailField.vue ([19b6af7](https://github.com/webmappsrl/osm2cai2/commit/19b6af70f4cd8d4b6a494dc89b9de7c541218754))
+* **SignageMap:** ✨ enhance hiking route management in DetailField.vue ([82584ce](https://github.com/webmappsrl/osm2cai2/commit/82584ceb6f2024ee558deb11bdd7e73dd1133d87))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
