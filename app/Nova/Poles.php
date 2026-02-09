@@ -2,7 +2,6 @@
 
 namespace App\Nova;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Osm2cai\SignageArrows\SignageArrows;
@@ -32,31 +31,9 @@ class Poles extends OsmfeaturesResource
     public static $search = [
         'id',
         'ref',
-        'osmfeatures_id',
     ];
 
-    /**
-     * Apply search to the query.
-     *
-     * Extends parent search to include 'ref' field and handle integer overflow.
-     * Validates numeric input to prevent integer overflow errors.
-     * If the search term is a number that exceeds integer max value,
-     * parent will handle it appropriately (skip id search for very large numbers).
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  string  $search
-     * @return \Illuminate\Database\Eloquent\Builder
-     * @phpstan-ignore-next-line
-     */
-    protected static function applySearch(Builder $query, string $search): Builder
-    {
-        // Apply parent search (handles osmfeatures_id, id, name with proper logic)
-        $query = parent::applySearch($query, $search);
 
-        $searchTerm = trim($search);
-        // Also search in ref field
-        return $query->orWhere('ref', 'ilike', "%{$searchTerm}%");
-    }
 
     /**
      * Get the fields displayed by the resource.

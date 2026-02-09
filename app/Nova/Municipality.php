@@ -3,7 +3,6 @@
 namespace App\Nova;
 
 use App\Nova\Filters\ScoreFilter;
-use Illuminate\Http\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Municipality extends OsmfeaturesResource
@@ -24,12 +23,12 @@ class Municipality extends OsmfeaturesResource
 
     /**
      * The columns that should be searched.
-     * Note: Search is handled by parent OsmfeaturesResource::applySearch()
-     * which searches: osmfeatures_id, id, and name.
-     *
      * @var array
      */
-    public static $search = [];
+    public static $search = [
+        'id',
+        'name',
+    ];
 
     /**
      * Get the cards available for the request.

@@ -7,7 +7,6 @@ use App\Helpers\Osm2caiHelper;
 use App\Nova\Actions\CacheMiturApi;
 use App\Nova\Actions\CalculateIntersections;
 use App\Nova\Filters\EcPoiTypeFIlter;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -33,12 +32,12 @@ class EnrichPoi extends OsmfeaturesResource
     /**
      * The columns that should be searched.
      * Note: Search is handled by parent OsmfeaturesResource::applySearch()
-     * which searches: osmfeatures_id, id, and name.
-     * EnrichPoi extends it to also search in 'type' field.
+     * which automatically searches: osmfeatures_id, id, name, and the fields
+     * declared in this $search property (type).
      *
      * @var array
      */
-    public static $search = [];
+    public static $search = ['id', 'name', 'type'];
 
     public static function label(): string
     {
@@ -117,27 +116,6 @@ class EnrichPoi extends OsmfeaturesResource
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->whereNotNull('osmfeatures_id');
-    }
-
-    /**
-     * Apply search to the query.
-     *
-     * Extends parent search to include the 'type' field.
-     * Parent handles: osmfeatures_id, id, and name.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  string  $search
-     * @return \Illuminate\Database\Eloquent\Builder
-     * @phpstan-ignore-next-line
-     */
-    protected static function applySearch(Builder $query, string $search): Builder
-    {
-        // Apply parent search (osmfeatures_id, id, name)
-        $query = parent::applySearch($query, $search);
-
-        // Also search in type field
-        $searchTerm = trim($search);
-        return $query->orWhere('type', 'ilike', "%{$searchTerm}%");
     }
 
     /**
