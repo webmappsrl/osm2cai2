@@ -8,6 +8,7 @@ use App\Nova\Filters\OsmtagsFilter;
 use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\SourceFilter;
 use App\Services\GeometryService;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
@@ -129,5 +130,132 @@ abstract class OsmfeaturesResource extends AbstractEcResource
     public function actions(NovaRequest $request): array
     {
         return [];
+    }
+
+    /**
+     * Apply comprehensive search to the query.
+     *
+     * Handles common search fields for all OsmfeaturesResource children:
+     * - osmfeatures_id (with or without OSM type prefix R/N/W)
+     * - id (only if search term is completely numeric)
+     * - name (partial match)
+     *
+     * SEARCH BEHAVIORS:
+     * 1. "R19732" (with OSM type prefix) → searches ONLY in osmfeatures_id + name (NOT in id)
+     * 2. "19732" (without prefix, numeric) → searches in id + osmfeatures_id + name
+     * 3. Text → searches name + osmfeatures_id
+     *
+     * Child classes can override this method to add specific search logic,
+     * but should call parent::applySearch() to include common fields.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     *
+     * @phpstan-ignore-next-line
+     */
+    protected static function applySearch(Builder $query, string $search): Builder
+    {
+        $search = trim($search);
+        $hasOsmPrefix = preg_match('/^([RNW])\s*(\d+)$/i', $search, $matches);
+        $isNumeric = ctype_digit($search);
+
+        // Ottieni i campi di ricerca dalla classe figlia (se definiti)
+        $searchFields = static::$search ?? [];
+
+        // Caso 1: prefisso OSM (R/N/W + numero)
+        if ($hasOsmPrefix) {
+            $osmId = strtoupper($matches[1]) . $matches[2];
+
+            return $query->where(function ($q) use ($osmId, $search, $searchFields) {
+                $q->where('osmfeatures_id', 'ilike', "{$osmId}%");
+
+                // Aggiungi eventuali campi dichiarati in $search (inclusi id e name)
+                static::addSearchFieldsConditions($q, $searchFields, $search, false);
+            });
+        }
+
+        // Caso 2: solo numeri
+        if ($isNumeric) {
+            return $query->where(function ($q) use ($search, $searchFields, $isNumeric) {
+                // osmfeatures_id con prefisso R/N/W (il formato è sempre [NWR][numero])
+                $q->where('osmfeatures_id', 'ilike', "R{$search}%")
+                    ->orWhere('osmfeatures_id', 'ilike', "N{$search}%")
+                    ->orWhere('osmfeatures_id', 'ilike', "W{$search}%");
+
+                // Aggiungi eventuali campi dichiarati in $search (inclusi id e name)
+                static::addSearchFieldsConditions($q, $searchFields, $search, $isNumeric);
+            });
+        }
+
+        // Caso 3: testo libero
+        return $query->where(function ($q) use ($search, $searchFields) {
+            // Aggiungi eventuali campi dichiarati in $search (inclusi id e name)
+            static::addSearchFieldsConditions($q, $searchFields, $search, false);
+        });
+    }
+
+    /**
+     * Aggiunge condizioni di ricerca per i campi dichiarati in $search.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  array  $searchFields
+     * @param  string  $searchTerm
+     * @param  bool  $isNumeric Se true, per il campo 'id' usa match esatto invece di ilike
+     * @return void
+     */
+    protected static function addSearchFieldsConditions(Builder $query, array $searchFields, string $searchTerm, bool $isNumeric = false): void
+    {
+        foreach ($searchFields as $field) {
+            // Ignora solo osmfeatures_id perché ha logica speciale gestita nei casi principali
+            if ($field === 'osmfeatures_id') {
+                continue;
+            }
+
+            // Verifica se è un campo JSON (contiene ->)
+            if (strpos($field, '->') !== false) {
+                // Campo JSON: converte osmfeatures_data->properties->ref in osmfeatures_data->'properties'->>'ref'
+                $jsonPath = static::convertJsonFieldToPostgresSyntax($field);
+                $query->orWhereRaw("{$jsonPath} ILIKE ?", ["%{$searchTerm}%"]);
+            } else {
+                // Campo normale
+                // Per 'id' con ricerca numerica, usa match esatto invece di ilike
+                if ($field === 'id' && $isNumeric) {
+                    $query->orWhere($field, '=', (int) $searchTerm);
+                } else {
+                    $query->orWhere($field, 'ilike', "%{$searchTerm}%");
+                }
+            }
+        }
+    }
+
+    /**
+     * Converte un campo JSON da sintassi Laravel a sintassi PostgreSQL.
+     * Esempio: osmfeatures_data->properties->ref diventa osmfeatures_data->'properties'->>'ref'
+     *
+     * @param  string  $field
+     * @return string
+     */
+    protected static function convertJsonFieldToPostgresSyntax(string $field): string
+    {
+        $parts = explode('->', $field);
+        $baseField = array_shift($parts);
+
+        if (empty($parts)) {
+            return $baseField;
+        }
+
+        // L'ultimo elemento usa ->> per ottenere il valore come testo
+        $lastPart = array_pop($parts);
+        $path = $baseField;
+
+        // Aggiungi le parti intermedie con ->
+        foreach ($parts as $part) {
+            $path .= "->'{$part}'";
+        }
+
+        // L'ultima parte usa ->> per ottenere il testo
+        $path .= "->>'{$lastPart}'";
+
+        return $path;
     }
 }
