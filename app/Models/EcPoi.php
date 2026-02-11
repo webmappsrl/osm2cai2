@@ -102,7 +102,7 @@ class EcPoi extends WmEcPoi implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Ec Poi ' . $osmfeaturesId);
 
             return;
         }

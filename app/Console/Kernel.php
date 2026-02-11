@@ -18,18 +18,23 @@ class Kernel extends ConsoleKernel
             ->dailyAt('02:00')
             ->description('Renew SSL certificates');
 
+        // MODIFICATO: da '02:00' a '07:00' CET
         $schedule->command('wm-osmfeatures:sync')
-            ->dailyAt('02:00')
+            ->dailyAt('07:00')
             ->description('Sync wm-osmfeatures');
 
+        // MODIFICATO: da '03:30' a '08:00' CET
         $schedule->command('wm-osmfeatures:import-sync')
-            ->dailyAt('03:30')
+            ->dailyAt('08:00')
             ->description('Import-sync wm-osmfeatures');
 
         $schedule->command('horizon:snapshot')
             ->hourlyAt(10)
             ->description('Take Horizon snapshot');
 
+        // VERIFICARE: questo parte alle 05:00 CET quando osmfeatures 
+        // potrebbe ancora essere in import (finisce 05:00-06:00 CET)
+        // Potrebbe essere necessario spostarlo dopo le 08:00 CET
         $schedule->command('osm2cai:update-hiking-routes')
             ->dailyAt('05:00')
             ->description('Check osmfeatures for hiking routes updates');
@@ -45,10 +50,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('osm2cai:fix-osmfeatures-sda')
             ->dailyAt('07:00')
             ->description('Update hiking routes status');
-
-        /*$schedule->command('osm2cai:cache-mitur-abruzzo-api --all')
-            ->weeklyOn(6, '09:00') // 6 = Saturday
-            ->description('Cache Mitur Abruzzo API (Saturday)');*/
     }
 
     /**

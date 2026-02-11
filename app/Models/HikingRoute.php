@@ -58,6 +58,7 @@ class HikingRoute extends EcTrack
         'osmfeatures_id',
         'osmfeatures_data',
         'osmfeatures_updated_at',
+        'osmfeatures_exists',
         'tdh',
         'region_favorite',
         'feature_image',
@@ -76,6 +77,7 @@ class HikingRoute extends EcTrack
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'array',
+        'osmfeatures_exists' => 'boolean',
         'issues_last_update' => 'date',
         'tdh' => 'array',
         'issues_chronology' => 'array',

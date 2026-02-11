@@ -185,8 +185,10 @@ class SignageProject extends Polygon
 
             // SINGOLA QUERY - Trova tutti i poles che sono nel buffer della geometria unificata
             // OTTIMIZZAZIONE: Carica solo i dati essenziali (id, name, ref, properties, osmfeatures_data)
+            // Filtra solo i poles che esistono su osmfeatures
             $allPoles = DB::table('poles')
                 ->select('poles.id', 'poles.name', 'poles.ref', 'poles.properties', 'poles.osmfeatures_data')
+                ->where('osmfeatures_exists', false)
                 ->whereRaw(
                     'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
                     [$unifiedGeometry, $bufferDistance]

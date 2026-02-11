@@ -3,12 +3,14 @@
 namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
+use App\Nova\Filters\MissingOnOsmfeaturesFilter;
 use App\Nova\Filters\OsmFilter;
 use App\Nova\Filters\OsmtagsFilter;
 use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\SourceFilter;
 use App\Services\GeometryService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
@@ -68,6 +70,16 @@ abstract class OsmfeaturesResource extends AbstractEcResource
             Text::make(__('Name'), 'name')->sortable(),
             DateTime::make(__('Created At'), 'created_at')->hideFromIndex(),
             DateTime::make(__('Updated At'), 'updated_at')->hideFromIndex(),
+            Badge::make(__('Osmfeatures status'), 'osmfeatures_exists')
+                ->map([
+                    true => 'success',
+                    false => 'danger',
+                ])
+                ->labels([
+                    true => __('Present'),
+                    false => __('Deleted from OSMFEATURES'),
+                ])
+                ->sortable(),
             Text::make(__('Osmfeatures ID'), function () {
                 if (! $this->osmfeatures_id) {
                     return '';
@@ -99,6 +111,7 @@ abstract class OsmfeaturesResource extends AbstractEcResource
     {
         return [
             (new OsmFilter),
+            (new MissingOnOsmfeaturesFilter),
             (new ScoreFilter),
             (new OsmtagsFilter('wikimedia_commons', 'WikiMedia')),
             (new OsmtagsFilter('wikipedia', 'Wikipedia')),

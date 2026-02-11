@@ -19,11 +19,13 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
         'osmfeatures_id',
         'osmfeatures_data',
         'osmfeatures_updated_at',
+        'osmfeatures_exists',
     ];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
+        'osmfeatures_exists' => 'boolean',
     ];
 
     /**
@@ -60,7 +62,7 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
         $osmfeaturesData = is_string($model->osmfeatures_data) ? json_decode($model->osmfeatures_data, true) : $model->osmfeatures_data;
 
         if (! $osmfeaturesData) {
-            Log::channel('wm-osmfeatures')->info('No data found for Municipality '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No data found for Municipality ' . $osmfeaturesId);
 
             return;
         }
@@ -71,7 +73,7 @@ class Municipality extends Model implements OsmfeaturesSyncableInterface
         if ($osmfeaturesData['properties']['name'] !== null && $osmfeaturesData['properties']['name'] !== $model->name) {
             $updateData['name'] = $osmfeaturesData['properties']['name'];
         } elseif ($osmfeaturesData['properties']['name'] === null) {
-            Log::channel('wm-osmfeatures')->info('No name found for Municipality '.$osmfeaturesId);
+            Log::channel('wm-osmfeatures')->info('No name found for Municipality ' . $osmfeaturesId);
         }
 
         $model->update($updateData);
