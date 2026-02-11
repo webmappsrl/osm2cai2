@@ -908,7 +908,7 @@ class SignageMapController
             return 240;
         }
 
-        // --- Ore successive: 241‑600 minuti (fino a 10 ore) ---
+        // --- Ore successive: 241‑420 minuti (fino a 7 ore) ---
         if ($minutes <= 270) {  // 4:05‑4:30
             return 270;
         }
@@ -927,28 +927,15 @@ class SignageMapController
         if ($minutes <= 420) {  // 6:35‑7:00
             return 420;
         }
-        if ($minutes <= 480) {  // 7:05‑8:00
-            return 480;
-        }
-        if ($minutes <= 540) {  // 8:05‑9:00
-            return 540;
-        }
-        if ($minutes <= 600) {  // 9:05‑10:00
-            return 600;
-        }
 
-        // --- Oltre le 10 ore ---
-        // Dalla tabella (7:05‑8:00 > 8:00, 8:05‑9:00 > 9:00, 9:05‑10:00 > 10:00)
-        // si vede che, superate le ~7 ore, qualsiasi valore con minuti > 0
-        // viene arrotondato ALL'ORA INTERA successiva.
-        //
-        // Per tempi > 10 ore manteniamo la stessa regola:
-        //  - H:00       -> H:00
-        //  - H:01‑H:59  -> (H+1):00
-        $hours = floor($minutes / 60);
+        // --- Dalle 7 ore in poi ---
+        // Regola uniforme con tolleranza di 4 minuti:
+        //  - H:00‑H:04  -> H:00
+        //  - H:05‑H:59  -> (H+1):00
+        $hours = intdiv($minutes, 60);
         $mins = $minutes % 60;
 
-        if ($mins === 0) {
+        if ($mins <= 4) {
             return $hours * 60;
         }
 
