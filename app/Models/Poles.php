@@ -31,12 +31,14 @@ class Poles extends GeometryModel implements OsmfeaturesSyncableInterface
         'osmfeatures_id',
         'osmfeatures_data',
         'osmfeatures_updated_at',
+        'osmfeatures_exists',
         'properties',
     ];
 
     protected $casts = [
         'osmfeatures_updated_at' => 'datetime',
         'osmfeatures_data' => 'json',
+        'osmfeatures_exists' => 'boolean',
         'properties' => 'array',
     ];
 

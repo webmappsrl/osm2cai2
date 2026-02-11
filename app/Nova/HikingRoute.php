@@ -140,47 +140,6 @@ class HikingRoute extends OsmfeaturesResource
     }
 
 
-    /**
-     * Optimize search with support for OSM object IDs.
-     *
-     * SEARCH BEHAVIORS:
-     * 1. "#1234" or direct number → searches internal ID (exact match)
-     * 2. "R19" / "N19" / "W19" (with OSM type prefix) → searches by osm_type + osm_id starting with "19" (PARTIAL search)
-     * 3. "19" (without prefix) → searches exactly OSM ID "19" (EXACT match)
-     * 4. Text → searches ref, ref_REI, and other fields (default Nova behavior)
-     *
-     * OSM Types: N=Node, W=Way, R=Relation
-     * Nova searches JSON fields `osmfeatures_data->properties->osm_type` and `osm_id`.
-     * Users often paste OSM objects with type prefix (e.g., "R19361944", "N123", "W456").
-     */
-    protected static function applySearch(Builder $query, string $search): Builder
-    {
-        $searchTerm = trim($search);
-
-        // OSM object search with type prefix (N/W/R) - PARTIAL search enabled
-        if (preg_match('/^\s*([NnWwRr])\s*(\d+)\s*$/', $searchTerm, $m)) {
-            $osmType = strtoupper($m[1]);
-            $osmId = $m[2];
-
-            // Search by both osm_type (stored as "N"/"W"/"R") and osm_id (partial match)
-            return $query->whereRaw(
-                "osmfeatures_data->'properties'->>'osm_type' = ? AND osmfeatures_data->'properties'->>'osm_id' LIKE ?",
-                [$osmType, $osmId . '%']
-            );
-        }
-
-        // Pure numeric search (without prefix) - PARTIAL match on osm_id (all types)
-        // "197" finds all types (N/W/R) with osm_id starting with "197"
-        if (preg_match('/^\d+$/', $searchTerm) === 1) {
-            return $query->whereRaw(
-                "osmfeatures_data->'properties'->>'osm_id' LIKE ?",
-                [$searchTerm . '%']
-            );
-        }
-
-        // Default search for ref, ref_REI, and other text fields
-        return parent::applySearch($query, $searchTerm);
-    }
 
     /**
      * Get the fields displayed by the resource.

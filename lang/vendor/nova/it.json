@@ -477,5 +477,8 @@
     "Zoom level for POI icons": "Livello di zoom per le icone POI",
     "geometry": "Geometria",
     "of": "di",
-    "tracks": "Tracce"
+    "tracks": "Tracce",
+    "Present": "Presente",
+    "Deleted from OSMFEATURES": "Eliminato da OSMFEATURES",
+    "Not present (deleted from OSMFEATURES)": "Non presente (eliminato da OSMFEATURES)"
 }

@@ -31,15 +31,13 @@ class EnrichPoi extends OsmfeaturesResource
 
     /**
      * The columns that should be searched.
+     * Note: Search is handled by parent OsmfeaturesResource::applySearch()
+     * which automatically searches: osmfeatures_id, id, name, and the fields
+     * declared in this $search property (type).
      *
      * @var array
      */
-    public static $search = [
-        'id',
-        'name',
-        'type',
-        'osmfeatures_id',
-    ];
+    public static $search = ['id', 'name', 'type'];
 
     public static function label(): string
     {

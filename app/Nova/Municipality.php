@@ -3,7 +3,6 @@
 namespace App\Nova;
 
 use App\Nova\Filters\ScoreFilter;
-use Illuminate\Http\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Municipality extends OsmfeaturesResource
@@ -24,7 +23,6 @@ class Municipality extends OsmfeaturesResource
 
     /**
      * The columns that should be searched.
-     *
      * @var array
      */
     public static $search = [
