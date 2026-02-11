@@ -188,7 +188,7 @@ class SignageProject extends Polygon
             // Filtra solo i poles che esistono su osmfeatures
             $allPoles = DB::table('poles')
                 ->select('poles.id', 'poles.name', 'poles.ref', 'poles.properties', 'poles.osmfeatures_data')
-                ->where('osmfeatures_exists', false)
+                ->where('osmfeatures_exists', true)
                 ->whereRaw(
                     'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
                     [$unifiedGeometry, $bufferDistance]
