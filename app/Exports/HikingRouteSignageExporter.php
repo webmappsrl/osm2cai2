@@ -378,6 +378,7 @@ class HikingRouteSignageExporter implements FromCollection, ShouldAutoSize, With
         }
 
         $results = DB::table('poles')
+            ->where('osmfeatures_exists', true)
             ->whereIn('id', $poleIds)
             ->whereNotNull('geometry')
             ->select('id', DB::raw('ST_Y(geometry::geometry) as latitude'), DB::raw('ST_X(geometry::geometry) as longitude'))

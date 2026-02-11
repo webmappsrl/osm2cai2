@@ -1193,6 +1193,7 @@ SQL;
         $geojson = $this->getHikingRouteGeojson($bufferDistance);
 
         return Poles::select('poles.*')
+            ->where('osmfeatures_exists', true)
             ->whereRaw(
                 'ST_DWithin(poles.geometry, ST_GeomFromGeoJSON(?)::geography, ?)',
                 [$geojson, $bufferDistance]
