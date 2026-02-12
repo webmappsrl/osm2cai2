@@ -145,6 +145,14 @@ class UpdateHikingRoutesCommand extends Command
             }
 
             $hikingRoute->updateQuietly($updateData);
+            $hikingRoute->refresh();
+
+            $dispatchedJobs = $hikingRoute->dispatchMissingTerritorialRelationsJobs();
+            if ($dispatchedJobs > 0) {
+                $dispatchMessage = "id {$id} - Dispatched {$dispatchedJobs} missing territorial relation jobs.";
+                $this->info($dispatchMessage);
+                $logger->info($dispatchMessage);
+            }
 
             if ($sourceRefChanged) {
                 SyncClubHikingRouteRelationJob::dispatch('HikingRoute', $hikingRoute->id);
