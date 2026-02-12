@@ -321,6 +321,11 @@ class HikingRoute extends EcTrack
         if (! empty($updateData)) {
             $model->update($updateData);
         }
+
+        $dispatchedJobs = $model->dispatchMissingTerritorialRelationsJobs();
+        if ($dispatchedJobs > 0) {
+            Log::channel('wm-osmfeatures')->info("Dispatched {$dispatchedJobs} missing territorial relation jobs for HikingRoute {$osmfeaturesId}");
+        }
     }
 
     /**
@@ -987,6 +992,53 @@ SQL;
         CheckNearbyHutsJob::dispatch($this, $buffer)->onQueue($queue);
         CheckNearbyNaturalSpringsJob::dispatch($this, $buffer)->onQueue($queue);
         CheckNearbyEcPoisJob::dispatch($this, $buffer)->onQueue($queue);
+    }
+
+    /**
+     * Return missing territorial relations for this hiking route.
+     */
+    public function getMissingTerritorialRelations(): array
+    {
+        $missing = [];
+
+        if (! $this->geometry || (int) $this->osm2cai_status === 4) {
+            return $missing;
+        }
+
+
+        if (! $this->sectors()->exists()) {
+            $missing[] = 'sectors';
+        }
+        if (! $this->areas()->exists()) {
+            $missing[] = 'areas';
+        }
+        if (! $this->provinces()->exists()) {
+            $missing[] = 'provinces';
+        }
+
+        return $missing;
+    }
+
+    /**
+     * Dispatch only missing territorial relation jobs.
+     *
+     * @return int Number of dispatched jobs
+     */
+    public function dispatchMissingTerritorialRelationsJobs(string $queue = 'geometric-computations'): int
+    {
+        $missingRelations = $this->getMissingTerritorialRelations();
+
+        $relationToClass = [
+            'sectors' => Sector::class,
+            'areas' => Area::class,
+            'provinces' => Province::class,
+        ];
+
+        foreach ($missingRelations as $relation) {
+            CalculateIntersectionsJob::dispatch($this, $relationToClass[$relation])->onQueue($queue);
+        }
+
+        return count($missingRelations);
     }
 
     /**

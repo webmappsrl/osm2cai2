@@ -18,6 +18,7 @@ use App\Nova\Actions\ImportPois;
 use App\Nova\Actions\ManageHikingRouteValidationAction;
 use App\Nova\Actions\OverpassMap;
 use App\Nova\Actions\PercorsoFavoritoAction;
+use App\Nova\Actions\RunFixMissingHikingRoutesModelAction;
 use App\Nova\Actions\SectorRefactoring;
 use App\Nova\Actions\UploadValidationRawDataAction;
 use App\Nova\Cards\LinksCard;
@@ -429,6 +430,30 @@ class HikingRoute extends OsmfeaturesResource
                 })
                 ->canRun(function ($request, $user) {
                     return true;
+                }),
+            (new RunFixMissingHikingRoutesModelAction('sectors'))
+                ->standalone()
+                ->canSee(function ($request) {
+                    return $request->user()?->email === 'team@webmapp.it';
+                })
+                ->canRun(function ($request, $user) {
+                    return $request->user()?->email === 'team@webmapp.it';
+                }),
+            (new RunFixMissingHikingRoutesModelAction('areas'))
+                ->standalone()
+                ->canSee(function ($request) {
+                    return $request->user()?->email === 'team@webmapp.it';
+                })
+                ->canRun(function ($request, $user) {
+                    return $request->user()?->email === 'team@webmapp.it';
+                }),
+            (new RunFixMissingHikingRoutesModelAction('provinces'))
+                ->standalone()
+                ->canSee(function ($request) {
+                    return $request->user()?->email === 'team@webmapp.it';
+                })
+                ->canRun(function ($request, $user) {
+                    return $request->user()?->email === 'team@webmapp.it';
                 }),
         ];
     }
