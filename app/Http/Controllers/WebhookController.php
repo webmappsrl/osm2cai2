@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Wm\WmPackage\Http\Controllers\Controller;
 use Wm\WmPackage\Models\UgcPoi;
@@ -162,6 +164,9 @@ class WebhookController extends Controller
                 if ($ugcModelId) {
                     $ugcModel = $modelClass::find($ugcModelId);
                     if ($ugcModel) {
+                        if ($modelType === 'Poi') {
+                            $ugcModel = $this->fixGeohubPropertiesId($ugcModel);
+                        }
                         // Gestisce l'associazione dell'utente e created_by usando la funzione unificata
                         $this->handleUserAssociation($request, $ugcModel, $modelType, $ugcModelId);
 
@@ -460,5 +465,21 @@ class WebhookController extends Controller
 
             return null;
         }
+    }
+
+
+    /**
+     * Corregge l'ID nelle properties provenienti da Geohub mettendo l'ID del nuovo modello
+     */
+    private function fixGeohubPropertiesId(\App\Models\UgcPoi $model): \App\Models\UgcPoi
+    {
+        $properties = $model->properties;
+        $propertiesId = Arr::get($properties, 'id',-1);
+        if ($propertiesId != $model->id) {
+            $properties['id'] = $model->id;
+            $model->properties = $properties;
+            $model->saveQuietly();
+        }
+        return $model;
     }
 }

@@ -24,3 +24,5 @@ docker-compose.yml
 public/wm-osmfeatures.log
 /public/vendor
 .phpunit.cache/test-results
+
+.DS_Store
