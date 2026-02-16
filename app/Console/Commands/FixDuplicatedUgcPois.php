@@ -41,7 +41,7 @@ class FixDuplicatedUgcPois extends Command
         $updatedCount = 0;
         $deletedCount = 0;
         $idMismatchedCount = 0;
-        foreach (UgcPoi::where('id','<',5)->get() as $ugcPoi) {
+        foreach (UgcPoi::all() as $ugcPoi) {
 
             $properties = $ugcPoi->properties;
             $uuid = Arr::get($properties, 'uuid');
