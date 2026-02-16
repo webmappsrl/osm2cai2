@@ -320,6 +320,7 @@ class HikingRoute extends EcTrack
         // Execute the update only if there are data to update
         if (! empty($updateData)) {
             $model->update($updateData);
+            $model->refresh(); // Assicura che la geometry sia aggiornata prima di verificare le relazioni
         }
 
         $dispatchedJobs = $model->dispatchMissingTerritorialRelationsJobs();
