@@ -16,7 +16,7 @@ class FixMissingHikingRoutesSectorsCommand extends Command
      */
     protected $signature = 'osm2cai:fix-missing-hiking-routes-sectors
                             {--id=* : Process only specific hiking route IDs}
-                            {--model=sectors : Target model (sectors, areas, provinces)}
+                            {--model=sectors : Target model (regions, provinces, areas, sectors)}
                             {--sync : Execute intersection computation synchronously}
                             {--queue=geometric-computations : Queue name for async mode}
                             {--chunk=200 : Chunk size used to scan routes}
@@ -27,7 +27,7 @@ class FixMissingHikingRoutesSectorsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Recalculate intersections for hiking routes that are missing assignments for sectors, areas, or provinces.';
+    protected $description = 'Recalculate intersections for hiking routes that are missing assignments for regions, provinces, areas, or sectors.';
 
     /**
      * Execute the console command.
@@ -38,7 +38,7 @@ class FixMissingHikingRoutesSectorsCommand extends Command
         $modelConfig = $this->resolveModelConfig($modelType);
 
         if ($modelConfig === null) {
-            $this->error("Invalid --model value '{$modelType}'. Allowed values: sectors, areas, provinces.");
+            $this->error("Invalid --model value '{$modelType}'. Allowed values: regions, provinces, areas, sectors.");
 
             return Command::FAILURE;
         }
@@ -151,20 +151,25 @@ class FixMissingHikingRoutesSectorsCommand extends Command
     private function resolveModelConfig(string $modelType): ?array
     {
         return match ($modelType) {
-            'sectors' => [
-                'relation' => 'sectors',
-                'class' => 'App\\Models\\Sector',
-                'label_plural' => 'sectors',
+            'regions' => [
+                'relation' => 'regions',
+                'class' => 'App\\Models\\Region',
+                'label_plural' => 'regions',
+            ],
+            'provinces' => [
+                'relation' => 'provinces',
+                'class' => 'App\\Models\\Province',
+                'label_plural' => 'provinces',
             ],
             'areas' => [
                 'relation' => 'areas',
                 'class' => 'App\\Models\\Area',
                 'label_plural' => 'areas',
             ],
-            'provinces' => [
-                'relation' => 'provinces',
-                'class' => 'App\\Models\\Province',
-                'label_plural' => 'provinces',
+            'sectors' => [
+                'relation' => 'sectors',
+                'class' => 'App\\Models\\Sector',
+                'label_plural' => 'sectors',
             ],
             default => null,
         };

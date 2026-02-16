@@ -13,14 +13,24 @@ class RunFixMissingHikingRoutesModelAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    private const ALLOWED_MODELS = ['sectors', 'areas', 'provinces'];
+    private const ALLOWED_MODELS = ['regions', 'provinces', 'areas', 'sectors'];
 
     private string $modelType;
+
+    public $standalone = true;
 
     public function __construct(string $modelType)
     {
         $this->modelType = strtolower($modelType);
         $this->name = __('Fix Missing Hiking Routes :model', ['model' => ucfirst($this->modelType)]);
+
+        $this->canSee(function ($request) {
+            return $request->user()?->email === 'team@webmapp.it';
+        });
+
+        $this->canRun(function ($request, $model) {
+            return $request->user()?->email === 'team@webmapp.it';
+        });
     }
 
     /**

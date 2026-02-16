@@ -1007,14 +1007,17 @@ SQL;
         }
 
 
-        if (! $this->sectors()->exists()) {
-            $missing[] = 'sectors';
+        if (! $this->regions()->exists()) {
+            $missing[] = 'regions';
+        }
+        if (! $this->provinces()->exists()) {
+            $missing[] = 'provinces';
         }
         if (! $this->areas()->exists()) {
             $missing[] = 'areas';
         }
-        if (! $this->provinces()->exists()) {
-            $missing[] = 'provinces';
+        if (! $this->sectors()->exists()) {
+            $missing[] = 'sectors';
         }
 
         return $missing;
@@ -1030,9 +1033,10 @@ SQL;
         $missingRelations = $this->getMissingTerritorialRelations();
 
         $relationToClass = [
-            'sectors' => Sector::class,
-            'areas' => Area::class,
+            'regions' => Region::class,
             'provinces' => Province::class,
+            'areas' => Area::class,
+            'sectors' => Sector::class,
         ];
 
         foreach ($missingRelations as $relation) {

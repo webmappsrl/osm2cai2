@@ -431,30 +431,10 @@ class HikingRoute extends OsmfeaturesResource
                 ->canRun(function ($request, $user) {
                     return true;
                 }),
-            (new RunFixMissingHikingRoutesModelAction('sectors'))
-                ->standalone()
-                ->canSee(function ($request) {
-                    return $request->user()?->email === 'team@webmapp.it';
-                })
-                ->canRun(function ($request, $user) {
-                    return $request->user()?->email === 'team@webmapp.it';
-                }),
-            (new RunFixMissingHikingRoutesModelAction('areas'))
-                ->standalone()
-                ->canSee(function ($request) {
-                    return $request->user()?->email === 'team@webmapp.it';
-                })
-                ->canRun(function ($request, $user) {
-                    return $request->user()?->email === 'team@webmapp.it';
-                }),
-            (new RunFixMissingHikingRoutesModelAction('provinces'))
-                ->standalone()
-                ->canSee(function ($request) {
-                    return $request->user()?->email === 'team@webmapp.it';
-                })
-                ->canRun(function ($request, $user) {
-                    return $request->user()?->email === 'team@webmapp.it';
-                }),
+            new RunFixMissingHikingRoutesModelAction('regions'),
+            new RunFixMissingHikingRoutesModelAction('provinces'),
+            new RunFixMissingHikingRoutesModelAction('areas'),
+            new RunFixMissingHikingRoutesModelAction('sectors'),
         ];
     }
 
