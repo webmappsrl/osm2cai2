@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
 use Wm\WmPackage\Models\EcTrack;
@@ -319,8 +320,26 @@ class HikingRoute extends EcTrack
 
         // Execute the update only if there are data to update
         if (! empty($updateData)) {
+            $statusChanged = isset($updateData['osm2cai_status']);
+            $geometryChanged = isset($updateData['geometry']);
+
             $model->updateQuietly($updateData);
             $model->refresh(); // Assicura che la geometry sia aggiornata prima di verificare le relazioni
+
+            // Traccia le hiking routes modificate per la generazione PBF post-sincronizzazione
+            if ($statusChanged || $geometryChanged) {
+                $syncKey = 'osmfeatures_sync:modified:HikingRoute';
+                $appId = $model->app_id ?? 1; // Default app_id se null
+
+                // Usa Redis Set per raggruppare per app_id: app_id => Set di IDs
+                $appKey = "{$syncKey}:app:{$appId}";
+                Redis::sadd($appKey, $model->id);
+                Redis::expire($appKey, 86400); // TTL 24h
+
+                // Traccia anche la lista di app_id modificati
+                Redis::sadd("{$syncKey}:apps", $appId);
+                Redis::expire("{$syncKey}:apps", 86400);
+            }
         }
 
         $dispatchedJobs = $model->dispatchMissingTerritorialRelationsJobs();
