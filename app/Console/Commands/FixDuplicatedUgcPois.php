@@ -77,7 +77,7 @@ class FixDuplicatedUgcPois extends Command
             }
             $this->uuids[$uuid] = $uuid;
         }
-        sort($duplicatedArray);
+        //sort($duplicatedArray);
         foreach ($duplicatedArray as $uuid => $count) {
             $this->info($uuid . ' - ' . $count);
         }
