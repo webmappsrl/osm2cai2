@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\TaxonomyPoiType;
+use Wm\WmPackage\Services\GeometryComputationService;
 
 trait UgcCommonModelTrait
 {
@@ -69,13 +70,92 @@ trait UgcCommonModelTrait
             }
         });
 
-        // Quando si salva un UGC, controlla se è stato validato
+        // Quando si salva un UGC, sincronizza geometry in properties.position e controlla se è stato validato
         static::saved(function ($ugc) {
+            // Sincronizza geometry in properties.position
+            if ($ugc->geometry !== null && $ugc->id) {
+                try {
+                    // Estrai latitude e longitude usando GeometryComputationService del wm-package
+                    $coordinates = self::extractCoordinatesFromUgcModel($ugc);
+
+                    // Salva solo latitude e longitude in properties.position
+                    if ($coordinates !== null) {
+                        $properties = $ugc->properties ?? [];
+                        $currentLat = $properties['position']['latitude'] ?? null;
+                        $currentLon = $properties['position']['longitude'] ?? null;
+
+                        // Aggiorna solo se le coordinate sono cambiate o non esistono
+                        if ($currentLat !== $coordinates['latitude'] || $currentLon !== $coordinates['longitude']) {
+                            $properties['position'] = [
+                                'latitude' => $coordinates['latitude'],
+                                'longitude' => $coordinates['longitude'],
+                            ];
+
+                            // Usa updateQuietly per evitare loop di eventi
+                            $ugc->updateQuietly(['properties' => $properties]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Errore nel sincronizzare geometry in properties.position durante saved', [
+                        'model_id' => $ugc->id,
+                        'model_type' => get_class($ugc),
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             // Controlla se il campo validated è stato cambiato a VALID
             if ($ugc->isDirty('validated') && $ugc->validated === ValidatedStatusEnum::VALID->value) {
                 $ugc->createEcPoiFromValidatedUgc();
             }
         });
+    }
+
+    /**
+     * Estrae latitude e longitude da geometry del modello UGC
+     * Usa il valore di geometry direttamente dal modello (non dal database)
+     * Gestisce solo Point (per POI), le tracce non vengono sincronizzate
+     *
+     * @param  mixed  $ugc  Modello UGC (UgcPoi, UgcTrack, ecc.)
+     * @return array|null Array con 'latitude' e 'longitude' o null se non disponibile
+     */
+    private static function extractCoordinatesFromUgcModel($ugc): ?array
+    {
+        if (empty($ugc->geometry)) {
+            return null;
+        }
+
+        // Converti geometry in GeoJSON usando il metodo del package
+        $geojsonString = GeometryComputationService::make()->getModelGeometryAsGeojson($ugc);
+
+        if (! $geojsonString) {
+            return null;
+        }
+
+        $geometryArray = json_decode($geojsonString, true);
+
+        if (! $geometryArray || ! isset($geometryArray['type']) || ! isset($geometryArray['coordinates'])) {
+            return null;
+        }
+
+        $coords = $geometryArray['coordinates'];
+        $latitude = null;
+        $longitude = null;
+
+        // Per Point: coordinates è [longitude, latitude]
+        if ($geometryArray['type'] === 'Point' && is_array($coords) && count($coords) >= 2) {
+            $longitude = (float) $coords[0];
+            $latitude = (float) $coords[1];
+        }
+
+        if ($latitude !== null && $longitude !== null) {
+            return [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+            ];
+        }
+
+        return null;
     }
 
     /**
