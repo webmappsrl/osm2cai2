@@ -1,0 +1,47 @@
+services:
+  # Estende tutti i servizi base da compose.yml
+  php:
+    extends:
+      file: compose.yml
+      service: php
+  db:
+    extends:
+      file: compose.yml
+      service: db
+    # Override: aggiunge shm_size per prestazioni produzione
+    shm_size: '256mb'
+  redis:
+    extends:
+      file: compose.yml
+      service: redis
+  elasticsearch:
+    extends:
+      file: compose.yml
+      service: elasticsearch
+    # Override: heap ridotto a 6g per produzione (invece di 8g)
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+      # Heap 6g: per prestazioni migliori; la macchina deve avere almeno ~8GB liberi per evitare OOM
+      - ES_JAVA_OPTS=-Xms6g -Xmx6g
+  elasticsearch-init:
+    extends:
+      file: compose.yml
+      service: elasticsearch-init
+  kibana:
+    extends:
+      file: compose.yml
+      service: kibana
+  horizon:
+    extends:
+      file: compose.yml
+      service: horizon
+
+networks:
+  laravel:
+    driver: bridge
