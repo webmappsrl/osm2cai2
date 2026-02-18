@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Storage;
 trait SpatialDataTrait
 {
     use GeoBufferTrait;
-    use GeoIntersectTrait;
     // ------------------------------
     // GeoJSON Utilities
     // ------------------------------

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\HikingRoute;
 use App\Models\Sector;
+use App\Services\GeometryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -379,7 +380,7 @@ class OsmService
     protected function updateIntersections(HikingRoute $model)
     {
         try {
-            $sectorsIntersecting = $model->getIntersections(new Sector);
+            $sectorsIntersecting = GeometryService::getIntersections($model, Sector::class);
             $model->sectors()->sync($sectorsIntersecting->pluck('id'));
         } catch (\Throwable $e) {
             Log::error("OsmService: Error syncing sectors for HikingRoute ID {$model->id}: ".$e->getMessage());

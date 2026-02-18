@@ -46,11 +46,12 @@ class FixMissingHikingRoutesSectorsCommand extends Command
         $relation = $modelConfig['relation'];
         $intersectingModelClass = $modelConfig['class'];
         $labelPlural = $modelConfig['label_plural'];
+        $pivotTable = $modelConfig['pivot_table'];
 
         $idsOption = collect($this->option('id'))
-            ->filter(fn ($id) => $id !== null && $id !== '')
-            ->map(fn ($id) => (int) $id)
-            ->filter(fn ($id) => $id > 0)
+            ->filter(fn($id) => $id !== null && $id !== '')
+            ->map(fn($id) => (int) $id)
+            ->filter(fn($id) => $id > 0)
             ->unique()
             ->values()
             ->all();
@@ -75,7 +76,8 @@ class FixMissingHikingRoutesSectorsCommand extends Command
                 $query->whereNull('osm2cai_status')
                     ->orWhere('osm2cai_status', '!=', 4);
             })
-            ->whereDoesntHave($relation);
+            ->whereRaw("NOT EXISTS (SELECT 1 FROM {$pivotTable} WHERE {$pivotTable}.hiking_route_id = hiking_routes.id)");
+
 
         if (! empty($idsOption)) {
             $baseQuery->whereIn('id', $idsOption);
@@ -92,13 +94,13 @@ class FixMissingHikingRoutesSectorsCommand extends Command
             return Command::SUCCESS;
         }
 
-        $this->line('Mode: '.($syncMode ? 'sync' : "async (queue: {$queue})"));
+        $this->line('Mode: ' . ($syncMode ? 'sync' : "async (queue: {$queue})"));
         $this->line("Chunk size: {$chunkSize}");
 
         if ($dryRun) {
             $previewIds = (clone $baseQuery)->orderBy('id')->limit(20)->pluck('id')->all();
             $this->line('Dry-run enabled, no jobs dispatched.');
-            $this->line('Preview IDs (max 20): '.implode(', ', $previewIds));
+            $this->line('Preview IDs (max 20): ' . implode(', ', $previewIds));
 
             return Command::SUCCESS;
         }
@@ -135,7 +137,7 @@ class FixMissingHikingRoutesSectorsCommand extends Command
         $this->info("Processed {$processed} hiking routes.");
 
         if (! empty($failed)) {
-            $this->warn('Failed IDs: '.implode(', ', $failed));
+            $this->warn('Failed IDs: ' . implode(', ', $failed));
         }
 
         if ($syncMode) {
@@ -155,21 +157,25 @@ class FixMissingHikingRoutesSectorsCommand extends Command
                 'relation' => 'regions',
                 'class' => 'App\\Models\\Region',
                 'label_plural' => 'regions',
+                'pivot_table' => 'hiking_route_region',
             ],
             'provinces' => [
                 'relation' => 'provinces',
                 'class' => 'App\\Models\\Province',
                 'label_plural' => 'provinces',
+                'pivot_table' => 'hiking_route_province',
             ],
             'areas' => [
                 'relation' => 'areas',
                 'class' => 'App\\Models\\Area',
                 'label_plural' => 'areas',
+                'pivot_table' => 'area_hiking_route',
             ],
             'sectors' => [
                 'relation' => 'sectors',
                 'class' => 'App\\Models\\Sector',
                 'label_plural' => 'sectors',
+                'pivot_table' => 'hiking_route_sector',
             ],
             default => null,
         };

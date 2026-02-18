@@ -6,7 +6,9 @@ use App\Jobs\CalculateIntersectionsJob;
 use App\Jobs\CheckNearbyEcPoisJob;
 use App\Jobs\CheckNearbyHutsJob;
 use App\Jobs\CheckNearbyNaturalSpringsJob;
+use App\Models\Sector;
 use App\Observers\HikingRouteObserver;
+use App\Services\GeometryService;
 use App\Services\HikingRouteDescriptionService;
 use App\Traits\AwsCacheable;
 use App\Traits\OsmfeaturesGeometryUpdateTrait;
@@ -14,7 +16,6 @@ use App\Traits\SpatialDataTrait;
 use App\Traits\TagsMappingTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -420,7 +421,8 @@ class HikingRoute extends EcTrack
 
     public function sectors()
     {
-        return $this->belongsToMany(Sector::class)->withPivot(['percentage']);
+        return $this->belongsToMany(Sector::class, 'hiking_route_sector')
+            ->withPivot(['percentage']);
     }
 
     public function issueUser()
@@ -527,6 +529,14 @@ class HikingRoute extends EcTrack
 
             return $poleFeature;
         })->toArray();
+
+        // Aggiungi tutti i settori che intersecano il bounding box della hiking route
+        // Ottimizzato: usa ST_Envelope per creare un bbox veloce invece di ST_DWithin
+        $sectorFeatures = [];
+        if ($this->geometry) {
+            $sectorFeatures = GeometryService::getIntersectingSectorsFeaturesByBbox($this->id);
+        }
+
         if ($uncheckedGeometryFeature) {
             $uncheckedGeometryFeature = $this->getFeatureMap($this->geometry_raw_data);
             $properties = [
@@ -540,9 +550,9 @@ class HikingRoute extends EcTrack
             }
             $uncheckedGeometryFeature['properties'] = $properties;
 
-            $geojson['features'] = array_merge($poleFeatures,  $geojson['features'], [$uncheckedGeometryFeature]);
+            $geojson['features'] = array_merge($poleFeatures, $sectorFeatures, $geojson['features'], [$uncheckedGeometryFeature]);
         } else {
-            $geojson['features'] = array_merge($poleFeatures, $geojson['features']);
+            $geojson['features'] = array_merge($poleFeatures, $sectorFeatures, $geojson['features']);
         }
         return $geojson;
     }

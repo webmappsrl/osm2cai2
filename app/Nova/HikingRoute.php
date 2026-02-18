@@ -3,8 +3,13 @@
 namespace App\Nova;
 
 use App\Enums\UserRole;
+use App\Jobs\CalculateIntersectionsJob;
+use App\Models\Area;
 use App\Models\EcPoi;
 use App\Models\HikingRoute as HikingRouteModel;
+use App\Models\Province;
+use App\Models\Region;
+use App\Models\Sector;
 use App\Models\User;
 use App\Services\OsmService;
 use App\Nova\Actions\AddRegionFavoritePublicationDateToHikingRouteAction;
@@ -148,8 +153,14 @@ class HikingRoute extends OsmfeaturesResource
     public function fields(NovaRequest $request): array
     {
         // Esegui operazioni sul modello prima del rendering (solo per la vista detail)
-        if ($request->isResourceDetailRequest() && $this->model()) {
-            $this->prepareModelForDetailView($request);
+
+        if ($this->model()) {
+            if ($request->isResourceDetailRequest()) {
+                $this->prepareModelForDetailView($request);
+            }
+            if ($request->isResourceIndexRequest()) {
+                $this->prepareModelForIndexView($request);
+            }
         }
 
         // Get fields from parent
@@ -870,6 +881,43 @@ class HikingRoute extends OsmfeaturesResource
         //  $this->checkAndUpdateFromOsm($model);
         // 1. Controllo aggiornamenti da osmfeatures (priorità 1)
         $this->checkAndUpdateFromOsmfeatures($model);
+
+        $this->updateIntersections();
+    }
+
+    public function prepareModelForIndexView(NovaRequest $request)
+    {
+        $model = $this->model();
+
+        if (! $model) {
+            Log::warning('prepareModelForDetailView: Model is null, exiting');
+            return;
+        }
+        if (is_null($model->geometry)) {
+            $this->checkAndUpdateOsmExistenceStatus($model);
+            $this->updateOsmfeaturesData($model);
+            $this->checkAndUpdateFromOsmfeatures($model);
+        }
+        $this->updateIntersections();
+    }
+
+    public function updateIntersections(): void
+    {
+        if ($this->model()->osm2cai_status > 3) {
+            return;
+        }
+        if ($this->sectors->isEmpty()) {
+            CalculateIntersectionsJob::dispatch($this->model(), Sector::class);
+        }
+        if ($this->regions->isEmpty()) {
+            CalculateIntersectionsJob::dispatch($this->model(), Region::class);
+        }
+        if ($this->provinces->isEmpty()) {
+            CalculateIntersectionsJob::dispatch($this->model(), Province::class);
+        }
+        if ($this->areas->isEmpty()) {
+            CalculateIntersectionsJob::dispatch($this->model(), Area::class);
+        }
     }
 
     /**

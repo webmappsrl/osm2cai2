@@ -11,6 +11,7 @@ use App\Models\MountainGroups;
 use App\Models\Municipality;
 use App\Models\Province;
 use App\Models\Region;
+use App\Services\GeometryService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -130,7 +131,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         }
 
         // get the sections associated with the hiking route
-        $clubsIds = $hikingRoute->getIntersections(new Club)->pluck('updated_at', 'id')->toArray();
+        $clubsIds = GeometryService::getIntersections($hikingRoute, Club::class)->pluck('updated_at', 'id')->toArray();
 
         // get the abstract from the hiking route and get only it description
         $abstract = $hikingRoute->tdh['abstract']['it'] ?? '';
@@ -212,8 +213,8 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     protected function buildMountainGroupGeojson($mountainGroup): array
     {
         $regions = $mountainGroup->regions->pluck('name')->implode(', ');
-        $provinces = $mountainGroup->getIntersections(new Province)->pluck('name')->implode(', ');
-        $municipalities = $mountainGroup->getIntersections(new Municipality)->pluck('name')->implode(', ');
+        $provinces = GeometryService::getIntersections($mountainGroup, Province::class)->pluck('name')->implode(', ');
+        $municipalities = GeometryService::getIntersections($mountainGroup, Municipality::class)->pluck('name')->implode(', ');
 
         // build the geojson
         $geojson = [];
@@ -258,7 +259,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
     {
         $this->logger()->info("Start caching club $club->name");
 
-        $provinceNames = $club->getIntersections(new Province)->pluck('name')->implode(', ');
+        $provinceNames = GeometryService::getIntersections($club, Province::class)->pluck('name')->implode(', ');
 
         // build the geojson
         $geojson = [];
@@ -313,7 +314,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $geojson = [];
         $geojson['type'] = 'Feature';
 
-        $intersectingMunicipalities = $poi->getIntersections(new Municipality);
+        $intersectingMunicipalities = GeometryService::getIntersections($poi, Municipality::class);
         $municipalities = $intersectingMunicipalities->pluck('name')->implode(', ');
 
         $properties = [];
@@ -342,7 +343,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $this->logger()->info("Start caching region $region->name");
 
         // get the mountain groups for the region
-        $mountainGroups = $region->getIntersections(new MountainGroups);
+        $mountainGroups = GeometryService::getIntersections($region, MountainGroups::class);
 
         // format the date
         $mountainGroups = $mountainGroups->mapWithKeys(function ($mountainGroup) {
@@ -374,7 +375,7 @@ class CacheMiturAbruzzoDataJob implements ShouldQueue
         $this->logger()->info("Start caching hut $hut->id");
 
         // get the mountain groups for the hut based on the geometry intersection
-        $mountainGroups = $hut->getIntersections(new MountainGroups)->first();
+        $mountainGroups = GeometryService::getIntersections($hut, MountainGroups::class)->first();
 
         // get the pois in a 1km buffer from the hut
         $pois = $hut->getElementsInBuffer(new EcPoi, 1000);

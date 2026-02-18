@@ -2,7 +2,11 @@
 
 namespace App\Nova\Filters;
 
+use App\Models\Club;
+use App\Models\Province;
 use App\Models\Region;
+use App\Models\Sector;
+use App\Models\User;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -31,17 +35,33 @@ class RegionFilter extends Filter
     {
         $model = $query->getModel();
 
-        if ($model instanceof \App\Models\Province || $model instanceof \App\Models\Club) {
+        // Gestione del caso "senza regione"
+        if ($value === 'no_region') {
+            if ($model instanceof Province || $model instanceof Club || $model instanceof User) {
+                return $query->whereNull('region_id');
+            }
+
+            if ($model instanceof Sector) {
+                return $query->whereHas('area.province', function ($query) {
+                    $query->whereNull('region_id');
+                });
+            }
+
+            return $query->whereDoesntHave('regions');
+        }
+
+        // Gestione normale con regione specifica
+        if ($model instanceof Province || $model instanceof Club) {
             return $query->where('region_id', $value);
         }
 
-        if ($model instanceof \App\Models\Sector) {
+        if ($model instanceof Sector) {
             return $query->whereHas('area.province', function ($query) use ($value) {
                 $query->where('region_id', $value);
             });
         }
 
-        if ($model instanceof \App\Models\User) {
+        if ($model instanceof User) {
             return $query->whereHas('region', function ($query) use ($value) {
                 $query->where('region_id', $value);
             });
@@ -60,6 +80,11 @@ class RegionFilter extends Filter
     public function options(NovaRequest $request)
     {
         $options = [];
+
+        // Aggiungi l'opzione "Senza regione" come prima opzione
+        $options[__('Senza regione')] = 'no_region';
+
+        // Aggiungi tutte le regioni
         foreach (Region::all() as $region) {
             $options[$region->name] = $region->id;
         }
