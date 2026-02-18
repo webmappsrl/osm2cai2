@@ -9360,7 +9360,10 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
       // Lista delle HikingRoute disponibili per questo palo (quando appartiene a più HikingRoute)
       selectedHikingRouteIds: [],
       // Array di HikingRoute selezionate quando il palo appartiene a più HikingRoute (multiselect)
-      ignoreValue: false // Escludi da export CSV/Excel: se true, il palo e le frecce non vengono esportati (numerazione preservata)
+      ignoreValue: false,
+      // Escludi da export CSV/Excel: se true, il palo e le frecce non vengono esportati (numerazione preservata)
+      clickHandler: null,
+      inertiaStartHandler: null
     };
   },
   computed: {
@@ -9401,11 +9404,18 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
     // Ascolta gli eventi Nova come fa il wm-package
     Nova.$on('signage-map:popup-open', this.onNovaPopupOpen);
     Nova.$on('signage-map:popup-close', this.onNovaPopupClose);
+
+    // Intercept navigation to force reload when navigating to index
+    var currentResourceId = this.resourceId || this.resource && this.resource.id && this.resource.id.value;
+    if (currentResourceId) {
+      this.setupNavigationInterceptor();
+    }
   },
   beforeUnmount: function beforeUnmount() {
     document.removeEventListener('keydown', this.handleKeydown);
     Nova.$off('signage-map:popup-open', this.onNovaPopupOpen);
     Nova.$off('signage-map:popup-close', this.onNovaPopupClose);
+    this.removeNavigationInterceptor();
   },
   methods: {
     /** Scala l'icona X in base alla risoluzione: con zoom bassi (risoluzione alta) la X è più piccola */getExportIgnoreIconScale: function getExportIgnoreIconScale(resolution) {
@@ -9514,6 +9524,75 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
         this.closePopup();
       }
     },
+    setupNavigationInterceptor: function setupNavigationInterceptor() {
+      var _this2 = this;
+      // Intercept clicks on links that navigate to index page
+      var handleClick = function handleClick(e) {
+        var link = e.target.closest('a[href]');
+        if (!link) return;
+        var href = link.getAttribute('href') || link.href;
+        if (!href) return;
+        try {
+          var currentPath = new URL(window.location.href).pathname;
+          var newPath = new URL(href, window.location.origin).pathname;
+
+          // Check if we're on a detail page and clicking a link to the index page
+          var currentResourceId = _this2.resourceId || _this2.resource && _this2.resource.id && _this2.resource.id.value;
+          if (currentResourceId && currentPath.includes("/".concat(_this2.resourceName, "/"))) {
+            var indexPattern = new RegExp("^/resources/".concat(_this2.resourceName, "/?$"));
+            if (indexPattern.test(newPath)) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              window.location.href = href;
+              return false;
+            }
+          }
+        } catch (err) {
+          // Invalid URL, ignore
+        }
+      };
+
+      // Use capture phase to intercept before other handlers
+      document.addEventListener('click', handleClick, true);
+      this.clickHandler = handleClick;
+
+      // Also intercept Inertia navigation events
+      var handleInertiaStart = function handleInertiaStart(event) {
+        var _event$detail;
+        var url = ((_event$detail = event.detail) === null || _event$detail === void 0 ? void 0 : _event$detail.url) || event.url || window.location.href;
+        try {
+          var currentPath = new URL(window.location.href).pathname;
+          var newPath = new URL(url, window.location.origin).pathname;
+          var currentResourceId = _this2.resourceId || _this2.resource && _this2.resource.id && _this2.resource.id.value;
+          if (currentResourceId && currentPath.includes("/".concat(_this2.resourceName, "/"))) {
+            var indexPattern = new RegExp("^/resources/".concat(_this2.resourceName, "/?$"));
+            if (indexPattern.test(newPath)) {
+              if (event.preventDefault) event.preventDefault();
+              if (event.stopPropagation) event.stopPropagation();
+              window.location.href = url;
+              return false;
+            }
+          }
+        } catch (err) {
+          // Invalid URL, ignore
+        }
+      };
+
+      // Listen to Inertia events
+      document.addEventListener('inertia:start', handleInertiaStart);
+      this.inertiaStartHandler = handleInertiaStart;
+    },
+    removeNavigationInterceptor: function removeNavigationInterceptor() {
+      if (this.clickHandler) {
+        document.removeEventListener('click', this.clickHandler, true);
+        this.clickHandler = null;
+      }
+      if (this.inertiaStartHandler) {
+        document.removeEventListener('inertia:start', this.inertiaStartHandler);
+        this.inertiaStartHandler = null;
+      }
+    },
     loadMetaValue: function loadMetaValue(featuresMap) {
       if (!this.currentPoleId) {
         this.metaValue = false;
@@ -9611,7 +9690,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
      * Quando un palo appartiene a più HikingRoute, le raccoglie tutte
      */
     loadAvailableHikingRoutes: function loadAvailableHikingRoutes() {
-      var _this2 = this;
+      var _this3 = this;
       if (!this.currentPoleId || !this.currentFeaturesMap) {
         this.availableHikingRoutes = [];
         this.selectedHikingRouteIds = [];
@@ -9759,7 +9838,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
             });
             if (_hasPole) {
               var _hrId = parseInt(feature.properties.id);
-              if (_this2.availableHikingRoutes.some(function (hr) {
+              if (_this3.availableHikingRoutes.some(function (hr) {
                 return hr.id === _hrId;
               })) {
                 checkpointRouteIds.push(_hrId);
@@ -9784,19 +9863,19 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
       }
     },
     toggleMeta: function toggleMeta() {
-      var _this3 = this;
+      var _this4 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
         return _regenerator().w(function (_context2) {
           while (1) switch (_context2.n) {
             case 0:
-              if (!_this3.isUpdatingMeta) {
+              if (!_this4.isUpdatingMeta) {
                 _context2.n = 1;
                 break;
               }
               return _context2.a(2);
             case 1:
               // Cambia solo il valore locale, il salvataggio avviene tramite il bottone Aggiorna
-              _this3.metaValue = !_this3.metaValue;
+              _this4.metaValue = !_this4.metaValue;
               // Non resettare name/description quando si disattiva Meta: così se l'utente riattiva Meta
               // i campi sono ancora compilati e il pulsante Aggiorna resta abilitato
             case 2:
@@ -9812,26 +9891,26 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
       this.ignoreValue = !this.ignoreValue;
     },
     suggestPlaceName: function suggestPlaceName() {
-      var _this4 = this;
+      var _this5 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
         var _response$data, _response$data2, response, _t;
         return _regenerator().w(function (_context3) {
           while (1) switch (_context3.p = _context3.n) {
             case 0:
-              if (!(!_this4.currentPoleId || _this4.isLoadingSuggestion)) {
+              if (!(!_this5.currentPoleId || _this5.isLoadingSuggestion)) {
                 _context3.n = 1;
                 break;
               }
               return _context3.a(2);
             case 1:
-              _this4.isLoadingSuggestion = true;
+              _this5.isLoadingSuggestion = true;
               _context3.p = 2;
               _context3.n = 3;
-              return Nova.request().get("/nova-vendor/signage-map/pole/".concat(_this4.currentPoleId, "/suggest-place-name"));
+              return Nova.request().get("/nova-vendor/signage-map/pole/".concat(_this5.currentPoleId, "/suggest-place-name"));
             case 3:
               response = _context3.v;
               if ((_response$data = response.data) !== null && _response$data !== void 0 && _response$data.success && (_response$data2 = response.data) !== null && _response$data2 !== void 0 && _response$data2.suggestedName) {
-                _this4.name = response.data.suggestedName;
+                _this5.name = response.data.suggestedName;
               }
               _context3.n = 5;
               break;
@@ -9842,7 +9921,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               // Non mostriamo errore all'utente, il campo rimane vuoto
             case 5:
               _context3.p = 5;
-              _this4.isLoadingSuggestion = false;
+              _this5.isLoadingSuggestion = false;
               return _context3.f(5);
             case 6:
               return _context3.a(2);
@@ -9956,43 +10035,43 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
       return lineFeatures[0].id;
     },
     saveChanges: function saveChanges() {
-      var _this5 = this;
+      var _this6 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-        var poleId, modelName, hikingRouteId, _lastResponse$data, _lastResponse$data2, hikingRouteIds, autoHikingRouteId, selectedIdsSet, deselectedRouteIds, promisesAdd, promisesRemove, responses, lastResponse, count, _this5$description2, _response$data3, _response$data4, endpoint, response, _error$response, _t2;
+        var poleId, modelName, hikingRouteId, _lastResponse$data, _lastResponse$data2, hikingRouteIds, autoHikingRouteId, selectedIdsSet, deselectedRouteIds, promisesAdd, promisesRemove, responses, lastResponse, count, _this6$description2, _response$data3, _response$data4, endpoint, response, _error$response, _t2;
         return _regenerator().w(function (_context4) {
           while (1) switch (_context4.p = _context4.n) {
             case 0:
-              if (!(_this5.isUpdatingMeta || !_this5.currentPoleId)) {
+              if (!(_this6.isUpdatingMeta || !_this6.currentPoleId)) {
                 _context4.n = 1;
                 break;
               }
               return _context4.a(2);
             case 1:
-              if (!(_this5.metaValue && (!_this5.name || !_this5.name.trim()))) {
+              if (!(_this6.metaValue && (!_this6.name || !_this6.name.trim()))) {
                 _context4.n = 2;
                 break;
               }
               return _context4.a(2);
             case 2:
-              _this5.isUpdatingMeta = true;
-              poleId = parseInt(_this5.currentPoleId);
+              _this6.isUpdatingMeta = true;
+              poleId = parseInt(_this6.currentPoleId);
               _context4.p = 3;
-              modelName = _this5.resourceName;
+              modelName = _this6.resourceName;
               if (!(modelName === 'signage-projects')) {
                 _context4.n = 9;
                 break;
               }
               // Se il palo appartiene a più HikingRoute e l'utente ne ha selezionate, usa quelle
               hikingRouteIds = [];
-              if (!(_this5.availableHikingRoutes.length > 1 && _this5.selectedHikingRouteIds && _this5.selectedHikingRouteIds.length > 0)) {
+              if (!(_this6.availableHikingRoutes.length > 1 && _this6.selectedHikingRouteIds && _this6.selectedHikingRouteIds.length > 0)) {
                 _context4.n = 5;
                 break;
               }
               // Converti gli ID selezionati in numeri e verifica che siano validi
-              hikingRouteIds = _this5.selectedHikingRouteIds.map(function (id) {
+              hikingRouteIds = _this6.selectedHikingRouteIds.map(function (id) {
                 return typeof id === 'number' ? id : parseInt(id);
               }).filter(function (id) {
-                var isValid = _this5.availableHikingRoutes.some(function (hr) {
+                var isValid = _this6.availableHikingRoutes.some(function (hr) {
                   return hr.id === id;
                 });
                 if (!isValid) {
@@ -10005,14 +10084,14 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
                 break;
               }
               Nova.error('Nessuna HikingRoute valida selezionata. Seleziona almeno un\'opzione valida.');
-              _this5.isUpdatingMeta = false;
+              _this6.isUpdatingMeta = false;
               return _context4.a(2);
             case 4:
               _context4.n = 6;
               break;
             case 5:
               // Altrimenti, trova automaticamente l'HikingRoute
-              autoHikingRouteId = _this5.findHikingRouteFromFeaturesMap(poleId);
+              autoHikingRouteId = _this6.findHikingRouteFromFeaturesMap(poleId);
               if (autoHikingRouteId) {
                 hikingRouteIds = [autoHikingRouteId];
               }
@@ -10022,25 +10101,25 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
                 break;
               }
               Nova.error('Impossibile trovare l\'HikingRoute che contiene questo palo');
-              _this5.isUpdatingMeta = false;
+              _this6.isUpdatingMeta = false;
               return _context4.a(2);
             case 7:
               // HikingRoute deselezionate: rimuovi il palo da checkpoint (add: false)
               selectedIdsSet = new Set(hikingRouteIds);
-              deselectedRouteIds = _this5.availableHikingRoutes.map(function (hr) {
+              deselectedRouteIds = _this6.availableHikingRoutes.map(function (hr) {
                 return hr.id;
               }).filter(function (id) {
                 return !selectedIdsSet.has(id);
               });
               promisesAdd = hikingRouteIds.map(function (hikingRouteId) {
-                var _this5$description;
+                var _this6$description;
                 var endpoint = "/nova-vendor/signage-map/hiking-route/".concat(hikingRouteId, "/properties");
                 return Nova.request().patch(endpoint, {
                   poleId: poleId,
-                  add: _this5.metaValue,
-                  name: _this5.metaValue ? _this5.name.trim() : null,
-                  description: _this5.metaValue ? ((_this5$description = _this5.description) === null || _this5$description === void 0 ? void 0 : _this5$description.trim()) || null : null,
-                  export_ignore: _this5.ignoreValue
+                  add: _this6.metaValue,
+                  name: _this6.metaValue ? _this6.name.trim() : null,
+                  description: _this6.metaValue ? ((_this6$description = _this6.description) === null || _this6$description === void 0 ? void 0 : _this6$description.trim()) || null : null,
+                  export_ignore: _this6.ignoreValue
                 });
               });
               promisesRemove = deselectedRouteIds.map(function (hikingRouteId) {
@@ -10057,25 +10136,25 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               // Aggiorna la cache con le properties dell'ultima risposta "add" (le remove potrebbero avere properties diverse)
               lastResponse = promisesAdd.length > 0 ? responses[promisesAdd.length - 1] : responses.length > 0 ? responses[0] : null;
               if (lastResponse !== null && lastResponse !== void 0 && (_lastResponse$data = lastResponse.data) !== null && _lastResponse$data !== void 0 && _lastResponse$data.properties) {
-                _this5.cachedProperties = lastResponse.data.properties;
+                _this6.cachedProperties = lastResponse.data.properties;
               }
               // Aggiorna le frecce segnaletica nel popup senza dover chiudere/riaprire
               if (lastResponse !== null && lastResponse !== void 0 && (_lastResponse$data2 = lastResponse.data) !== null && _lastResponse$data2 !== void 0 && _lastResponse$data2.poleSignage) {
-                _this5.signageArrowsData = _objectSpread(_objectSpread({}, _this5.signageArrowsData), lastResponse.data.poleSignage);
+                _this6.signageArrowsData = _objectSpread(_objectSpread({}, _this6.signageArrowsData), lastResponse.data.poleSignage);
               }
               count = hikingRouteIds.length;
-              Nova.success(_this5.metaValue ? "Dati localit\xE0 salvati con successo per ".concat(count, " HikingRoute").concat(count > 1 ? '' : '') : "Meta rimossa con successo da ".concat(count, " HikingRoute").concat(count > 1 ? '' : ''));
+              Nova.success(_this6.metaValue ? "Dati localit\xE0 salvati con successo per ".concat(count, " HikingRoute").concat(count > 1 ? '' : '') : "Meta rimossa con successo da ".concat(count, " HikingRoute").concat(count > 1 ? '' : ''));
               _context4.n = 12;
               break;
             case 9:
               // Se stiamo lavorando direttamente su un HikingRoute, usa il suo ID
-              hikingRouteId = _this5.resourceId || _this5.resource && _this5.resource.id && _this5.resource.id.value;
+              hikingRouteId = _this6.resourceId || _this6.resource && _this6.resource.id && _this6.resource.id.value;
               if (hikingRouteId) {
                 _context4.n = 10;
                 break;
               }
               Nova.error('ID HikingRoute non trovato');
-              _this5.isUpdatingMeta = false;
+              _this6.isUpdatingMeta = false;
               return _context4.a(2);
             case 10:
               // Usa sempre l'endpoint dell'HikingRoute
@@ -10083,25 +10162,25 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               _context4.n = 11;
               return Nova.request().patch(endpoint, {
                 poleId: poleId,
-                add: _this5.metaValue,
-                name: _this5.metaValue ? _this5.name.trim() : null,
-                description: _this5.metaValue ? ((_this5$description2 = _this5.description) === null || _this5$description2 === void 0 ? void 0 : _this5$description2.trim()) || null : null,
-                export_ignore: _this5.ignoreValue
+                add: _this6.metaValue,
+                name: _this6.metaValue ? _this6.name.trim() : null,
+                description: _this6.metaValue ? ((_this6$description2 = _this6.description) === null || _this6$description2 === void 0 ? void 0 : _this6$description2.trim()) || null : null,
+                export_ignore: _this6.ignoreValue
               });
             case 11:
               response = _context4.v;
               // Aggiorna la cache con le properties aggiornate dalla risposta
               if ((_response$data3 = response.data) !== null && _response$data3 !== void 0 && _response$data3.properties) {
-                _this5.cachedProperties = response.data.properties;
+                _this6.cachedProperties = response.data.properties;
               }
               // Aggiorna le frecce segnaletica nel popup senza dover chiudere/riaprire
               if ((_response$data4 = response.data) !== null && _response$data4 !== void 0 && _response$data4.poleSignage) {
-                _this5.signageArrowsData = _objectSpread(_objectSpread({}, _this5.signageArrowsData), response.data.poleSignage);
+                _this6.signageArrowsData = _objectSpread(_objectSpread({}, _this6.signageArrowsData), response.data.poleSignage);
               }
-              Nova.success(_this5.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
+              Nova.success(_this6.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
             case 12:
               // Forza il refresh della mappa incrementando la key
-              _this5.mapKey++;
+              _this6.mapKey++;
               _context4.n = 14;
               break;
             case 13:
@@ -10111,7 +10190,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               Nova.error('Errore durante il salvataggio: ' + (((_error$response = _t2.response) === null || _error$response === void 0 || (_error$response = _error$response.data) === null || _error$response === void 0 ? void 0 : _error$response.error) || _t2.message || 'Errore sconosciuto'));
             case 14:
               _context4.p = 14;
-              _this5.isUpdatingMeta = false;
+              _this6.isUpdatingMeta = false;
               return _context4.f(14);
             case 15:
               return _context4.a(2);
@@ -10120,7 +10199,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
       }))();
     },
     handleArrowDirectionChanged: function handleArrowDirectionChanged(event) {
-      var _this6 = this;
+      var _this7 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
         var _response$data5, _response$data6, poleId, response, _error$response2, _t3;
         return _regenerator().w(function (_context5) {
@@ -10139,7 +10218,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
                     routeId: event.routeId,
                     arrowIndex: event.arrowIndex,
                     newDirection: event.newDirection,
-                    currentPoleId: _this6.currentPoleId
+                    currentPoleId: _this7.currentPoleId
                   },
                   timestamp: Date.now(),
                   sessionId: 'debug-session',
@@ -10148,7 +10227,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
                 })
               })["catch"](function () {});
               // #endregion
-              if (_this6.currentPoleId) {
+              if (_this7.currentPoleId) {
                 _context5.n = 1;
                 break;
               }
@@ -10172,7 +10251,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               return _context5.a(2);
             case 1:
               _context5.p = 1;
-              poleId = parseInt(_this6.currentPoleId); // #region agent log
+              poleId = parseInt(_this7.currentPoleId); // #region agent log
               fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
                 method: 'POST',
                 headers: {
@@ -10225,7 +10304,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
 
               // Aggiorna i dati locali con la nuova direzione
               if ((_response$data6 = response.data) !== null && _response$data6 !== void 0 && _response$data6.signageData) {
-                _this6.signageArrowsData = response.data.signageData;
+                _this7.signageArrowsData = response.data.signageData;
                 // #region agent log
                 fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', {
                   method: 'POST',
@@ -10236,7 +10315,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
                     location: 'DetailField.vue:handleArrowDirectionChanged',
                     message: 'signageArrowsData aggiornato',
                     data: {
-                      hasData: !!_this6.signageArrowsData
+                      hasData: !!_this7.signageArrowsData
                     },
                     timestamp: Date.now(),
                     sessionId: 'debug-session',
@@ -10249,7 +10328,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               Nova.success('Direzione freccia aggiornata con successo');
 
               // Forza il refresh della mappa per mostrare i cambiamenti
-              _this6.mapKey++;
+              _this7.mapKey++;
               _context5.n = 4;
               break;
             case 3:
@@ -10284,13 +10363,13 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
       }))();
     },
     handleArrowOrderChanged: function handleArrowOrderChanged(event) {
-      var _this7 = this;
+      var _this8 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
         var _response$data7, poleId, response, _t4;
         return _regenerator().w(function (_context6) {
           while (1) switch (_context6.p = _context6.n) {
             case 0:
-              if (_this7.currentPoleId) {
+              if (_this8.currentPoleId) {
                 _context6.n = 1;
                 break;
               }
@@ -10298,7 +10377,7 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
               return _context6.a(2);
             case 1:
               _context6.p = 1;
-              poleId = parseInt(_this7.currentPoleId);
+              poleId = parseInt(_this8.currentPoleId);
               _context6.n = 2;
               return Nova.request().patch("/nova-vendor/signage-map/pole/".concat(poleId, "/arrow-order"), {
                 routeId: event.routeId,
@@ -10307,12 +10386,12 @@ var X_ICON_DATA_URL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="ht
             case 2:
               response = _context6.v;
               if ((_response$data7 = response.data) !== null && _response$data7 !== void 0 && _response$data7.signageData) {
-                _this7.signageArrowsData = response.data.signageData;
+                _this8.signageArrowsData = response.data.signageData;
               }
               Nova.success('Ordine frecce aggiornato con successo');
 
               // Forza il refresh della mappa per mostrare i cambiamenti
-              _this7.mapKey++;
+              _this8.mapKey++;
               _context6.n = 4;
               break;
             case 3:

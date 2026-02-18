@@ -254,6 +254,8 @@ export default {
             availableHikingRoutes: [], // Lista delle HikingRoute disponibili per questo palo (quando appartiene a più HikingRoute)
             selectedHikingRouteIds: [], // Array di HikingRoute selezionate quando il palo appartiene a più HikingRoute (multiselect)
             ignoreValue: false, // Escludi da export CSV/Excel: se true, il palo e le frecce non vengono esportati (numerazione preservata)
+            clickHandler: null,
+            inertiaStartHandler: null
         };
     },
 
@@ -298,12 +300,19 @@ export default {
         // Ascolta gli eventi Nova come fa il wm-package
         Nova.$on('signage-map:popup-open', this.onNovaPopupOpen);
         Nova.$on('signage-map:popup-close', this.onNovaPopupClose);
+        
+        // Intercept navigation to force reload when navigating to index
+        const currentResourceId = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+        if (currentResourceId) {
+            this.setupNavigationInterceptor();
+        }
     },
 
     beforeUnmount() {
         document.removeEventListener('keydown', this.handleKeydown);
         Nova.$off('signage-map:popup-open', this.onNovaPopupOpen);
         Nova.$off('signage-map:popup-close', this.onNovaPopupClose);
+        this.removeNavigationInterceptor();
     },
 
     methods: {
@@ -408,6 +417,77 @@ export default {
         handleKeydown(event) {
             if (event.key === 'Escape' && this.showPopup) {
                 this.closePopup();
+            }
+        },
+        setupNavigationInterceptor() {
+            // Intercept clicks on links that navigate to index page
+            const handleClick = (e) => {
+                const link = e.target.closest('a[href]');
+                if (!link) return;
+                
+                const href = link.getAttribute('href') || link.href;
+                if (!href) return;
+                
+                try {
+                    const currentPath = new URL(window.location.href).pathname;
+                    const newPath = new URL(href, window.location.origin).pathname;
+                    
+                    // Check if we're on a detail page and clicking a link to the index page
+                    const currentResourceId = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+                    if (currentResourceId && currentPath.includes(`/${this.resourceName}/`)) {
+                        const indexPattern = new RegExp(`^/resources/${this.resourceName}/?$`);
+                        if (indexPattern.test(newPath)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            window.location.href = href;
+                            return false;
+                        }
+                    }
+                } catch (err) {
+                    // Invalid URL, ignore
+                }
+            };
+            
+            // Use capture phase to intercept before other handlers
+            document.addEventListener('click', handleClick, true);
+            this.clickHandler = handleClick;
+            
+            // Also intercept Inertia navigation events
+            const handleInertiaStart = (event) => {
+                const url = event.detail?.url || event.url || window.location.href;
+                
+                try {
+                    const currentPath = new URL(window.location.href).pathname;
+                    const newPath = new URL(url, window.location.origin).pathname;
+                    
+                    const currentResourceId = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
+                    if (currentResourceId && currentPath.includes(`/${this.resourceName}/`)) {
+                        const indexPattern = new RegExp(`^/resources/${this.resourceName}/?$`);
+                        if (indexPattern.test(newPath)) {
+                            if (event.preventDefault) event.preventDefault();
+                            if (event.stopPropagation) event.stopPropagation();
+                            window.location.href = url;
+                            return false;
+                        }
+                    }
+                } catch (err) {
+                    // Invalid URL, ignore
+                }
+            };
+            
+            // Listen to Inertia events
+            document.addEventListener('inertia:start', handleInertiaStart);
+            this.inertiaStartHandler = handleInertiaStart;
+        },
+        removeNavigationInterceptor() {
+            if (this.clickHandler) {
+                document.removeEventListener('click', this.clickHandler, true);
+                this.clickHandler = null;
+            }
+            if (this.inertiaStartHandler) {
+                document.removeEventListener('inertia:start', this.inertiaStartHandler);
+                this.inertiaStartHandler = null;
             }
         },
 
