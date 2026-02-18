@@ -30,6 +30,12 @@ class SectorFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
+        // Gestione del caso "senza settore"
+        if ($value === 'no_sector') {
+            return $query->whereDoesntHave('sectors');
+        }
+
+        // Gestione normale con settore specifico
         return $query->whereHas('sectors', function ($query) use ($value) {
             $query->where('sector_id', $value);
         });
@@ -43,6 +49,10 @@ class SectorFilter extends Filter
     public function options(NovaRequest $request)
     {
         $options = [];
+        
+        // Aggiungi l'opzione "Senza settore" come prima opzione
+        $options[__('Senza settore')] = 'no_sector';
+        
         if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             $sectors_id = [];
             foreach (auth()->user()->region->provinces as $province) {

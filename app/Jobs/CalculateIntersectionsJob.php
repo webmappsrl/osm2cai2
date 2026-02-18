@@ -2,13 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Services\GeometryService;
 use App\Traits\SpatialDataTrait;
-use DB;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -60,10 +61,30 @@ class CalculateIntersectionsJob implements ShouldQueue
     public function handle()
     {
         $baseModel = $this->baseModel;
-        $intersectingModelClass = str_starts_with($this->intersectingModelClass, 'App\\Models\\')
-            ? $this->intersectingModelClass
-            : 'App\\Models\\' . $this->intersectingModelClass;
+
+        // If baseModel is a Nova resource, get the underlying Eloquent model
+        // This is a safety check in case a Nova resource is accidentally passed
+        if (is_object($baseModel) && method_exists($baseModel, 'model')) {
+            $baseModel = $baseModel->model();
+        }
+
+        // Normalize the intersecting model class name
+        $intersectingModelClass = $this->intersectingModelClass;
+        if (str_starts_with($intersectingModelClass, 'App\\Models\\')) {
+            // Already correct
+        } elseif (str_starts_with($intersectingModelClass, 'App\\')) {
+            // Replace wrong App\ namespace with App\Models\
+            $intersectingModelClass = 'App\\Models\\' . substr($intersectingModelClass, 5);
+        } else {
+            // Add App\Models\ prefix
+            $intersectingModelClass = 'App\\Models\\' . $intersectingModelClass;
+        }
         $intersectingModelInstance = new $intersectingModelClass; // create a new instance of the intersecting model
+
+        $baseModelClass = get_class($baseModel);
+        $baseModelId = $baseModel->id;
+        $baseTable = $baseModel->getTable();
+        $intersectingTable = $intersectingModelInstance->getTable();
 
         // Check if models are different
         if (get_class($baseModel) === $this->intersectingModelClass) {
@@ -80,8 +101,17 @@ class CalculateIntersectionsJob implements ShouldQueue
         }
 
         try {
-            // Calculate intersections
-            $intersectingIds = $baseModel->getIntersections($intersectingModelInstance)
+            // Ricarica il modello dal database per assicurarsi che abbia la geometria
+            $baseModel = $baseModelClass::find($baseModelId);
+            if (!$baseModel) {
+                Log::error('CalculateIntersectionsJob fallito: modello base non trovato nel database', [
+                    'base_model' => $baseModelClass,
+                    'base_model_id' => $baseModelId,
+                ]);
+                throw new \Exception("Base model {$baseModelId} not found");
+            }
+
+            $intersectingIds = GeometryService::getIntersections($baseModel, $intersectingModelClass)
                 ->pluck('id')
                 ->toArray();
 
@@ -95,39 +125,37 @@ class CalculateIntersectionsJob implements ShouldQueue
                 'sectors' => ['areas' => 'area_id'],
             ];
 
-            $intersectingTable = $intersectingModelInstance->getTable();
-            $baseTable = $baseModel->getTable();
-
             if (isset($directRelations[$intersectingTable][$baseTable])) {
-                // check if there is a direct relationship between the two models
+                // Relazione diretta con foreign key
                 $foreignKey = $directRelations[$intersectingTable][$baseTable];
 
                 // update the foreign key for all intersecting records
-                $intersectingModelClass::whereIn('id', $intersectingIds)
-                    ->update([$foreignKey => $baseModel->id]);
+                $updatedCount = $intersectingModelClass::whereIn('id', $intersectingIds)
+                    ->update([$foreignKey => $baseModelId]);
 
                 // set NULL for all records that no longer intersect
-                $intersectingModelClass::whereNotIn('id', $intersectingIds)
-                    ->where($foreignKey, $baseModel->id)
+                $nullifiedCount = $intersectingModelClass::whereNotIn('id', $intersectingIds)
+                    ->where($foreignKey, $baseModelId)
                     ->update([$foreignKey => null]);
             } else {
-                // many-to-many relationship with pivot table
+                // Relazione many-to-many con pivot table
                 $pivotTable = $this->determinePivotTable($baseModel->getTable(), $intersectingModelInstance->getTable());
 
                 // Sync relationships in pivot table
-                DB::table($pivotTable)->where([
-                    $this->getModelForeignKey($baseModel) => $baseModel->id,
+                $deletedCount = DB::table($pivotTable)->where([
+                    $this->getModelForeignKey($baseModel) => $baseModelId,
                 ])->delete();
 
                 $pivotRecords = [];
+
                 foreach ($intersectingIds as $intersectingId) {
                     // Use find instead of findOrFail to handle deleted records gracefully
                     $intersectingModel = $intersectingModelInstance::find($intersectingId);
 
                     if (!$intersectingModel) {
-                        Log::warning("Intersecting model not found, skipping", [
-                            'base_model' => get_class($baseModel),
-                            'base_model_id' => $baseModel->id,
+                        Log::warning("Modello intersecante non trovato, saltato", [
+                            'base_model' => $baseModelClass,
+                            'base_model_id' => $baseModelId,
                             'intersecting_model' => $intersectingModelClass,
                             'intersecting_id' => $intersectingId,
                         ]);
@@ -138,7 +166,7 @@ class CalculateIntersectionsJob implements ShouldQueue
                     $intersectingModelForeignKey = $this->getModelForeignKey($intersectingModel);
 
                     $record = [
-                        $baseModelForeignKey => $baseModel->id,
+                        $baseModelForeignKey => $baseModelId,
                         $intersectingModelForeignKey => $intersectingId,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -146,12 +174,12 @@ class CalculateIntersectionsJob implements ShouldQueue
 
                     if (Schema::hasColumn($pivotTable, 'percentage')) {
                         try {
-                            $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel, $pivotTable);
+                            $percentage = $this->calculateIntersectionPercentage($baseModel, $intersectingModel);
                             $record['percentage'] = $percentage;
                         } catch (\Exception $e) {
-                            Log::warning("Failed to calculate intersection percentage, using 0", [
-                                'base_model' => get_class($baseModel),
-                                'base_model_id' => $baseModel->id,
+                            Log::warning("Errore nel calcolo della percentuale di intersezione, uso 0", [
+                                'base_model' => $baseModelClass,
+                                'base_model_id' => $baseModelId,
                                 'intersecting_model' => $intersectingModelClass,
                                 'intersecting_id' => $intersectingId,
                                 'error' => $e->getMessage(),
@@ -164,20 +192,27 @@ class CalculateIntersectionsJob implements ShouldQueue
                 }
 
                 if (!empty($pivotRecords)) {
-                    DB::table($pivotTable)->insert($pivotRecords);
-                    Log::info("Inserted pivot records", [
-                        'base_model' => get_class($baseModel),
-                        'base_model_id' => $baseModel->id,
-                        'intersecting_model' => $intersectingModelClass,
-                        'count' => count($pivotRecords),
-                    ]);
+                    try {
+                        DB::table($pivotTable)->insert($pivotRecords);
+                    } catch (\Exception $e) {
+                        Log::error('Errore durante l\'inserimento dei record pivot', [
+                            'base_model' => $baseModelClass,
+                            'base_model_id' => $baseModelId,
+                            'intersecting_model' => $intersectingModelClass,
+                            'pivot_table' => $pivotTable,
+                            'records_count' => count($pivotRecords),
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                        throw $e;
+                    }
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error recalculating intersections', [
-                'base_model' => get_class($baseModel),
-                'base_model_id' => $baseModel->id ?? null,
-                'base_model_table' => $baseModel->getTable() ?? null,
+            Log::error('Errore durante il calcolo delle intersezioni', [
+                'base_model' => $baseModelClass,
+                'base_model_id' => $baseModelId ?? null,
+                'base_model_table' => $baseTable ?? null,
                 'intersecting_model' => $intersectingModelClass,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -311,7 +346,7 @@ class CalculateIntersectionsJob implements ShouldQueue
             ", [$intersectingModel->id, $baseModel->id, $intersectingModel->id]);
         } else {
             // case for multipolygons
-            return DB::select('
+            $query = DB::select('
                 WITH intersection AS (
                     SELECT ST_Intersection(
                         ST_Transform(?, 3857),
@@ -328,16 +363,22 @@ class CalculateIntersectionsJob implements ShouldQueue
                 $intersectingModel->geometry,
                 $baseModel->geometry,
                 $baseModel->geometry,
-            ])[0]->percentage ?? 0.0;
+            ]);
         }
 
-        // Log for debug
-        Log::info('Calculated percentage:', [
-            'base_model' => $baseModel->getTable(),
-            'intersecting_model' => $intersectingModel->getTable(),
-            'percentage' => $query[0]->percentage,
+        $percentage = (float) ($query[0]->percentage ?? 0.0);
+
+        // Log per debug
+        Log::info('Percentuale di intersezione calcolata', [
+            'base_model' => get_class($baseModel),
+            'base_model_id' => $baseModel->id,
+            'base_table' => $baseModel->getTable(),
+            'intersecting_model' => get_class($intersectingModel),
+            'intersecting_id' => $intersectingModel->id,
+            'intersecting_table' => $intersectingModel->getTable(),
+            'percentage' => $percentage,
         ]);
 
-        return (float) ($query[0]->percentage ?? 0.0);
+        return $percentage;
     }
 }

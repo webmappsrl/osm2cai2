@@ -8,7 +8,7 @@ use App\Models\EcPoi;
 use App\Models\HikingRoute;
 use App\Models\MountainGroups;
 use App\Models\Region;
-use App\Models\Section;
+use App\Services\GeometryService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -1369,8 +1369,8 @@ class MiturAbruzzoController extends Controller
         }
         $geometry = json_decode($geometry[0]->geom, true);
 
-        $hikingRoutesIntersectingIds = Cache::remember('hiking_routes_intersecting_'.$id, 60 * 24, function () use ($mountainGroup) {
-            return array_keys($mountainGroup->getIntersections(new HikingRoute)->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray());
+        $hikingRoutesIntersectingIds = Cache::remember('hiking_routes_intersecting_' . $id, 60 * 24, function () use ($mountainGroup) {
+            return array_keys(GeometryService::getIntersections($mountainGroup, HikingRoute::class)->where('osm2cai_status', 4)->pluck('updated_at', 'id')->toArray());
         });
 
         $hikingRoutesGeojson = array_map(function ($hikingRoute) {
