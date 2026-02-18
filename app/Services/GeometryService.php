@@ -280,6 +280,18 @@ class GeometryService
                     ->pluck('percentage', 'sector_id')
                     ->toArray();
 
+                // Trova le percentuali uniche ordinate (solo tra i settori che hanno una percentuale)
+                // per identificare la prima, la seconda e tutte le altre
+                $uniquePercentages = [];
+                if (!empty($sectorPercentages)) {
+                    $uniquePercentages = array_unique(array_filter($sectorPercentages, static function ($value) {
+                        return $value !== null;
+                    }));
+                    rsort($uniquePercentages); // Ordina in ordine decrescente
+                }
+                $firstPercentage = !empty($uniquePercentages) ? $uniquePercentages[0] : null;
+                $secondPercentage = count($uniquePercentages) > 1 ? $uniquePercentages[1] : null;
+
                 foreach ($sectors as $sector) {
                     $sectorGeometry = $sectorsGeometries->get($sector->id);
 
@@ -301,6 +313,32 @@ class GeometryService
                                 $tooltip .= ' (' . number_format($percentage, 2) . '%)';
                             }
 
+                            // Colore del poligono in base alla percentuale:
+                            // - se la percentuale è nulla, usa il grigio
+                            // - se è la percentuale più alta, usa arancione con trasparenza alta (più pieno)
+                            // - se è la seconda percentuale più alta, usa arancione con trasparenza media
+                            // - tutte le altre: arancione con trasparenza bassa (più trasparente)
+                            if ($percentage === null) {
+                                $strokeColor = '#808080';
+                                $fillColor = 'rgba(128, 128, 128, 0.2)';
+                                $strokeWidth = 2;
+                            } elseif ($firstPercentage !== null && $percentage == $firstPercentage) {
+                                // Poligono con match più alto - trasparenza più alta (più pieno)
+                                $strokeColor = '#FFA500';
+                                $fillColor = 'rgba(255, 165, 0, 0.6)';
+                                $strokeWidth = 3;
+                            } elseif ($secondPercentage !== null && $percentage == $secondPercentage) {
+                                // Seconda percentuale più alta - trasparenza media
+                                $strokeColor = '#FFA500';
+                                $fillColor = 'rgba(255, 165, 0, 0.4)';
+                                $strokeWidth = 2;
+                            } else {
+                                // Tutte le altre - trasparenza bassa (più trasparente)
+                                $strokeColor = '#FFA500';
+                                $fillColor = 'rgba(255, 165, 0, 0.2)';
+                                $strokeWidth = 2;
+                            }
+
                             $sectorFeature = [
                                 'type' => 'Feature',
                                 'geometry' => $geometry,
@@ -309,11 +347,11 @@ class GeometryService
                                     'name' => $sectorName,
                                     'full_code' => $sector->full_code ?? '',
                                     'percentage' => $percentage,
-                                    'strokeColor' => '#FFA500', // Arancione
-                                    'strokeWidth' => 2,
-                                    'fillColor' => 'rgba(255, 165, 0, 0.2)', // Arancione semi-trasparente
+                                    'strokeColor' => $strokeColor,
+                                    'strokeWidth' => $strokeWidth,
+                                    'fillColor' => $fillColor,
                                     'tooltip' => $tooltip,
-                                    'link' => url('/resources/sectors/' . $sector->id),
+                                    // Non mettere il link per disabilitare il click
                                 ],
                             ];
                             $sectorFeatures[] = $sectorFeature;
