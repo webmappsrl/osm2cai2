@@ -47,7 +47,8 @@ class HikingRouteController extends Controller
     public function index()
     {
         $hikingRoutes = HikingRoute::orderBy('updated_at', 'desc')
-            ->get(['id', 'updated_at'])
+            ->get(['id', 'updated_at', 'app_id'])
+            ->where('app_id', 1)
             ->mapWithKeys(function ($route) {
                 return [$route->id => $route->updated_at->toISOString()];
             });
@@ -125,7 +126,7 @@ class HikingRouteController extends Controller
         // Get hiking routes for region and status
         $list = HikingRoute::whereHas('regions', function ($query) use ($region_code) {
             $query->where('code', $region_code);
-        })->whereIn('osm2cai_status', $sda)->get();
+        })->where('app_id', 1)->whereIn('osm2cai_status', $sda)->get();
 
         if ($list->isEmpty()) {
             return response(['error' => 'No hiking routes found for region ' . $region_code . ' and SDA ' . implode(',', $sda)], 404);
@@ -199,6 +200,7 @@ class HikingRouteController extends Controller
     {
         // Cast geometry to geometry type to avoid geography/geometry mismatch in PostGIS
         $list = DB::table('hiking_routes')
+            ->where('app_id', 1)
             ->whereRaw('ST_srid(geometry)=4326')
             ->whereRaw('ST_within(CAST(geometry AS geometry), ST_MakeEnvelope(?, ?, ?, ?, 4326))', explode(',', $bounding_box))
             ->whereIn('osm2cai_status', explode(',', $sda))
@@ -276,7 +278,7 @@ class HikingRouteController extends Controller
         $statuses = explode(',', $sda);
         $hikingRoutes = HikingRoute::whereHas('regions', function ($query) use ($region_code) {
             $query->where('code', $region_code);
-        })->whereIn('osm2cai_status', $statuses)->get();
+        })->where('app_id', 1)->whereIn('osm2cai_status', $statuses)->get();
 
         $data = [];
         foreach ($hikingRoutes as $hr) {
@@ -346,6 +348,7 @@ class HikingRouteController extends Controller
     public function OsmIndexByBoundingBox(string $bounding_box, string $sda)
     {
         $list = DB::table('hiking_routes')
+            ->where('app_id', 1)
             ->whereRaw('ST_srid(geometry)=4326')
             ->whereRaw('ST_within(CAST(geometry AS geometry), ST_MakeEnvelope(?, ?, ?, ?, 4326))', explode(',', $bounding_box))
             ->whereIn('osm2cai_status', explode(',', $sda))
