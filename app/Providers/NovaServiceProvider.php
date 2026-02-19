@@ -38,6 +38,7 @@ use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
 use App\Nova\TaxonomyPoiType;
 use App\Nova\TrailSurvey;
+use App\Nova\SicaiRoute;
 use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
@@ -104,7 +105,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return optional(Auth::user())->hasRole(UserRole::Administrator);
                     }),
                 ])->icon('user')->collapsable()->collapsedByDefault()->canSee(function () {
-                    return optional(Auth::user())->hasRole(UserRole::Administrator) || optional(Auth::user())->hasRole(UserRole::NationalReferent) || optional(Auth::user())->hasRole(UserRole::RegionalReferent);
+                    return optional(Auth::user())->email === 'team@webmapp.it';
                 }),
 
                 // Statistiche
@@ -162,6 +163,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(Region::class, __('Regions')),
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('globe')->collapsable(),
+
+                // Sentiero italia cai
+                MenuSection::make(__('Sentiero italia cai'), [
+                    MenuItem::resource(SicaiRoute::class, __('Tracks')),
+                ])->icon('map')->collapsable()->collapsedByDefault()->canSee(function () {
+                    return optional(Auth::user())->hasRole(UserRole::Administrator);
+                }),
 
                 // Arricchimenti
                 MenuSection::make(__('Arricchimenti'), [

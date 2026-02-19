@@ -52,6 +52,7 @@ class HikingRoute extends EcTrack
 
     protected $fillable = [
         'name',
+        'parent_hiking_route_id',
         'app_id',
         'user_id',
         'osmid',
@@ -407,6 +408,16 @@ class HikingRoute extends EcTrack
     public function provinces()
     {
         return $this->belongsToMany(Province::class);
+    }
+
+    public function parentHikingRoute()
+    {
+        return $this->belongsTo(HikingRoute::class, 'parent_hiking_route_id');
+    }
+
+    public function childHikingRoutes()
+    {
+        return $this->hasMany(HikingRoute::class, 'parent_hiking_route_id');
     }
 
     public function clubs()
