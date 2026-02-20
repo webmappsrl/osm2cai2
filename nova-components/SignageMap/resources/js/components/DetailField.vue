@@ -295,8 +295,6 @@ export default {
     },
 
     mounted() {
-        document.addEventListener('keydown', this.handleKeydown);
-
         // Ascolta gli eventi Nova come fa il wm-package
         Nova.$on('signage-map:popup-open', this.onNovaPopupOpen);
         Nova.$on('signage-map:popup-close', this.onNovaPopupClose);
@@ -309,10 +307,20 @@ export default {
     },
 
     beforeUnmount() {
-        document.removeEventListener('keydown', this.handleKeydown);
+        this.removeKeydownListener();
         Nova.$off('signage-map:popup-open', this.onNovaPopupOpen);
         Nova.$off('signage-map:popup-close', this.onNovaPopupClose);
         this.removeNavigationInterceptor();
+    },
+
+    watch: {
+        showPopup(open) {
+            if (open) {
+                this.addKeydownListener();
+            } else {
+                this.removeKeydownListener();
+            }
+        }
     },
 
     methods: {
@@ -414,6 +422,16 @@ export default {
             this.ignoreValue = false;
         },
 
+        addKeydownListener() {
+            if (this._keydownBound) return;
+            this._keydownBound = this.handleKeydown.bind(this);
+            document.addEventListener('keydown', this._keydownBound);
+        },
+        removeKeydownListener() {
+            if (!this._keydownBound) return;
+            document.removeEventListener('keydown', this._keydownBound);
+            this._keydownBound = null;
+        },
         handleKeydown(event) {
             if (event.key === 'Escape' && this.showPopup) {
                 this.closePopup();
