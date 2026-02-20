@@ -74,10 +74,12 @@ abstract class OsmfeaturesResource extends AbstractEcResource
                 ->map([
                     true => 'success',
                     false => 'danger',
+                    null => 'warning',
                 ])
                 ->labels([
                     true => __('Present'),
                     false => __('Deleted from OSMFEATURES'),
+                    null => __('Unknown'),
                 ])
                 ->sortable(),
             Text::make(__('Osmfeatures ID'), function () {
