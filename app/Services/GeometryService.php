@@ -314,28 +314,30 @@ class GeometryService
                             }
 
                             // Colore del poligono in base alla percentuale:
-                            // - se la percentuale è nulla, usa il grigio
-                            // - se è la percentuale più alta, usa arancione con trasparenza alta (più pieno)
-                            // - se è la seconda percentuale più alta, usa arancione con trasparenza media
-                            // - tutte le altre: arancione con trasparenza bassa (più trasparente)
+                            // - nessun match: grigio
+                            // - match più alto (es. 100%): verde
+                            // - seconda percentuale: giallo
+                            // - altre: rosso
+                            // Trasparenza più alta (opacity 0.25) per non appesantire la mappa
+                            $fillOpacity = 0.15;
                             if ($percentage === null) {
                                 $strokeColor = '#808080';
                                 $fillColor = 'rgba(128, 128, 128, 0.2)';
                                 $strokeWidth = 2;
                             } elseif ($firstPercentage !== null && $percentage == $firstPercentage) {
-                                // Poligono con match più alto - trasparenza più alta (più pieno)
-                                $strokeColor = '#FFA500';
-                                $fillColor = 'rgba(255, 165, 0, 0.6)';
+                                // Match più alto → verde
+                                $strokeColor = '#16a34a';
+                                $fillColor = 'rgba(34, 197, 94, ' . $fillOpacity . ')';
                                 $strokeWidth = 3;
                             } elseif ($secondPercentage !== null && $percentage == $secondPercentage) {
-                                // Seconda percentuale più alta - trasparenza media
-                                $strokeColor = '#FFA500';
-                                $fillColor = 'rgba(255, 165, 0, 0.4)';
+                                // Seconda percentuale → giallo
+                                $strokeColor = '#ca8a04';
+                                $fillColor = 'rgba(234, 179, 8, ' . $fillOpacity . ')';
                                 $strokeWidth = 2;
                             } else {
-                                // Tutte le altre - trasparenza bassa (più trasparente)
-                                $strokeColor = '#FFA500';
-                                $fillColor = 'rgba(255, 165, 0, 0.2)';
+                                // Altre percentuali → rosso
+                                $strokeColor = '#dc2626';
+                                $fillColor = 'rgba(239, 68, 68, ' . $fillOpacity . ')';
                                 $strokeWidth = 2;
                             }
 
