@@ -538,10 +538,9 @@ class SignageProject extends Polygon
             $polesMap = [];
             $otherFeatures = [];
 
-            // Per ogni hiking route, genera le features manualmente usando i dati raw
-            // - La geometria principale (linea blu) con signage
-            // - I poles con buffer (punti rossi/arancioni) con tutte le proprietà
-            // - La geometria raw non controllata (linea rossa) con signage
+            // Per ogni hiking route, genera le features: solo geometria valida e poles
+            // - La geometria principale (valida) con signage
+            // - I poles con buffer (punti) con tutte le proprietà
             foreach ($hikingRoutesProcessed as $index => $hrData) {
                 $hrId = $hrData['id'];
                 $hrProperties = $hrData['properties'] ?? [];
@@ -629,33 +628,14 @@ class SignageProject extends Polygon
                     return $poleFeature;
                 })->filter()->toArray(); // filter() rimuove eventuali null
 
-                // Genera la feature per geometry_raw_data
-                $uncheckedGeometryFeature = null;
-                if ($hrData['geometry_raw_data']) {
-                    $uncheckedGeometryFeature = [
-                        'type' => 'Feature',
-                        'geometry' => $hrData['geometry_raw_data'],
-                        'properties' => [
-                            'strokeColor' => 'red',
-                            'strokeWidth' => 2,
-                            'id' => $hrId,
-                            'osmfeatures_id' => $hrData['osmfeatures_id'],
-                        ],
-                    ];
+                // In project signage si mostra solo la geometria valida; geometry_raw_data non viene inclusa
 
-                    if (isset($hrProperties['signage'])) {
-                        $uncheckedGeometryFeature['properties']['signage'] = $hrProperties['signage'];
-                    }
-                }
-
-                // Combina tutte le features della hiking route
+                // Combina le features della hiking route: solo geometria valida (principale) e pali
                 $hikingRouteFeatures = ['features' => []];
                 if (!empty($poleFeatures)) {
                     $hikingRouteFeatures['features'] = array_merge($hikingRouteFeatures['features'], $poleFeatures);
                 }
-                if ($uncheckedGeometryFeature) {
-                    $hikingRouteFeatures['features'][] = $uncheckedGeometryFeature;
-                }
+                // Non includere uncheckedGeometryFeature: in project signage si mostra solo la geometria valida
                 if ($mainFeature) {
                     $hikingRouteFeatures['features'][] = $mainFeature;
                 }
@@ -664,10 +644,9 @@ class SignageProject extends Polygon
                 $colorIndex = $index % count($routeColors);
                 $routeColor = $routeColors[$colorIndex];
 
-                // Aggiungi TUTTE le features della hiking route per mantenere tutte le funzionalità interattive:
-                // - Geometria principale (linea blu) - clickabile con signage
+                // Features della hiking route:
+                // - Geometria valida (linea) - clickabile con signage
                 // - Poles (punti) - clickabili per aprire popup segnaletica
-                // - Geometria raw (linea rossa) - clickabile con signage
                 if (isset($hikingRouteFeatures['features']) && !empty($hikingRouteFeatures['features'])) {
                     foreach ($hikingRouteFeatures['features'] as $feature) {
                         // Verifica che sia una feature GeoJSON valida
