@@ -148,6 +148,15 @@ class HikingRoute extends OsmfeaturesResource
 
 
     /**
+     * Restituisce i fields definiti in OsmfeaturesResource (parent), senza le aggiunte di HikingRoute.
+     * Utile per risorse figlie che vogliono usare solo la base Osmfeatures.
+     */
+    public function getOsmfeaturesFields(NovaRequest $request): array
+    {
+        return parent::fields($request);
+    }
+
+    /**
      * Get the fields displayed by the resource.
      */
     public function fields(NovaRequest $request): array
