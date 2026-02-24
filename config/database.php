@@ -91,6 +91,20 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        // Sicai PostGIS: DB esterno in sola lettura (solo SELECT; garanzia lato server con utente con privilegi SELECT)
+        'sicai_postgis' => [
+            'driver' => 'pgsql',
+            'host' => env('SICAI_POSTGIS_DB_HOST'),
+            'port' => env('SICAI_POSTGIS_DB_PORT', '5432'),
+            'database' => env('SICAI_POSTGIS_DB_DATABASE'),
+            'username' => env('SICAI_POSTGIS_DB_USERNAME'),
+            'password' => env('SICAI_POSTGIS_DB_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'sentiero_italia',
+            'sslmode' => 'prefer',
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
@@ -138,7 +152,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [
