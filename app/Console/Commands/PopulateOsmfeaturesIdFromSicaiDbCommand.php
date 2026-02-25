@@ -105,7 +105,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         $this->newLine();
 
         foreach ($allFeatures as $feature) {
-            $tappa = $feature['properties']['tappa'] ?? null;
+            $tappa = $feature['properties']['sicai_properties']['tappa'] ?? $feature['properties']['tappa'] ?? null;
 
             if ($tappa === null) {
                 $skipped++;
@@ -147,6 +147,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                 $willUpdateOsmfeaturesId = true;
                 $willUpdateParentId = ($app1RouteId !== null && (int) $currentParentId !== (int) $app1RouteId);
 
+                // Se ha un parent (trovato da osmid) copia osm2cai_status e osmfeatures_data dalla hiking route app_1
                 $willUpdateOsm2caiStatus = false;
                 $parentOsm2caiStatus = null;
                 if ($app1Route !== null && $app1Route->osm2cai_status !== null) {
@@ -281,17 +282,32 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         foreach ($rowsSiTappe as $row) {
             $osmid = $row->openstreetmap ?? null;
             if ($osmid !== null && $osmid !== '') {
+                $sicaiProperties = [
+                    'tappa' => $row->tappa,
+                    'referente' => ['name' => $row->referente ?? null, 'email' => $row->email ?? null],
+                    'stazioni' => ['treno' => $row->stazione_treno == 'si' ? true : false, 'bus' => $row->stazione_bus == 'si' ? true : false],
+                    'parcheggio' => $row->parcheggio == 'si' ? true : false,
+                    'pt_accoglienza' => $row->pt_accoglienza == 'si' ? true : false,
+                    'email_ref_regionale' => $row->email_ref_regionale ?? null,
+                    'percorribilità' => $row->percorribilità,
+                    'segnaletica' => $row->segnaletica,
+                    'descrizione' => $row->descrizione,
+                    'verifica' => $row->verifica,
+                    'note' => $row->Note,
+                    'segnalazioni' => $row->Segnalazioni,
+                    'sezione' => $row->sezione,
+                    'referente_regionale' => $row->referente_regionale,
+                    'sezione_ref_regionale' => $row->sezione_ref_regionale,
+                    'email_ref_regionale' => $row->email_ref_regionale,
+                    'sezioni_manutenzione' => $row->sezioni_manutenzione,
+
+                ];
                 $features[] = [
                     'source' => 'si_tappe',
                     'properties' => [
-                        'tappa' => $row->tappa,
                         'osmid' => (string) $osmid,
-                        'referente' => ['name' => $row->referente ?? null, 'email' => $row->email ?? null],
                         'description' => ['it' => $row->descrizione_sito],
-                        'reachable' => ['train' => $row->stazione_treno == 'si' ? true : false, 'bus' => $row->stazione_bus == 'si' ? true : false],
-                        'parking' => $row->parcheggio == 'si' ? true : false,
-                        'reception_points' => $row->pt_accoglienza == 'si' ? true : false,
-                        'email_ref_regionale' => $row->email_ref_regionale ?? null,
+                        'sicai_properties' => $sicaiProperties,
                     ],
                     'raw' => (array) $row,
                 ];
@@ -306,8 +322,10 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                 $features[] = [
                     'source' => 'sicai_mtb',
                     'properties' => [
-                        'tappa' => $row->tappa,
                         'osmid' => (string) $osmid,
+                        'sicai_properties' => [
+                            'tappa' => $row->tappa,
+                        ],
                     ],
                     'raw' => (array) $row,
                 ];
