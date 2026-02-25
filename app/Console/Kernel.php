@@ -53,7 +53,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('osm2cai:fix-duplicated-ugc-pois')
             ->dailyAt('06:00')
-            ->description('Fix duplicated ugc pois');
+            ->description('Fix duplicated ugc pois (monitoring)');
     }
 
     /**
