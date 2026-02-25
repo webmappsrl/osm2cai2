@@ -94,7 +94,6 @@ class FixDuplicatedUgcPois extends Command
                 continue;
             }
             $duplicateUuids = UgcPoi::where('properties->uuid', $uuid)
-                ->where('user_id', '!=', $this->duplicatedUser->id)
                 ->orderBy('created_at', 'asc')
                 ->orderBy('id', 'asc')
                 ->get();
@@ -398,8 +397,10 @@ class FixDuplicatedUgcPois extends Command
     {
         $properties = $duplicatedUgcPoi->properties;
         $media = $duplicatedUgcPoi->getMedia();
+        $properties['uuid'] = null;
         $properties['duplicated'] = true;
         $properties['duplication_info'] = [
+            'uuid' => $referenceUgcPoiInfo['uuid'],
             'position' => $referenceUgcPoiInfo['count'],
             'parent_ugc_poi_id' => $referenceUgcPoiInfo['id'],
             'parent_ugc_poi_user_id' => $referenceUgcPoiInfo['user_id'],
