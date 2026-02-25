@@ -6,6 +6,7 @@
 /storage/logs/
 /storage/json/
 /storage/media-library/
+/storage/ugc/images
 /vendor
 .env
 .env.backup
@@ -24,3 +25,5 @@ docker-compose.yml
 public/wm-osmfeatures.log
 /public/vendor
 .phpunit.cache/test-results
+
+.DS_Store

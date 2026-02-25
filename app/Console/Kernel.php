@@ -50,6 +50,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('osm2cai:fix-osmfeatures-sda')
             ->dailyAt('07:00')
             ->description('Update hiking routes status');
+
+        $schedule->command('osm2cai:fix-duplicated-ugc-pois')
+            ->dailyAt('06:00')
+            ->description('Fix duplicated ugc pois (monitoring)');
     }
 
     /**
