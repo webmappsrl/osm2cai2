@@ -122,39 +122,9 @@ class SiHikingRoute extends HikingRoute
     protected function sicaiIndexFields(NovaRequest $request): array
     {
         $fields = [];
+        $fields[] = $this->getParentRouteField();
         $fields[] = ID::make()->sortable();
         $fields[] = Text::make(__('Name'), 'name');
-        $fields[] = Text::make(__('congruenza'), 'properties->congruenza');
-        $fields[] = Text::make(__('Email referente regionale'), 'properties->email_ref_regionale');
-        $fields[] = Text::make(__('osmfeatures source_ref'), function () {
-            return $this->resource->osmfeatures_data['properties']['source_ref'] ?? null;
-        })->asHtml();
-        $fields[] = Text::make(__('Referente sezione'), function () {
-            $clubs = $this->resource->clubs ?? collect();
-            if ($clubs->isEmpty()) {
-                return __('Non impostato');
-            }
-            $regionIds = $clubs->pluck('region_id')->filter()->unique()->values()->all();
-            $regionalReferents = [];
-            if (! empty($regionIds)) {
-                $users = User::role(UserRole::RegionalReferent)->whereIn('region_id', $regionIds)->get();
-                foreach ($users as $user) {
-                    $regionalReferents[$user->region_id][] = $user;
-                }
-            }
-            $parts = [];
-            foreach ($clubs as $club) {
-                $refs = collect($regionalReferents[$club->region_id] ?? [])->map(function ($user) {
-                    $name = e($user->name ?? '');
-                    $email = $user->email ? '<a href="mailto:' . e($user->email) . '">' . e($user->email) . '</a>' : '';
-
-                    return trim($name . ($email ? ' — ' . $email : ''));
-                })->filter()->implode(', ');
-                $parts[] = $club->name . ': ' . ($refs ?: __('Non impostato'));
-            }
-
-            return implode(' | ', $parts);
-        })->asHtml();
         $fields[] = Text::make(__('Osmfeatures ID'), function () {
             return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
         })->asHtml();
@@ -299,7 +269,7 @@ class SiHikingRoute extends HikingRoute
             Text::make(__('wikidata'), fn() => $props()['wikidata'] ?? '—'),
             Text::make(__('wikipedia'), fn() => $props()['wikipedia'] ?? '—'),
             Text::make(__('wikimedia_commons'), fn() => $props()['wikimedia_commons'] ?? '—'),
-            Text::make(__('dem_enrichment'), fn() => $props()['dem_enrichment'] !== null ? json_encode($props()['dem_enrichment'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '—'),
+            Text::make(__('dem_enrichment'), fn() => ($props()['dem_enrichment'] ?? null) !== null ? json_encode($props()['dem_enrichment'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '—'),
             Code::make(__('osm_tags'), function () use ($props) {
                 $tags = $props()['osm_tags'] ?? null;
                 if (! is_array($tags)) {
