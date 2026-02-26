@@ -111,9 +111,38 @@ class HikingRouteObserver extends EcTrackObserver
 
     public function saved($hikingRoute): void
     {
-        if ($hikingRoute->isDirty('osm2cai_status')) {
+        if ($hikingRoute->wasChanged('osm2cai_status')) {
             $this->updateLayerAssociations($hikingRoute);
             $this->updatePbfsForHikingRoute($hikingRoute);
+        }
+        if ($hikingRoute->wasChanged('osm2cai_status') || $hikingRoute->wasChanged('validator_id') || $hikingRoute->wasChanged('validation_date')) {
+            $this->syncOsm2caiStatusToChildSiHikingRoutes($hikingRoute);
+        }
+    }
+
+    /**
+     * Quando un HikingRoute parent cambia osm2cai_status (e/o validatore/data validazione),
+     * propaga i valori a tutte le SiHikingRoute (route figlie) che lo hanno come parent.
+     */
+    private function syncOsm2caiStatusToChildSiHikingRoutes($hikingRoute): void
+    {
+        $newStatus = $hikingRoute->osm2cai_status;
+        $newValidatorId = $hikingRoute->validator_id;
+        $newValidationDate = $hikingRoute->validation_date;
+        $children = $hikingRoute->childHikingRoutes()->get();
+
+        foreach ($children as $child) {
+            $changed = $child->osm2cai_status !== $newStatus
+                || $child->validator_id !== $newValidatorId
+                || $child->validation_date?->format('Y-m-d') !== $newValidationDate?->format('Y-m-d');
+            if (! $changed) {
+                continue;
+            }
+            $child->osm2cai_status = $newStatus;
+            $child->validator_id = $newValidatorId;
+            $child->validation_date = $newValidationDate;
+
+            $child->saveQuietly();
         }
     }
 

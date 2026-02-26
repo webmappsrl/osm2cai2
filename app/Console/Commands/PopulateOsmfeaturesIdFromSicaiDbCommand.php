@@ -147,13 +147,33 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                 $willUpdateOsmfeaturesId = true;
                 $willUpdateParentId = ($app1RouteId !== null && (int) $currentParentId !== (int) $app1RouteId);
 
-                // Se ha un parent (trovato da osmid) copia osm2cai_status e osmfeatures_data dalla hiking route app_1
+                // Se ha un parent (trovato da osmid) copia osm2cai_status, validation_date, validator_id e osmfeatures_data dalla hiking route app_1
                 $willUpdateOsm2caiStatus = false;
                 $parentOsm2caiStatus = null;
                 if ($app1Route !== null && $app1Route->osm2cai_status !== null) {
                     $parentOsm2caiStatus = $app1Route->osm2cai_status;
                     if ($route->osm2cai_status !== $parentOsm2caiStatus) {
                         $willUpdateOsm2caiStatus = true;
+                    }
+                }
+
+                $willUpdateValidationDate = false;
+                $parentValidationDate = null;
+                if ($app1Route !== null && $app1Route->validation_date !== null) {
+                    $parentValidationDate = $app1Route->validation_date;
+                    $routeValDate = $route->validation_date !== null ? substr((string) $route->validation_date, 0, 10) : null;
+                    $parentValDate = substr((string) $parentValidationDate, 0, 10);
+                    if ($routeValDate !== $parentValDate) {
+                        $willUpdateValidationDate = true;
+                    }
+                }
+
+                $willUpdateValidatorId = false;
+                $parentValidatorId = null;
+                if ($app1Route !== null && $app1Route->validator_id !== null) {
+                    $parentValidatorId = $app1Route->validator_id;
+                    if ((int) $route->validator_id !== (int) $parentValidatorId) {
+                        $willUpdateValidatorId = true;
                     }
                 }
 
@@ -167,7 +187,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     }
                 }
 
-                $willUpdate = $willUpdateOsmfeaturesId || $willUpdateParentId || $willUpdateOsm2caiStatus || $willUpdateOsmfeaturesData;
+                $willUpdate = $willUpdateOsmfeaturesId || $willUpdateParentId || $willUpdateOsm2caiStatus || $willUpdateValidationDate || $willUpdateValidatorId || $willUpdateOsmfeaturesData;
 
                 $routeName = $route->name ?? 'N/A';
                 $osmidToShow = ! empty($osmid) ? (string) $osmid : null;
@@ -183,16 +203,22 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
 
                 $parentIdToShow = $app1RouteId ?? $currentParentId;
                 $osm2caiStatusToShow = $parentOsm2caiStatus ?? $route->osm2cai_status;
+                $validationDateToShow = $parentValidationDate ?? $route->validation_date;
+                $validatorIdToShow = $parentValidatorId ?? $route->validator_id;
 
                 $osmidValue = $osmidToShow !== null ? (string) $osmidToShow : 'null';
                 $parentIdValue = $parentIdToShow !== null ? (string) $parentIdToShow : 'null';
                 $osm2caiStatusValue = $osm2caiStatusToShow !== null ? (string) $osm2caiStatusToShow : 'null';
+                $validationDateValue = $validationDateToShow !== null ? substr((string) $validationDateToShow, 0, 10) : 'null';
+                $validatorIdValue = $validatorIdToShow !== null ? (string) $validatorIdToShow : 'null';
 
                 $outputLine = implode(', ', [
                     "name: {$routeName}",
                     "osmid: {$osmidValue}",
                     "parent_hiking_route_id: {$parentIdValue}",
                     "osm2cai_status: {$osm2caiStatusValue}",
+                    "validation_date: {$validationDateValue}",
+                    "validator_id: {$validatorIdValue}",
                 ]);
 
                 if ($willUpdate) {
@@ -209,6 +235,12 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                         }
                         if ($willUpdateOsm2caiStatus && $parentOsm2caiStatus !== null) {
                             $updateData['osm2cai_status'] = $parentOsm2caiStatus;
+                        }
+                        if ($willUpdateValidationDate && $parentValidationDate !== null) {
+                            $updateData['validation_date'] = $parentValidationDate;
+                        }
+                        if ($willUpdateValidatorId && $parentValidatorId !== null) {
+                            $updateData['validator_id'] = $parentValidatorId;
                         }
                         if ($willUpdateOsmfeaturesData && $parentOsmfeaturesData !== null) {
                             $updateData['osmfeatures_data'] = $parentOsmfeaturesData;
@@ -365,4 +397,5 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
 
         return null;
     }
+
 }
