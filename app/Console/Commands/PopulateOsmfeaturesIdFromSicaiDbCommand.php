@@ -283,6 +283,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
             $osmid = $row->openstreetmap ?? null;
             if ($osmid !== null && $osmid !== '') {
                 $sicaiProperties = [
+                    'data' => $row->data,
                     'tappa' => $row->tappa,
                     'referente' => ['name' => $row->referente ?? null, 'email' => $row->email ?? null],
                     'stazioni' => ['treno' => $row->stazione_treno == 'si' ? true : false, 'bus' => $row->stazione_bus == 'si' ? true : false],
