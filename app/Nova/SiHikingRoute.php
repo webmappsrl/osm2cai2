@@ -191,9 +191,11 @@ class SiHikingRoute extends HikingRoute
      */
     protected function sicaiEditFields(NovaRequest $request): array
     {
-        return [
-            // es: $this->getReferenteNameField(), $this->getReferenteEmailField(), ...
-        ];
+        $fields[] = Tab::group(__('Details'), [
+            Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+        ]);
+
+        return $fields;
     }
 
     /**
@@ -356,23 +358,24 @@ class SiHikingRoute extends HikingRoute
     {
         return [
             Text::make(__('Tappa'), 'properties->sicai_properties->tappa'),
-            Text::make(__('Sezione'), 'properties->sicai_properties->sezione'),
-            Boolean::make(__('Parcheggio'), 'properties->sicai_properties->parcheggio'),
-            Boolean::make(__('Stazione bus'), 'properties->sicai_properties->stazioni->bus'),
-            Boolean::make(__('Stazione treno'), 'properties->sicai_properties->stazioni->treno'),
             Text::make(__('Verifica'), 'properties->sicai_properties->verifica'),
             Text::make(__('Descrizione'), 'properties->sicai_properties->descrizione'),
             Text::make(__('Segnaletica'), 'properties->sicai_properties->segnaletica'),
             Text::make(__('Segnalazioni'), 'properties->sicai_properties->segnalazioni'),
-            Boolean::make(__('Punto accoglienza'), 'properties->sicai_properties->pt_accoglienza'),
-            Text::make(__('Percorribilità'), 'properties->sicai_properties->percorribilità'),
             Text::make(__('Referente Nome'), 'properties->sicai_properties->referente->name'),
             Text::make(__('Referente Email'), 'properties->sicai_properties->referente->email'),
-            Text::make(__('Email referente regionale'), 'properties->sicai_properties->email_ref_regionale'),
-            Text::make(__('Referente regionale'), 'properties->sicai_properties->referente_regionale'),
-            Text::make(__('Sezioni manutenzione'), 'properties->sicai_properties->sezioni_manutenzione'),
-            Text::make(__('Sezione referente regionale'), 'properties->sicai_properties->sezione_ref_regionale'),
             Text::make(__('Note'), 'properties->sicai_properties->note'),
+            Text::make(__('Data'), 'properties->sicai_properties->data')->readonly(),
+            Text::make(__('Percorribilità'), 'properties->sicai_properties->percorribilità')->readonly(),
+            Text::make(__('Referente regionale'), 'properties->sicai_properties->referente_regionale')->readonly(),
+            Text::make(__('Email referente regionale'), 'properties->sicai_properties->email_ref_regionale')->readonly(),
+            Text::make(__('Sezione'), 'properties->sicai_properties->sezione')->readonly(),
+            Text::make(__('Sezione referente regionale'), 'properties->sicai_properties->sezione_ref_regionale')->readonly(),
+            Text::make(__('Sezioni manutenzione'), 'properties->sicai_properties->sezioni_manutenzione')->readonly(),
+            Boolean::make(__('Parcheggio'), 'properties->sicai_properties->parcheggio')->readonly(),
+            Boolean::make(__('Stazione bus'), 'properties->sicai_properties->stazioni->bus')->readonly(),
+            Boolean::make(__('Stazione treno'), 'properties->sicai_properties->stazioni->treno')->readonly(),
+            Boolean::make(__('Punto accoglienza'), 'properties->sicai_properties->pt_accoglienza')->readonly(),
         ];
     }
     /**
