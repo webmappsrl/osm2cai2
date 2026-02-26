@@ -4,10 +4,10 @@ namespace App\Nova;
 
 use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
-use App\Models\SicaiRoute as SicaiRouteModel;
+use App\Models\HikingRoute as HikingRouteModel;
+use App\Models\SiHikingRoute as SiHikingRouteModel;
 use App\Models\User;
 use App\Nova\Cards\LinksCard;
-use App\Nova\Sector;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
@@ -16,19 +16,16 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
-use Monolog\Handler\BrowserConsoleHandler;
-use Osm2cai\SignageMap\SignageMap;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
-use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 
-class SicaiRoute extends HikingRoute
+class SiHikingRoute extends HikingRoute
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<SicaiRouteModel>
+     * @var class-string<SiHikingRouteModel>
      */
-    public static $model = SicaiRouteModel::class;
+    public static $model = SiHikingRouteModel::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -44,7 +41,7 @@ class SicaiRoute extends HikingRoute
      */
     public static function label()
     {
-        return __('Routes');
+        return __('Hiking Routes');
     }
 
     /**
@@ -59,8 +56,17 @@ class SicaiRoute extends HikingRoute
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        // Filtra solo le routes con app_id = 2
+        // Tutte le hiking routes dell'app 2
         $query->where('app_id', 2);
+
+        // ...associate al layer 6 tramite la tabella pivot layerables
+        $query->whereIn('id', function ($sub) {
+            $sub->select('layerable_id')
+                ->from('layerables')
+                ->where('layer_id', 6)
+                ->where('layerable_type', HikingRouteModel::class);
+        });
+
         // Eager load sezioni (clubs) e regioni per il referente regionale
         $query->with(['clubs.region']);
 
@@ -76,7 +82,7 @@ class SicaiRoute extends HikingRoute
         // Il parent cerca HikingRouteModel, ma noi siamo SicaiRouteModel
         // Quindi sovrascriviamo per usare il modello corretto
         if ($request->resourceId) {
-            $sicaiRoute = SicaiRouteModel::find($request->resourceId);
+            $sicaiRoute = SiHikingRouteModel::find($request->resourceId);
 
             if ($sicaiRoute) {
                 $linksCardData = $sicaiRoute->getDataForNovaLinksCard();

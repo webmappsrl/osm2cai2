@@ -14,7 +14,7 @@ use App\Models\Region;
 use App\Models\Sector;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class SicaiRoute extends HikingRoute
+class SiHikingRoute extends HikingRoute
 {
     // Usa la stessa tabella di HikingRoute (hiking_routes)
     // Il filtro per app_id viene gestito nella risorsa Nova
@@ -84,3 +84,4 @@ class SicaiRoute extends HikingRoute
         return $this->belongsToMany(MountainGroups::class, 'mountain_group_hiking_route', 'hiking_route_id', 'mountain_group_id');
     }
 }
+
