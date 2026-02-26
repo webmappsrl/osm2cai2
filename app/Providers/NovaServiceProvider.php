@@ -39,6 +39,7 @@ use App\Nova\TaxonomyActivity;
 use App\Nova\TaxonomyPoiType;
 use App\Nova\TrailSurvey;
 use App\Nova\SiHikingRoute;
+use App\Nova\SiMTBRoute;
 use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
@@ -167,6 +168,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // Sentiero Italia CAI (solo utenti con ruolo Sicai Manager)
                 MenuSection::make(__('Sentiero Italia CAI'), [
                     MenuItem::resource(SiHikingRoute::class, __('Hiking Routes')),
+                    MenuItem::resource(SiMTBRoute::class, __('MTB Routes')),
                 ])->icon('map')->collapsable()->collapsedByDefault()->canSee(function () {
                     return optional(Auth::user())->hasRole(UserRole::SicaiManager);
                 }),
