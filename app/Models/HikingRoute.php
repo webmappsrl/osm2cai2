@@ -358,9 +358,9 @@ class HikingRoute extends EcTrack
     public function getDataForNovaLinksCard()
     {
         if (is_string($this->osmfeatures_data)) {
-            $osmId = json_decode($this->osmfeatures_data, true)['properties']['osm_id'];
+            $osmId = json_decode($this->osmfeatures_data, true)['properties']['osm_id'] ?? null;
         } else {
-            $osmId = $this->osmfeatures_data['properties']['osm_id'];
+            $osmId = $this->osmfeatures_data['properties']['osm_id'] ?? null;
         }
         $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
         $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
