@@ -164,11 +164,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('globe')->collapsable(),
 
-                // Sentiero italia cai
+                // Sentiero Italia CAI (solo utenti con ruolo Sicai Manager)
                 MenuSection::make(__('Sentiero Italia CAI'), [
                     MenuItem::resource(SiHikingRoute::class, __('Hiking Routes')),
                 ])->icon('map')->collapsable()->collapsedByDefault()->canSee(function () {
-                    return optional(Auth::user())->hasRole(UserRole::Administrator);
+                    return optional(Auth::user())->hasRole(UserRole::SicaiManager);
                 }),
 
                 // Arricchimenti
