@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Wm\WmOsmfeatures\Exceptions\WmOsmfeaturesException;
 use Wm\WmOsmfeatures\Traits\OsmfeaturesSyncableTrait;
+use Wm\WmPackage\Models\EcPoiEcTrack;
 use Wm\WmPackage\Models\EcTrack;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMapTrait;
 
@@ -451,12 +452,17 @@ class HikingRoute extends EcTrack
     }
 
     /**
-     * Override della relazione ecPois del parent EcTrack per usare la tabella corretta
-     * La tabella pivot per HikingRoute è 'hiking_route_ec_poi' non 'ec_poi_hiking_route'
+     * Override della relazione ecPois del parent EcTrack per usare la tabella pivot corretta.
+     * La tabella viene letta da config('wm-package.ec_poi_track_pivot_table') (default: hiking_route_ec_poi).
+     * Usa ->using(EcPoiEcTrack::class) dal wm-package per attivare gli eventi pivot
+     * (created/updated/deleted) che triggerano l'updateDataChain.
      */
     public function ecPois(): BelongsToMany
     {
-        return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi')->withPivot('order')->orderByPivot('order');
+        return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi')
+            ->using(EcPoiEcTrack::class)
+            ->withPivot('order')
+            ->orderByPivot('order');
     }
 
     public function mountainGroups()
