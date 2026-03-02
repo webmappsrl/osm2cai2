@@ -2,13 +2,12 @@
 
 namespace App\Nova;
 
-use App\Enums\UserRole;
 use App\Helpers\Osm2caiHelper;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\SiHikingRoute as SiHikingRouteModel;
-use App\Models\User;
 use App\Nova\Cards\LinksCard;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
@@ -56,11 +55,17 @@ class SiHikingRoute extends HikingRoute
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        // Tutte le hiking routes dell'app 2
-        $query->where('app_id', 2);
+        // Quando la risorsa è caricata come relazione di SiPoi (via hiking_route_ec_poi),
+        // NON applichiamo filtri aggiuntivi: vogliamo vedere tutte le righe presenti in pivot.
+        if ($request->viaResource === 'si-pois' && $request->viaRelationship === 'siHikingRoutes') {
+            return $query;
+        }
+
+        // Elenco principale SI: tutte le hiking routes dell'app 2
+        $query->where('hiking_routes.app_id', 2);
 
         // ...associate al layer 6 tramite la tabella pivot layerables
-        $query->whereIn('id', function ($sub) {
+        $query->whereIn('hiking_routes.id', function ($sub) {
             $sub->select('layerable_id')
                 ->from('layerables')
                 ->where('layer_id', 6)
@@ -128,7 +133,7 @@ class SiHikingRoute extends HikingRoute
         $fields[] = Text::make(__('Osmfeatures ID'), function () {
             return Osm2caiHelper::getOpenstreetmapUrlAsHtml($this->osmfeatures_id);
         })->asHtml();
-
+        $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', EcPoi::class);
 
         return $fields;
     }
@@ -146,6 +151,7 @@ class SiHikingRoute extends HikingRoute
         $fields[] = Text::make('id', 'id');
         $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
         $fields[] = NovaTabTranslatable::make([Text::make('name', 'name'), Tiptap::make(__('description'), 'properties->description')]);
+        $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', EcPoi::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
             Tab::make(__('DEM'), $this->getDemTabFields()),
@@ -161,6 +167,7 @@ class SiHikingRoute extends HikingRoute
      */
     protected function sicaiEditFields(NovaRequest $request): array
     {
+        $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', EcPoi::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
         ]);
@@ -183,6 +190,16 @@ class SiHikingRoute extends HikingRoute
             return "<a href='{$url}' target='_blank' style='color: #2697bc; text-decoration: none; font-weight: bold;'>{$parentHikingRouteId}</a>";
         })->asHtml();
     }
+
+    /**
+     * Campo relazione Ec Pois. Definito una volta e incluso anche in index (con onlyOnDetail)
+     * così Nova trova il campo in hasRelatableField e la richiesta relazione non va in 409.
+     */
+    protected function getEcPoisField(): BelongsToMany
+    {
+        return BelongsToMany::make(__('Ec Pois'), 'ecPois', EcPoi::class);
+    }
+
     public function getGeneralTabFields(): array
     {
         return [

@@ -12,6 +12,7 @@ use App\Models\NaturalSpring;
 use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
+use App\Models\SiPoi;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class SiHikingRoute extends HikingRoute
@@ -75,13 +76,50 @@ class SiHikingRoute extends HikingRoute
     public function ecPois(): BelongsToMany
     {
         return $this->belongsToMany(EcPoi::class, 'hiking_route_ec_poi', 'hiking_route_id', 'ec_poi_id')
-            ->withPivot('order')
-            ->orderByPivot('order');
+            ->where('ec_pois.app_id', 2);
+    }
+    public function siPois(): BelongsToMany
+    {
+        return $this->belongsToMany(SiPoi::class, 'hiking_route_ec_poi', 'hiking_route_id', 'ec_poi_id');
     }
 
     public function mountainGroups(): BelongsToMany
     {
         return $this->belongsToMany(MountainGroups::class, 'mountain_group_hiking_route', 'hiking_route_id', 'mountain_group_id');
     }
-}
 
+    public function getFeatureCollectionMap($uncheckedGeometryFeature = true): array
+    {
+        // Si Hiking Route: niente geometria non controllata, niente poles
+        $geojson = parent::getFeatureCollectionMap(false);
+
+        // Rimuovi i poles dalla collection
+        $geojson['features'] = array_values(array_filter($geojson['features'], function (array $feature) {
+            $link = $feature['properties']['link'] ?? '';
+            return ! str_contains($link, '/resources/poles/');
+        }));
+
+        $pois = $this->ecPois()->get();
+        $poiFeatures = [];
+        foreach ($pois as $poi) {
+            $poiFeature = $poi->getGeojson();
+            if ($poiFeature && isset($poiFeature['geometry'])) {
+                $lang = app()->getLocale() ?? 'it';
+                $tooltip = $poi->getTranslation('name', $lang) ?: $poi->getTranslation('name', 'it');
+                $poiFeature['properties'] = array_merge($poiFeature['properties'] ?? [], [
+                    'tooltip' => $tooltip ?? '',
+                    'pointRadius' => 6,
+                    'pointStrokeColor' => 'rgb(255, 255, 255)',
+                    'pointStrokeWidth' => 2,
+                    'pointFillColor' => 'rgba(255, 0, 0, 0.8)',
+                    'link' => url(trim(config('nova.path', '/nova'), '/') . '/resources/ec-pois/' . $poi->id),
+                ]);
+                $poiFeatures[] = $poiFeature;
+            }
+        }
+
+        $geojson['features'] = array_merge($poiFeatures, $geojson['features']);
+
+        return $geojson;
+    }
+}
