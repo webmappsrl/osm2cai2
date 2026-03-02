@@ -533,12 +533,7 @@ class SignageMapController
                         'description' => $targetFeature['properties']['description'] ?? '',
                     ], $data);
 
-                    // Arrotonda time_hiking se presente
-                    if (isset($mergedData['time_hiking'])) {
-                        $mergedData['time_hiking'] = $this->roundTravelTime($mergedData['time_hiking']);
-                    }
-
-                    return $mergedData;
+                    return $this->applyMinimumDisplayValues($mergedData);
                 },
                 $forward
             )));
@@ -558,12 +553,7 @@ class SignageMapController
                         'description' => $targetFeature['properties']['description'] ?? '',
                     ], $data);
 
-                    // Arrotonda time_hiking se presente
-                    if (isset($mergedData['time_hiking'])) {
-                        $mergedData['time_hiking'] = $this->roundTravelTime($mergedData['time_hiking']);
-                    }
-
-                    return $mergedData;
+                    return $this->applyMinimumDisplayValues($mergedData);
                 },
                 $backward
             )));
@@ -803,6 +793,24 @@ class SignageMapController
     }
 
     /**
+     * Applica i valori minimi di visualizzazione per tempo (5 min) e distanza (0,1 km).
+     *
+     * @param  array  $mergedData  Riga direzione con id, ref, name, description e dati matrix (distance, time_hiking, ...)
+     * @return array Stesso array con time_hiking arrotondato e distance >= 100 m
+     */
+    private function applyMinimumDisplayValues(array $mergedData): array
+    {
+        if (isset($mergedData['time_hiking'])) {
+            $mergedData['time_hiking'] = $this->roundTravelTime($mergedData['time_hiking']);
+        }
+        if (isset($mergedData['distance']) && (int) $mergedData['distance'] < 100) {
+            $mergedData['distance'] = 100;
+        }
+
+        return $mergedData;
+    }
+
+    /**
      * Arrotonda i tempi di percorrenza secondo le regole CAI
      *
      * Regole di arrotondamento:
@@ -816,13 +824,11 @@ class SignageMapController
      */
     private function roundTravelTime(?int $minutes): ?int
     {
-        if ($minutes === null || $minutes <= 0) {
-            return $minutes;
-        }
+
 
         // --- Prima ora: 0‑60 minuti ---
         // Non ha senso mostrare tempi inferiori a 5', li portiamo a 5'.
-        if ($minutes <= 5) {
+        if ($minutes === null || $minutes <= 5) {
             return 5;
         }
         if ($minutes <= 10) {
