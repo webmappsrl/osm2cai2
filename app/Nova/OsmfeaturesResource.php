@@ -228,14 +228,12 @@ abstract class OsmfeaturesResource extends AbstractEcResource
                 // Campo JSON: converte osmfeatures_data->properties->ref in osmfeatures_data->'properties'->>'ref'
                 $jsonPath = static::convertJsonFieldToPostgresSyntax($field);
                 $query->orWhereRaw("{$jsonPath} ILIKE ?", ["%{$searchTerm}%"]);
-            }else {
-                // Campo normale
-                if ($field === 'id') {
-                    // Se è l'ID, cerchiamo solo se è un numero E se rientra nei limiti del tipo integer di PostgreSQL
-                    if ($isNumeric && $searchTerm <= 2147483647) {
-                        $query->orWhere($field, '=', (int) $searchTerm);
-                    }
-                    // Se è numerico ma più grande di 2.147.483.647, lo ignoriamo per l'ID per evitare il crash.
+            } else {
+                $model = $query->getModel();
+                $lastId = $model::latest('id')->value('id');
+                // Se è un campo ID e il valore è numerico e minore o uguale all'ultimo ID, usa match esatto
+                if ($field === 'id' && $isNumeric && $searchTerm <= $lastId) {
+                    $query->orWhere($field, '=', (int) $searchTerm);
                 } else {
                     // Per tutti gli altri campi (come osmfeatures_id o ref), usa sempre l'ILIKE
                     $query->orWhere($field, 'ilike', "%{$searchTerm}%");
