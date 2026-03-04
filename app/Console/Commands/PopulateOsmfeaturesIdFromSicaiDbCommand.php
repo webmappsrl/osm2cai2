@@ -756,7 +756,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         }
 
         $baseUrl = 'https://sentieroitaliamappe.cai.it/index.php/view/media/getMedia?repository=sicaipubblico&project=SICAI_Pubblico&path=';
-        $photoColumns = ['immagine', 'foto02', 'foto03', 'foto04', 'foto05'];
+        $photoColumns = ['foto02', 'foto03', 'foto04', 'foto05'];
 
         foreach ($rows as $index => $row) {
             $raw = $row['raw'] ?? [];
