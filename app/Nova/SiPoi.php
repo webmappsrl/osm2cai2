@@ -142,7 +142,7 @@ class SiPoi extends EcPoi
     {
         $fields = [];
 
-        $fields[] = ID::make()->onlyOnDetail();
+        $fields[] = ID::make();
         $fields[] = Text::make(__('Name'), 'name');
         $fields[] = Images::make(__('Image'), 'default');
 
@@ -154,8 +154,9 @@ class SiPoi extends EcPoi
         $fields = [];
 
         $fields[] = Text::make('id', 'id');
-        $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
+        $fields[] = Boolean::make(__('Global'), 'global');
         $fields[] = NovaTabTranslatable::make([Text::make('name', 'name'), Tiptap::make(__('description'), 'properties->description')]);
+        $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
         $fields[] = Images::make(__('Image'), 'default');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
 
@@ -168,7 +169,7 @@ class SiPoi extends EcPoi
     public function sicaiEditFields(): array
     {
         $fields = [];
-        $fields[] = ID::make()->onlyOnDetail();
+        $fields[] = Boolean::make(__('Global'), 'global');
         $fields[] = Text::make(__('Name'), 'name');
         $fields[] = Images::make(__('Image'), 'default');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);

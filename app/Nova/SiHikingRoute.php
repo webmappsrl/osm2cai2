@@ -151,7 +151,7 @@ class SiHikingRoute extends HikingRoute
         $fields[] = Text::make('id', 'id');
         $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
         $fields[] = NovaTabTranslatable::make([Text::make('name', 'name'), Tiptap::make(__('description'), 'properties->description')]);
-        $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', EcPoi::class);
+        $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', SiPoi::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
             Tab::make(__('DEM'), $this->getDemTabFields()),
@@ -167,7 +167,7 @@ class SiHikingRoute extends HikingRoute
      */
     protected function sicaiEditFields(NovaRequest $request): array
     {
-        $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', EcPoi::class);
+        $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', SiPoi::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
         ]);

@@ -172,7 +172,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(SiMTBRoute::class, __('MTB Routes')),
                     MenuItem::resource(SiPoi::class, __('SI Pois')),
                 ])->icon('map')->collapsable()->collapsedByDefault()->canSee(function () {
-                    return true || optional(Auth::user())->hasRole(UserRole::SicaiManager);
+                    $user = Auth::user();
+
+                    if (! $user) {
+                        return false;
+                    }
+
+                    return $user->email === 'team@webmapp.it'
+                        || $user->hasRole(UserRole::SicaiManager);
                 }),
 
                 // Arricchimenti

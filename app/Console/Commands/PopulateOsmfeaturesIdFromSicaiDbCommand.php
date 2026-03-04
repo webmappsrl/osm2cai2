@@ -565,6 +565,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
             if (! $ecPoi) {
                 $ecPoi = new EcPoi();
                 $ecPoi->app_id = 2;
+                $ecPoi->global = false;
                 $isNew = true;
             }
 
@@ -593,6 +594,8 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
             $sicai['source_key'] = $sourceKey;
             $properties['sicai'] = $sicai;
             $ecPoi->properties = $properties;
+
+            $canLinkToRoutes = isset($sicai['situazione']) && $sicai['situazione'] === 'ha aderito';
 
             // Geometria: valore grezzo da raw (colonna geom/geometry); trasformazione 3857→4326 tramite GeometryService (sul nostro DB)
             $geometryColumn = $row['geometry_column'] ?? null;
@@ -678,16 +681,25 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
             }
 
             if ($dryRun) {
-                $this->comment(sprintf(
-                    'Collegherei EC POI %s alle HikingRoute id: [%s] [DRY-RUN]',
-                    $sourceKey,
-                    implode(', ', $routeIds)
-                ));
+                if ($canLinkToRoutes) {
+                    $this->comment(sprintf(
+                        'Collegherei EC POI %s alle HikingRoute id: [%s] [DRY-RUN]',
+                        $sourceKey,
+                        implode(', ', $routeIds)
+                    ));
+                } else {
+                    $this->comment(sprintf(
+                        'NON collegherei EC POI %s alle HikingRoute id: [%s] perché situazione != \"ha aderito\" [DRY-RUN]',
+                        $sourceKey,
+                        implode(', ', $routeIds)
+                    ));
+                }
             } else {
-                $ecPoi->nearbyHikingRoutes()->syncWithoutDetaching($routeIds);
+                if ($canLinkToRoutes) {
+                    $ecPoi->nearbyHikingRoutes()->syncWithoutDetaching($routeIds);
+                    $linkedRoutes += count($routeIds);
+                }
             }
-
-            $linkedRoutes += count($routeIds);
         }
 
         return [
