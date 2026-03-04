@@ -5,14 +5,17 @@ namespace App\Nova;
 use App\Models\SIPoi as SIPoiModel;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Database\Eloquent\Builder;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
+use Marshmallow\Tiptap\Tiptap;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\EcTrack as EcTrackResource;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
 class SiPoi extends EcPoi
 {
@@ -58,6 +61,15 @@ class SiPoi extends EcPoi
      */
     public function fields(NovaRequest $request): array
     {
+
+        if ($request->isResourceIndexRequest()) {
+            return $this->sicaiIndexFields($request);
+        }
+        if ($request->isResourceDetailRequest()) {
+            return $this->sicaiDetailFields($request);
+        }
+
+        return $this->sicaiEditFields($request);
         $fields = parent::fields($request);
 
         // Rimuove il pannello generico "Properties" ereditato da AbstractGeometryResource
@@ -123,5 +135,46 @@ class SiPoi extends EcPoi
             Text::make(__('Source key'), 'properties->sicai->source_key')->readonly(),
             Boolean::make(__('Punto accoglienza ufficiale'), 'properties->sicai->pt_accoglienza')->readonly(),
         ];
+    }
+
+
+    public function sicaiIndexFields(): array
+    {
+        $fields = [];
+
+        $fields[] = ID::make()->onlyOnDetail();
+        $fields[] = Text::make(__('Name'), 'name');
+        $fields[] = Images::make(__('Image'), 'default');
+
+        return $fields;
+    }
+
+    public function sicaiDetailFields(): array
+    {
+        $fields = [];
+
+        $fields[] = Text::make('id', 'id');
+        $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
+        $fields[] = NovaTabTranslatable::make([Text::make('name', 'name'), Tiptap::make(__('description'), 'properties->description')]);
+        $fields[] = Images::make(__('Image'), 'default');
+        $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
+
+        $fields[] = Tab::group(__('Details'), [
+            Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+        ]);
+        return $fields;
+    }
+
+    public function sicaiEditFields(): array
+    {
+        $fields = [];
+        $fields[] = ID::make()->onlyOnDetail();
+        $fields[] = Text::make(__('Name'), 'name');
+        $fields[] = Images::make(__('Image'), 'default');
+        $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
+        $fields[] = Tab::group(__('Details'), [
+            Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+        ]);
+        return $fields;
     }
 }
