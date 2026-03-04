@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Annotations as OA;
+use SimpleXMLElement;
 
 class HikingRouteController extends Controller
 {
@@ -645,6 +646,91 @@ class HikingRouteController extends Controller
     }
 
     /**
+     * Generate and download a GPX file for a hiking route.
+     *
+     * This endpoint is mainly used by Nova and external integrations.
+     */
+    public function hikingRouteGpx(int $id)
+    {
+        /** @var HikingRoute|null $hikingRoute */
+        $hikingRoute = HikingRoute::find($id);
+
+        if (is_null($hikingRoute)) {
+            return $this->notFoundResponse('No Hiking Route found with this id');
+        }
+
+        $geomRow = DB::select('SELECT ST_AsGeoJSON(geometry) as geom FROM hiking_routes WHERE id = ?', [$id]);
+
+        if (empty($geomRow) || ! isset($geomRow[0]->geom)) {
+            return $this->notFoundResponse('No geometry found for this Hiking Route');
+        }
+
+        $geometry = json_decode($geomRow[0]->geom, true);
+
+        if (! is_array($geometry) || empty($geometry['coordinates'])) {
+            return $this->notFoundResponse('Invalid geometry for this Hiking Route');
+        }
+
+        $coordinates = $geometry['coordinates'];
+
+        // Normalize coordinates for LineString and MultiLineString
+        $points = [];
+        if (($geometry['type'] ?? null) === 'LineString') {
+            $points = $coordinates;
+        } elseif (($geometry['type'] ?? null) === 'MultiLineString') {
+            foreach ($coordinates as $segment) {
+                foreach ($segment as $coord) {
+                    $points[] = $coord;
+                }
+            }
+        } else {
+            return $this->errorResponse('Unsupported geometry type for GPX export');
+        }
+
+        if (empty($points)) {
+            return $this->notFoundResponse('No coordinates available for this Hiking Route');
+        }
+
+        $gpx = new SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="osm2cai" xmlns="http://www.topografix.com/GPX/1/1"></gpx>'
+        );
+
+        $trk = $gpx->addChild('trk');
+        $trk->addChild('name', 'OSM2CAI Hiking Route '.$hikingRoute->id);
+        $trkseg = $trk->addChild('trkseg');
+
+        foreach ($points as $coord) {
+            // Coordinate format: [lon, lat] or [lon, lat, ele]
+            if (! is_array($coord) || count($coord) < 2) {
+                continue;
+            }
+
+            $lon = $coord[0];
+            $lat = $coord[1];
+            $ele = $coord[2] ?? null;
+
+            $trkpt = $trkseg->addChild('trkpt');
+            $trkpt->addAttribute('lat', (string) $lat);
+            $trkpt->addAttribute('lon', (string) $lon);
+
+            if ($ele !== null) {
+                $trkpt->addChild('ele', (string) $ele);
+            }
+        }
+
+        $gpxContent = $gpx->asXML();
+
+        if ($gpxContent === false) {
+            return $this->errorResponse('Error generating GPX for this Hiking Route');
+        }
+
+        return response($gpxContent, 200, [
+            'Content-Type' => 'application/gpx+xml',
+            'Content-Disposition' => 'attachment; filename="hiking-route-'.$hikingRoute->id.'.gpx"',
+        ]);
+    }
+
+    /**
      * @OA\Get(
      *      path="/api/v2/hiking-route-osm/{id}",
      *      tags={"Api V2"},
@@ -815,6 +901,14 @@ class HikingRouteController extends Controller
             ],
             'geometry' => json_decode($geom, true),
         ];
+
+        // Espone eventuali dati aggiuntivi salvati in hiking_routes.properties (es. blocco "sicai")
+        if (is_array($hikingRoute->properties) && ! empty($hikingRoute->properties)) {
+            $response['properties'] = array_merge(
+                $response['properties'],
+                $hikingRoute->properties
+            );
+        }
 
         if ($hikingRoute->osm2cai_status == 4) {
             $response['properties']['validation_date'] = Carbon::create($hikingRoute->validation_date)->format('Y-m-d');

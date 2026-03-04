@@ -393,6 +393,8 @@ class HikingRoute extends EcTrack
             'openstreetmapLink' => $osmLink,
             'waymarkedtrailsLink' => $wmt,
             'analyzerLink' => $analyzer,
+            'geojsonApiLink' => url('/api/v2/hiking-route/' . $this->id),
+            'gpxApiLink' => url('/api/v2/hiking-routes/' . $this->id . '.gpx'),
         ];
     }
 

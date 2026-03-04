@@ -40,6 +40,8 @@ class LinksCard extends HtmlCard
             <p>OSM Relation Analyzer: <a style="color:blue" target="_blank" href="{$this->linksData['analyzerLink']}">{$this->linksData['osm_id']}</a></p>
             <p>OSM2CAI: <a style="color:blue" target="_blank" href="{$this->linksData['osm2caiLink']}">{$this->linksData['id']}</a></p>
             <p>INFOMONT: <a style="color:blue" target="_blank" href="{$this->linksData['infomontLink']}">{$this->linksData['id']}</a></p>
+            <p>Hiking Route JSON (GeoJSON): <a style="color:blue" target="_blank" href="{$this->linksData['geojsonApiLink']}">Download JSON</a></p>
+            <p>Hiking Route GPX: <a style="color:blue" target="_blank" href="{$this->linksData['gpxApiLink']}">Download GPX</a></p>
             HTML;
     }
 }
