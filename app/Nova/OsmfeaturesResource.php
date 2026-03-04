@@ -179,7 +179,7 @@ abstract class OsmfeaturesResource extends AbstractEcResource
 
         // Caso 1: prefisso OSM (R/N/W + numero)
         if ($hasOsmPrefix) {
-            $osmId = strtoupper($matches[1]) . $matches[2];
+            $osmId = strtoupper($matches[1]).$matches[2];
 
             return $query->where(function ($q) use ($osmId, $search, $searchFields) {
                 $q->where('osmfeatures_id', 'ilike', "{$osmId}%");
@@ -213,10 +213,7 @@ abstract class OsmfeaturesResource extends AbstractEcResource
      * Aggiunge condizioni di ricerca per i campi dichiarati in $search.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  array  $searchFields
-     * @param  string  $searchTerm
-     * @param  bool  $isNumeric Se true, per il campo 'id' usa match esatto invece di ilike
-     * @return void
+     * @param  bool  $isNumeric  Se true, per il campo 'id' usa match esatto invece di ilike
      */
     protected static function addSearchFieldsConditions(Builder $query, array $searchFields, string $searchTerm, bool $isNumeric = false): void
     {
@@ -232,11 +229,13 @@ abstract class OsmfeaturesResource extends AbstractEcResource
                 $jsonPath = static::convertJsonFieldToPostgresSyntax($field);
                 $query->orWhereRaw("{$jsonPath} ILIKE ?", ["%{$searchTerm}%"]);
             } else {
-                // Campo normale
-                // Per 'id' con ricerca numerica, usa match esatto invece di ilike
-                if ($field === 'id' && $isNumeric) {
+                $model = $query->getModel();
+                $lastId = $model::latest('id')->value('id');
+                // Se è un campo ID e il valore è numerico e minore o uguale all'ultimo ID, usa match esatto
+                if ($field === 'id' && $isNumeric && $searchTerm <= $lastId) {
                     $query->orWhere($field, '=', (int) $searchTerm);
                 } else {
+                    // Per tutti gli altri campi (come osmfeatures_id o ref), usa sempre l'ILIKE
                     $query->orWhere($field, 'ilike', "%{$searchTerm}%");
                 }
             }
@@ -246,9 +245,6 @@ abstract class OsmfeaturesResource extends AbstractEcResource
     /**
      * Converte un campo JSON da sintassi Laravel a sintassi PostgreSQL.
      * Esempio: osmfeatures_data->properties->ref diventa osmfeatures_data->'properties'->>'ref'
-     *
-     * @param  string  $field
-     * @return string
      */
     protected static function convertJsonFieldToPostgresSyntax(string $field): string
     {
