@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.0.0 (2026-03-04)
+
+
+### Features
+
+* **command:** ✨ add support for regions in hiking routes command ([96555b5](https://github.com/webmappsrl/osm2cai2/commit/96555b569fc09aebfc854a3f9fd7d9929db04c71))
+* **console:** ✨ add command to fix missing hiking route sectors ([8bb7185](https://github.com/webmappsrl/osm2cai2/commit/8bb7185f590f8616ca54f44074c25a441299b8f5))
+* **DetailField:** ✨ add navigation interception to force reload on index navigation ([a43324d](https://github.com/webmappsrl/osm2cai2/commit/a43324db1d48d49de08f6ec22481d2b2a3dce402))
+* **docker:** ✨ add production-specific docker-compose configuration ([9ce6957](https://github.com/webmappsrl/osm2cai2/commit/9ce69578a6051711551e7feee04a13ef07a798fa))
+* **ec-points:** ✨ add global flag to ec_pois and update pivot table configuration oc:7257 ([#297](https://github.com/webmappsrl/osm2cai2/issues/297)) ([63445d7](https://github.com/webmappsrl/osm2cai2/commit/63445d7ce24d065891cec292aacf3f861d6b41bd))
+* **geometry:** ✨ enhance sector feature coloring and linking logic ([8c581d9](https://github.com/webmappsrl/osm2cai2/commit/8c581d9aa865f84ed93e188e821e9dd01c89cdea))
+* **jobs:** ✨ add job for PBF generation post-osmfeatures sync ([123b9c6](https://github.com/webmappsrl/osm2cai2/commit/123b9c664671784e33272ecdb53a89f713384131))
+* **models:** ✨ add condition to filter poles by osmfeatures existence ([d97d2b2](https://github.com/webmappsrl/osm2cai2/commit/d97d2b229c1ebeea7a07e2f8491a43ddc26a8f16))
+* **nova:** ✨ add handling for null status in OsmfeaturesResource ([3949822](https://github.com/webmappsrl/osm2cai2/commit/39498222aae9cda72f0d1ed9b687e004fe994918))
+* **schedule:** ⏰ update command execution times for CET ([438b094](https://github.com/webmappsrl/osm2cai2/commit/438b094f47da83181d1be5feec55705f90df5802))
+
+
+### Bug Fixes
+
+* **command:** fix UgcPoi duplicati (stesso uuid) - Oc 6951 ([#294](https://github.com/webmappsrl/osm2cai2/issues/294)) ([07f5f4f](https://github.com/webmappsrl/osm2cai2/commit/07f5f4f7bac49a2694585ba9db9b38ae4ca124c1))
+* **export:** 🐛 add condition to check for existing OSM features ([83d95d4](https://github.com/webmappsrl/osm2cai2/commit/83d95d42cf08866e6aa343ca331ce26842ba4a4f))
+* **model:** 🐛 use updateQuietly to avoid firing events during update ([438ad24](https://github.com/webmappsrl/osm2cai2/commit/438ad24194427e16f87f1642dbab97eda8cbaefa))
+* **SignageProject:** 🐛 correct osmfeatures_exists condition ([14a1c43](https://github.com/webmappsrl/osm2cai2/commit/14a1c4367e0d3673bfa7f298d5334895e20b76c3))
+
+
+### Miscellaneous Chores
+
+* **geometry:** 🔧 update polygon color scheme in intersecting sectors ([bcfb53d](https://github.com/webmappsrl/osm2cai2/commit/bcfb53d979b613e1d04f2ce5b7d3685b0675a2ed))
+* **models:** 🔧 ensure geometry is updated before verifying relations ([007181b](https://github.com/webmappsrl/osm2cai2/commit/007181bc0d80463d13427ba0606ecaaf7f28afc6))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
