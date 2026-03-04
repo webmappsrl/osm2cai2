@@ -2,7 +2,7 @@
 
 namespace App\Nova;
 
-use App\Models\SIPoi as SIPoiModel;
+use App\Models\SiPoi as SiPoiModel;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Database\Eloquent\Builder;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
@@ -14,7 +14,6 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
-use Wm\WmPackage\Nova\EcTrack as EcTrackResource;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
 class SiPoi extends EcPoi
@@ -22,9 +21,9 @@ class SiPoi extends EcPoi
     /**
      * Il model associato alla risorsa.
      *
-     * @var class-string<SIPoiModel>
+     * @var class-string<SiPoiModel>
      */
-    public static $model = SIPoiModel::class;
+    public static $model = SiPoiModel::class;
 
     /**
      * Etichetta plurale della risorsa.
