@@ -109,7 +109,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         $this->newLine();
 
         foreach ($allFeatures as $feature) {
-            $tappa = $feature['properties']['sicai_properties']['tappa'] ?? $feature['properties']['tappa'] ?? null;
+            $tappa = $feature['properties']['sicai']['tappa'] ?? $feature['properties']['tappa'] ?? null;
 
             if ($tappa === null) {
                 $skipped++;
@@ -390,7 +390,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'properties' => [
                         'osmid' => (string) $osmid,
                         'description' => ['it' => $row->descrizione_sito],
-                        'sicai_properties' => $sicaiProperties,
+                        'sicai' => $sicaiProperties,
                     ],
                     'raw' => (array) $row,
                 ];
@@ -406,7 +406,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'source' => 'sicai_mtb',
                     'properties' => [
                         'osmid' => (string) $osmid,
-                        'sicai_properties' => [
+                        'sicai' => [
                             'tappa' => $row->tappa,
                         ],
                     ],
@@ -756,7 +756,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         }
 
         $baseUrl = 'https://sentieroitaliamappe.cai.it/index.php/view/media/getMedia?repository=sicaipubblico&project=SICAI_Pubblico&path=';
-        $photoColumns = ['foto02', 'foto03', 'foto04', 'foto05'];
+        $photoColumns = ['immagine', 'foto02', 'foto03', 'foto04', 'foto05'];
 
         foreach ($rows as $index => $row) {
             $raw = $row['raw'] ?? [];
