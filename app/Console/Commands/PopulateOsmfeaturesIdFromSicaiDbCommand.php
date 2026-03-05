@@ -402,13 +402,14 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         foreach ($rowsMtb as $row) {
             $osmid = $row->osmid ?? null;
             if ($osmid !== null && $osmid !== '') {
+                $sicai = (array) $row;
+                unset($sicai['osmid']);
+
                 $features[] = [
                     'source' => 'sicai_mtb',
                     'properties' => [
                         'osmid' => (string) $osmid,
-                        'sicai' => [
-                            'tappa' => $row->tappa,
-                        ],
+                        'sicai' => $sicai,
                     ],
                     'raw' => (array) $row,
                 ];
