@@ -301,25 +301,15 @@ class SiMTBRoute extends HikingRoute
     public function getSicaiTabFields(): array
     {
         return [
+            Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('Tappa'), 'properties->sicai->tappa'),
-            Text::make(__('Verifica'), 'properties->sicai->verifica'),
+            Text::make(__('Verso'), 'properties->sicai->verso'),
             Text::make(__('Descrizione'), 'properties->sicai->descrizione'),
             Text::make(__('Segnaletica'), 'properties->sicai->segnaletica'),
-            Text::make(__('Segnalazioni'), 'properties->sicai->segnalazioni'),
             Text::make(__('Referente Nome'), 'properties->sicai->referente->name'),
             Text::make(__('Referente Email'), 'properties->sicai->referente->email'),
             Text::make(__('Note'), 'properties->sicai->note'),
-            Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('Percorribilità'), 'properties->sicai->percorribilità')->readonly(),
-            Text::make(__('Referente regionale'), 'properties->sicai->referente_regionale')->readonly(),
-            Text::make(__('Email referente regionale'), 'properties->sicai->email_ref_regionale')->readonly(),
-            Text::make(__('Sezione'), 'properties->sicai->sezione')->readonly(),
-            Text::make(__('Sezione referente regionale'), 'properties->sicai->sezione_ref_regionale')->readonly(),
-            Text::make(__('Sezioni manutenzione'), 'properties->sicai->sezioni_manutenzione')->readonly(),
-            Boolean::make(__('Parcheggio'), 'properties->sicai->parcheggio')->readonly(),
-            Boolean::make(__('Stazione bus'), 'properties->sicai->stazioni->bus')->readonly(),
-            Boolean::make(__('Stazione treno'), 'properties->sicai->stazioni->treno')->readonly(),
-            Boolean::make(__('Punto accoglienza'), 'properties->sicai->pt_accoglienza')->readonly(),
         ];
     }
 
