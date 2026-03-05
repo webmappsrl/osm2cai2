@@ -410,7 +410,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'percorribilità' => $row->percorribilità,
                     'segnaletica' => $row->segnaletica_SICAI_MTB,
                     'descrizione' => $row->descrizione,
-                    'note' => $row->Note,
+                    'note' => $row->note,
                 ];
 
                 $features[] = [
