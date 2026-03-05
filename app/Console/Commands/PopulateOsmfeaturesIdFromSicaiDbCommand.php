@@ -573,18 +573,19 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                 $ecPoi->user_id = $sentieroItaliaUser->id;
             }
 
-            // Nome: va in ec_poi->name (translatable), non in properties->sicai
-            $name = $raw['name'] ?? $raw['addr:city'] ?? null;
-            if ($name !== null && $name !== '') {
-                $ecPoi->setTranslation('name', 'it', $name);
-            }
-
-            // Descrizione: va in properties->description (in EcPoi non esiste il campo description), non in properties->sicai
-            $description = $raw['Descrizione'] ?? $raw['descrizione'] ?? null;
             $properties = $ecPoi->properties ?? [];
             if (! is_array($properties)) {
                 $properties = [];
             }
+            // Nome: va in ec_poi->name (translatable), non in properties->sicai
+            $name = $raw['name'] ?? $raw['addr:city'] ?? null;
+            if ($name !== null && $name !== '') {
+                $ecPoi->setTranslation('name', 'it', $name);
+                $properties['name'] = ['it' => $name];
+            }
+
+            // Descrizione: va in properties->description (in EcPoi non esiste il campo description), non in properties->sicai
+            $description = $raw['Descrizione'] ?? $raw['descrizione'] ?? null;
             if ($description !== null && $description !== '') {
                 $properties['description'] = ['it' => $description];
             }
@@ -927,7 +928,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
             'description' => [],
             'excerpt' => [],
             'identifier' => 'punto-accoglienza',
-            'icon' => 'alpine-hut',
+            'icon' => 'txn-alpine-hut',
         ]);
         $this->info('Creato TaxonomyPoiType "Punto Accoglienza" (identifier: punto-accoglienza, icon: alpine-hut).');
 
