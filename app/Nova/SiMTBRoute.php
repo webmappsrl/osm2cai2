@@ -115,7 +115,6 @@ class SiMTBRoute extends HikingRoute
     protected function sicaiIndexFields(NovaRequest $request): array
     {
         $fields = [];
-        $fields[] = $this->getParentRouteField();
         $fields[] = ID::make()->sortable();
         $fields[] = Text::make(__('Name'), 'name');
         $fields[] = Text::make(__('Osmfeatures ID'), function () {
