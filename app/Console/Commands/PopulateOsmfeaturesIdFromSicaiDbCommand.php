@@ -596,6 +596,9 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
             $ecPoi->properties = $properties;
 
             $canLinkToRoutes = isset($sicai['situazione']) && $sicai['situazione'] === 'ha aderito';
+            if ($canLinkToRoutes) {
+                $ecPoi->global = true;
+            }
 
             // Geometria: valore grezzo da raw (colonna geom/geometry); trasformazione 3857→4326 tramite GeometryService (sul nostro DB)
             $geometryColumn = $row['geometry_column'] ?? null;
