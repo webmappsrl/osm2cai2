@@ -4,33 +4,57 @@ namespace App\Nova\Filters;
 
 use App\Enums\UserRole;
 use App\Models\Province;
-use Illuminate\Http\Request;
-use Laravel\Nova\Filters\Filter;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
-class ProvinceFilter extends Filter
+class ProvinceFilter extends BaseOSMFeaturesFilter
 {
-    /**
-     * The filter's component.
-     *
-     * @var string
-     */
-    public $component = 'select-filter';
-
-    public $name;
-
     public function __construct()
     {
-        $this->name = __('Province');
+        parent::__construct(__('Province'));
     }
 
-    /**
-     * Apply the filter to the given query.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  mixed  $value
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function apply(Request $request, $query, $value)
+    protected function getEmptyOptionLabel(): string
+    {
+        return __('No province');
+    }
+
+    protected function getEmptyOptionValue(): string
+    {
+        return 'no_province';
+    }
+
+    protected function getEntityOptions(NovaRequest $request): array
+    {
+        $options = [];
+        $user = $request->user();
+        if ($user && $user->hasRole(UserRole::RegionalReferent)) {
+            $provinces = Province::where('region_id', $user->region->id)->orderBy('name')->get();
+            foreach ($provinces as $item) {
+                $options[$item->name] = $item->id;
+            }
+        } else {
+            foreach (Province::orderBy('name')->get() as $item) {
+                $options[$item->name] = $item->id;
+            }
+        }
+
+        return $options;
+    }
+
+    protected function applyEmpty(NovaRequest $request, $query)
+    {
+        if ($query->getModel() instanceof \App\Models\HikingRoute) {
+            return $query->whereDoesntHave('provinces');
+        }
+
+        if ($query->getModel() instanceof \App\Models\User) {
+            return $query->whereDoesntHave('provinces');
+        }
+
+        return $query->whereNull('province_id');
+    }
+
+    protected function applyValue(NovaRequest $request, $query, $value)
     {
         if ($query->getModel() instanceof \App\Models\HikingRoute) {
             return $query->whereHas('provinces', function ($query) use ($value) {
@@ -45,27 +69,5 @@ class ProvinceFilter extends Filter
         }
 
         return $query->where('province_id', $value);
-    }
-
-    /**
-     * Get the filter's available options.
-     *
-     * @return array
-     */
-    public function options(Request $request)
-    {
-        $options = [];
-        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
-            $provinces = Province::where('region_id', auth()->user()->region->id)->orderBy('name')->get();
-            foreach ($provinces as $item) {
-                $options[$item->name] = $item->id;
-            }
-        } else {
-            foreach (Province::orderBy('name')->get() as $item) {
-                $options[$item->name] = $item->id;
-            }
-        }
-
-        return $options;
     }
 }
