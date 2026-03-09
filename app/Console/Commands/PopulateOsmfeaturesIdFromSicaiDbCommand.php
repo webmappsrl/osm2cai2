@@ -394,7 +394,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     ],
                     'not_accessible' => $notAccessible,
                     'not_accessible_message' => isset($sicaiProperties['note'])
-                        ? ['it' => $sicai['note']]
+                        ? ['it' => $sicaiProperties['note']]
                         : null,
                     'raw' => (array) $row,
                 ];
