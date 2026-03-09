@@ -364,6 +364,9 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         foreach ($rowsSiTappe as $row) {
             $osmid = $row->openstreetmap ?? null;
             if ($osmid !== null && $osmid !== '') {
+                $rawNote = $row->note ?? ($row->Note ?? null);
+                $cleanNote = $rawNote !== null ? strip_tags($rawNote) : null;
+
                 $sicaiProperties = [
                     'data' => $row->data,
                     'tappa' => $row->tappa,
@@ -376,7 +379,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'segnaletica' => $row->segnaletica,
                     'descrizione' => $row->descrizione,
                     'verifica' => $row->verifica,
-                    'note' => strip_tags($row->Note),
+                    'note' => $cleanNote,
                     'segnalazioni' => $row->Segnalazioni,
                     'sezione' => $row->sezione,
                     'referente_regionale' => $row->referente_regionale,
@@ -406,6 +409,10 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
         foreach ($rowsMtb as $row) {
             $osmid = $row->osmid ?? null;
             if ($osmid !== null && $osmid !== '') {
+                // Alcune istanze del DB possono avere il campo come "note" o "Note".
+                $rawNote = $row->note ?? ($row->Note ?? null);
+                $cleanNote = $rawNote !== null ? trim(strip_tags($rawNote)) : null;
+
                 $sicai = [
                     'data' => $row->data,
                     'tappa' => $row->tappa,
@@ -414,7 +421,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'percorribilità' => $row->percorribilità,
                     'segnaletica' => $row->segnaletica_SICAI_MTB,
                     'descrizione' => $row->descrizione,
-                    'note' => strip_tags($row->note),
+                    'note' => $cleanNote,
                     's_plus' => $row->{'s+'},
                     's_minus' => $row->{'s-'},
                 ];
