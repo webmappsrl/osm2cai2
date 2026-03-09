@@ -376,7 +376,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'segnaletica' => $row->segnaletica,
                     'descrizione' => $row->descrizione,
                     'verifica' => $row->verifica,
-                    'note' => $row->Note,
+                    'note' => strip_tags($row->Note),
                     'segnalazioni' => $row->Segnalazioni,
                     'sezione' => $row->sezione,
                     'referente_regionale' => $row->referente_regionale,
@@ -410,7 +410,9 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'percorribilità' => $row->percorribilità,
                     'segnaletica' => $row->segnaletica_SICAI_MTB,
                     'descrizione' => $row->descrizione,
-                    'note' => $row->note,
+                    'note' => strip_tags($row->Note),
+                    's_plus' => $row->{'s+'},
+                    's_minus' => $row->{'s-'},
                 ];
 
                 $features[] = [
