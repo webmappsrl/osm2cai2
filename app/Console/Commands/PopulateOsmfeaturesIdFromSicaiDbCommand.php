@@ -433,6 +433,7 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'properties' => [
                         'osmid' => (string) $osmid,
                         'sicai' => $sicai,
+                        'description' => ['it' => $row->descrizione],
                     ],
                     'raw' => (array) $row,
                 ];

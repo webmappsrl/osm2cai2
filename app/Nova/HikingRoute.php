@@ -87,6 +87,7 @@ class HikingRoute extends OsmfeaturesResource
         'osmfeatures_data->properties->ref',
         'osmfeatures_data->properties->ref_REI',
         'osmfeatures_data->properties->osm_id',
+        'properties->name',
     ];
 
     /**

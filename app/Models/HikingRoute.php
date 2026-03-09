@@ -1219,15 +1219,12 @@ SQL;
         // Get the base GeoJSON from parent
         $baseGeojson = parent::getGeojson();
 
-        if ($baseGeojson && $this->app && $this->app->sku === 'it.webmapp.osm2cai') {
-            // Extend properties with specific data for HikingRoute
-            $enhancedGeojson = $this->enhanceHikingRouteProperties($baseGeojson);
+        // Extend properties with specific data for HikingRoute
+        $enhancedGeojson = $this->enhanceHikingRouteProperties($baseGeojson);
 
-            return $enhancedGeojson;
-        }
-
-        return $baseGeojson;
+        return $enhancedGeojson;
     }
+
 
     /**
      * Extend GeoJSON properties with specific data for HikingRoute
@@ -1245,6 +1242,25 @@ SQL;
             $baseGeojson['properties']['description'] = [];
         }
         $baseGeojson['properties']['description']['it'] ??= '';
+
+        $percorribilita = $this->properties['sicai']['percorribilità'] ?? null;
+        if ($percorribilita) {
+            $baseGeojson['properties']['description']['it'] .= <<<HTML
+            <br><p><strong>Percorribilità:</strong> 
+            HTML;
+            $baseGeojson['properties']['description']['it'] .= e($percorribilita);
+            $baseGeojson['properties']['description']['it'] .= <<<HTML
+            </p>
+            HTML;
+
+            $updatedAt = $this->properties['sicai']['data'] ?? $this->updated_at?->format('d/m/Y');
+            if ($updatedAt) {
+                $baseGeojson['properties']['description']['it'] .= <<<HTML
+                <p><strong>Ultimo aggiornamento:</strong> {$updatedAt}</p>
+                HTML;
+            }
+        }
+
 
         if ($this->osm2cai_status) {
             $baseGeojson['properties']['description']['it'] .= <<<HTML

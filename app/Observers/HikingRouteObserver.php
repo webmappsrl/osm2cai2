@@ -8,6 +8,7 @@ use App\Models\Layer;
 use Illuminate\Support\Facades\Log;
 use Wm\WmPackage\Jobs\Pbf\GenerateLayerPBFJob;
 use Wm\WmPackage\Jobs\Pbf\GeneratePBFJob;
+use Wm\WmPackage\Jobs\Track\UpdateEcTrackAwsJob;
 use Wm\WmPackage\Observers\EcTrackObserver;
 use Wm\WmPackage\Services\GeometryComputationService;
 use Wm\WmPackage\Services\PBFGeneratorService;
@@ -111,6 +112,8 @@ class HikingRouteObserver extends EcTrackObserver
 
     public function saved($hikingRoute): void
     {
+        UpdateEcTrackAwsJob::dispatch($hikingRoute);
+
         if ($hikingRoute->wasChanged('osm2cai_status')) {
             $this->updateLayerAssociations($hikingRoute);
             $this->updatePbfsForHikingRoute($hikingRoute);
