@@ -309,6 +309,8 @@ class SiMTBRoute extends HikingRoute
             Text::make(__('Referente Email'), 'properties->sicai->referente->email'),
             Text::make(__('Note'), 'properties->sicai->note'),
             Text::make(__('Percorribilità'), 'properties->sicai->percorribilità')->readonly(),
+            Text::make(__('s_plus'), 'properties->sicai->s_plus')->readonly(),
+            Text::make(__('s_minus'), 'properties->sicai->s_minus')->readonly(),
         ];
     }
 
