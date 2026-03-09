@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Poles;
 use App\Models\User;
 
@@ -21,6 +22,14 @@ class PolesPolicy
     public function view(User $user, Poles $poles): bool
     {
         return true;
+    }
+
+    /**
+     * Determine whether the user can run actions on the model.
+     */
+    public function runAction(User $user): bool
+    {
+        return $user->hasRole(UserRole::Administrator);
     }
 
     /**
