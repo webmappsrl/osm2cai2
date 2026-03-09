@@ -256,6 +256,9 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                         if (! empty($newProperties)) {
                             $updateData['properties'] = array_merge($currentProperties, $newProperties);
                         }
+                        if ($route->name === null && isset($newProperties['sicai']['tappa'])) {
+                            $updateData['name'] = $newProperties['sicai']['tappa'];
+                        }
 
                         $route->updateQuietly($updateData);
                         $updated++;
