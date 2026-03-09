@@ -1268,8 +1268,20 @@ SQL;
                 HTML;
         }
 
+        $resource = 'hiking-routes';
+
+        // Determina la risorsa Nova corretta in base al tipo di percorso
+        if ((int) $this->app_id === 2) {
+            $layerIds = $this->layers?->pluck('id')->toArray() ?? [];
+            if (in_array(6, $layerIds, true)) {
+                $resource = 'si-hiking-routes';
+            } else {
+                $resource = 'si-m-t-b-routes';
+            }
+        }
+
         $baseGeojson['properties']['description']['it'] .= <<<HTML
-            <a href="https://osm2cai.cai.it/resources/hiking-routes/{$this->id}" target="_blank">Modifica questo percorso</a>
+            <a href="https://osm2cai.cai.it/resources/{$resource}/{$this->id}" target="_blank">Modifica questo percorso</a>
             HTML;
 
         if (isset($osmDataProperties['website'])) {
