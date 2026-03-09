@@ -1283,7 +1283,7 @@ SQL;
         $editUrl = url("/resources/{$resource}/{$this->id}");
 
         $baseGeojson['properties']['description']['it'] .= <<<HTML
-            <a href="{$editUrl}" target="_blank">Modifica questo percorso</a>
+            <br><a href="{$editUrl}" target="_blank">Modifica questo percorso</a>
             HTML;
 
         if (isset($osmDataProperties['website'])) {
