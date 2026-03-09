@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\OsmRefreshPoleAction;
 use App\Nova\Filters\MissingOnOsmfeaturesFilter;
 use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\Text;
@@ -36,6 +37,16 @@ class Poles extends OsmfeaturesResource
     ];
 
 
+
+    /**
+     * Get the actions available for the resource.
+     */
+    public function actions(NovaRequest $request): array
+    {
+        return [
+            new OsmRefreshPoleAction,
+        ];
+    }
 
     /**
      * Get the fields displayed by the resource.
