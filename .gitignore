@@ -27,3 +27,5 @@ public/wm-osmfeatures.log
 .phpunit.cache/test-results
 
 .DS_Store
+.claude/
+/storage/json/conf/
