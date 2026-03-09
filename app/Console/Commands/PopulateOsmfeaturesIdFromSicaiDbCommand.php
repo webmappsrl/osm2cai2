@@ -383,8 +383,8 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'sezione_ref_regionale' => $row->sezione_ref_regionale,
                     'email_ref_regionale' => $row->email_ref_regionale,
                     'sezioni_manutenzione' => $row->sezioni_manutenzione,
-
                 ];
+                $notAccessible = $sicaiProperties['note'] !== null && $sicaiProperties['note'] !== '' ? true : false;
                 $features[] = [
                     'source' => 'si_tappe',
                     'properties' => [
@@ -392,6 +392,10 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                         'description' => ['it' => $row->descrizione_sito],
                         'sicai' => $sicaiProperties,
                     ],
+                    'not_accessible' => $notAccessible,
+                    'not_accessible_message' => isset($sicaiProperties['note'])
+                        ? ['it' => $sicai['note']]
+                        : null,
                     'raw' => (array) $row,
                 ];
             }
@@ -410,16 +414,21 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'percorribilità' => $row->percorribilità,
                     'segnaletica' => $row->segnaletica_SICAI_MTB,
                     'descrizione' => $row->descrizione,
-                    'note' => strip_tags($row->Note),
+                    'note' => strip_tags($row->note),
                     's_plus' => $row->{'s+'},
                     's_minus' => $row->{'s-'},
                 ];
+                $notAccessible = $sicai['note'] !== null && $sicai['note'] !== '' ? true : false;
 
                 $features[] = [
                     'source' => 'sicai_mtb',
                     'properties' => [
                         'osmid' => (string) $osmid,
                         'sicai' => $sicai,
+                        'not_accessible' => $notAccessible,
+                        'not_accessible_message' => isset($sicai['note'])
+                            ? ['it' => $sicai['note']]
+                            : null,
                     ],
                     'raw' => (array) $row,
                 ];
