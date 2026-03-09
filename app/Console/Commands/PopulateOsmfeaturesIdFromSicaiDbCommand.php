@@ -255,6 +255,10 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                         $newProperties = $feature['properties'] ?? [];
                         if (! empty($newProperties)) {
                             $updateData['properties'] = array_merge($currentProperties, $newProperties);
+                            if ($updateData['properties'] != null && isset($updateData['properties']['sicai']['note'])) {
+                                $updateData['properties']['not_accessible'] = true;
+                                $updateData['properties']['not_accessible_message'] = ['it' => $updateData['properties']['sicai']['note']];
+                            }
                         }
                         if ($route->name === null && isset($newProperties['sicai']['tappa'])) {
                             $updateData['name'] = $newProperties['sicai']['tappa'];
@@ -390,7 +394,6 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     'email_ref_regionale' => $row->email_ref_regionale,
                     'sezioni_manutenzione' => $row->sezioni_manutenzione,
                 ];
-                $notAccessible = $sicaiProperties['note'] !== null && $sicaiProperties['note'] !== '' ? true : false;
                 $features[] = [
                     'source' => 'si_tappe',
                     'properties' => [
@@ -398,10 +401,6 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                         'description' => ['it' => $row->descrizione_sito],
                         'sicai' => $sicaiProperties,
                     ],
-                    'not_accessible' => $notAccessible,
-                    'not_accessible_message' => isset($sicaiProperties['note'])
-                        ? ['it' => $sicaiProperties['note']]
-                        : null,
                     'raw' => (array) $row,
                 ];
             }
@@ -428,17 +427,12 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                     's_plus' => $row->{'s+'},
                     's_minus' => $row->{'s-'},
                 ];
-                $notAccessible = $sicai['note'] !== null && $sicai['note'] !== '' ? true : false;
 
                 $features[] = [
                     'source' => 'sicai_mtb',
                     'properties' => [
                         'osmid' => (string) $osmid,
                         'sicai' => $sicai,
-                        'not_accessible' => $notAccessible,
-                        'not_accessible_message' => isset($sicai['note'])
-                            ? ['it' => $sicai['note']]
-                            : null,
                     ],
                     'raw' => (array) $row,
                 ];
