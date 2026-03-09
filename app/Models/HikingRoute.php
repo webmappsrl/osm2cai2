@@ -1280,8 +1280,10 @@ SQL;
             }
         }
 
+        $editUrl = url("/resources/{$resource}/{$this->id}");
+
         $baseGeojson['properties']['description']['it'] .= <<<HTML
-            <a href="https://osm2cai.cai.it/resources/{$resource}/{$this->id}" target="_blank">Modifica questo percorso</a>
+            <a href="{$editUrl}" target="_blank">Modifica questo percorso</a>
             HTML;
 
         if (isset($osmDataProperties['website'])) {
