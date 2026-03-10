@@ -14,6 +14,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
+use Wm\WmPackage\Nova\Actions\TranslateModelAction;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
 class SiMTBRoute extends HikingRoute
@@ -94,7 +95,9 @@ class SiMTBRoute extends HikingRoute
 
     public function actions(NovaRequest $request): array
     {
-        return [];
+        return [
+            new TranslateModelAction,
+        ];
     }
 
     public function fields(NovaRequest $request): array
