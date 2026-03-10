@@ -7,7 +7,6 @@ use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\SiMTBRoute as SiMTBRouteModel;
 use App\Nova\Cards\LinksCard;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
-use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
@@ -308,7 +307,6 @@ class SiMTBRoute extends HikingRoute
             Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('Tappa'), 'properties->sicai->tappa'),
             Text::make(__('Verso'), 'properties->sicai->verso'),
-            Text::make(__('Descrizione'), 'properties->sicai->descrizione'),
             Text::make(__('Segnaletica'), 'properties->sicai->segnaletica'),
             Text::make(__('Referente Nome'), 'properties->sicai->referente->name'),
             Text::make(__('Referente Email'), 'properties->sicai->referente->email'),
