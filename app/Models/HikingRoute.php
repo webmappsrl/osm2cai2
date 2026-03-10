@@ -90,6 +90,14 @@ class HikingRoute extends EcTrack
 
     private HikingRouteDescriptionService $descriptionService;
 
+    public $translatable = [
+        'name',
+        'properties->description',
+        'properties->excerpt',
+        'properties->difficulty',
+        'properties->not_accessible_message',
+    ];
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);

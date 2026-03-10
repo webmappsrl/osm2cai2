@@ -159,6 +159,7 @@ class SiHikingRoute extends HikingRoute
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
             Tab::make(__('DEM'), $this->getDemTabFields()),
             Tab::make(__('OSMFEATURES'), $this->getOsmfeaturesTabFields()),
+            Tab::make(__('INFO'), $this->getInfoTabFields()),
         ]);
 
         return $fields;
@@ -173,6 +174,7 @@ class SiHikingRoute extends HikingRoute
         $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', SiPoi::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+            Tab::make(__('INFO'), $this->getInfoTabFields()),
         ]);
 
         return $fields;
@@ -336,7 +338,6 @@ class SiHikingRoute extends HikingRoute
             Text::make(__('Segnalazioni'), 'properties->sicai->segnalazioni'),
             Text::make(__('Referente Nome'), 'properties->sicai->referente->name'),
             Text::make(__('Referente Email'), 'properties->sicai->referente->email'),
-            Text::make(__('Note'), 'properties->sicai->note'),
             Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('Percorribilità'), 'properties->sicai->percorribilità')->readonly(),
             Text::make(__('Referente regionale'), 'properties->sicai->referente_regionale')->readonly(),

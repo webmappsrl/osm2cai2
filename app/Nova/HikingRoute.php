@@ -52,6 +52,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
@@ -1400,5 +1401,17 @@ class HikingRoute extends OsmfeaturesResource
     public static function authorizedToCreate($request)
     {
         return false;
+    }
+
+    public function getInfoTabFields(): array
+    {
+        return [
+            Boolean::make('Not Accessible', 'properties->not_accessible')
+                ->help('Enable this option to indicate that the track is not accessible. The reason can be specified below.'),
+            NovaTabTranslatable::make([
+                Textarea::make(__('Not Accessible Message'), 'properties->not_accessible_message'),
+            ]),
+
+        ];
     }
 }

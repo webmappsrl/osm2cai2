@@ -143,6 +143,7 @@ class SiMTBRoute extends HikingRoute
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
             Tab::make(__('DEM'), $this->getDemTabFields()),
             Tab::make(__('OSMFEATURES'), $this->getOsmfeaturesTabFields()),
+            Tab::make(__('INFO'), $this->getInfoTabFields()),
         ]);
 
         return $fields;
@@ -155,6 +156,7 @@ class SiMTBRoute extends HikingRoute
     {
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+            Tab::make(__('INFO'), $this->getInfoTabFields()),
         ]);
 
         return $fields;
