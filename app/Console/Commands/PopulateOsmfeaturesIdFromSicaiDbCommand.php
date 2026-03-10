@@ -631,10 +631,18 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
             if (! empty($raw['addr:housenumber'] ?? null)) {
                 $properties['addr_housenumber'] = $raw['addr:housenumber'];
             }
+            $relatedUrl = $properties['related_url'] ?? [];
+            if (! is_array($relatedUrl)) {
+                $relatedUrl = [];
+            }
             if (! empty($raw['website'] ?? null)) {
-                $properties['related_url'] = [
-                    $raw['website'] => $raw['website'],
-                ];
+                $relatedUrl[$raw['website']] = $raw['website'];
+            }
+            if (! empty($raw['link'] ?? null)) {
+                $relatedUrl['Prenota'] = $raw['link'];
+            }
+            if (! empty($relatedUrl)) {
+                $properties['related_url'] = $relatedUrl;
             }
             if (! empty($raw['addr:street'] ?? null)) {
                 $properties['addr_complete'] = $raw['addr:street'];
