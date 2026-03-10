@@ -13,6 +13,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
+use Wm\MapPoint\MapPoint;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
@@ -118,6 +119,7 @@ class SiPoi extends EcPoi
             Text::make(__('Telefono'), 'properties->sicai->phone')->readonly(),
             Text::make(__('Tourism'), 'properties->sicai->tourism')->readonly(),
             Text::make(__('Website'), 'properties->sicai->website')->readonly(),
+            Text::make(__('Link'), 'properties->sicai->link')->readonly(),
             Text::make(__('Immagine (path)'), 'properties->sicai->immagine')->readonly(),
             Text::make(__('Foto 02'), 'properties->sicai->foto02')->readonly(),
             Text::make(__('Foto 03'), 'properties->sicai->foto03')->readonly(),
@@ -172,6 +174,8 @@ class SiPoi extends EcPoi
         $fields[] = Boolean::make(__('Global'), 'global');
         $fields[] = Text::make(__('Name'), 'name');
         $fields[] = Images::make(__('Image'), 'default');
+        $fields[] = MapPoint::make(__('Geometry'), 'geometry');
+        $fields[] = Text::make(__('Link'), 'properties->sicai->link');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
