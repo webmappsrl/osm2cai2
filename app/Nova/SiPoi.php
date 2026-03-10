@@ -106,6 +106,7 @@ class SiPoi extends EcPoi
     {
         return [
             ID::make()->onlyOnDetail(),
+            Text::make(__('Link'), 'properties->sicai->link'),
             Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('DB Table'), 'properties->sicai->dbtable')->readonly(),
             Text::make(__('Tappa 01'), 'properties->sicai->tappa01')->readonly(),
@@ -119,7 +120,6 @@ class SiPoi extends EcPoi
             Text::make(__('Telefono'), 'properties->sicai->phone')->readonly(),
             Text::make(__('Tourism'), 'properties->sicai->tourism')->readonly(),
             Text::make(__('Website'), 'properties->sicai->website')->readonly(),
-            Text::make(__('Link'), 'properties->sicai->link')->readonly(),
             Text::make(__('Immagine (path)'), 'properties->sicai->immagine')->readonly(),
             Text::make(__('Foto 02'), 'properties->sicai->foto02')->readonly(),
             Text::make(__('Foto 03'), 'properties->sicai->foto03')->readonly(),
@@ -175,7 +175,6 @@ class SiPoi extends EcPoi
         $fields[] = Text::make(__('Name'), 'name');
         $fields[] = Images::make(__('Image'), 'default');
         $fields[] = MapPoint::make(__('Geometry'), 'geometry');
-        $fields[] = Text::make(__('Link'), 'properties->sicai->link');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
