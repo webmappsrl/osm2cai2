@@ -333,7 +333,6 @@ class SiHikingRoute extends HikingRoute
         return [
             Text::make(__('Tappa'), 'properties->sicai->tappa'),
             Text::make(__('Verifica'), 'properties->sicai->verifica'),
-            Text::make(__('Descrizione'), 'properties->sicai->descrizione'),
             Text::make(__('Segnaletica'), 'properties->sicai->segnaletica'),
             Text::make(__('Segnalazioni'), 'properties->sicai->segnalazioni'),
             Text::make(__('Referente Nome'), 'properties->sicai->referente->name'),
