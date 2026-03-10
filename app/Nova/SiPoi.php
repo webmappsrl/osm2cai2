@@ -161,6 +161,7 @@ class SiPoi extends EcPoi
 
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+            Tab::make(__('Info'), $this->getInfoTabFields()),
         ]);
         return $fields;
     }
@@ -174,6 +175,7 @@ class SiPoi extends EcPoi
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+            Tab::make(__('Info'), $this->getInfoTabFields()),
         ]);
         return $fields;
     }

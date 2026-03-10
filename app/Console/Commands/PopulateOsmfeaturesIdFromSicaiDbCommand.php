@@ -615,6 +615,31 @@ class PopulateOsmfeaturesIdFromSicaiDbCommand extends Command
                 $properties['description'] = ['it' => $description];
             }
 
+            // Campi di contatto / indirizzo direttamente in properties (non annidati sotto sicai)
+            if (! empty($raw['email'] ?? null)) {
+                $properties['contact_email'] = $raw['email'];
+            }
+            if (! empty($raw['phone'] ?? null)) {
+                $properties['contact_phone'] = $raw['phone'];
+            }
+            if (! empty($raw['opening_hours'] ?? null)) {
+                $properties['opening_hours'] = $raw['opening_hours'];
+            }
+            if (! empty($raw['addr:city'] ?? null)) {
+                $properties['addr_locality'] = $raw['addr:city'];
+            }
+            if (! empty($raw['addr:housenumber'] ?? null)) {
+                $properties['addr_housenumber'] = $raw['addr:housenumber'];
+            }
+            if (! empty($raw['website'] ?? null)) {
+                $properties['related_url'] = [
+                    $raw['website'] => $raw['website'],
+                ];
+            }
+            if (! empty($raw['addr:street'] ?? null)) {
+                $properties['addr_complete'] = $raw['addr:street'];
+            }
+
             // properties->sicai: tutti i campi della tabella tranne name e Descrizione
             unset($sicai['name'], $sicai['description'], $sicai['Descrizione'], $sicai['descrizione']);
             $sicai['source_key'] = $sourceKey;
