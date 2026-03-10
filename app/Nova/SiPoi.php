@@ -13,6 +13,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
+use Wm\MapPoint\MapPoint;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
@@ -105,6 +106,7 @@ class SiPoi extends EcPoi
     {
         return [
             ID::make()->onlyOnDetail(),
+            Text::make(__('Link'), 'properties->sicai->link'),
             Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('DB Table'), 'properties->sicai->dbtable')->readonly(),
             Text::make(__('Tappa 01'), 'properties->sicai->tappa01')->readonly(),
@@ -172,6 +174,7 @@ class SiPoi extends EcPoi
         $fields[] = Boolean::make(__('Global'), 'global');
         $fields[] = Text::make(__('Name'), 'name');
         $fields[] = Images::make(__('Image'), 'default');
+        $fields[] = MapPoint::make(__('Geometry'), 'geometry');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
