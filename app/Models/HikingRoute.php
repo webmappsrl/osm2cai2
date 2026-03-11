@@ -53,6 +53,7 @@ class HikingRoute extends EcTrack
 
     protected $fillable = [
         'name',
+        'parent_hiking_route_id',
         'app_id',
         'user_id',
         'osmid',
@@ -88,6 +89,14 @@ class HikingRoute extends EcTrack
     ];
 
     private HikingRouteDescriptionService $descriptionService;
+
+    public $translatable = [
+        'name',
+        'properties->description',
+        'properties->excerpt',
+        'properties->difficulty',
+        'properties->not_accessible_message',
+    ];
 
     public function __construct(array $attributes = [])
     {
@@ -358,17 +367,33 @@ class HikingRoute extends EcTrack
     public function getDataForNovaLinksCard()
     {
         if (is_string($this->osmfeatures_data)) {
-            $osmId = json_decode($this->osmfeatures_data, true)['properties']['osm_id'];
+            $osmId = json_decode($this->osmfeatures_data, true)['properties']['osm_id'] ?? null;
         } else {
-            $osmId = $this->osmfeatures_data['properties']['osm_id'];
+            $osmId = $this->osmfeatures_data['properties']['osm_id'] ?? null;
         }
-        $infomontLink = 'https://15.app.geohub.webmapp.it/#/map';
-        $osm2caiLink = 'https://26.app.geohub.webmapp.it/#/map';
         $osmLink = 'https://www.openstreetmap.org/relation/' . $osmId;
         $wmt = 'https://hiking.waymarkedtrails.org/#route?id=' . $osmId;
         $analyzer = 'https://ra.osmsurround.org/analyzeRelation?relationId=' . $osmId . '&noCache=true&_noCache=on';
         $endpoint = 'https://geohub.webmapp.it/api/osf/track/osm2cai/';
         $api = $endpoint . $this->id;
+
+        $appEnv = config('app.env');
+        $webappLink = null;
+
+        if ($appEnv === 'local') {
+            // Ambiente locale: frontend in esecuzione su localhost
+            $webappLink = sprintf('http://localhost:8100/?track=%d', $this->id);
+        } elseif ($appEnv === 'develop') {
+            // Ambiente di sviluppo: dominio *.osm2caidev.webmapp.it con app_id come subdominio
+            if ($this->app_id) {
+                $webappLink = sprintf('https://%s.osm2caidev.webmapp.it/?track=%d', $this->app_id, $this->id);
+            }
+        } elseif ($appEnv === 'production') {
+            // Produzione: dominio *.osm2cai.webmapp.it con app_id come subdominio
+            if ($this->app_id) {
+                $webappLink = sprintf('https://%s.osm2cai.webmapp.it/?track=%d', $this->app_id, $this->id);
+            }
+        }
 
         $headers = get_headers($api);
         $statusLine = $headers[0];
@@ -376,22 +401,17 @@ class HikingRoute extends EcTrack
         if (strpos($statusLine, '200 OK') !== false) {
             // The API returned a success response
             $data = json_decode(file_get_contents($api), true);
-            if (! empty($data)) {
-                if ($data['properties']['id'] !== null) {
-                    $infomontLink .= '?track=' . $data['properties']['id'];
-                    $osm2caiLink .= '?track=' . $data['properties']['id'];
-                }
-            }
         }
 
         return [
             'id' => $this->id,
             'osm_id' => $osmId,
-            'infomontLink' => $infomontLink,
-            'osm2caiLink' => $osm2caiLink,
+            'webappLink' => $webappLink,
             'openstreetmapLink' => $osmLink,
             'waymarkedtrailsLink' => $wmt,
             'analyzerLink' => $analyzer,
+            'geojsonApiLink' => url('/api/v2/hiking-route/' . $this->id),
+            'gpxApiLink' => url('/api/v2/hiking-routes/' . $this->id . '.gpx'),
         ];
     }
 
@@ -408,6 +428,16 @@ class HikingRoute extends EcTrack
     public function provinces()
     {
         return $this->belongsToMany(Province::class);
+    }
+
+    public function parentHikingRoute()
+    {
+        return $this->belongsTo(HikingRoute::class, 'parent_hiking_route_id');
+    }
+
+    public function childHikingRoutes()
+    {
+        return $this->hasMany(HikingRoute::class, 'parent_hiking_route_id');
     }
 
     public function clubs()
@@ -1206,15 +1236,12 @@ SQL;
         // Get the base GeoJSON from parent
         $baseGeojson = parent::getGeojson();
 
-        if ($baseGeojson && $this->app && $this->app->sku === 'it.webmapp.osm2cai') {
-            // Extend properties with specific data for HikingRoute
-            $enhancedGeojson = $this->enhanceHikingRouteProperties($baseGeojson);
+        // Extend properties with specific data for HikingRoute
+        $enhancedGeojson = $this->enhanceHikingRouteProperties($baseGeojson);
 
-            return $enhancedGeojson;
-        }
-
-        return $baseGeojson;
+        return $enhancedGeojson;
     }
+
 
     /**
      * Extend GeoJSON properties with specific data for HikingRoute
@@ -1233,14 +1260,50 @@ SQL;
         }
         $baseGeojson['properties']['description']['it'] ??= '';
 
+        $percorribilita = $this->properties['sicai']['percorribilità'] ?? null;
+        if ($percorribilita) {
+            $baseGeojson['properties']['description']['it'] .= <<<HTML
+            <br><p><strong>Percorribilità:</strong> 
+            HTML;
+            $baseGeojson['properties']['description']['it'] .= e($percorribilita);
+            $baseGeojson['properties']['description']['it'] .= <<<HTML
+            </p>
+            HTML;
+
+            $updatedAt = $this->properties['sicai']['data'] ?? $this->updated_at?->format('d/m/Y');
+            if ($updatedAt) {
+                $baseGeojson['properties']['description']['it'] .= <<<HTML
+                <p><strong>Ultimo aggiornamento:</strong> {$updatedAt}</p>
+                HTML;
+            }
+        }
+
+
         if ($this->osm2cai_status) {
             $baseGeojson['properties']['description']['it'] .= <<<HTML
                 <br>Stato di accatastamento: <strong>{$this->osm2cai_status}</strong> ({$this->getSDADescription()})<br>
                 HTML;
         }
 
+        $resource = 'hiking-routes';
+
+        // Determina la risorsa Nova corretta in base al tipo di percorso
+        if ((int) $this->app_id === 2) {
+            $layerIds = $this->layers?->pluck('id')->toArray() ?? [];
+            if (in_array(6, $layerIds, true)) {
+                $resource = 'si-hiking-routes';
+            } else {
+                $resource = 'si-m-t-b-routes';
+            }
+            if (isset($baseGeojson['properties']['sicai'])) {
+                $baseGeojson['properties']['sicai'] = $this->filterSicaiPropertiesForApi($baseGeojson['properties']['sicai']);
+            }
+        }
+
+        $editUrl = url("/resources/{$resource}/{$this->id}");
+
         $baseGeojson['properties']['description']['it'] .= <<<HTML
-            <a href="https://osm2cai.cai.it/resources/hiking-routes/{$this->id}" target="_blank">Modifica questo percorso</a>
+            <br><a href="{$editUrl}" target="_blank">Modifica questo percorso</a>
             HTML;
 
         if (isset($osmDataProperties['website'])) {
@@ -1249,6 +1312,31 @@ SQL;
         }
 
         return $baseGeojson;
+    }
+
+    private function filterSicaiPropertiesForApi(mixed $sicai): mixed
+    {
+        if (! is_array($sicai)) {
+            return $sicai;
+        }
+
+        // Campi SICAi da NON esporre via API (GeoJSON).
+        unset(
+            $sicai['referente_regionale'],
+            $sicai['email_ref_regionale'],
+            $sicai['sezione_ref_regionale'],
+            $sicai['sezioni_manutenzione']
+        );
+
+        // `referente` è un oggetto: nascondiamo solo alcuni sotto-attributi.
+        if (isset($sicai['referente']) && is_array($sicai['referente'])) {
+            unset($sicai['referente']['name'], $sicai['referente']['email']);
+            if ($sicai['referente'] === []) {
+                unset($sicai['referente']);
+            }
+        }
+
+        return $sicai;
     }
 
     /**

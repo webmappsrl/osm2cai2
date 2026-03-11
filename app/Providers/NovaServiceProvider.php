@@ -38,6 +38,9 @@ use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
 use App\Nova\TaxonomyPoiType;
 use App\Nova\TrailSurvey;
+use App\Nova\SiHikingRoute;
+use App\Nova\SiMTBRoute;
+use App\Nova\SiPoi;
 use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
@@ -104,7 +107,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return optional(Auth::user())->hasRole(UserRole::Administrator);
                     }),
                 ])->icon('user')->collapsable()->collapsedByDefault()->canSee(function () {
-                    return optional(Auth::user())->hasRole(UserRole::Administrator) || optional(Auth::user())->hasRole(UserRole::NationalReferent) || optional(Auth::user())->hasRole(UserRole::RegionalReferent);
+                    return optional(Auth::user())->email === 'team@webmapp.it';
                 }),
 
                 // Statistiche
@@ -162,6 +165,22 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(Region::class, __('Regions')),
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('globe')->collapsable(),
+
+                // Sentiero Italia CAI (solo utenti con ruolo Sicai Manager)
+                MenuSection::make(__('Sentiero Italia CAI'), [
+                    MenuItem::resource(SiHikingRoute::class, __('Hiking Routes')),
+                    MenuItem::resource(SiMTBRoute::class, __('MTB Routes')),
+                    MenuItem::resource(SiPoi::class, __('SI Pois')),
+                ])->icon('map')->collapsable()->collapsedByDefault()->canSee(function () {
+                    $user = Auth::user();
+
+                    if (! $user) {
+                        return false;
+                    }
+
+                    return $user->email === 'team@webmapp.it'
+                        || $user->hasRole(UserRole::SicaiManager);
+                }),
 
                 // Arricchimenti
                 MenuSection::make(__('Arricchimenti'), [

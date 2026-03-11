@@ -74,6 +74,44 @@ trait SpatialDataTrait
     }
 
     /**
+     * Get GeoJSON as FeatureCollection for the FeatureCollectionMap widget.
+     * Normalizes getGeojsonForMapView() to always return a FeatureCollection.
+     * Used by Nova field FeatureCollectionMap (wm-package) via the geojson endpoint.
+     *
+     * @return array{type: string, features: array<int, array>}
+     */
+    public function getFeatureCollectionMap(): array
+    {
+        $geojson = $this->getGeojsonForMapView();
+        if (! $geojson) {
+            return ['type' => 'FeatureCollection', 'features' => []];
+        }
+        if (isset($geojson['type']) && $geojson['type'] === 'FeatureCollection') {
+            $features = $geojson['features'] ?? [];
+            foreach ($features as $i => $feature) {
+                $features[$i]['properties'] = array_merge([
+                    'id' => $this->id ?? null,
+                    'name' => $this->name ?? null,
+                    'strokeColor' => 'rgba(0, 0, 255, 1)',
+                    'strokeWidth' => 3,
+                ], $feature['properties'] ?? []);
+            }
+            return ['type' => 'FeatureCollection', 'features' => $features];
+        }
+        if (isset($geojson['type']) && $geojson['type'] === 'Feature') {
+            $props = array_merge([
+                'id' => $this->id ?? null,
+                'name' => $this->name ?? null,
+                'strokeColor' => 'rgba(0, 0, 255, 1)',
+                'strokeWidth' => 3,
+            ], $geojson['properties'] ?? []);
+            $geojson['properties'] = $props;
+            return ['type' => 'FeatureCollection', 'features' => [$geojson]];
+        }
+        return ['type' => 'FeatureCollection', 'features' => []];
+    }
+
+    /**
      * Get the centroid of the model's geometry as GeoJSON.
      */
     public function getCentroidGeojson(): ?array

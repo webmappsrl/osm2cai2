@@ -52,6 +52,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
@@ -87,6 +88,7 @@ class HikingRoute extends OsmfeaturesResource
         'osmfeatures_data->properties->ref',
         'osmfeatures_data->properties->ref_REI',
         'osmfeatures_data->properties->osm_id',
+        'properties->name',
     ];
 
     /**
@@ -146,6 +148,15 @@ class HikingRoute extends OsmfeaturesResource
     }
 
 
+
+    /**
+     * Restituisce i fields definiti in OsmfeaturesResource (parent), senza le aggiunte di HikingRoute.
+     * Utile per risorse figlie che vogliono usare solo la base Osmfeatures.
+     */
+    public function getOsmfeaturesFields(NovaRequest $request): array
+    {
+        return parent::fields($request);
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -1390,5 +1401,17 @@ class HikingRoute extends OsmfeaturesResource
     public static function authorizedToCreate($request)
     {
         return false;
+    }
+
+    public function getInfoTabFields(): array
+    {
+        return [
+            Boolean::make('Not Accessible', 'properties->not_accessible')
+                ->help('Enable this option to indicate that the track is not accessible. The reason can be specified below.'),
+            NovaTabTranslatable::make([
+                Textarea::make(__('Not Accessible Message'), 'properties->not_accessible_message'),
+            ]),
+
+        ];
     }
 }

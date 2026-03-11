@@ -25,6 +25,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'Regional Referent', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'Local Referent', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'Club Manager', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => \App\Enums\UserRole::SicaiManager->value, 'guard_name' => 'web']);
 
         // Create permissions
         Permission::firstOrCreate(['name' => 'validate archaeological sites', 'guard_name' => 'web']);

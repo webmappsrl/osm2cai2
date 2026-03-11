@@ -11,6 +11,7 @@ enum UserRole: string
     case LocalReferent = 'Local Referent';
     case ClubManager = 'Club Manager';
     case ItineraryManager = 'Itinerary Manager';
+    case SicaiManager = 'Sicai Manager';
     case Guest = 'Guest';
     case Contributor = 'Contributor';
     case Editor = 'Editor';
