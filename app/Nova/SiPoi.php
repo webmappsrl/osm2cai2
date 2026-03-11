@@ -106,7 +106,6 @@ class SiPoi extends EcPoi
     {
         return [
             ID::make()->onlyOnDetail(),
-            Text::make(__('Link'), 'properties->sicai->link'),
             Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('DB Table'), 'properties->sicai->dbtable')->readonly(),
             Text::make(__('Tappa 01'), 'properties->sicai->tappa01')->readonly(),
