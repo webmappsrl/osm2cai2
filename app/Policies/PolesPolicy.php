@@ -29,7 +29,12 @@ class PolesPolicy
      */
     public function runAction(User $user): bool
     {
-        return $user->hasRole(UserRole::Administrator);
+        return $user->hasAnyRole([
+            UserRole::Administrator,
+            UserRole::LocalReferent,
+            UserRole::ClubManager
+            // aggiungi qui altri ruoli abilitati
+        ]);
     }
 
     /**
