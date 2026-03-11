@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\SicaiSituazioneEnum;
 use App\Models\SiPoi as SiPoiModel;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,6 +10,7 @@ use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
@@ -117,11 +119,19 @@ class SiPoi extends EcPoi
             Text::make(__('Note'), 'properties->sicai->note')->readonly(),
             Text::make(__('Tourism'), 'properties->sicai->tourism')->readonly(),
             Text::make(__('Materiale'), 'properties->sicai->materiale')->readonly(),
-            Text::make(__('Situazione'), 'properties->sicai->situazione')->readonly(),
+            Select::make(__('Situazione'), 'properties->sicai->situazione')
+                ->options($this->situazioneOptions())
+                ->nullable()
+                ->displayUsingLabels(),
             Text::make(__('Operatore'), 'properties->sicai->operator')->readonly(),
             Text::make(__('Rifugio CAI'), 'properties->sicai->rifugio_cai')->readonly(),
             Boolean::make(__('Punto accoglienza ufficiale'), 'properties->sicai->pt_accoglienza')->readonly(),
         ];
+    }
+
+    public function situazioneOptions(): array
+    {
+        return collect(SicaiSituazioneEnum::cases())->mapWithKeys(fn($c) => [$c->value => $c->value])->all();
     }
 
 
