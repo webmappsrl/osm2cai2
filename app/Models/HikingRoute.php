@@ -1295,6 +1295,9 @@ SQL;
             } else {
                 $resource = 'si-m-t-b-routes';
             }
+            if (isset($baseGeojson['properties']['sicai'])) {
+                $baseGeojson['properties']['sicai'] = $this->filterSicaiPropertiesForApi($baseGeojson['properties']['sicai']);
+            }
         }
 
         $editUrl = url("/resources/{$resource}/{$this->id}");
@@ -1309,6 +1312,31 @@ SQL;
         }
 
         return $baseGeojson;
+    }
+
+    private function filterSicaiPropertiesForApi(mixed $sicai): mixed
+    {
+        if (! is_array($sicai)) {
+            return $sicai;
+        }
+
+        // Campi SICAi da NON esporre via API (GeoJSON).
+        unset(
+            $sicai['referente_regionale'],
+            $sicai['email_ref_regionale'],
+            $sicai['sezione_ref_regionale'],
+            $sicai['sezioni_manutenzione']
+        );
+
+        // `referente` è un oggetto: nascondiamo solo alcuni sotto-attributi.
+        if (isset($sicai['referente']) && is_array($sicai['referente'])) {
+            unset($sicai['referente']['name'], $sicai['referente']['email']);
+            if ($sicai['referente'] === []) {
+                unset($sicai['referente']);
+            }
+        }
+
+        return $sicai;
     }
 
     /**
