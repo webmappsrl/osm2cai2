@@ -11,9 +11,9 @@ class SyncAccoglienzaPoiImagesCommand extends Command
 {
     protected $signature = 'osm2cai:sync-accoglienza-poi-images
                             {--dry-run : Esegue senza scrivere sul database}
-                            {--source-key= : Processa solo il POI con questo source_key (es. pt_accoglienza_unofficial:1894)}';
+                            {--ec-poi-id= : Processa solo l\'EC POI con questo id}';
 
-    protected $description = 'Importa le immagini mancanti dei punti accoglienza da pt_accoglienza_unofficial (idempotente: salta le già presenti).';
+    protected $description = 'Importa le immagini mancanti dei punti accoglienza (max 4 per POI). Idempotente: salta le già presenti, rimuove i doppioni.';
 
     private string $baseUrl = 'https://sentieroitaliamappe.cai.it/index.php/view/media/getMedia?repository=sicaipubblico&project=SICAI_Pubblico&path=';
 
@@ -23,45 +23,187 @@ class SyncAccoglienzaPoiImagesCommand extends Command
     public function handle(): int
     {
         $dryRun = $this->option('dry-run');
-        $filterSourceKey = $this->option('source-key');
+        $filterEcPoiId = $this->option('ec-poi-id') !== null ? (int) $this->option('ec-poi-id') : null;
 
         if ($dryRun) {
             $this->warn('Modalità dry-run: nessuna modifica al database.');
         }
 
-        if (! config('database.connections.sicai_postgis.host')) {
-            $this->error('Connessione Sicai PostGIS non configurata: imposta SICAI_POSTGIS_DB_* nel .env');
+        $query = EcPoi::query()
+            ->where('app_id', 2)
+            ->whereNotNull('properties->sicai->source_key');
 
-            return self::FAILURE;
+        if ($filterEcPoiId !== null) {
+            $query->where('id', $filterEcPoiId);
         }
 
-        $this->info('Lettura pt_accoglienza_unofficial dal DB Sicai...');
+        $total = $query->count();
+        $this->info("EC POI da processare: {$total}");
 
-        try {
-            $rows = $this->fetchRows();
-        } catch (\Throwable $e) {
-            $this->error('Errore lettura DB Sicai: ' . $e->getMessage());
+        $poisWithImages = 0;
+        $poisWithoutImages = 0;
+        $imagesTotal = 0;
+        $imagesAttached = 0;
+        $imagesSkipped = 0;
+        $imagesFailed = 0;
+        $duplicatesRemoved = 0;
 
-            return self::FAILURE;
-        }
+        $query->chunkById(100, function ($pois) use (
+            $dryRun,
+            &$poisWithImages, &$poisWithoutImages,
+            &$imagesTotal, &$imagesAttached, &$imagesSkipped, &$imagesFailed, &$duplicatesRemoved
+        ) {
+            foreach ($pois as $ecPoi) {
+                $sicai = $ecPoi->properties['sicai'] ?? [];
+                $sourceKey = $sicai['source_key'] ?? "ec_poi:{$ecPoi->id}";
 
-        $this->info('Trovate ' . count($rows) . ' righe.');
+                // Raccogli i path delle foto da properties->sicai (max 4)
+                $relativePaths = [];
+                foreach ($this->photoColumns as $column) {
+                    $path = $sicai[$column] ?? null;
+                    if (is_string($path)) {
+                        $path = trim($path);
+                        if ($path !== '') {
+                            $relativePaths[] = $path;
+                        }
+                    }
+                }
 
-        $stats = $this->syncImages($rows, $dryRun, $filterSourceKey);
+                if (empty($relativePaths)) {
+                    $poisWithoutImages++;
+
+                    continue;
+                }
+
+                $poisWithImages++;
+
+                // Leggi i media esistenti direttamente dalla tabella (no cache Eloquent)
+                $existingMediaRows = DB::table('media')
+                    ->where('model_type', EcPoi::class)
+                    ->where('model_id', $ecPoi->id)
+                    ->where('collection_name', 'default')
+                    ->orderBy('id')
+                    ->get(['id', 'file_name']);
+
+                // Rimuovi doppioni per file_name (case-insensitive), tieni il record con id più basso
+                $seenFileNames = [];
+                foreach ($existingMediaRows as $mediaRow) {
+                    $key = strtolower($mediaRow->file_name);
+                    if (isset($seenFileNames[$key])) {
+                        if ($dryRun) {
+                            $this->comment(sprintf(
+                                '[DRY-RUN DUPLICATO] %s (%d): rimuoverei media id=%d (%s)',
+                                $sourceKey, $ecPoi->id, $mediaRow->id, $mediaRow->file_name
+                            ));
+                        } else {
+                            DB::table('media')->where('id', $mediaRow->id)->delete();
+                            $this->warn(sprintf(
+                                '[DUPLICATO RIMOSSO] %s (%d): media id=%d (%s)',
+                                $sourceKey, $ecPoi->id, $mediaRow->id, $mediaRow->file_name
+                            ));
+                        }
+                        $duplicatesRemoved++;
+                    } else {
+                        $seenFileNames[$key] = $mediaRow->id;
+                    }
+                }
+
+                // Lista filename già presenti dopo la pulizia (normalizzati come fa Spatie)
+                $existingFileNamesNorm = array_map(
+                    fn ($f) => $this->spatieSanitize($f),
+                    array_keys($seenFileNames)
+                );
+                $expectedCount = count($relativePaths);
+                $presentCount = count($existingFileNamesNorm);
+
+                // Se il numero di foto presenti è uguale a quelle attese, il POI è completo
+                if ($presentCount === $expectedCount) {
+                    $imagesSkipped += $expectedCount;
+                    $imagesTotal += $expectedCount;
+                    $this->line(sprintf('[COMPLETO] %s (%d): %d/%d foto già presenti', $sourceKey, $ecPoi->id, $presentCount, $expectedCount));
+
+                    continue;
+                }
+
+                // Sanity check: più foto di quelle attese (anomalia)
+                if ($presentCount > $expectedCount) {
+                    $this->warn(sprintf(
+                        '[ANOMALIA] %s (%d): %d foto in media ma ne sono attese solo %d — verifica manuale',
+                        $sourceKey, $ecPoi->id, $presentCount, $expectedCount
+                    ));
+                }
+
+                foreach ($relativePaths as $relativePath) {
+                    $imagesTotal++;
+
+                    $fileName = basename($relativePath);
+                    $fileNameNorm = $this->spatieSanitize($fileName);
+
+                    if (in_array($fileNameNorm, $existingFileNamesNorm, true)) {
+                        $imagesSkipped++;
+                        $this->line(sprintf('[SKIP] %s (%d): %s', $sourceKey, $ecPoi->id, $fileName));
+
+                        continue;
+                    }
+
+                    if ($dryRun) {
+                        $this->comment(sprintf('[DRY-RUN] %s (%d): %s', $sourceKey, $ecPoi->id, $relativePath));
+
+                        continue;
+                    }
+
+                    $pathForUrl = str_replace(' ', '%20', $relativePath);
+                    $url = $this->baseUrl . $pathForUrl;
+
+                    try {
+                        $ecPoi
+                            ->addMediaFromUrl($url)
+                            ->usingFileName($fileName)
+                            ->usingName($fileName)
+                            ->toMediaCollection('default');
+
+                        $imagesAttached++;
+
+                        // Aggiorna la lista locale per evitare doppioni nel loop corrente
+                        $existingFileNamesNorm[] = $fileNameNorm;
+
+                        $this->info(sprintf('[OK] %s (%d): %s', $sourceKey, $ecPoi->id, $relativePath));
+
+                        Log::channel('single')->info('sync-accoglienza-poi-images: importata', [
+                            'source_key' => $sourceKey,
+                            'ec_poi_id' => $ecPoi->id,
+                            'file' => $relativePath,
+                        ]);
+                    } catch (\Throwable $e) {
+                        $imagesFailed++;
+                        $this->error(sprintf(
+                            '[FAIL] %s (%d): %s — %s',
+                            $sourceKey, $ecPoi->id, $relativePath, $e->getMessage()
+                        ));
+
+                        Log::warning('sync-accoglienza-poi-images: import fallito', [
+                            'source_key' => $sourceKey,
+                            'ec_poi_id' => $ecPoi->id,
+                            'url' => $url,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+        });
 
         $this->newLine();
         $this->info('=== Riepilogo ===');
         $this->table(
             ['Esito', 'Numero'],
             [
-                ['Righe elaborate', $stats['rows_total']],
-                ['Righe senza EC POI corrispondente', $stats['rows_without_poi']],
-                ['Righe con immagini', $stats['rows_with_images']],
-                ['Righe senza immagini', $stats['rows_without_images']],
-                ['Immagini totali trovate', $stats['images_total']],
-                ['Immagini importate', $stats['images_attached']],
-                ['Immagini già presenti (saltate)', $stats['images_skipped_existing']],
-                ['Immagini fallite', $stats['images_failed']],
+                ['POI con immagini', $poisWithImages],
+                ['POI senza immagini', $poisWithoutImages],
+                ['Immagini totali attese', $imagesTotal],
+                ['Immagini importate', $imagesAttached],
+                ['Immagini già presenti (saltate)', $imagesSkipped],
+                ['Doppioni rimossi', $duplicatesRemoved],
+                ['Immagini fallite', $imagesFailed],
             ]
         );
 
@@ -69,183 +211,22 @@ class SyncAccoglienzaPoiImagesCommand extends Command
             $this->warn('Nessuna modifica scritta: eseguire senza --dry-run per applicare.');
         }
 
+        if ($imagesFailed > 0) {
+            $this->warn("Ci sono {$imagesFailed} immagini fallite: rilancia il comando per ritentarle.");
+        }
+
         return self::SUCCESS;
     }
 
-    private function fetchRows(): array
+    /**
+     * Applica la stessa sanitizzazione che usa Spatie Media Library di default.
+     * Fonte: vendor/spatie/laravel-medialibrary/src/MediaCollections/FileAdder.php::defaultSanitizer
+     */
+    private function spatieSanitize(string $fileName): string
     {
-        $conn = DB::connection('sicai_postgis');
+        $sanitized = preg_replace('#\p{C}+#u', '', $fileName);
+        $sanitized = str_replace(['#', '/', '\\', ' '], '-', $sanitized);
 
-        $geomColumn = $this->getGeometryColumnName($conn);
-        $rawRows = $conn->select('SELECT * FROM "pt_accoglienza_unofficial"');
-
-        $items = [];
-        foreach ($rawRows as $index => $row) {
-            $raw = (array) $row;
-
-            $externalId = $raw['id'] ?? $raw['gid'] ?? null;
-            $sourceKey = $externalId !== null
-                ? 'pt_accoglienza_unofficial:' . $externalId
-                : 'pt_accoglienza_unofficial:row_' . ($index + 1);
-
-            $items[] = [
-                'source_key' => $sourceKey,
-                'raw' => $raw,
-                'geometry_column' => $geomColumn,
-            ];
-        }
-
-        return $items;
-    }
-
-    private function syncImages(array $rows, bool $dryRun, ?string $filterSourceKey): array
-    {
-        $rowsTotal = 0;
-        $rowsWithoutPoi = 0;
-        $rowsWithImages = 0;
-        $rowsWithoutImages = 0;
-        $imagesTotal = 0;
-        $imagesAttached = 0;
-        $imagesSkippedExisting = 0;
-        $imagesFailed = 0;
-
-        foreach ($rows as $row) {
-            $sourceKey = $row['source_key'];
-            $raw = $row['raw'];
-
-            if ($filterSourceKey !== null && $sourceKey !== $filterSourceKey) {
-                continue;
-            }
-
-            $rowsTotal++;
-
-            /** @var EcPoi|null $ecPoi */
-            $ecPoi = EcPoi::query()
-                ->where('app_id', 2)
-                ->where('properties->sicai->source_key', $sourceKey)
-                ->first();
-
-            if (! $ecPoi) {
-                $rowsWithoutPoi++;
-                $this->line(sprintf('Nessun EC POI per source_key %s, salto.', $sourceKey));
-
-                continue;
-            }
-
-            $relativePaths = [];
-            foreach ($this->photoColumns as $column) {
-                $path = $raw[$column] ?? null;
-                if (is_string($path)) {
-                    $path = trim($path);
-                    if ($path !== '') {
-                        $relativePaths[] = $path;
-                    }
-                }
-            }
-
-            if (empty($relativePaths)) {
-                $rowsWithoutImages++;
-
-                continue;
-            }
-
-            $rowsWithImages++;
-
-            foreach ($relativePaths as $relativePath) {
-                $imagesTotal++;
-
-                $fileName = basename($relativePath);
-                $pathForUrl = str_replace(' ', '%20', $relativePath);
-                $url = $this->baseUrl . $pathForUrl;
-
-                $existingMedia = $ecPoi->media
-                    ->where('collection_name', 'default')
-                    ->firstWhere('file_name', $fileName);
-
-                if ($existingMedia) {
-                    $imagesSkippedExisting++;
-                    $this->line(sprintf(
-                        '[SKIP] EC POI %s (%d): %s già presente',
-                        $sourceKey,
-                        $ecPoi->id,
-                        $fileName
-                    ));
-
-                    continue;
-                }
-
-                if ($dryRun) {
-                    $this->comment(sprintf(
-                        '[DRY-RUN] Importerei EC POI %s (%d): %s',
-                        $sourceKey,
-                        $ecPoi->id,
-                        $relativePath
-                    ));
-
-                    continue;
-                }
-
-                try {
-                    $ecPoi
-                        ->addMediaFromUrl($url)
-                        ->usingFileName($fileName)
-                        ->usingName($fileName)
-                        ->toMediaCollection('default');
-
-                    $imagesAttached++;
-                    $this->info(sprintf(
-                        '[OK] EC POI %s (%d): %s',
-                        $sourceKey,
-                        $ecPoi->id,
-                        $relativePath
-                    ));
-
-                    Log::channel('single')->info('sync-accoglienza-poi-images: importata', [
-                        'source_key' => $sourceKey,
-                        'ec_poi_id' => $ecPoi->id,
-                        'file' => $relativePath,
-                    ]);
-                } catch (\Throwable $e) {
-                    $imagesFailed++;
-                    $this->error(sprintf(
-                        '[FAIL] EC POI %s (%d): %s — %s',
-                        $sourceKey,
-                        $ecPoi->id,
-                        $relativePath,
-                        $e->getMessage()
-                    ));
-
-                    Log::warning('sync-accoglienza-poi-images: import fallito', [
-                        'source_key' => $sourceKey,
-                        'ec_poi_id' => $ecPoi->id,
-                        'url' => $url,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-        }
-
-        return [
-            'rows_total' => $rowsTotal,
-            'rows_without_poi' => $rowsWithoutPoi,
-            'rows_with_images' => $rowsWithImages,
-            'rows_without_images' => $rowsWithoutImages,
-            'images_total' => $imagesTotal,
-            'images_attached' => $imagesAttached,
-            'images_skipped_existing' => $imagesSkippedExisting,
-            'images_failed' => $imagesFailed,
-        ];
-    }
-
-    private function getGeometryColumnName(\Illuminate\Database\Connection $conn): string
-    {
-        $col = $conn->selectOne(
-            "SELECT column_name FROM information_schema.columns
-             WHERE table_schema = 'public' AND table_name = 'pt_accoglienza_unofficial'
-             AND udt_name = 'geometry'
-             LIMIT 1"
-        );
-
-        return ($col && isset($col->column_name)) ? $col->column_name : 'geom';
+        return strtolower($sanitized);
     }
 }
