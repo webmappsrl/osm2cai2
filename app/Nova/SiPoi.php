@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Enums\SicaiSituazioneEnum;
 use App\Models\SiPoi as SiPoiModel;
+use Wm\WmPackage\Nova\Actions\RegenerateEcPoiTaxonomyWhere;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Database\Eloquent\Builder;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
@@ -177,5 +178,17 @@ class SiPoi extends EcPoi
             Tab::make(__('Info'), $this->getInfoTabFields()),
         ]);
         return $fields;
+    }
+
+    /**
+     * Azioni disponibili per i SiPoi.
+     */
+    public function actions(NovaRequest $request): array
+    {
+        $actions = parent::actions($request);
+
+        $actions[] = new RegenerateEcPoiTaxonomyWhere();
+
+        return $actions;
     }
 }
