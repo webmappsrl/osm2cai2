@@ -106,6 +106,7 @@ class SiPoi extends EcPoi
     {
         return [
             ID::make()->onlyOnDetail(),
+            Text::make(__('CIN'), 'properties->sicai->CIN'),
             Text::make(__('Data'), 'properties->sicai->data')->readonly(),
             Text::make(__('Tappa 01'), 'properties->sicai->tappa01')->readonly(),
             Text::make(__('Tappa 02'), 'properties->sicai->tappa02')->readonly(),
@@ -114,19 +115,11 @@ class SiPoi extends EcPoi
             Text::make(__('Nome struttura'), 'properties->sicai->nome')->readonly(),
             Text::make(__('Denominazione'), 'properties->sicai->denominazione')->readonly(),
             Text::make(__('Note'), 'properties->sicai->note')->readonly(),
-            Text::make(__('Email'), 'properties->sicai->email')->readonly(),
-            Text::make(__('Telefono'), 'properties->sicai->phone')->readonly(),
             Text::make(__('Tourism'), 'properties->sicai->tourism')->readonly(),
-            Text::make(__('Website'), 'properties->sicai->website')->readonly(),
-            Text::make(__('Città'), 'properties->sicai->addr:city')->readonly(),
-            Text::make(__('Via'), 'properties->sicai->addr:street')->readonly(),
-            Text::make(__('Numero civico'), 'properties->sicai->addr:housenumber')->readonly(),
             Text::make(__('Materiale'), 'properties->sicai->materiale')->readonly(),
             Text::make(__('Situazione'), 'properties->sicai->situazione')->readonly(),
             Text::make(__('Operatore'), 'properties->sicai->operator')->readonly(),
             Text::make(__('Rifugio CAI'), 'properties->sicai->rifugio_cai')->readonly(),
-            Text::make(__('Orari apertura'), 'properties->sicai->opening_hours')->readonly(),
-            Text::make(__('Source key'), 'properties->sicai->source_key')->readonly(),
             Boolean::make(__('Punto accoglienza ufficiale'), 'properties->sicai->pt_accoglienza')->readonly(),
         ];
     }
