@@ -8,7 +8,6 @@ use App\Nova\Filters\OsmFilter;
 use App\Nova\Filters\OsmtagsFilter;
 use App\Nova\Filters\ScoreFilter;
 use App\Nova\Filters\SourceFilter;
-use App\Services\GeometryService;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\Code;
@@ -16,10 +15,8 @@ use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Wm\MapMultiPolygon\MapMultiPolygon;
-use Wm\MapPoint\MapPoint;
-use Wm\Osm2caiMapMultiLinestring\Osm2caiMapMultiLinestring;
 use Wm\WmPackage\Nova\AbstractEcResource;
+use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
 abstract class OsmfeaturesResource extends AbstractEcResource
 {
@@ -28,43 +25,10 @@ abstract class OsmfeaturesResource extends AbstractEcResource
      */
     public function fields(NovaRequest $request): array
     {
-        $geometryField = null;
-        $model = $this->model();
-        // get the table name for the model
-        $tableName = $model->getTable();
-        // get the geometry type of the model class
-        $geometryType = GeometryService::getGeometryType($tableName, 'geometry');
-        // if geometry type is point return MapPoint::make, if is multipolygon return MapMultiPolygon if is multilinestring return MapMultiLineString
-        switch ($geometryType) {
-            case 'Point':
-                $geometryField = MapPoint::make(__('Geometry'), 'geometry')->withMeta([
-                    'center' => [42, 10],
-                    'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-                    'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
-                    'minZoom' => 8,
-                    'maxZoom' => 17,
-                    'defaultZoom' => 13,
-                    'defaultCenter' => [42, 10],
-                ])->hideFromIndex();
-                break;
-            case 'MultiPolygon':
-                $geometryField = MapMultiPolygon::make(__('Geometry'), 'geometry')->withMeta([
-                    'center' => ['42.795977075', '10.326813853'],
-                    'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-                ])->hideFromIndex();
-                break;
-            default:
-                $centroid = $this->getCentroid();
-                $geojson = $this->getGeojsonForMapView();
-                $geometryField = Osm2caiMapMultiLinestring::make(__('Geometry'), 'geometry')->withMeta([
-                    'center' => $centroid ?? [42, 10],
-                    'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-                    'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
-                    'defaultZoom' => 10,
-                    'geojson' => json_encode($geojson),
-                ])->hideFromIndex();
-                break;
-        }
+        $geometryField = FeatureCollectionMap::make(__('Geometry'), 'geometry')
+            ->height(500)
+            ->hideFromIndex();
+
         $fields = [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
@@ -99,11 +63,7 @@ abstract class OsmfeaturesResource extends AbstractEcResource
                 }),
         ];
 
-        if ($geometryField) {
-            return array_merge($fields, [$geometryField]);
-        }
-
-        return $fields;
+        return array_merge($fields, [$geometryField]);
     }
 
     /**
@@ -268,5 +228,119 @@ abstract class OsmfeaturesResource extends AbstractEcResource
         $path .= "->>'{$lastPart}'";
 
         return $path;
+    }
+
+    public function getOsmfeaturesTabFields(): array
+    {
+        $props = fn() => $this->resource->osmfeatures_data['properties'] ?? [];
+
+        return [
+            Text::make(__('Osmfeatures ID (interno)'), 'osmfeatures_id'),
+            Text::make(__('OSM (relation/way)'), function () use ($props) {
+                $p = $props();
+                $osmType = $p['osm_type'] ?? null;
+                $osmId = $p['osm_id'] ?? null;
+                if ($osmType === null || $osmId === null) {
+                    return '—';
+                }
+                $osmRef = $osmType . (string) $osmId;
+
+                return Osm2caiHelper::getOpenstreetmapUrlAsHtml($osmRef);
+            })->asHtml(),
+            Text::make(__('osm_api'), function () use ($props) {
+                $url = $props()['osm_api'] ?? null;
+                if (! $url) {
+                    return '—';
+                }
+
+                return '<a href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a>';
+            })->asHtml(),
+            Text::make(__('ref'), fn() => $props()['ref'] ?? '—'),
+            Text::make(__('ref_REI'), fn() => $props()['ref_REI'] ?? '—'),
+            Text::make(__('source_ref'), fn() => $props()['source_ref'] ?? '—'),
+            Text::make(__('from'), fn() => $props()['from'] ?? '—'),
+            Text::make(__('to'), fn() => $props()['to'] ?? '—'),
+            Text::make(__('name'), fn() => $props()['name'] ?? '—'),
+            Text::make(__('network'), fn() => $props()['network'] ?? '—'),
+            Text::make(__('cai_scale'), fn() => $props()['cai_scale'] ?? '—'),
+            Text::make(__('symbol'), fn() => $props()['symbol'] ?? '—'),
+            Text::make(__('symbol_it'), fn() => $props()['symbol_it'] ?? '—'),
+            Text::make(__('osmc_symbol'), fn() => $props()['osmc_symbol'] ?? '—'),
+            Text::make(__('source'), fn() => $props()['source'] ?? '—'),
+            Text::make(__('operator'), fn() => $props()['operator'] ?? '—'),
+            Text::make(__('website'), function () use ($props) {
+                $url = $props()['website'] ?? null;
+                if (! $url) {
+                    return '—';
+                }
+
+                return '<a href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a>';
+            })->asHtml(),
+            Text::make(__('score'), function () use ($props) {
+                $s = $props()['score'] ?? null;
+                if ($s === null) {
+                    return '—';
+                }
+
+                return Osm2caiHelper::getScoreAsStars((int) $s) . " ({$s})";
+            })->asHtml(),
+            Text::make(__('ascent'), fn() => $props()['ascent'] ?? '—'),
+            Text::make(__('descent'), fn() => $props()['descent'] ?? '—'),
+            Text::make(__('distance'), fn() => $props()['distance'] ?? '—'),
+            Text::make(__('duration_forward'), fn() => $props()['duration_forward'] ?? '—'),
+            Text::make(__('duration_backward'), fn() => $props()['duration_backward'] ?? '—'),
+            Text::make(__('roundtrip'), fn() => ($props()['roundtrip'] ?? null) === true ? __('Yes') : (($props()['roundtrip'] ?? null) === false ? __('No') : '—')),
+            Text::make(__('state'), fn() => $props()['state'] ?? '—'),
+            Text::make(__('osm2cai_status'), fn() => $props()['osm2cai_status'] ?? '—'),
+            Text::make(__('updated_at'), fn() => $props()['updated_at'] ?? '—'),
+            Text::make(__('updated_at_osm'), fn() => $props()['updated_at_osm'] ?? '—'),
+            Text::make(__('survey_date'), fn() => $props()['survey_date'] ?? '—'),
+            Text::make(__('description'), fn() => $props()['description'] ?? '—'),
+            Text::make(__('description_it'), fn() => $props()['description_it'] ?? '—'),
+            Text::make(__('note'), fn() => $props()['note'] ?? '—'),
+            Text::make(__('note_it'), fn() => $props()['note_it'] ?? '—'),
+            Text::make(__('maintenance'), fn() => $props()['maintenance'] ?? '—'),
+            Text::make(__('maintenance_it'), fn() => $props()['maintenance_it'] ?? '—'),
+            Text::make(__('note_project_page'), fn() => $props()['note_project_page'] ?? '—'),
+            Text::make(__('old_ref'), fn() => $props()['old_ref'] ?? '—'),
+            Text::make(__('rwn_name'), fn() => $props()['rwn_name'] ?? '—'),
+            Text::make(__('wikidata'), fn() => $props()['wikidata'] ?? '—'),
+            Text::make(__('wikipedia'), fn() => $props()['wikipedia'] ?? '—'),
+            Text::make(__('wikimedia_commons'), fn() => $props()['wikimedia_commons'] ?? '—'),
+            Text::make(__('dem_enrichment'), fn() => $props()['dem_enrichment'] !== null ? json_encode($props()['dem_enrichment'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '—'),
+            Code::make(__('osm_tags'), function () use ($props) {
+                $tags = $props()['osm_tags'] ?? null;
+                if (! is_array($tags)) {
+                    return '';
+                }
+
+                return json_encode($tags, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            })->json()->onlyOnDetail(),
+            Text::make(__('admin_areas'), function () use ($props) {
+                $adminAreas = $props()['admin_areas']['admin_area'] ?? null;
+                if (! is_array($adminAreas)) {
+                    return '—';
+                }
+                $labels = [
+                    '2' => __('Stato'),
+                    '4' => __('Regione'),
+                    '6' => __('Provincia'),
+                    '7' => __('Area (liv. 7)'),
+                    '8' => __('Comune'),
+                    '10' => __('Unità amministrative (liv. 10)'),
+                ];
+                $out = [];
+                foreach ($adminAreas as $level => $items) {
+                    if (! is_array($items)) {
+                        continue;
+                    }
+                    $label = $labels[$level] ?? __('Livello') . ' ' . $level;
+                    $names = array_map(fn($a) => ($a['name'] ?? '') . ' (' . ($a['osmfeatures_id'] ?? '') . ')', $items);
+                    $out[] = '<strong>' . e($label) . '</strong>: ' . implode(', ', array_map('e', $names));
+                }
+
+                return implode('<br>', $out);
+            })->asHtml()->onlyOnDetail(),
+        ];
     }
 }

@@ -18,14 +18,18 @@ class Osm2caiHelper
         };
         $osmid = substr($id, 1);
 
-        return 'https://www.openstreetmap.org/'.$finalType.'/'.$osmid;
+        return 'https://www.openstreetmap.org/' . $finalType . '/' . $osmid;
     }
 
     /**
      * Get the openstreetmap url as html string
      */
-    public static function getOpenstreetmapUrlAsHtml(string $id): string
+    public static function getOpenstreetmapUrlAsHtml(?string $id): string
     {
+        if ($id === null || $id === '') {
+            return '';
+        }
+
         $openstreetmapUrl = self::getOpenstreetmapUrl($id);
 
         return <<<HTML
@@ -57,7 +61,7 @@ class Osm2caiHelper
      */
     public static function getOsmfeaturesDataForNovaDetail(string $data): string
     {
-        return cache()->remember('osmfeatures_data_'.md5($data), 60 * 60 * 24, function () use ($data) {
+        return cache()->remember('osmfeatures_data_' . md5($data), 60 * 60 * 24, function () use ($data) {
             $data = json_decode($data, true);
 
             if (! is_array($data)) {
