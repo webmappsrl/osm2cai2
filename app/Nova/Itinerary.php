@@ -41,6 +41,7 @@ class Itinerary extends Resource
      */
     public static $search = [
         'id',
+        'name',
     ];
 
     /**
