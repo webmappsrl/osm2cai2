@@ -66,7 +66,7 @@ class FixDuplicatedUgcPois extends Command
             $this->duplicatedUser = User::create([
                 'email' => 'duplicated-ugc-pois@webmapp.it',
                 'name' => 'duplicated-ugc-pois',
-                'password' => bcrypt('webmapp123'),
+                'password' => bcrypt(env('WEBMAPP_DEFAULT_PASSWORD')),
             ]);
             $this->duplicatedUser->assignRole(UserRole::Guest->value);
         }

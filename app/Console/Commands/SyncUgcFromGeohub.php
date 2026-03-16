@@ -262,7 +262,7 @@ class SyncUgcFromGeohub extends Command
                 $user = User::create([
                     'name' => $userEmail,
                     'email' => $userEmail,
-                    'password' => bcrypt('webmapp123'),
+                    'password' => bcrypt(env('WEBMAPP_DEFAULT_PASSWORD')),
                 ]);
 
                 $user->assignRole(UserRole::Guest);
