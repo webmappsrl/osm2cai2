@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         $nationalReferent = User::where('email', 'referenteNazionale@webmapp.it')->first();
 
         if (! $admin) {
-            $user = User::factory()->create(['email' => 'team@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Webmapp Team']);
+            $user = User::factory()->create(['email' => 'team@webmapp.it', 'password' => bcrypt(env('WEBMAPP_DEFAULT_PASSWORD')), 'name' => 'Webmapp Team']);
 
             // if the user already have the role, skip
             if (! $user->hasRole('Administrator')) {
@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         }
 
         if (! $nationalReferent) {
-            $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt('webmapp123'), 'name' => 'Referente Nazionale']);
+            $user = User::factory()->create(['email' => 'referenteNazionale@webmapp.it', 'password' => bcrypt(env('WEBMAPP_DEFAULT_PASSWORD')), 'name' => 'Referente Nazionale']);
 
             // if the user already have the role, skip
             if (! $user->hasRole('National Referent')) {

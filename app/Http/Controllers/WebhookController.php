@@ -445,7 +445,7 @@ class WebhookController extends Controller
             $user = User::create([
                 'name' => $email,
                 'email' => $email,
-                'password' => bcrypt('webmapp123'), // Password temporanea
+                'password' => bcrypt(env('WEBMAPP_DEFAULT_PASSWORD')), // Password temporanea
             ]);
 
             // Assegna il ruolo Guest
