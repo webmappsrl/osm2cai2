@@ -989,7 +989,7 @@ class SignageMapController
             'id'          => $selectedPoleId,
             'name'        => $selectedPole?->name ?? '',
             'ref'         => $selectedPole?->ref ?? '',
-            'description' => '',
+            'description' => $selectedPole?->properties['description'] ?? '',
         ], $midData);
 
         $arrow['selected_midpoint_id'] = $selectedPoleId;
@@ -1034,7 +1034,7 @@ class SignageMapController
             }
 
             $poleNames = Poles::whereIn('id', $checkpointOrder)
-                ->get(['id', 'name', 'ref'])
+                ->get(['id', 'name', 'ref', 'properties'])
                 ->keyBy('id');
 
             foreach ($routeData['arrows'] as $arrowIdx => $arrow) {
@@ -1073,7 +1073,7 @@ class SignageMapController
                         'id'          => $midId,
                         'name'        => $p?->name ?? '',
                         'ref'         => $p?->ref ?? '',
-                        'description' => '',
+                        'description' => $p?->properties['description'] ?? '',
                     ], $midData);
                 }
 
