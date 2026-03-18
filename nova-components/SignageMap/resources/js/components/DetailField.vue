@@ -188,7 +188,8 @@
                             </label>
                             <SignageArrowsDisplay :signage-data="signageArrowsData"
                                 @arrow-direction-changed="handleArrowDirectionChanged"
-                                @arrow-order-changed="handleArrowOrderChanged" />
+                                @arrow-order-changed="handleArrowOrderChanged"
+                                @arrow-midpoint-changed="handleArrowMidpointChanged" />
                         </div>
                     </div>
 
@@ -244,6 +245,7 @@ export default {
             metaValue: false,
             isUpdatingMeta: false,
             cachedProperties: null, // Cache delle properties dopo il salvataggio
+            polePopupCache: {}, // Cache per palo: evita riaperture con dati vecchi senza refresh pagina
             signageArrowsData: {}, // Dati per le frecce segnaletica
             mapKey: 0, // Chiave per forzare il refresh della mappa
             name: '', // Nome località del palo
@@ -324,6 +326,22 @@ export default {
     },
 
     methods: {
+        cacheCurrentPolePopupState(poleId = null) {
+            const id = poleId ?? this.currentPoleId;
+            if (!id) return;
+            const key = String(id);
+            this.polePopupCache = {
+                ...this.polePopupCache,
+                [key]: {
+                    popupTitle: this.popupTitle,
+                    name: this.name,
+                    description: this.description,
+                    signageArrowsData: JSON.parse(JSON.stringify(this.signageArrowsData || {})),
+                    osmTags: this.currentPoleOsmTags || null,
+                    ts: Date.now(),
+                }
+            };
+        },
         /** Scala l'icona X in base alla risoluzione: con zoom bassi (risoluzione alta) la X è più piccola */
         getExportIgnoreIconScale(resolution) {
             if (resolution == null || resolution <= 0) return 1;
@@ -380,17 +398,24 @@ export default {
             console.log('SignageMap: Nova popup-open received:', event);
             if (event.popupComponent === 'signage-map') {
                 this.currentPoleId = event.id;
-                this.popupTitle = event.properties?.name || event.properties?.tooltip;
-                // Estrai i dati della segnaletica dalle properties del palo
-                this.signageArrowsData = {
-                    ...event.properties?.signage, ...{ ref: event.properties?.ref }
-                } || {};
+                const cacheKey = String(event.id);
+                const cached = this.polePopupCache?.[cacheKey] || null;
+
+                this.popupTitle = cached?.popupTitle || event.properties?.name || event.properties?.tooltip;
+                // Estrai i dati della segnaletica: preferisci cache locale per evitare dati vecchi alla riapertura
+                if (cached?.signageArrowsData && Object.keys(cached.signageArrowsData).length > 0) {
+                    this.signageArrowsData = cached.signageArrowsData;
+                } else {
+                    this.signageArrowsData = {
+                        ...event.properties?.signage, ...{ ref: event.properties?.ref }
+                    } || {};
+                }
                 console.log('signageArrowsData', this.signageArrowsData);
-                // Carica il name e description dalle properties del palo se esistono
-                this.name = event.properties?.name || '';
-                this.description = event.properties?.description || '';
-                // Salva i dati osmTags del palo
-                this.currentPoleOsmTags = event.properties?.osmTags || null;
+                // Carica il name e description dalle properties del palo se esistono (cache se presente)
+                this.name = cached?.name ?? (event.properties?.name || '');
+                this.description = cached?.description ?? (event.properties?.description || '');
+                // Salva i dati osmTags del palo (cache se presente)
+                this.currentPoleOsmTags = cached?.osmTags ?? (event.properties?.osmTags || null);
                 // Salva le featuresMap per poter trovare l'HikingRoute quando si lavora da SignageProject
                 this.currentFeaturesMap = event.featuresMap || null;
                 this.showPopup = true;
@@ -400,6 +425,8 @@ export default {
                 this.loadIgnoreValue(event.featuresMap);
                 // Carica le HikingRoute disponibili per questo palo
                 this.loadAvailableHikingRoutes();
+                // Carica available_midpoints calcolati a runtime
+                this.loadAvailableMidpoints(event.id);
             }
         },
 
@@ -591,6 +618,31 @@ export default {
          * Carica le HikingRoute disponibili per il palo corrente
          * Quando un palo appartiene a più HikingRoute, le raccoglie tutte
          */
+        loadAvailableMidpoints(poleId) {
+            if (!poleId) return;
+            fetch(`/nova-vendor/signage-map/pole/${poleId}/available-midpoints`)
+                .then(r => r.json())
+                .then(data => {
+                    const map = data.available_midpoints || {};
+                    if (!this.signageArrowsData) return;
+
+                    // signageArrowsData nel contesto SignageMap non ha il wrapper "signage":
+                    // la struttura è direttamente { "routeId": { arrows: [...] }, ... }
+                    const updated = JSON.parse(JSON.stringify(this.signageArrowsData));
+                    for (const [key, midpoints] of Object.entries(map)) {
+                        const dashIdx = key.indexOf('-');
+                        const routeId  = key.substring(0, dashIdx);
+                        const arrowIdx = parseInt(key.substring(dashIdx + 1), 10);
+                        const routeData = updated[routeId] || (updated.signage && updated.signage[routeId]);
+                        if (routeData && routeData.arrows && routeData.arrows[arrowIdx] !== undefined) {
+                            routeData.arrows[arrowIdx].available_midpoints = midpoints;
+                        }
+                    }
+                    this.signageArrowsData = updated;
+                })
+                .catch(() => {});
+        },
+
         loadAvailableHikingRoutes() {
             if (!this.currentPoleId || !this.currentFeaturesMap) {
                 this.availableHikingRoutes = [];
@@ -955,6 +1007,8 @@ export default {
                     if (lastResponse?.data?.poleSignage) {
                         this.signageArrowsData = { ...this.signageArrowsData, ...lastResponse.data.poleSignage };
                     }
+                    // Cache: alla riapertura popup usa i dati appena salvati
+                    this.cacheCurrentPolePopupState(poleId);
 
                     const count = hikingRouteIds.length;
                     Nova.success(
@@ -995,6 +1049,8 @@ export default {
                     if (response.data?.poleSignage) {
                         this.signageArrowsData = { ...this.signageArrowsData, ...response.data.poleSignage };
                     }
+                    // Cache: alla riapertura popup usa i dati appena salvati
+                    this.cacheCurrentPolePopupState(poleId);
 
                     Nova.success(this.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
                 }
@@ -1047,6 +1103,8 @@ export default {
                     fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'signageArrowsData aggiornato', data: { hasData: !!this.signageArrowsData }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
                     // #endregion
                 }
+                // Cache: evita dati vecchi alla riapertura del popup
+                this.cacheCurrentPolePopupState(poleId);
 
                 Nova.success('Direzione freccia aggiornata con successo');
 
@@ -1058,6 +1116,39 @@ export default {
                 // #endregion
                 console.error('Errore durante il salvataggio della direzione:', error);
                 Nova.error('Errore durante il salvataggio della direzione');
+            }
+        },
+
+        async handleArrowMidpointChanged(event) {
+            if (!this.currentPoleId) return;
+            try {
+                const poleId = parseInt(this.currentPoleId);
+                const response = await Nova.request().patch(
+                    `/nova-vendor/signage-map/pole/${poleId}/arrow-midpoint`,
+                    {
+                        hiking_route_id: parseInt(event.routeId),
+                        arrow_index:     event.arrowIndex,
+                        selected_pole_id: event.selectedPoleId,
+                    }
+                );
+                if (response.data?.arrow) {
+                    // Aggiorna la riga rows[1] localmente con i dati salvati
+                    const updated = JSON.parse(JSON.stringify(this.signageArrowsData));
+                    const routeData = updated[event.routeId] || (updated.signage && updated.signage[event.routeId]);
+                    if (routeData && routeData.arrows && routeData.arrows[event.arrowIndex]) {
+                        routeData.arrows[event.arrowIndex].rows = response.data.arrow.rows;
+                        routeData.arrows[event.arrowIndex].selected_midpoint_id = response.data.arrow.selected_midpoint_id;
+                    }
+                    this.signageArrowsData = updated;
+                    // Ricarica available_midpoints per aggiornare l'ordine (corrente per primo)
+                    this.loadAvailableMidpoints(poleId);
+                    // Cache: evita dati vecchi alla riapertura del popup
+                    this.cacheCurrentPolePopupState(poleId);
+                }
+                Nova.success('Meta intermedia aggiornata');
+            } catch (error) {
+                console.error('Errore salvataggio meta intermedia:', error);
+                Nova.error('Errore durante il salvataggio della meta intermedia');
             }
         },
 
@@ -1081,6 +1172,8 @@ export default {
                 if (response.data?.signageData) {
                     this.signageArrowsData = response.data.signageData;
                 }
+                // Cache: evita dati vecchi alla riapertura del popup
+                this.cacheCurrentPolePopupState(poleId);
 
                 Nova.success('Ordine frecce aggiornato con successo');
 
