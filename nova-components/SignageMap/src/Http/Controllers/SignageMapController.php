@@ -655,7 +655,8 @@ class SignageMapController
             foreach ($checkpoints as $checkpointId) {
                 $matrixEntry = $hikingRouteMatrix[(string) $checkpointId] ?? null;
                 if ($matrixEntry) {
-                    $allCheckpointMidpointsData[(string) $checkpointId] = $matrixEntry;
+                    // Uniforma h/km dei midpoint alle stesse regole CAI usate per le altre mete.
+                    $allCheckpointMidpointsData[(string) $checkpointId] = $this->applyMinimumDisplayValues($matrixEntry);
                 }
             }
 
@@ -985,12 +986,15 @@ class SignageMapController
         $midData      = $arrow['midpoints_data'][(string) $selectedPoleId] ?? [];
         $selectedPole = Poles::find($selectedPoleId);
 
-        $arrow['rows'][1] = array_merge([
+        $rows1 = array_merge([
             'id'          => $selectedPoleId,
             'name'        => $selectedPole?->name ?? '',
             'ref'         => $selectedPole?->ref ?? '',
             'description' => $selectedPole?->properties['description'] ?? '',
         ], $midData);
+
+        // Assicura arrotondamento coerente anche dopo cambio select.
+        $arrow['rows'][1] = $this->applyMinimumDisplayValues($rows1);
 
         $arrow['selected_midpoint_id'] = $selectedPoleId;
 
@@ -1069,12 +1073,12 @@ class SignageMapController
                     }
                     $midData     = $arrow['midpoints_data'][(string) $midId] ?? [];
                     $p           = $poleNames->get($midId);
-                    $midpoints[] = array_merge([
+                    $midpoints[] = $this->applyMinimumDisplayValues(array_merge([
                         'id'          => $midId,
                         'name'        => $p?->name ?? '',
                         'ref'         => $p?->ref ?? '',
                         'description' => $p?->properties['description'] ?? '',
-                    ], $midData);
+                    ], $midData));
                 }
 
                 $result[$key] = $midpoints;

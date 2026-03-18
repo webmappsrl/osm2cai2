@@ -654,7 +654,6 @@ export default {
             } else if (type === 'move') {
                 this.executeMoveArrow(params.routeId, params.arrowIdx, params.direction);
             } else if (type === 'midpoint') {
-                this.applyMidpointChangeLocal(params);
                 this.$emit('arrow-midpoint-changed', {
                     routeId: params.routeId,
                     arrowIndex: params.arrowIndex,
