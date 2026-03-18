@@ -671,11 +671,10 @@ class SignageMapController
             $pole->saveQuietly();
         }
 
-        // Salva checkpoint_order nella HikingRoute per uso runtime in resolveAttribute
-        $orderedCheckpoints = array_values(array_filter(
-            array_map('intval', $pointsOrder),
-            fn($id) => isset($checkpointSet[(string) $id])
-        ));
+        // Salva checkpoint_order nella HikingRoute per uso runtime in resolveAttribute.
+        // NOTA: deve contenere l'ordine COMPLETO dei pali lungo la traccia (points_order),
+        // non solo i checkpoint attivi, altrimenti nearest/final potrebbero non essere trovati.
+        $orderedCheckpoints = array_values(array_map('intval', $pointsOrder));
 
         $hikingRoute = HikingRoute::find($hikingRouteId);
         if ($hikingRoute) {
