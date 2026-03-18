@@ -48,17 +48,87 @@
                                     :key="idx"
                                     class="destination-row"
                                     :class="{ 'destination-row--with-separator': idx < arrow.rows.length - 1 }">
-                                    <span class="destination-info">
-                                        <span class="destination-name">{{ formatDestinationName(destination) }}</span>
-                                        <span v-if="destination?.description" class="destination-description">{{
-                                            destination?.description }}</span>
-                                    </span>
-                                    <span class="destination-meta">
-                                        <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
-                                        <span v-if="destination?.distance" class="destination-distance">
-                                            km {{ formatDistance(destination?.distance) }}
+
+                                    <!-- rows[1] con 3 destinazioni: select interattiva -->
+                                    <template v-if="idx === 1 && arrow.rows.length === 3">
+                                        <span class="destination-info destination-info--select">
+                                            <select
+                                                class="midpoint-select"
+                                                :disabled="!arrow.available_midpoints || arrow.available_midpoints.filter(m => m.id !== destination.id).length === 0"
+                                                :value="destination.id"
+                                                @focus="onMidpointSelectFocus($event)"
+                                                @change="onMidpointChange($event, routeId, arrow, arrowIdx)"
+                                            >
+                                                <!--
+                                                  Opzioni in ordine naturale da available_midpoints.
+                                                  Se available_midpoints non include il valore corrente
+                                                  (dati vecchi senza checkpoint_order), viene aggiunto come fallback.
+                                                -->
+                                                <option
+                                                    v-if="!(arrow.available_midpoints || []).some(m => m.id === destination.id)"
+                                                    :value="destination.id"
+                                                >
+                                                    {{ formatDestinationName(destination) }}
+                                                </option>
+                                                <option
+                                                    v-for="midpoint in (arrow.available_midpoints || [])"
+                                                    :key="midpoint.id"
+                                                    :value="midpoint.id"
+                                                >
+                                                    {{ formatDestinationName(midpoint) }}
+                                                </option>
+                                            </select>
                                         </span>
-                                    </span>
+                                        <span class="destination-meta">
+                                            <span class="destination-row-1">
+                                                <span class="destination-elev-slot">
+                                                    <span v-if="destination?.ascent" class="destination-ascent">
+                                                        {{ formatElevation(destination?.ascent) }}
+                                                    </span>
+                                                </span>
+                                                <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
+                                            </span>
+                                            <span v-if="destination?.descent || destination?.distance" class="destination-row-2">
+                                                <span class="destination-elev-slot">
+                                                    <span v-if="destination?.descent" class="destination-descent">
+                                                        {{ formatElevation(destination?.descent) }}
+                                                    </span>
+                                                </span>
+                                                <span v-if="destination?.distance" class="destination-distance">
+                                                    km {{ formatDistance(destination?.distance) }}
+                                                </span>
+                                            </span>
+                                        </span>
+                                    </template>
+
+                                    <!-- Tutte le altre righe: testo normale -->
+                                    <template v-else>
+                                        <span class="destination-info">
+                                            <span class="destination-name">{{ formatDestinationName(destination) }}</span>
+                                            <span v-if="destination?.description" class="destination-description">{{
+                                                destination?.description }}</span>
+                                        </span>
+                                        <span class="destination-meta">
+                                            <span class="destination-row-1">
+                                                <span class="destination-elev-slot">
+                                                    <span v-if="destination?.ascent" class="destination-ascent">
+                                                        {{ formatElevation(destination?.ascent) }}
+                                                    </span>
+                                                </span>
+                                                <span class="destination-time">h {{ formatTime(destination?.time_hiking) }}</span>
+                                            </span>
+                                            <span v-if="destination?.descent || destination?.distance" class="destination-row-2">
+                                                <span class="destination-elev-slot">
+                                                    <span v-if="destination?.descent" class="destination-descent">
+                                                        {{ formatElevation(destination?.descent) }}
+                                                    </span>
+                                                </span>
+                                                <span v-if="destination?.distance" class="destination-distance">
+                                                    km {{ formatDistance(destination?.distance) }}
+                                                </span>
+                                            </span>
+                                        </span>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -78,7 +148,7 @@
         </div>
 
         <!-- Modal di conferma -->
-        <div v-if="showConfirmModal" class="confirm-modal-overlay" @click.self="closeConfirmModal">
+        <div v-if="showConfirmModal" class="confirm-modal-overlay" @click.self="cancelConfirmModal">
             <div class="confirm-modal">
                 <div class="confirm-modal-header">
                     <h3>Conferma operazione</h3>
@@ -87,7 +157,7 @@
                     <p>{{ confirmModalMessage }}</p>
                 </div>
                 <div class="confirm-modal-footer">
-                    <button class="confirm-btn confirm-btn--cancel" @click="closeConfirmModal">
+                    <button class="confirm-btn confirm-btn--cancel" @click="cancelConfirmModal">
                         Annulla
                     </button>
                     <button class="confirm-btn confirm-btn--confirm" @click="executeConfirmedAction">
@@ -145,6 +215,8 @@ export default {
                 return 'Sei sicuro di voler invertire la direzione della freccia?';
             } else if (this.pendingAction.type === 'move') {
                 return 'Sei sicuro di voler spostare questa freccia?';
+            } else if (this.pendingAction.type === 'midpoint') {
+                return 'Sei sicuro di voler cambiare la destinazione intermedia?';
             }
 
             return 'Sei sicuro di voler eseguire questa operazione?';
@@ -162,7 +234,7 @@ export default {
             // Determina se i dati sono nel formato con wrapper "signage" o diretto
             let signage = this.signageData;
             let arrowOrder = [];
-            const effectiveArrowOrder = (this.localArrowOrder && this.localArrowOrder.length > 0)
+            let effectiveArrowOrder = (this.localArrowOrder && this.localArrowOrder.length > 0)
                 ? this.localArrowOrder
                 : [];
 
@@ -175,7 +247,7 @@ export default {
             if (signage.arrow_order && Array.isArray(signage.arrow_order)) {
                 arrowOrder = signage.arrow_order;
                 if (effectiveArrowOrder.length === 0) {
-                    effectiveArrowOrder.push(...arrowOrder);
+                    effectiveArrowOrder = [...arrowOrder];
                 }
             }
 
@@ -297,11 +369,18 @@ export default {
             localArrowDirections: {}, // Mantiene le direzioni modificate: { "routeId-arrowIdx": "forward|backward" }
             localArrowOrder: [], // Mantiene l'ordine modificato: array di chiavi "routeId-index"
             showConfirmModal: false, // Stato del modal di conferma
-            pendingAction: null // Azione in attesa di conferma: { type: 'toggle'|'move', params: {...} }
+            pendingAction: null // Azione in attesa di conferma: { type: 'toggle'|'move'|'midpoint', params: {...} }
         };
     },
 
     methods: {
+        onMidpointSelectFocus(event) {
+            // Memorizza il valore corrente prima della modifica per poterlo ripristinare in caso di annullamento.
+            // Usiamo una property "non Vue" sull'elemento per evitare stato globale.
+            if (event?.target) {
+                event.target.__previousValue = event.target.value;
+            }
+        },
         /**
          * Ottiene la direzione corrente di una freccia (locale o originale)
          * @param {string} routeId - ID della route
@@ -339,15 +418,8 @@ export default {
          * @param {number} arrowIdx - Indice della freccia nell'array orderedArrows
          */
         executeToggleArrowDirection(routeId, arrowIdx) {
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Metodo chiamato', data: { routeId, arrowIdx }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
-            // #endregion
-
             const routeData = this.processedSignageData[routeId];
             if (!routeData || !routeData.orderedArrows || !routeData.orderedArrows[arrowIdx]) {
-                // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Route data non valida', data: { routeId, arrowIdx, hasRouteData: !!routeData, hasOrderedArrows: !!(routeData && routeData.orderedArrows) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
-                // #endregion
                 return;
             }
 
@@ -355,10 +427,6 @@ export default {
             const key = arrow.__arrowKey || `${routeId}-${arrowIdx}`;
             const currentDirection = this.getArrowDirection(routeId, arrowIdx, arrow.direction);
             const newDirection = currentDirection === 'forward' ? 'backward' : 'forward';
-
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Calcolata nuova direzione', data: { routeId, arrowIdx, currentDirection, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
-            // #endregion
 
             // Salva la nuova direzione localmente
             // In Vue 3, $set non è più necessario - l'assegnazione diretta è reattiva
@@ -380,10 +448,6 @@ export default {
                 routeSignage.arrows[originalIndex].direction = newDirection;
             }
 
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Prima di emettere evento', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
-            // #endregion
-
             // Emetti evento per notificare il cambio
             this.$emit('arrow-direction-changed', {
                 routeId: routeId,
@@ -391,10 +455,6 @@ export default {
                 newDirection: newDirection,
                 fullSignageData: this.signageData
             });
-
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignageArrowsDisplay.vue:executeToggleArrowDirection', message: 'Evento emesso', data: { routeId, arrowIdx, newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'G' }) }).catch(() => { });
-            // #endregion
         },
 
         /**
@@ -428,11 +488,22 @@ export default {
         },
 
         /**
+         * Formatta il dislivello in metri interi (senza conversione in km).
+         * @param {number|string} meters - dislivello in metri
+         * @returns {string}
+         */
+        formatElevation(meters) {
+            if (meters === null || meters === undefined || meters === '') return '';
+            const n = Number(meters);
+            if (Number.isNaN(n)) return '';
+            return String(Math.round(n));
+        },
+
+        /**
          * Restituisce un titolo pulito per la destinazione.
          * Ordine: name -> ref -> name -> tooltip -> id. Rimuove eventuale prefisso "id".
          */
         formatDestinationName(destination) {
-            console.log('destination', destination);
             if (!destination || typeof destination !== 'object') {
                 return '-';
             }
@@ -582,8 +653,51 @@ export default {
                 this.executeToggleArrowDirection(params.routeId, params.arrowIdx);
             } else if (type === 'move') {
                 this.executeMoveArrow(params.routeId, params.arrowIdx, params.direction);
+            } else if (type === 'midpoint') {
+                this.applyMidpointChangeLocal(params);
+                this.$emit('arrow-midpoint-changed', {
+                    routeId: params.routeId,
+                    arrowIndex: params.arrowIndex,
+                    selectedPoleId: params.selectedPoleId,
+                });
             }
 
+            this.closeConfirmModal();
+        },
+
+        applyMidpointChangeLocal(params) {
+            // Aggiornamento ottimistico: aggiorna i dati locali così la UI riflette subito la scelta
+            let signage = this.signageData;
+            if (this.signageData.signage) {
+                signage = this.signageData.signage;
+            }
+
+            const routeSignage = signage?.[params.routeId];
+            if (!routeSignage?.arrows?.[params.arrowIndex]?.rows?.[1]) {
+                return;
+            }
+
+            const selected = (params.availableMidpoints || []).find(m => Number(m.id) === Number(params.selectedPoleId));
+            if (!selected) {
+                routeSignage.arrows[params.arrowIndex].rows[1].id = params.selectedPoleId;
+                return;
+            }
+
+            routeSignage.arrows[params.arrowIndex].rows[1] = {
+                ...routeSignage.arrows[params.arrowIndex].rows[1],
+                ...selected,
+                id: selected.id,
+            };
+        },
+
+        cancelConfirmModal() {
+            if (this.pendingAction?.type === 'midpoint') {
+                const el = this.pendingAction.params?.selectEl;
+                const prev = this.pendingAction.params?.previousValue;
+                if (el && prev !== undefined && prev !== null) {
+                    el.value = String(prev);
+                }
+            }
             this.closeConfirmModal();
         },
 
@@ -593,7 +707,27 @@ export default {
         closeConfirmModal() {
             this.showConfirmModal = false;
             this.pendingAction = null;
-        }
+        },
+
+        onMidpointChange(event, routeId, arrow, arrowIdx) {
+            const selectedPoleId = parseInt(event.target.value, 10);
+            const originalArrowKey = arrow.__arrowKey || `${routeId}-${arrowIdx}`;
+            const originalIndex = parseInt((originalArrowKey.split('-')[1] ?? arrowIdx), 10);
+            const previousValue = event?.target?.__previousValue ?? (arrow?.rows?.[1]?.id ?? null);
+
+            this.pendingAction = {
+                type: 'midpoint',
+                params: {
+                    routeId: routeId,
+                    arrowIndex: originalIndex,
+                    selectedPoleId: selectedPoleId,
+                    previousValue: previousValue,
+                    selectEl: event?.target ?? null,
+                    availableMidpoints: arrow?.available_midpoints || [],
+                }
+            };
+            this.showConfirmModal = true;
+        },
     }
 };
 </script>
@@ -785,11 +919,66 @@ export default {
     max-width: 100%;
 }
 
+/* Select per la meta intermedia */
+.destination-info--select {
+    flex: 1;
+    min-width: 0;
+    max-width: 180px;
+}
+
+.midpoint-select {
+    width: 100%;
+    font-family: 'Arial', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: #000000;
+    background: #FFFFFF;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 2px 4px;
+    cursor: pointer;
+}
+
+.midpoint-select:disabled {
+    background: transparent;
+    border: none;
+    cursor: default;
+    appearance: none;
+    font-size: 15px;
+    padding: 0;
+    font-weight: 600;
+}
+
+.destination-row-1 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.destination-row-2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.destination-elev-slot {
+    flex: 0 0 45px;
+    min-width: 45px;
+    display: inline-flex;
+    justify-content: flex-end;
+}
+
 .destination-distance {
     font-family: 'Arial', sans-serif;
     font-weight: 700;
     font-size: 13px;
     color: #000000;
+    min-width: 70px;
+    text-align: right;
 }
 
 .destination-time {
@@ -797,8 +986,26 @@ export default {
     font-weight: 700;
     font-size: 13px;
     color: #000000;
-    min-width: 55px;
+    min-width: 70px;
     text-align: right;
+}
+
+.destination-ascent,
+.destination-descent {
+    font-family: 'Arial', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #C41E3A;
+}
+
+.destination-ascent::before {
+    content: '↑';
+    margin-right: 2px;
+}
+
+.destination-descent::before {
+    content: '↓';
+    margin-right: 2px;
 }
 
 .destination-meta {

@@ -62,6 +62,7 @@ use Laravel\Nova\Http\Requests\ActionRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Osm2cai\SignageMap\SignageMap;
+use Osm2cai\SignageMap\Http\Controllers\SignageMapController as SignageMapControllerNova;
 
 class HikingRoute extends OsmfeaturesResource
 {
@@ -893,7 +894,35 @@ class HikingRoute extends OsmfeaturesResource
         // 1. Controllo aggiornamenti da osmfeatures (priorità 1)
         $this->checkAndUpdateFromOsmfeatures($model);
 
+        $this->ensureSignageDerivedData($request, $model);
+
         $this->updateIntersections();
+    }
+
+    /**
+     * Se il DB è stato ripristinato da un dump pre-feature, potrebbero mancare i dati derivati
+     * per la segnaletica (es. checkpoint_order / midpoints_data). In quel caso, rigenera una volta
+     * la segnaletica prima che Nova renderizzi la mappa e il popup.
+     */
+    protected function ensureSignageDerivedData(NovaRequest $request, HikingRouteModel $model): void
+    {
+        try {
+            $signage = $model->properties['signage'] ?? [];
+            $hasAnyCheckpoint = ! empty($signage['checkpoint'] ?? []);
+            $checkpointOrder = $signage['checkpoint_order'] ?? null;
+            $hasCheckpointOrder = is_array($checkpointOrder) && count($checkpointOrder) > 0;
+
+            if ($hasAnyCheckpoint && ! $hasCheckpointOrder) {
+                $controller = new SignageMapControllerNova();
+                $controller->reprocessSignage($request, (int) $model->id);
+                $model->refresh();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('ensureSignageDerivedData: reprocessSignage failed', [
+                'hiking_route_id' => $model->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function prepareModelForIndexView(NovaRequest $request)

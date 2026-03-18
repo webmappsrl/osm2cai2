@@ -186,9 +186,14 @@
                             <label class="text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 block">
                                 Segnaletica
                             </label>
-                            <SignageArrowsDisplay :signage-data="signageArrowsData"
+                            <div v-if="isLoadingSignage"
+                                class="text-xs text-gray-500 dark:text-gray-400 italic mb-2">
+                                Caricamento segnaletica…
+                            </div>
+                            <SignageArrowsDisplay v-else :signage-data="signageArrowsData"
                                 @arrow-direction-changed="handleArrowDirectionChanged"
-                                @arrow-order-changed="handleArrowOrderChanged" />
+                                @arrow-order-changed="handleArrowOrderChanged"
+                                @arrow-midpoint-changed="handleArrowMidpointChanged" />
                         </div>
                     </div>
 
@@ -244,11 +249,13 @@ export default {
             metaValue: false,
             isUpdatingMeta: false,
             cachedProperties: null, // Cache delle properties dopo il salvataggio
+            polePopupCache: {}, // Cache per palo: evita riaperture con dati vecchi senza refresh pagina
             signageArrowsData: {}, // Dati per le frecce segnaletica
             mapKey: 0, // Chiave per forzare il refresh della mappa
             name: '', // Nome località del palo
             description: '', // Descrizione località del palo
             isLoadingSuggestion: false, // Indica se sta caricando il suggerimento
+            isLoadingSignage: false, // Indica se sta caricando available_midpoints per il popup
             currentPoleOsmTags: null, // Dati osm_tags del palo corrente
             currentFeaturesMap: null, // FeaturesMap corrente per trovare l'HikingRoute quando si lavora da SignageProject
             availableHikingRoutes: [], // Lista delle HikingRoute disponibili per questo palo (quando appartiene a più HikingRoute)
@@ -298,7 +305,7 @@ export default {
         // Ascolta gli eventi Nova come fa il wm-package
         Nova.$on('signage-map:popup-open', this.onNovaPopupOpen);
         Nova.$on('signage-map:popup-close', this.onNovaPopupClose);
-        
+
         // Intercept navigation to force reload when navigating to index
         const currentResourceId = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
         if (currentResourceId) {
@@ -324,6 +331,22 @@ export default {
     },
 
     methods: {
+        cacheCurrentPolePopupState(poleId = null) {
+            const id = poleId ?? this.currentPoleId;
+            if (!id) return;
+            const key = String(id);
+            this.polePopupCache = {
+                ...this.polePopupCache,
+                [key]: {
+                    popupTitle: this.popupTitle,
+                    name: this.name,
+                    description: this.description,
+                    signageArrowsData: JSON.parse(JSON.stringify(this.signageArrowsData || {})),
+                    osmTags: this.currentPoleOsmTags || null,
+                    ts: Date.now(),
+                }
+            };
+        },
         /** Scala l'icona X in base alla risoluzione: con zoom bassi (risoluzione alta) la X è più piccola */
         getExportIgnoreIconScale(resolution) {
             if (resolution == null || resolution <= 0) return 1;
@@ -377,20 +400,26 @@ export default {
 
         // Handler per eventi Nova
         async onNovaPopupOpen(event) {
-            console.log('SignageMap: Nova popup-open received:', event);
             if (event.popupComponent === 'signage-map') {
                 this.currentPoleId = event.id;
-                this.popupTitle = event.properties?.name || event.properties?.tooltip;
-                // Estrai i dati della segnaletica dalle properties del palo
-                this.signageArrowsData = {
-                    ...event.properties?.signage, ...{ ref: event.properties?.ref }
-                } || {};
-                console.log('signageArrowsData', this.signageArrowsData);
-                // Carica il name e description dalle properties del palo se esistono
-                this.name = event.properties?.name || '';
-                this.description = event.properties?.description || '';
-                // Salva i dati osmTags del palo
-                this.currentPoleOsmTags = event.properties?.osmTags || null;
+                this.isLoadingSignage = true;
+                const cacheKey = String(event.id);
+                const cached = this.polePopupCache?.[cacheKey] || null;
+
+                this.popupTitle = cached?.popupTitle || event.properties?.name || event.properties?.tooltip;
+                // Estrai i dati della segnaletica: preferisci cache locale per evitare dati vecchi alla riapertura
+                if (cached?.signageArrowsData && Object.keys(cached.signageArrowsData).length > 0) {
+                    this.signageArrowsData = cached.signageArrowsData;
+                } else {
+                    this.signageArrowsData = {
+                        ...event.properties?.signage, ...{ ref: event.properties?.ref }
+                    } || {};
+                }
+                // Carica il name e description dalle properties del palo se esistono (cache se presente)
+                this.name = cached?.name ?? (event.properties?.name || '');
+                this.description = cached?.description ?? (event.properties?.description || '');
+                // Salva i dati osmTags del palo (cache se presente)
+                this.currentPoleOsmTags = cached?.osmTags ?? (event.properties?.osmTags || null);
                 // Salva le featuresMap per poter trovare l'HikingRoute quando si lavora da SignageProject
                 this.currentFeaturesMap = event.featuresMap || null;
                 this.showPopup = true;
@@ -400,6 +429,9 @@ export default {
                 this.loadIgnoreValue(event.featuresMap);
                 // Carica le HikingRoute disponibili per questo palo
                 this.loadAvailableHikingRoutes();
+                // Carica available_midpoints calcolati a runtime per questo palo PRIMA di renderizzare la segnaletica
+                await this.loadAvailableMidpoints(event.id);
+                this.isLoadingSignage = false;
             }
         },
 
@@ -442,14 +474,14 @@ export default {
             const handleClick = (e) => {
                 const link = e.target.closest('a[href]');
                 if (!link) return;
-                
+
                 const href = link.getAttribute('href') || link.href;
                 if (!href) return;
-                
+
                 try {
                     const currentPath = new URL(window.location.href).pathname;
                     const newPath = new URL(href, window.location.origin).pathname;
-                    
+
                     // Check if we're on a detail page and clicking a link to the index page
                     const currentResourceId = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
                     if (currentResourceId && currentPath.includes(`/${this.resourceName}/`)) {
@@ -466,19 +498,19 @@ export default {
                     // Invalid URL, ignore
                 }
             };
-            
+
             // Use capture phase to intercept before other handlers
             document.addEventListener('click', handleClick, true);
             this.clickHandler = handleClick;
-            
+
             // Also intercept Inertia navigation events
             const handleInertiaStart = (event) => {
                 const url = event.detail?.url || event.url || window.location.href;
-                
+
                 try {
                     const currentPath = new URL(window.location.href).pathname;
                     const newPath = new URL(url, window.location.origin).pathname;
-                    
+
                     const currentResourceId = this.resourceId || (this.resource && this.resource.id && this.resource.id.value);
                     if (currentResourceId && currentPath.includes(`/${this.resourceName}/`)) {
                         const indexPattern = new RegExp(`^/resources/${this.resourceName}/?$`);
@@ -493,7 +525,7 @@ export default {
                     // Invalid URL, ignore
                 }
             };
-            
+
             // Listen to Inertia events
             document.addEventListener('inertia:start', handleInertiaStart);
             this.inertiaStartHandler = handleInertiaStart;
@@ -591,6 +623,31 @@ export default {
          * Carica le HikingRoute disponibili per il palo corrente
          * Quando un palo appartiene a più HikingRoute, le raccoglie tutte
          */
+        loadAvailableMidpoints(poleId) {
+            if (!poleId) return;
+            return fetch(`/nova-vendor/signage-map/pole/${poleId}/available-midpoints`)
+                .then(r => r.json())
+                .then(data => {
+                    const map = data.available_midpoints || {};
+                    if (!this.signageArrowsData) return;
+
+                    // signageArrowsData nel contesto SignageMap non ha il wrapper "signage":
+                    // la struttura è direttamente { "routeId": { arrows: [...] }, ... }
+                    const updated = JSON.parse(JSON.stringify(this.signageArrowsData));
+                    for (const [key, midpoints] of Object.entries(map)) {
+                        const dashIdx = key.indexOf('-');
+                        const routeId = key.substring(0, dashIdx);
+                        const arrowIdx = parseInt(key.substring(dashIdx + 1), 10);
+                        const routeData = updated[routeId] || (updated.signage && updated.signage[routeId]);
+                        if (routeData && routeData.arrows && routeData.arrows[arrowIdx] !== undefined) {
+                            routeData.arrows[arrowIdx].available_midpoints = midpoints;
+                        }
+                    }
+                    this.signageArrowsData = updated;
+                })
+                .catch(() => { });
+        },
+
         loadAvailableHikingRoutes() {
             if (!this.currentPoleId || !this.currentFeaturesMap) {
                 this.availableHikingRoutes = [];
@@ -955,6 +1012,10 @@ export default {
                     if (lastResponse?.data?.poleSignage) {
                         this.signageArrowsData = { ...this.signageArrowsData, ...lastResponse.data.poleSignage };
                     }
+                    // Cache: alla riapertura popup usa i dati appena salvati
+                    this.cacheCurrentPolePopupState(poleId);
+                    // Carica available_midpoints calcolati a runtime per questo palo
+                    this.loadAvailableMidpoints(poleId);
 
                     const count = hikingRouteIds.length;
                     Nova.success(
@@ -995,6 +1056,11 @@ export default {
                     if (response.data?.poleSignage) {
                         this.signageArrowsData = { ...this.signageArrowsData, ...response.data.poleSignage };
                     }
+                    // Cache: alla riapertura popup usa i dati appena salvati
+                    this.cacheCurrentPolePopupState(poleId);
+                    // Dopo un restore DB o la prima attivazione meta, i midpoint possono non essere ancora presenti:
+                    // ricarichiamo available_midpoints così la select funziona al primo salvataggio.
+                    this.loadAvailableMidpoints(poleId);
 
                     Nova.success(this.metaValue ? 'Dati località salvati con successo' : 'Meta rimossa con successo');
                 }
@@ -1010,22 +1076,12 @@ export default {
         },
 
         async handleArrowDirectionChanged(event) {
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Evento arrow-direction-changed ricevuto', data: { routeId: event.routeId, arrowIndex: event.arrowIndex, newDirection: event.newDirection, currentPoleId: this.currentPoleId }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-            // #endregion
-
             if (!this.currentPoleId) {
-                // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'currentPoleId mancante, salto salvataggio', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-                // #endregion
                 return;
             }
 
             try {
                 const poleId = parseInt(this.currentPoleId);
-                // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Chiamata API per salvare direzione', data: { poleId, routeId: event.routeId, arrowIndex: event.arrowIndex, newDirection: event.newDirection }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
-                // #endregion
 
                 const response = await Nova.request().patch(
                     `/nova-vendor/signage-map/pole/${poleId}/arrow-direction`,
@@ -1036,28 +1092,53 @@ export default {
                     }
                 );
 
-                // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Risposta API ricevuta', data: { success: response.data?.success, status: response.status }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
-                // #endregion
-
                 // Aggiorna i dati locali con la nuova direzione
                 if (response.data?.signageData) {
                     this.signageArrowsData = response.data.signageData;
-                    // #region agent log
-                    fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'signageArrowsData aggiornato', data: { hasData: !!this.signageArrowsData }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
-                    // #endregion
                 }
+                // Cache: evita dati vecchi alla riapertura del popup
+                this.cacheCurrentPolePopupState(poleId);
 
                 Nova.success('Direzione freccia aggiornata con successo');
 
                 // Forza il refresh della mappa per mostrare i cambiamenti
                 this.mapKey++;
             } catch (error) {
-                // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/d698a848-ad0a-4be9-8feb-9586ee30a5c3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DetailField.vue:handleArrowDirectionChanged', message: 'Errore durante salvataggio', data: { error: error.message, status: error.response?.status }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
-                // #endregion
                 console.error('Errore durante il salvataggio della direzione:', error);
                 Nova.error('Errore durante il salvataggio della direzione');
+            }
+        },
+
+        async handleArrowMidpointChanged(event) {
+            if (!this.currentPoleId) return;
+            try {
+                const poleId = parseInt(this.currentPoleId);
+                const response = await Nova.request().patch(
+                    `/nova-vendor/signage-map/pole/${poleId}/arrow-midpoint`,
+                    {
+                        hiking_route_id: parseInt(event.routeId),
+                        arrow_index: event.arrowIndex,
+                        selected_pole_id: event.selectedPoleId,
+                    }
+                );
+                if (response.data?.arrow) {
+                    // Aggiorna la riga rows[1] localmente con i dati salvati
+                    const updated = JSON.parse(JSON.stringify(this.signageArrowsData));
+                    const routeData = updated[event.routeId] || (updated.signage && updated.signage[event.routeId]);
+                    if (routeData && routeData.arrows && routeData.arrows[event.arrowIndex]) {
+                        routeData.arrows[event.arrowIndex].rows = response.data.arrow.rows;
+                        routeData.arrows[event.arrowIndex].selected_midpoint_id = response.data.arrow.selected_midpoint_id;
+                    }
+                    this.signageArrowsData = updated;
+                    // Ricarica available_midpoints per aggiornare l'ordine (corrente per primo)
+                    this.loadAvailableMidpoints(poleId);
+                    // Cache: evita dati vecchi alla riapertura del popup
+                    this.cacheCurrentPolePopupState(poleId);
+                }
+                Nova.success('Meta intermedia aggiornata');
+            } catch (error) {
+                console.error('Errore salvataggio meta intermedia:', error);
+                Nova.error('Errore durante il salvataggio della meta intermedia');
             }
         },
 
@@ -1081,6 +1162,8 @@ export default {
                 if (response.data?.signageData) {
                     this.signageArrowsData = response.data.signageData;
                 }
+                // Cache: evita dati vecchi alla riapertura del popup
+                this.cacheCurrentPolePopupState(poleId);
 
                 Nova.success('Ordine frecce aggiornato con successo');
 

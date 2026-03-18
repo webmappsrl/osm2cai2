@@ -7,6 +7,10 @@ use Osm2cai\SignageMap\Http\Controllers\SignageMapController;
 Route::patch('/hiking-route/{id}/properties', [SignageMapController::class, 'updateProperties'])
     ->name('signage-map.update-properties');
 
+// Route per rigenerare la segnaletica (no side-effects su checkpoint/name)
+Route::post('/hiking-route/{id}/reprocess-signage', [SignageMapController::class, 'reprocessSignage'])
+    ->name('signage-map.reprocess-signage');
+
 // Route per aggiornare le properties dell'HikingRoute associata a un SignageProject
 Route::patch('/signage-project/{id}/properties', [SignageMapController::class, 'updatePropertiesForSignageProject'])
     ->name('signage-map.update-properties-signage-project');
@@ -22,3 +26,11 @@ Route::patch('/pole/{poleId}/arrow-direction', [SignageMapController::class, 'up
 // Route per aggiornare l'ordine delle frecce di un palo
 Route::patch('/pole/{poleId}/arrow-order', [SignageMapController::class, 'updateArrowOrder'])
     ->name('signage-map.update-arrow-order');
+
+// Route per aggiornare la meta intermedia (rows[1]) di una freccia
+Route::patch('/pole/{poleId}/arrow-midpoint', [SignageMapController::class, 'updateArrowMidpoint'])
+    ->name('signage-map.update-arrow-midpoint');
+
+// Route per ottenere available_midpoints calcolati a runtime per un palo
+Route::get('/pole/{poleId}/available-midpoints', [SignageMapController::class, 'getAvailableMidpoints'])
+    ->name('signage-map.available-midpoints');

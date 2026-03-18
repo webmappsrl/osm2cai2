@@ -636,4 +636,229 @@ class SignageMapControllerTest extends TestCase
         Mockery::close();
         parent::tearDown();
     }
+
+    private function seedPoleSignageArrowForMidpoint(Poles $pole, HikingRoute $hikingRoute, array $arrowOverrides = []): void
+    {
+        $hikingRouteIdStr = (string) $hikingRoute->id;
+
+        $defaults = [
+            'direction' => 'forward',
+            'rows' => [
+                ['id' => 1, 'name' => 'Nearest'],
+                ['id' => 2, 'name' => 'Mid'],
+                ['id' => 4, 'name' => 'Final'],
+            ],
+            'midpoints_data' => [
+                '2' => ['distance' => 1200, 'time_hiking' => 30],
+                '3' => ['distance' => 2100, 'time_hiking' => 55],
+            ],
+        ];
+
+        // 'rows' viene sostituito direttamente per evitare che array_replace_recursive
+        // mantenga gli elementi extra del default quando l'override ha meno righe.
+        $rowsOverride = array_key_exists('rows', $arrowOverrides) ? $arrowOverrides['rows'] : null;
+        $arrowOverridesWithoutRows = array_diff_key($arrowOverrides, ['rows' => null]);
+        $arrow = array_replace_recursive($defaults, $arrowOverridesWithoutRows);
+        if ($rowsOverride !== null) {
+            $arrow['rows'] = $rowsOverride;
+        }
+
+        $props = $pole->properties ?? [];
+        $props['signage'] ??= [];
+        $props['signage'][$hikingRouteIdStr] ??= ['arrows' => [], 'ref' => ''];
+        $props['signage'][$hikingRouteIdStr]['arrows'][0] = $arrow;
+
+        $pole->properties = $props;
+        $pole->saveQuietly();
+    }
+
+    /** @test */
+    public function it_updates_arrow_midpoint_successfully_and_persists_it(): void
+    {
+        $nearest = $this->createPoleWithGeometry('POINT(14.0000 37.0000)', [], 'N1');
+        $mid2 = $this->createPoleWithGeometry('POINT(14.0010 37.0010)', [], 'M2');
+        $mid3 = $this->createPoleWithGeometry('POINT(14.0020 37.0020)', [], 'M3');
+        $final = $this->createPoleWithGeometry('POINT(14.0030 37.0030)', [], 'F4');
+
+        $hikingRoute = $this->createHikingRouteWithGeometry(
+            'MULTILINESTRING((14.0000 37.0000, 14.0030 37.0030))',
+            [
+                'signage' => [
+                    'checkpoint_order' => [$nearest->id, $mid2->id, $mid3->id, $final->id],
+                    'checkpoint' => [$nearest->id, $mid2->id, $mid3->id, $final->id],
+                ],
+            ]
+        );
+
+        // Il palo su cui è salvata la segnaletica (popup)
+        $pole = $this->createPoleWithGeometry('POINT(14.0005 37.0005)');
+
+        $this->seedPoleSignageArrowForMidpoint($pole, $hikingRoute, [
+            'rows' => [
+                ['id' => $nearest->id],
+                ['id' => $mid2->id],
+                ['id' => $final->id],
+            ],
+            'midpoints_data' => [
+                (string) $mid2->id => ['distance' => 1200, 'time_hiking' => 30],
+                (string) $mid3->id => ['distance' => 2100, 'time_hiking' => 55],
+            ],
+        ]);
+
+        $response = $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            [
+                'hiking_route_id' => $hikingRoute->id,
+                'arrow_index' => 0,
+                'selected_pole_id' => $mid3->id,
+            ]
+        );
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('arrow.selected_midpoint_id', $mid3->id);
+        $response->assertJsonPath('arrow.rows.1.id', $mid3->id);
+        $response->assertJsonPath('arrow.rows.1.distance', 2100);
+        $response->assertJsonPath('arrow.rows.1.time_hiking', 55);
+
+        $pole->refresh();
+        $hikingRouteIdStr = (string) $hikingRoute->id;
+        $savedArrow = $pole->properties['signage'][$hikingRouteIdStr]['arrows'][0] ?? null;
+        $this->assertNotNull($savedArrow);
+        $this->assertSame($mid3->id, $savedArrow['selected_midpoint_id'] ?? null);
+        $this->assertSame($mid3->id, $savedArrow['rows'][1]['id'] ?? null);
+    }
+
+    /** @test */
+    public function it_returns_422_when_selected_midpoint_is_nearest_or_final_or_not_active_or_out_of_range(): void
+    {
+        $nearest = $this->createPoleWithGeometry('POINT(14.0000 37.0000)');
+        $mid2 = $this->createPoleWithGeometry('POINT(14.0010 37.0010)');
+        $mid3 = $this->createPoleWithGeometry('POINT(14.0020 37.0020)');
+        $final = $this->createPoleWithGeometry('POINT(14.0030 37.0030)');
+
+        $hikingRoute = $this->createHikingRouteWithGeometry(
+            'MULTILINESTRING((14.0000 37.0000, 14.0030 37.0030))',
+            [
+                'signage' => [
+                    'checkpoint_order' => [$nearest->id, $mid2->id, $mid3->id, $final->id],
+                    // mid3 non attivo
+                    'checkpoint' => [$nearest->id, $mid2->id, $final->id],
+                ],
+            ]
+        );
+
+        $pole = $this->createPoleWithGeometry('POINT(14.0005 37.0005)');
+        $this->seedPoleSignageArrowForMidpoint($pole, $hikingRoute, [
+            'rows' => [
+                ['id' => $nearest->id],
+                ['id' => $mid2->id],
+                ['id' => $final->id],
+            ],
+            'midpoints_data' => [
+                (string) $mid2->id => ['distance' => 1200, 'time_hiking' => 30],
+                (string) $mid3->id => ['distance' => 2100, 'time_hiking' => 55],
+            ],
+        ]);
+
+        // nearest
+        $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            ['hiking_route_id' => $hikingRoute->id, 'arrow_index' => 0, 'selected_pole_id' => $nearest->id]
+        )->assertStatus(422)->assertJsonPath('error', 'Selected pole is not a valid intermediate checkpoint');
+
+        // final
+        $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            ['hiking_route_id' => $hikingRoute->id, 'arrow_index' => 0, 'selected_pole_id' => $final->id]
+        )->assertStatus(422)->assertJsonPath('error', 'Selected pole is not a valid intermediate checkpoint');
+
+        // non attivo (mid3)
+        $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            ['hiking_route_id' => $hikingRoute->id, 'arrow_index' => 0, 'selected_pole_id' => $mid3->id]
+        )->assertStatus(422)->assertJsonPath('error', 'Selected pole is not a valid intermediate checkpoint');
+
+        // fuori range (id non in checkpoint_order)
+        $out = $this->createPoleWithGeometry('POINT(14.0100 37.0100)');
+        $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            ['hiking_route_id' => $hikingRoute->id, 'arrow_index' => 0, 'selected_pole_id' => $out->id]
+        )->assertStatus(422)->assertJsonPath('error', 'Selected pole is not a valid intermediate checkpoint');
+    }
+
+    /** @test */
+    public function it_returns_422_when_arrow_has_no_midpoint_slot(): void
+    {
+        $nearest = $this->createPoleWithGeometry('POINT(14.0000 37.0000)');
+        $final = $this->createPoleWithGeometry('POINT(14.0030 37.0030)');
+
+        $hikingRoute = $this->createHikingRouteWithGeometry(
+            'MULTILINESTRING((14.0000 37.0000, 14.0030 37.0030))',
+            [
+                'signage' => [
+                    'checkpoint_order' => [$nearest->id, $final->id],
+                    'checkpoint' => [$nearest->id, $final->id],
+                ],
+            ]
+        );
+
+        $pole = $this->createPoleWithGeometry('POINT(14.0005 37.0005)');
+        $this->seedPoleSignageArrowForMidpoint($pole, $hikingRoute, [
+            'rows' => [
+                ['id' => $nearest->id],
+                ['id' => $final->id],
+            ],
+        ]);
+
+        $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            [
+                'hiking_route_id' => $hikingRoute->id,
+                'arrow_index' => 0,
+                'selected_pole_id' => $final->id,
+            ]
+        )
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'Arrow has no midpoint slot');
+    }
+
+    /** @test */
+    public function it_returns_404_when_arrow_or_hiking_route_not_found(): void
+    {
+        $nearest = $this->createPoleWithGeometry('POINT(14.0000 37.0000)');
+        $mid = $this->createPoleWithGeometry('POINT(14.0010 37.0010)');
+        $final = $this->createPoleWithGeometry('POINT(14.0030 37.0030)');
+
+        $hikingRoute = $this->createHikingRouteWithGeometry(
+            'MULTILINESTRING((14.0000 37.0000, 14.0030 37.0030))',
+            [
+                'signage' => [
+                    'checkpoint_order' => [$nearest->id, $mid->id, $final->id],
+                    'checkpoint' => [$nearest->id, $mid->id, $final->id],
+                ],
+            ]
+        );
+
+        $pole = $this->createPoleWithGeometry('POINT(14.0005 37.0005)');
+        $this->seedPoleSignageArrowForMidpoint($pole, $hikingRoute, [
+            'rows' => [
+                ['id' => $nearest->id],
+                ['id' => $mid->id],
+                ['id' => $final->id],
+            ],
+        ]);
+
+        // arrow index inesistente
+        $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            ['hiking_route_id' => $hikingRoute->id, 'arrow_index' => 99, 'selected_pole_id' => $mid->id]
+        )->assertStatus(404)->assertJsonPath('error', 'Arrow not found');
+
+        // hiking route inesistente
+        $this->patchJson(
+            "/nova-vendor/signage-map/pole/{$pole->id}/arrow-midpoint",
+            ['hiking_route_id' => 999999, 'arrow_index' => 0, 'selected_pole_id' => $mid->id]
+        )->assertStatus(404)->assertJsonPath('error', 'HikingRoute not found');
+    }
 }

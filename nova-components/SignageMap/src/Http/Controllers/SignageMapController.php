@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 use Wm\WmPackage\Http\Clients\DemClient;
 
 class SignageMapController
@@ -247,6 +248,71 @@ class SignageMapController
     }
 
     /**
+     * Rigenera la segnaletica (processPointDirections) senza modificare checkpoint/name/description.
+     * Utile dopo restore DB pre-feature: crea checkpoint_order e midpoints_data al primo accesso.
+     *
+     * Body opzionale: { poleId?: int } per restituire poleSignage del palo.
+     */
+    public function reprocessSignage(Request $request, int $id): JsonResponse
+    {
+        $hikingRoute = HikingRoute::findOrFail($id);
+        $properties = $hikingRoute->properties ?? [];
+
+        try {
+            $geojson = $hikingRoute->getFeatureCollectionMap(false);
+            $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
+            $demClient = app(DemClient::class);
+            $geojson = $demClient->getPointMatrix($geojson);
+
+            $pointFeaturesMap = [];
+            $pointsOrder = null;
+            foreach ($geojson['features'] ?? [] as $feature) {
+                $geometryType = $feature['geometry']['type'] ?? null;
+
+                if ($geometryType === 'Point') {
+                    $pointId = (string) ($feature['properties']['id'] ?? null);
+                    if ($pointId) {
+                        $pointFeaturesMap[$pointId] = $feature;
+                    }
+                } elseif ($geometryType === 'MultiLineString' && $pointsOrder === null) {
+                    $pointsOrder = $feature['properties']['dem']['points_order'] ?? null;
+                }
+            }
+
+            if ($pointsOrder && is_array($pointsOrder)) {
+                if (! isset($properties['dem']) || ! is_array($properties['dem'])) {
+                    $properties['dem'] = [];
+                }
+                $properties['dem']['points_order'] = $pointsOrder;
+            }
+
+            $ref = $hikingRoute->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
+            $this->processPointDirections($pointFeaturesMap, $pointsOrder, $properties, $id, $ref);
+        } catch (Exception $e) {
+            Log::warning('DEM point matrix enrichment failed (reprocessSignage)', [
+                'hiking_route_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $hikingRoute->properties = $properties;
+        $hikingRoute->saveQuietly();
+
+        $poleSignage = [];
+        $poleId = $request->input('poleId');
+        if ($poleId !== null) {
+            $pole = Poles::find((int) $poleId);
+            $poleSignage = $pole ? ($pole->properties['signage'] ?? []) : [];
+        }
+
+        return response()->json([
+            'success' => true,
+            'properties' => $hikingRoute->properties,
+            'poleSignage' => $poleSignage,
+        ], Response::HTTP_OK);
+    }
+
+    /**
      * Aggiorna le properties dell'HikingRoute associata a un SignageProject
      * aggiungendo/rimuovendo checkpoint. Trova l'HikingRoute che contiene il palo.
      */
@@ -466,10 +532,10 @@ class SignageMapController
             }
         }
 
-        // Prepara riferimenti per direzioni
-        // Usa i checkpoint invece dei punti geometrici
-        $lastId = $lastCheckpointId ?? end($pointsOrder); // Fallback all'ultimo punto se non ci sono checkpoint
-        $firstId = $firstCheckpointId ?? reset($pointsOrder); // Fallback al primo punto se non ci sono checkpoint
+        // La destinazione finale/iniziale è sempre il punto fisico estremo del tracciato.
+        // I checkpoint compaiono solo come tappe intermedie (nearest/row[1]).
+        $lastId  = end($pointsOrder);
+        $firstId = reset($pointsOrder);
         $pointCount = count($pointsOrder);
 
         // Carica tutti i Poles in una singola query
@@ -583,26 +649,74 @@ class SignageMapController
                 $existingArrows = $existingRouteSignage['arrows'];
             }
 
-            // Crea la struttura arrows con direction e rows
-            $arrows = [];
-            if (! empty($forwardRows)) {
-                // Se esiste già una freccia in posizione 0, mantieni la sua direction
-                $direction = $existingArrows[0]['direction'] ?? 'forward';
-                $arrows[] = [
-                    'direction' => $direction,
-                    'rows' => $forwardRows,
-                ];
+            // midpoints_data: time/distance per tutti i checkpoint del route da questo palo.
+            // Stabile (dipende dalla geometria), usato a runtime per popolare available_midpoints.
+            $allCheckpointMidpointsData = [];
+            foreach ($checkpoints as $checkpointId) {
+                $matrixEntry = $hikingRouteMatrix[(string) $checkpointId] ?? null;
+                if ($matrixEntry) {
+                    $allCheckpointMidpointsData[(string) $checkpointId] = $matrixEntry;
+                }
             }
-            if (! empty($backwardRows)) {
-                // Indice dell'arrow "backward" nella struttura esistente:
-                // se esisteva già una freccia "forward", il backward è tipicamente in posizione 1,
-                // altrimenti riusa l'indice 0.
-                $backwardIndex = ! empty($forwardRows) ? 1 : 0;
-                $direction = $existingArrows[$backwardIndex]['direction'] ?? 'backward';
-                $arrows[] = [
-                    'direction' => $direction,
-                    'rows' => $backwardRows,
+
+            $arrows = [];
+
+            if (!empty($forwardRows)) {
+                $direction = $existingArrows[0]['direction'] ?? 'forward';
+
+                $selectedFwMidId = isset($existingArrows[0]['selected_midpoint_id'])
+                    ? (int) $existingArrows[0]['selected_midpoint_id']
+                    : null;
+
+                // Applica override a rows[1] se il midpoint selezionato ha dati validi
+                if ($selectedFwMidId && isset($forwardRows[1]) && isset($allCheckpointMidpointsData[(string) $selectedFwMidId])) {
+                    $midFeature = $pointFeaturesMap[(string) $selectedFwMidId] ?? null;
+                    $forwardRows[1] = $this->applyMinimumDisplayValues(array_merge([
+                        'id'          => $selectedFwMidId,
+                        'name'        => $midFeature['properties']['name'] ?? '',
+                        'ref'         => $midFeature['properties']['ref'] ?? '',
+                        'description' => $midFeature['properties']['description'] ?? '',
+                    ], $allCheckpointMidpointsData[(string) $selectedFwMidId]));
+                }
+
+                $arrowData = [
+                    'direction'      => $direction,
+                    'rows'           => $forwardRows,
+                    'midpoints_data' => $allCheckpointMidpointsData,
                 ];
+                if ($selectedFwMidId) {
+                    $arrowData['selected_midpoint_id'] = $selectedFwMidId;
+                }
+                $arrows[] = $arrowData;
+            }
+
+            if (!empty($backwardRows)) {
+                $backwardIndex = !empty($forwardRows) ? 1 : 0;
+                $direction = $existingArrows[$backwardIndex]['direction'] ?? 'backward';
+
+                $selectedBwMidId = isset($existingArrows[$backwardIndex]['selected_midpoint_id'])
+                    ? (int) $existingArrows[$backwardIndex]['selected_midpoint_id']
+                    : null;
+
+                if ($selectedBwMidId && isset($backwardRows[1]) && isset($allCheckpointMidpointsData[(string) $selectedBwMidId])) {
+                    $midFeature = $pointFeaturesMap[(string) $selectedBwMidId] ?? null;
+                    $backwardRows[1] = $this->applyMinimumDisplayValues(array_merge([
+                        'id'          => $selectedBwMidId,
+                        'name'        => $midFeature['properties']['name'] ?? '',
+                        'ref'         => $midFeature['properties']['ref'] ?? '',
+                        'description' => $midFeature['properties']['description'] ?? '',
+                    ], $allCheckpointMidpointsData[(string) $selectedBwMidId]));
+                }
+
+                $arrowData = [
+                    'direction'      => $direction,
+                    'rows'           => $backwardRows,
+                    'midpoints_data' => $allCheckpointMidpointsData,
+                ];
+                if ($selectedBwMidId) {
+                    $arrowData['selected_midpoint_id'] = $selectedBwMidId;
+                }
+                $arrows[] = $arrowData;
             }
 
             // Aggiorna la struttura per questo hiking route
@@ -622,6 +736,18 @@ class SignageMapController
             $pole->properties = $poleProperties;
             $pole->saveQuietly();
         }
+
+        // Salva checkpoint_order nella HikingRoute per uso runtime in resolveAttribute.
+        // NOTA: deve contenere l'ordine COMPLETO dei pali lungo la traccia (points_order),
+        // non solo i checkpoint attivi, altrimenti nearest/final potrebbero non essere trovati.
+        $orderedCheckpoints = array_values(array_map('intval', $pointsOrder));
+
+        // Aggiorna $properties (by-ref) così il salvataggio finale del chiamante (updateProperties /
+        // reprocessSignage) include checkpoint_order senza sovrascriverlo.
+        if (!isset($properties['signage'])) {
+            $properties['signage'] = [];
+        }
+        $properties['signage']['checkpoint_order'] = $orderedCheckpoints;
     }
 
     /**
@@ -790,6 +916,172 @@ class SignageMapController
             'success' => true,
             'signageData' => $signageData,
         ]);
+    }
+
+    /**
+     * Aggiorna la meta intermedia (rows[1]) di una freccia.
+     * Valida selected_pole_id a runtime contro checkpoint_order della HikingRoute.
+     * Persiste selected_midpoint_id nell'arrow.
+     *
+     * Body: { hiking_route_id: int, arrow_index: int, selected_pole_id: int }
+     */
+    public function updateArrowMidpoint(Request $request, int $poleId): JsonResponse
+    {
+        $validated = $request->validate([
+            'hiking_route_id'  => 'required|integer',
+            'arrow_index'      => 'required|integer|min:0',
+            'selected_pole_id' => 'required|integer',
+        ]);
+
+        $pole             = Poles::findOrFail($poleId);
+        $poleProperties   = $pole->properties ?? [];
+        $hikingRouteIdStr = (string) $validated['hiking_route_id'];
+        $arrowIndex       = (int) $validated['arrow_index'];
+        $selectedPoleId   = (int) $validated['selected_pole_id'];
+
+        // Valida prima la HikingRoute (errore semanticamente prioritario)
+        $hikingRoute = HikingRoute::find((int) $hikingRouteIdStr);
+        if (!$hikingRoute) {
+            return response()->json(['error' => 'HikingRoute not found'], 404);
+        }
+
+        if (!isset($poleProperties['signage'][$hikingRouteIdStr]['arrows'][$arrowIndex])) {
+            return response()->json(['error' => 'Arrow not found'], 404);
+        }
+
+        $arrow = &$poleProperties['signage'][$hikingRouteIdStr]['arrows'][$arrowIndex];
+        $rows  = $arrow['rows'] ?? [];
+
+        if (count($rows) < 3) {
+            return response()->json(['error' => 'Arrow has no midpoint slot'], 422);
+        }
+
+        $hrSignage         = $hikingRoute->properties['signage'] ?? [];
+        $checkpointOrder   = array_map('intval', $hrSignage['checkpoint_order'] ?? []);
+        $activeCheckpoints = array_map('intval', $hrSignage['checkpoint'] ?? []);
+        $activeSet         = array_flip($activeCheckpoints);
+
+        $nearestId   = (int) ($rows[0]['id'] ?? 0);
+        $finalId     = (int) ($rows[count($rows) - 1]['id'] ?? 0);
+        $nearestPos  = array_search($nearestId, $checkpointOrder);
+        $finalPos    = array_search($finalId, $checkpointOrder);
+        $selectedPos = array_search($selectedPoleId, $checkpointOrder);
+
+        $start = min($nearestPos, $finalPos);
+        $end   = max($nearestPos, $finalPos);
+
+        $isValid = $selectedPos !== false
+            && $selectedPos > $start
+            && $selectedPos < $end
+            && isset($activeSet[$selectedPoleId])
+            && $selectedPoleId !== $nearestId
+            && $selectedPoleId !== $finalId;
+
+        if (!$isValid) {
+            return response()->json(['error' => 'Selected pole is not a valid intermediate checkpoint'], 422);
+        }
+
+        // Recupera time/distance da midpoints_data (già calcolati in processPointDirections)
+        $midData      = $arrow['midpoints_data'][(string) $selectedPoleId] ?? [];
+        $selectedPole = Poles::find($selectedPoleId);
+
+        $arrow['rows'][1] = array_merge([
+            'id'          => $selectedPoleId,
+            'name'        => $selectedPole?->name ?? '',
+            'ref'         => $selectedPole?->ref ?? '',
+            'description' => $selectedPole?->properties['description'] ?? '',
+        ], $midData);
+
+        $arrow['selected_midpoint_id'] = $selectedPoleId;
+
+        $pole->properties = $poleProperties;
+        $pole->saveQuietly();
+
+        return response()->json(['success' => true, 'arrow' => $arrow]);
+    }
+
+    /**
+     * Restituisce available_midpoints per ogni arrow del palo, calcolati a runtime
+     * usando checkpoint_order della HikingRoute.
+     *
+     * GET /pole/{poleId}/available-midpoints
+     */
+    public function getAvailableMidpoints(int $poleId): JsonResponse
+    {
+        $pole           = Poles::findOrFail($poleId);
+        $poleProperties = $pole->properties ?? [];
+        $signage        = $poleProperties['signage'] ?? [];
+
+        $result = [];
+
+        foreach ($signage as $hikingRouteIdStr => $routeData) {
+            if ($hikingRouteIdStr === 'arrow_order' || ! is_array($routeData) || ! isset($routeData['arrows'])) {
+                continue;
+            }
+
+            $hikingRoute = HikingRoute::find((int) $hikingRouteIdStr);
+            if (! $hikingRoute) {
+                continue;
+            }
+
+            $hrSignage         = $hikingRoute->properties['signage'] ?? [];
+            $checkpointOrder   = array_map('intval', $hrSignage['checkpoint_order'] ?? []);
+            $activeCheckpoints = array_map('intval', $hrSignage['checkpoint'] ?? []);
+            $activeSet         = array_flip($activeCheckpoints);
+
+            if (empty($checkpointOrder)) {
+                continue;
+            }
+
+            $poleNames = Poles::whereIn('id', $checkpointOrder)
+                ->get(['id', 'name', 'ref', 'properties'])
+                ->keyBy('id');
+
+            foreach ($routeData['arrows'] as $arrowIdx => $arrow) {
+                $key = "{$hikingRouteIdStr}-{$arrowIdx}";
+
+                if (! isset($arrow['rows']) || count($arrow['rows']) < 3) {
+                    $result[$key] = [];
+                    continue;
+                }
+
+                $nearestId  = (int) ($arrow['rows'][0]['id'] ?? 0);
+                $finalId    = (int) ($arrow['rows'][count($arrow['rows']) - 1]['id'] ?? 0);
+                $nearestPos = array_search($nearestId, $checkpointOrder);
+                $finalPos   = array_search($finalId, $checkpointOrder);
+
+                if ($nearestPos === false || $finalPos === false) {
+                    $result[$key] = [];
+                    continue;
+                }
+
+                $start     = min($nearestPos, $finalPos);
+                $end       = max($nearestPos, $finalPos);
+                $midpoints = [];
+
+                for ($k = $start + 1; $k < $end; $k++) {
+                    $midId = $checkpointOrder[$k];
+                    if ($midId === $nearestId || $midId === $finalId) {
+                        continue;
+                    }
+                    if (! isset($activeSet[$midId])) {
+                        continue;
+                    }
+                    $midData     = $arrow['midpoints_data'][(string) $midId] ?? [];
+                    $p           = $poleNames->get($midId);
+                    $midpoints[] = array_merge([
+                        'id'          => $midId,
+                        'name'        => $p?->name ?? '',
+                        'ref'         => $p?->ref ?? '',
+                        'description' => $p?->properties['description'] ?? '',
+                    ], $midData);
+                }
+
+                $result[$key] = $midpoints;
+            }
+        }
+
+        return response()->json(['available_midpoints' => $result]);
     }
 
     /**
