@@ -7,6 +7,10 @@ use Osm2cai\SignageMap\Http\Controllers\SignageMapController;
 Route::patch('/hiking-route/{id}/properties', [SignageMapController::class, 'updateProperties'])
     ->name('signage-map.update-properties');
 
+// Route per rigenerare la segnaletica (no side-effects su checkpoint/name)
+Route::post('/hiking-route/{id}/reprocess-signage', [SignageMapController::class, 'reprocessSignage'])
+    ->name('signage-map.reprocess-signage');
+
 // Route per aggiornare le properties dell'HikingRoute associata a un SignageProject
 Route::patch('/signage-project/{id}/properties', [SignageMapController::class, 'updatePropertiesForSignageProject'])
     ->name('signage-map.update-properties-signage-project');

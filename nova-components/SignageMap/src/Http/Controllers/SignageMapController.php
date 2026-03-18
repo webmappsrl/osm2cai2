@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 use Wm\WmPackage\Http\Clients\DemClient;
 
 class SignageMapController
@@ -244,6 +245,71 @@ class SignageMapController
             'properties' => $hikingRoute->properties,
             'poleSignage' => $poleSignage,
         ]);
+    }
+
+    /**
+     * Rigenera la segnaletica (processPointDirections) senza modificare checkpoint/name/description.
+     * Utile dopo restore DB pre-feature: crea checkpoint_order e midpoints_data al primo accesso.
+     *
+     * Body opzionale: { poleId?: int } per restituire poleSignage del palo.
+     */
+    public function reprocessSignage(Request $request, int $id): JsonResponse
+    {
+        $hikingRoute = HikingRoute::findOrFail($id);
+        $properties = $hikingRoute->properties ?? [];
+
+        try {
+            $geojson = $hikingRoute->getFeatureCollectionMap(false);
+            $geojson = $this->filterLineFeaturesWithOsmfeaturesId($geojson);
+            $demClient = app(DemClient::class);
+            $geojson = $demClient->getPointMatrix($geojson);
+
+            $pointFeaturesMap = [];
+            $pointsOrder = null;
+            foreach ($geojson['features'] ?? [] as $feature) {
+                $geometryType = $feature['geometry']['type'] ?? null;
+
+                if ($geometryType === 'Point') {
+                    $pointId = (string) ($feature['properties']['id'] ?? null);
+                    if ($pointId) {
+                        $pointFeaturesMap[$pointId] = $feature;
+                    }
+                } elseif ($geometryType === 'MultiLineString' && $pointsOrder === null) {
+                    $pointsOrder = $feature['properties']['dem']['points_order'] ?? null;
+                }
+            }
+
+            if ($pointsOrder && is_array($pointsOrder)) {
+                if (! isset($properties['dem']) || ! is_array($properties['dem'])) {
+                    $properties['dem'] = [];
+                }
+                $properties['dem']['points_order'] = $pointsOrder;
+            }
+
+            $ref = $hikingRoute->osmfeatures_data['properties']['osm_tags']['ref'] ?? '';
+            $this->processPointDirections($pointFeaturesMap, $pointsOrder, $properties, $id, $ref);
+        } catch (Exception $e) {
+            Log::warning('DEM point matrix enrichment failed (reprocessSignage)', [
+                'hiking_route_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $hikingRoute->properties = $properties;
+        $hikingRoute->saveQuietly();
+
+        $poleSignage = [];
+        $poleId = $request->input('poleId');
+        if ($poleId !== null) {
+            $pole = Poles::find((int) $poleId);
+            $poleSignage = $pole ? ($pole->properties['signage'] ?? []) : [];
+        }
+
+        return response()->json([
+            'success' => true,
+            'properties' => $hikingRoute->properties,
+            'poleSignage' => $poleSignage,
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -676,16 +742,12 @@ class SignageMapController
         // non solo i checkpoint attivi, altrimenti nearest/final potrebbero non essere trovati.
         $orderedCheckpoints = array_values(array_map('intval', $pointsOrder));
 
-        $hikingRoute = HikingRoute::find($hikingRouteId);
-        if ($hikingRoute) {
-            $hrProperties = $hikingRoute->properties ?? [];
-            if (!isset($hrProperties['signage'])) {
-                $hrProperties['signage'] = [];
-            }
-            $hrProperties['signage']['checkpoint_order'] = $orderedCheckpoints;
-            $hikingRoute->properties = $hrProperties;
-            $hikingRoute->saveQuietly();
+        // Aggiorna $properties (by-ref) così il salvataggio finale del chiamante (updateProperties /
+        // reprocessSignage) include checkpoint_order senza sovrascriverlo.
+        if (!isset($properties['signage'])) {
+            $properties['signage'] = [];
         }
+        $properties['signage']['checkpoint_order'] = $orderedCheckpoints;
     }
 
     /**
