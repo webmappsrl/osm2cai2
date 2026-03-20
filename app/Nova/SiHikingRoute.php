@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Helpers\Osm2caiHelper;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\SiHikingRoute as SiHikingRouteModel;
+use App\Nova\Actions\AddHikingRoutesToSignageProject;
 use App\Nova\Cards\LinksCard;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsToMany;
@@ -108,6 +109,13 @@ class SiHikingRoute extends HikingRoute
     {
         return [
             new TranslateModelAction,
+            (new AddHikingRoutesToSignageProject())
+                ->canSee(function ($request) {
+                    return true;
+                })
+                ->canRun(function ($request, $user) {
+                    return true;
+                }),
         ];
     }
 

@@ -2,7 +2,7 @@
 
 namespace App\Nova\Actions;
 
-use App\Enums\UserRole;
+use App\Models\HikingRoute;
 use App\Models\SignageProject;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,7 +23,7 @@ class AddHikingRoutesToSignageProject extends Action
 
     public function __construct()
     {
-        $this->name = __('Aggiungi a Progetto Segnaletica');
+        $this->name = __('Add to Signage Project');
     }
 
     /**
@@ -36,37 +36,73 @@ class AddHikingRoutesToSignageProject extends Action
         $user = Auth::user();
 
         if (! $user) {
-            return Action::danger(__('Utente non autenticato'));
+            return Action::danger(__('User not authenticated'));
         }
 
         $signageProjectId = $fields->get('signage_project');
         $signageProject = SignageProject::find($signageProjectId);
 
         if (! $signageProject) {
-            return Action::danger(__('Progetto Segnaletica non trovato'));
+            return Action::danger(__('Signage project not found'));
         }
 
-        // Verifica che l'utente sia il proprietario del progetto o un admin
+        // Check that the user is the owner of the project
         if ($signageProject->user_id !== $user->id) {
-            return Action::danger(__('Non hai i permessi per aggiungere percorsi a questo progetto. Solo il creatore del progetto o un amministratore possono aggiungere hiking routes.'));
+            return Action::danger(__('You do not have permission to add routes to this project. Only the project creator or an administrator can add hiking routes.'));
         }
 
         $addedCount = 0;
+        $skippedCount = 0;
+
         foreach ($models as $hikingRoute) {
-            if (! $signageProject->hikingRoutes->contains($hikingRoute->id)) {
-                $signageProject->hikingRoutes()->attach($hikingRoute->id);
+            $hikingRouteToAttach = $hikingRoute;
+
+            if ((int) $hikingRouteToAttach->app_id !== 1) {
+                $parentId = $hikingRouteToAttach->parent_hiking_route_id;
+
+                if (! $parentId) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                $parent = HikingRoute::find($parentId);
+                if (! $parent || (int) $parent->app_id !== 1) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                $hikingRouteToAttach = $parent;
+            }
+
+            if (! $signageProject->hikingRoutes->contains($hikingRouteToAttach->id)) {
+                $signageProject->hikingRoutes()->attach($hikingRouteToAttach->id);
                 $addedCount++;
             }
         }
 
-        if ($addedCount > 0) {
-            return Action::message(__(':count percorsi aggiunti al progetto ":project"', [
+        if ($addedCount === 0 && $skippedCount === 0) {
+            return Action::message(__('All selected hiking routes are already in this signage project'));
+        }
+
+        if ($addedCount > 0 && $skippedCount === 0) {
+            return Action::message(__(':count hiking routes added to signage project ":project"', [
                 'count' => $addedCount,
                 'project' => $signageProject->getStringName(),
             ]));
         }
 
-        return Action::message(__('Tutti i percorsi selezionati sono già presenti nel progetto'));
+        if ($addedCount === 0 && $skippedCount > 0) {
+            return Action::danger(__('No hiking routes were added to signage project ":project". :skipped routes are not present in "Rete Escursionistica".', [
+                'project' => $signageProject->getStringName(),
+                'skipped' => $skippedCount,
+            ]));
+        }
+
+        return Action::message(__(':added hiking routes added to signage project ":project". :skipped routes were not added because they are not present in "Rete Escursionistica".', [
+            'project' => $signageProject->getStringName(),
+            'added' => $addedCount,
+            'skipped' => $skippedCount,
+        ]));
     }
 
     /**
@@ -77,7 +113,7 @@ class AddHikingRoutesToSignageProject extends Action
     public function fields($request)
     {
         return [
-            Select::make(__('Progetto Segnaletica'), 'signage_project')
+            Select::make(__('Signage Project'), 'signage_project')
                 ->options(function () {
                     $user = Auth::user();
 
@@ -85,14 +121,14 @@ class AddHikingRoutesToSignageProject extends Action
                         return [];
                     }
 
-                    // Gli admin vedono tutti i progetti, gli altri utenti solo i propri
                     $query = SignageProject::query();
                     $query->where('user_id', $user->id);
 
                     return $query->get()
                         ->mapWithKeys(function ($project) {
                             $name = $project->getStringName();
-                            return [$project->id => $name ?: 'Progetto #' . $project->id];
+
+                            return [$project->id => $name ?: 'Project #'.$project->id];
                         })
                         ->sort()
                         ->toArray();
@@ -102,9 +138,10 @@ class AddHikingRoutesToSignageProject extends Action
                 ->help(function () {
                     $user = Auth::user();
                     if ($user) {
-                        return __('Seleziona il progetto segnaletica a cui aggiungere i percorsi. Vedi tutti i progetti.');
+                        return __('Select the signage project to which you want to add the routes. You can see all your projects.');
                     }
-                    return __('Seleziona il progetto segnaletica a cui aggiungere i percorsi. Vedi solo i progetti che hai creato.');
+
+                    return __('Select the signage project to which you want to add the routes. You can only see the projects you created.');
                 }),
         ];
     }
