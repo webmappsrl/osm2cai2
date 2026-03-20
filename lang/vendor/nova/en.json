@@ -761,5 +761,16 @@
   "Date of end of the survey": "Date of end of the survey",
   "Date of end of the survey. If not provided, it will be set equal to the start date.": "Date of end of the survey. If not provided, it will be set equal to the start date.",
   "Create Trail Survey confirmation message": "This action will create a new Trail Survey for the selected hiking route. You need to specify the start date (required) and optionally the end date. If the end date is not provided, it will be automatically set equal to the start date. The system will automatically associate all field-surveyed POIs and Tracks within a 10m radius from the route that fall within the specified date range. After creation, you can delete any that are not needed. A PDF document will be generated and you will be redirected to the detail page of the created Trail Survey.",
-  "A new Trail Survey object has been created and the PDF generation has been started. You will be redirected to the object page.": "A new Trail Survey object has been created and the PDF generation has been started. You will be redirected to the object page."
+  "A new Trail Survey object has been created and the PDF generation has been started. You will be redirected to the object page.": "A new Trail Survey object has been created and the PDF generation has been started. You will be redirected to the object page.",
+  "All selected hiking routes are already in this signage project": "All selected hiking routes are already in this signage project",
+  ":count hiking routes added to signage project \":project\"": ":count hiking routes added to signage project \":project\"",
+  "No hiking routes were added to signage project \":project\". :skipped routes are not present in \"Rete Escursionistica\".": "No hiking routes were added to signage project \":project\". :skipped routes are not present in \"Rete Escursionistica\".",
+  ":added hiking routes added to signage project \":project\". :skipped routes were not added because they are not present in \"Rete Escursionistica\".": ":added hiking routes added to signage project \":project\". :skipped routes were not added because they are not present in \"Rete Escursionistica\".",
+  "Add to Signage Project": "Add to Signage Project",
+  "User not authenticated": "User not authenticated",
+  "Signage project not found": "Signage project not found",
+  "You do not have permission to add routes to this project. Only the project creator or an administrator can add hiking routes.": "You do not have permission to add routes to this project. Only the project creator or an administrator can add hiking routes.",
+  "Signage Project": "Signage Project",
+  "Select the signage project to which you want to add the routes. You can see all your projects.": "Select the signage project to which you want to add the routes. You can see all your projects.",
+  "Select the signage project to which you want to add the routes. You can only see the projects you created.": "Select the signage project to which you want to add the routes. You can only see the projects you created."
 }
