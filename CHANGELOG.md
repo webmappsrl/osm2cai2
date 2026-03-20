@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.0.0 (2026-03-20)
+
+
+### Features
+
+* **command:** ✨ add SyncAccoglienzaPoiImagesCommand ([a29e413](https://github.com/webmappsrl/osm2cai2/commit/a29e413795479ae2622093e20f008bce53fc3341))
+* **DetailField:** ✨ add loading indicator for signage data ([9735697](https://github.com/webmappsrl/osm2cai2/commit/9735697566fccf241658c8351db78b7ad9f95391))
+* **ec-points:** ✨ add global flag to ec_pois and update pivot table configuration oc:7257 ([#297](https://github.com/webmappsrl/osm2cai2/issues/297)) ([63445d7](https://github.com/webmappsrl/osm2cai2/commit/63445d7ce24d065891cec292aacf3f861d6b41bd))
+* **itinerary:** ✨ add 'name' to searchable fields OC:7322 ([#302](https://github.com/webmappsrl/osm2cai2/issues/302)) ([08cb9e8](https://github.com/webmappsrl/osm2cai2/commit/08cb9e89d8e6cdd23bd68bf124be373db2a40420))
+* **nova:** ✨ add handling for null status in OsmfeaturesResource ([3949822](https://github.com/webmappsrl/osm2cai2/commit/39498222aae9cda72f0d1ed9b687e004fe994918))
+* **nova:** ✨ add OsmRefreshPoleAction for Poles resource ([6ae1717](https://github.com/webmappsrl/osm2cai2/commit/6ae171769c4ddad4e91605bc4d65c156e0917589))
+* **nova:** ✨ add RegenerateEcPoiTaxonomyWhere action to SiPoi ([4a4eabe](https://github.com/webmappsrl/osm2cai2/commit/4a4eabe8f1073e1dd6e166d07c082de1c4c70b55))
+* **policies:** ✨ extend role permissions for runAction method ([3eee366](https://github.com/webmappsrl/osm2cai2/commit/3eee366ec8ac3ad7e1a9cf12f8ddd4f969fffe96))
+* **signage:** ✨ add action to add hiking routes to signage projects ([#303](https://github.com/webmappsrl/osm2cai2/issues/303)) ([374ad76](https://github.com/webmappsrl/osm2cai2/commit/374ad76bae694282247d221b8ce764d49afb63f5))
+* **signage:** ✨ introduce interactive select for signage arrow midpoints ([b8b2463](https://github.com/webmappsrl/osm2cai2/commit/b8b2463d849b46b8e94ac9576213a6a4d221d921))
+* **signagemap:** ✨ add reprocessSignage endpoint and ensure signage data integrity ([ed2883f](https://github.com/webmappsrl/osm2cai2/commit/ed2883f92741432d51024b38632bc35824138ff9))
+
+
+### Bug Fixes
+
+* **command:** fix UgcPoi duplicati (stesso uuid) - Oc 6951 ([#294](https://github.com/webmappsrl/osm2cai2/issues/294)) ([07f5f4f](https://github.com/webmappsrl/osm2cai2/commit/07f5f4f7bac49a2694585ba9db9b38ae4ca124c1))
+* **controller:** 🐛 ensure complete order of checkpoints in HikingRoute ([d473929](https://github.com/webmappsrl/osm2cai2/commit/d4739291926121990d2c41b07954747406e8ed27))
+* **security:** 🔒 update user creation to use environment variable for default password ([6fbf84d](https://github.com/webmappsrl/osm2cai2/commit/6fbf84df9d984048c0fdc8c07bfcfd8eb568eec2))
+
+
+### Miscellaneous Chores
+
+* **geometry:** 🔧 update polygon color scheme in intersecting sectors ([bcfb53d](https://github.com/webmappsrl/osm2cai2/commit/bcfb53d979b613e1d04f2ce5b7d3685b0675a2ed))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
