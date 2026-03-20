@@ -7,50 +7,56 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\Sector;
 use App\Models\User;
-use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class RegionFilter extends Filter
+class RegionFilter extends BaseOSMFeaturesFilter
 {
-    /**
-     * The filter's component.
-     *
-     * @var string
-     */
-    public $component = 'select-filter';
-
     public function __construct()
     {
-        $this->name = __('Region');
+        parent::__construct(__('Region'));
     }
 
-    /**
-     * Apply the filter to the given query.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  mixed  $value
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function apply(NovaRequest $request, $query, $value)
+    protected function getEmptyOptionLabel(): string
+    {
+        return __('No region');
+    }
+
+    protected function getEmptyOptionValue(): string
+    {
+        return 'no_region';
+    }
+
+    protected function getEntityOptions(NovaRequest $request): array
+    {
+        $options = [];
+        foreach (Region::all() as $region) {
+            $options[$region->name] = $region->id;
+        }
+
+        return $options;
+    }
+
+    protected function applyEmpty(NovaRequest $request, $query)
     {
         $model = $query->getModel();
 
-        // Gestione del caso "senza regione"
-        if ($value === 'no_region') {
-            if ($model instanceof Province || $model instanceof Club || $model instanceof User) {
-                return $query->whereNull('region_id');
-            }
-
-            if ($model instanceof Sector) {
-                return $query->whereHas('area.province', function ($query) {
-                    $query->whereNull('region_id');
-                });
-            }
-
-            return $query->whereDoesntHave('regions');
+        if ($model instanceof Province || $model instanceof Club || $model instanceof User) {
+            return $query->whereNull('region_id');
         }
 
-        // Gestione normale con regione specifica
+        if ($model instanceof Sector) {
+            return $query->whereHas('area.province', function ($query) {
+                $query->whereNull('region_id');
+            });
+        }
+
+        return $query->whereDoesntHave('regions');
+    }
+
+    protected function applyValue(NovaRequest $request, $query, $value)
+    {
+        $model = $query->getModel();
+
         if ($model instanceof Province || $model instanceof Club) {
             return $query->where('region_id', $value);
         }
@@ -70,25 +76,5 @@ class RegionFilter extends Filter
         return $query->whereHas('regions', function ($query) use ($value) {
             $query->where('region_id', $value);
         });
-    }
-
-    /**
-     * Get the filter's available options.
-     *
-     * @return array
-     */
-    public function options(NovaRequest $request)
-    {
-        $options = [];
-
-        // Aggiungi l'opzione "Senza regione" come prima opzione
-        $options[__('Senza regione')] = 'no_region';
-
-        // Aggiungi tutte le regioni
-        foreach (Region::all() as $region) {
-            $options[$region->name] = $region->id;
-        }
-
-        return $options;
     }
 }
