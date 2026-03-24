@@ -25,7 +25,7 @@ class UgcPoi extends WmUgcPoi
     /**
      * Get the resource label
      */
-    public static function label()
+    public static function label(): string
     {
         return static::getResourceLabel('Poi');
     }

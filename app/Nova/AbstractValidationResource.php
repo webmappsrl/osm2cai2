@@ -13,7 +13,7 @@ abstract class AbstractValidationResource extends UgcPoi
 
     abstract public static function getLabel(): string;
 
-    public static function label()
+    public static function label(): string
     {
         return __(static::getLabel());
     }
