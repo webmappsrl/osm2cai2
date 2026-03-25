@@ -11,7 +11,7 @@
     },
     "servers": [
         {
-            "url": "https://osm2cai.cai.it",
+            "url": "http://localhost:8008",
             "description": "API Server"
         }
     ],
@@ -2820,9 +2820,244 @@
                     }
                 }
             }
+        },
+        "/api/v3/sectors/list": {
+            "get": {
+                "tags": [
+                    "Api V3"
+                ],
+                "summary": "Lista dei settori CAI",
+                "description": "Restituisce l'elenco dei settori filtrati opzionalmente per data di aggiornamento e/o bounding box geografico.",
+                "operationId": "ac4ca77ade401f55946cf50f59617f09",
+                "parameters": [
+                    {
+                        "name": "updated_at",
+                        "in": "query",
+                        "description": "Filtra i settori aggiornati dopo questa data (formato YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-05-01"
+                        }
+                    },
+                    {
+                        "name": "bbox",
+                        "in": "query",
+                        "description": "Bounding box geografico per filtrare i settori. Formato: min_lon,min_lat,max_lon,max_lat",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "10.1,44.2,10.5,44.6"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista dei settori trovati",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "Identificatore univoco del settore",
+                                                "type": "integer",
+                                                "example": 3
+                                            },
+                                            "updated_at": {
+                                                "description": "Data e ora dell'ultimo aggiornamento",
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2024-05-01T10:00:00.000000Z"
+                                            },
+                                            "name": {
+                                                "description": "Nome del settore (translatable, lingua default: it)",
+                                                "properties": {
+                                                    "it": {
+                                                        "type": "string",
+                                                        "example": "Settore A"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parametri non validi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid bbox format. Expected: min_lon,min_lat,max_lon,max_lat"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/sectors/{id}": {
+            "get": {
+                "tags": [
+                    "Api V3"
+                ],
+                "summary": "Dettaglio di un settore CAI",
+                "description": "Restituisce una GeoJSON Feature con la geometria e tutte le proprietà del settore identificato dall'id.",
+                "operationId": "c9adbecf8774c6a5985c6d52b991c52b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Identificatore univoco del settore (ottenibile dalla API list)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "GeoJSON Feature del settore",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "example": "Feature"
+                                        },
+                                        "geometry": {
+                                            "description": "Geometria MultiPolygon in formato GeoJSON (EPSG:4326)",
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "MultiPolygon"
+                                                },
+                                                "coordinates": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "number"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "properties": {
+                                            "description": "Tutte le proprietà del settore",
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Identificatore univoco",
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "name": {
+                                                    "description": "Nome del settore (translatable, lingua default: it)",
+                                                    "properties": {
+                                                        "it": {
+                                                            "type": "string",
+                                                            "example": "Settore A"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "code": {
+                                                    "description": "Codice breve del settore (1 carattere)",
+                                                    "type": "string",
+                                                    "example": "A"
+                                                },
+                                                "full_code": {
+                                                    "description": "Codice completo del settore (5 caratteri)",
+                                                    "type": "string",
+                                                    "example": "LIG01"
+                                                },
+                                                "num_expected": {
+                                                    "description": "Numero di sentieri attesi nel settore",
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "human_name": {
+                                                    "description": "Nome leggibile del settore (translatable, lingua default: it)",
+                                                    "properties": {
+                                                        "it": {
+                                                            "type": "string",
+                                                            "example": "Settore Alpino Ligure"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "manager": {
+                                                    "description": "Responsabile del settore",
+                                                    "type": "string",
+                                                    "example": "Mario Rossi",
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2024-04-26T06:24:21.000000Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-01-20T14:22:00.000000Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Settore non trovato",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Sector not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "tags": [
+        {
+            "name": "Api V3",
+            "description": "API V3 - Sectors"
+        },
         {
             "name": "Api V2",
             "description": "Api V2"
