@@ -23,5 +23,10 @@ namespace App;
  *     name="V2",
  *     description="API V2"
  * )
+ *
+ * @OA\Tag(
+ *     name="Api V3",
+ *     description="API V3 - Sectors"
+ * )
  */
 class ApiDoc {}

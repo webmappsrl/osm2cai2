@@ -135,6 +135,11 @@ Route::prefix('v2')->group(function () {
     });
 });
 
+Route::prefix('v3')->name('v3.')->group(function () {
+    Route::get('/sectors/list', [\App\Http\Controllers\V3\SectorController::class, 'list'])->name('sectors.list');
+    Route::get('/sectors/{id}', [\App\Http\Controllers\V3\SectorController::class, 'show'])->name('sectors.show');
+});
+
 Route::prefix('umap')->name('umap.')->group(function () {
     Route::get('/pois', [UmapController::class, 'pois'])->name('pois');
     Route::get('/signs', [UmapController::class, 'signs'])->name('signs');
