@@ -19,7 +19,7 @@
 <script>
     var map = L.map('map', { dragging: !L.Browser.mobile }).setView([43.689740, 10.392279], 12);
     L.tileLayer('https://api.webmapp.it/tiles/{z}/{x}/{y}.png', {
-        attribution: '<a  href="http://webmapp.it" target="blank"> © Webmapp </a><a _ngcontent-wbl-c140="" href="https://www.openstreetmap.org/about/" target="blank">© OpenStreetMap </a>',
+        attribution: '<a  href="https://www.cai.it/" target="blank"> © CAI </a><a _ngcontent-wbl-c140="" href="https://www.openstreetmap.org/about/" target="blank">© OpenStreetMap </a>',
         maxZoom: 16,
         minZoom: 8,
         tileSize: 256,

@@ -62,7 +62,7 @@ class CaiHut extends Resource
             BelongsToField::make(__('Region'), 'region', Region::class),
             MapPoint::make(__('Geometry'), 'geometry')->withMeta([
                 'center' => [42, 10],
-                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                'attribution' => '<a href="https://www.cai.it/">CAI</a> contributors',
                 'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
                 'minZoom' => 8,
                 'maxZoom' => 17,
