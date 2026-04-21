@@ -11,12 +11,14 @@ use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use Wm\MapPoint\MapPoint;
+use Wm\WmPackage\Nova\TaxonomyPoiType;
 use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
@@ -110,23 +112,38 @@ class SiPoi extends EcPoi
         return [
             ID::make()->onlyOnDetail(),
             Text::make(__('CIN'), 'properties->sicai->CIN'),
-            Text::make(__('Data'), 'properties->sicai->data')->readonly(),
-            Text::make(__('Tappa 01'), 'properties->sicai->tappa01')->readonly(),
-            Text::make(__('Tappa 02'), 'properties->sicai->tappa02')->readonly(),
-            Text::make(__('Tappa 03'), 'properties->sicai->tappa03')->readonly(),
-            Text::make(__('Regione'), 'properties->sicai->Regione')->readonly(),
-            Text::make(__('Nome struttura'), 'properties->sicai->nome')->readonly(),
-            Text::make(__('Denominazione'), 'properties->sicai->denominazione')->readonly(),
-            Text::make(__('Note'), 'properties->sicai->note')->readonly(),
-            Text::make(__('Tourism'), 'properties->sicai->tourism')->readonly(),
-            Text::make(__('Materiale'), 'properties->sicai->materiale')->readonly(),
+            Text::make(__('Data'), 'properties->sicai->data'),
+            Text::make(__('Tappa 01'), 'properties->sicai->tappa01'),
+            Text::make(__('Tappa 02'), 'properties->sicai->tappa02'),
+            Text::make(__('Tappa 03'), 'properties->sicai->tappa03'),
+            Text::make(__('Regione'), 'properties->sicai->Regione')
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Text::make(__('Nome struttura'), 'properties->sicai->nome')
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Text::make(__('Denominazione'), 'properties->sicai->denominazione')
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Text::make(__('Note'), 'properties->sicai->note')
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Text::make(__('Tourism'), 'properties->sicai->tourism')
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Text::make(__('Materiale'), 'properties->sicai->materiale'),
             Select::make(__('Situazione'), 'properties->sicai->situazione')
                 ->options($this->situazioneOptions())
                 ->nullable()
                 ->displayUsingLabels(),
-            Text::make(__('Operatore'), 'properties->sicai->operator')->readonly(),
-            Text::make(__('Rifugio CAI'), 'properties->sicai->rifugio_cai')->readonly(),
-            Boolean::make(__('Punto accoglienza ufficiale'), 'properties->sicai->pt_accoglienza')->readonly(),
+            Text::make(__('Operatore'), 'properties->sicai->operator'),
+            Text::make(__('Rifugio CAI'), 'properties->sicai->rifugio_cai'),
+            Boolean::make(__('Punto accoglienza ufficiale'), 'properties->sicai->pt_accoglienza'),
         ];
     }
 
@@ -157,9 +174,14 @@ class SiPoi extends EcPoi
         $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
         $fields[] = Images::make(__('Image'), 'default');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
+        $fields[] = MorphToMany::make(__('Taxonomy Poi Types'), 'taxonomyPoiTypes', TaxonomyPoiType::class)
+            ->display('name')
+            ->help(__('Tipologie di POI associate a questo punto di interesse'));
 
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
+            Tab::make(__('OSMFEATURES'), $this->getOsmfeaturesTabFields()),
+            Tab::make(__('DEM'), $this->getDemTabFields()),
             Tab::make(__('Info'), $this->getInfoTabFields()),
         ]);
         return $fields;
@@ -173,11 +195,92 @@ class SiPoi extends EcPoi
         $fields[] = Images::make(__('Image'), 'default');
         $fields[] = MapPoint::make(__('Geometry'), 'geometry');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
+        $fields[] = MorphToMany::make(__('Taxonomy Poi Types'), 'taxonomyPoiTypes', TaxonomyPoiType::class)
+            ->display('name')
+            ->help(__('Tipologie di POI associate a questo punto di interesse'));
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
             Tab::make(__('Info'), $this->getInfoTabFields()),
         ]);
         return $fields;
+    }
+
+    public function getOsmfeaturesTabFields(): array
+    {
+        return [
+            Text::make(__('admin_areas'), function () {
+                $taxonomyWhere = $this->resource->properties['taxonomy_where'] ?? null;
+                if (! is_array($taxonomyWhere) || empty($taxonomyWhere)) {
+                    return '—';
+                }
+
+                $labels = [
+                    '2' => __('Stato'),
+                    '4' => __('Regione'),
+                    '6' => __('Provincia'),
+                    '7' => __('Area (liv. 7)'),
+                    '8' => __('Comune'),
+                    '10' => __('Unità amministrative (liv. 10)'),
+                ];
+
+                $groupedByLevel = [];
+                foreach ($taxonomyWhere as $osmfeaturesId => $translations) {
+                    if (! is_array($translations)) {
+                        continue;
+                    }
+
+                    $level = (string) ($translations['_admin_level'] ?? '');
+                    if ($level === '') {
+                        $level = 'unknown';
+                    }
+
+                    $name = $translations['it'] ?? $translations['en'] ?? null;
+                    if (! $name) {
+                        continue;
+                    }
+
+                    $groupedByLevel[$level][] = [
+                        'name' => $name,
+                        'osmfeatures_id' => $osmfeaturesId,
+                    ];
+                }
+
+                if (empty($groupedByLevel)) {
+                    return '—';
+                }
+
+                $preferredOrder = ['2', '4', '6', '7', '8', '10', 'unknown'];
+                uksort($groupedByLevel, function ($a, $b) use ($preferredOrder) {
+                    $ai = array_search((string) $a, $preferredOrder, true);
+                    $bi = array_search((string) $b, $preferredOrder, true);
+                    $ai = $ai === false ? 999 : $ai;
+                    $bi = $bi === false ? 999 : $bi;
+
+                    return $ai <=> $bi;
+                });
+
+                $out = [];
+                foreach ($groupedByLevel as $level => $items) {
+                    $label = $labels[$level] ?? __('Livello') . ' ' . $level;
+                    $names = array_map(fn($a) => ($a['name'] ?? '') . ' (' . ($a['osmfeatures_id'] ?? '') . ')', $items);
+                    $out[] = '<strong>' . e($label) . '</strong>: ' . implode(', ', array_map('e', $names));
+                }
+
+                return implode('<br>', $out);
+            })->asHtml()->onlyOnDetail(),
+        ];
+    }
+
+    public function getDemTabFields(): array
+    {
+        return [
+            Text::make(__('Elevation (ele)'), function () {
+                $properties = $this->resource->properties ?? [];
+                $ele = $properties['ele'] ?? null;
+
+                return $ele !== null ? (string) $ele : '—';
+            })->onlyOnDetail(),
+        ];
     }
 
     /**
