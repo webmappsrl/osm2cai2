@@ -87,6 +87,8 @@ class HikingRouteObserver extends EcTrackObserver
     public function saving($hikingRoute)
     {
         Log::info('HikingRouteObserver saving event');
+        // Prevent accidental persistence of in-memory geometry sync cache
+        unset($hikingRoute->_geometry_sync_cached);
         parent::saving($hikingRoute);
         if ($hikingRoute->isDirty('osmfeatures_data.properties.ref') && $hikingRoute->isDirty('osmfeatures_data.properties.from') && $hikingRoute->isDirty('osmfeatures_data.properties.to')) {
             $hikingRoute->name = $hikingRoute->osmfeatures_data['properties']['ref'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['from'] . ' - ' . $hikingRoute->osmfeatures_data['properties']['to'];

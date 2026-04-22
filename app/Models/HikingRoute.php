@@ -196,10 +196,11 @@ class HikingRoute extends EcTrack
      */
     public function getGeometrySyncAttribute(): bool
     {
-        // Usa un attributo cache per evitare query duplicate quando viene chiamato più volte
+        // Cache in-memory (non persistita) per evitare query duplicate.
+        // Usiamo `$this->attributes` così NON finisce in update SQL (no colonna DB).
         $cacheKey = '_geometry_sync_cached';
-        if (isset($this->attributes[$cacheKey])) {
-            return $this->attributes[$cacheKey];
+        if (array_key_exists($cacheKey, $this->attributes)) {
+            return (bool) $this->attributes[$cacheKey];
         }
 
         $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
@@ -223,7 +224,7 @@ class HikingRoute extends EcTrack
             $isSync = json_encode($normalizedDbGeom, JSON_UNESCAPED_SLASHES) === json_encode($normalizedOsmfeaturesGeom, JSON_UNESCAPED_SLASHES);
         }
 
-        // Cache del risultato per questa istanza
+        // Cache del risultato per questa istanza (non persistito)
         $this->attributes[$cacheKey] = $isSync;
 
         return $isSync;
