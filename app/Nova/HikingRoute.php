@@ -508,7 +508,7 @@ class HikingRoute extends OsmfeaturesResource
                 return $this->sectors->first()->name;
             })->onlyOnIndex(),
             Text::make(__('REF'), 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
-            Text::make(__('REI Code'), 'ref_rei')->hideFromDetail(),
+            Text::make(__('REI Code'), 'ref_rei')->hideFromDetail()->readonly(),
             Text::make(__('Accessibility'), 'issues_status')->hideFromDetail(),
             Text::make(__('Last Survey'), 'osmfeatures_data->properties->survey_date')->hideFromDetail(),
         ];
