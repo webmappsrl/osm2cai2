@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\IssuesStatusEnum;
 use App\Enums\UserRole;
 use App\Jobs\CalculateIntersectionsJob;
 use App\Models\Area;
@@ -56,6 +57,7 @@ use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\ActionRequest;
@@ -508,8 +510,10 @@ class HikingRoute extends OsmfeaturesResource
                 return $this->sectors->first()->name;
             })->onlyOnIndex(),
             Text::make(__('REF'), 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
-            Text::make(__('REI Code'), 'ref_rei')->hideFromDetail(),
-            Text::make(__('Accessibility'), 'issues_status')->hideFromDetail(),
+            Text::make(__('REI Code'), fn () => $this->ref_rei)->onlyOnIndex(),
+            Select::make(__('Accessibility'), 'issues_status')
+                ->options(collect(IssuesStatusEnum::cases())->mapWithKeys(fn (IssuesStatusEnum $case) => [$case->value => __($case->name)])->all())
+                ->displayUsingLabels(),
             Text::make(__('Last Survey'), 'osmfeatures_data->properties->survey_date')->hideFromDetail(),
         ];
 
@@ -664,7 +668,10 @@ class HikingRoute extends OsmfeaturesResource
     private function getIssuesTabFields()
     {
         return [
-            Text::make(__('Issue Status'), 'issues_status')->onlyOnDetail(),
+            Select::make(__('Issue Status'), 'issues_status')
+                ->options(collect(IssuesStatusEnum::cases())->mapWithKeys(fn (IssuesStatusEnum $case) => [$case->value => __($case->name)])->all())
+                ->displayUsingLabels()
+                ->onlyOnDetail(),
             Textarea::make(__('Issue Description'), 'issues_description')->onlyOnDetail(),
             Date::make(__('Issue Date'), 'issues_last_update')->onlyOnDetail(),
             Text::make(__('Issue Author'), function () {
