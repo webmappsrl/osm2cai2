@@ -196,37 +196,34 @@ class HikingRoute extends EcTrack
      */
     public function getGeometrySyncAttribute(): bool
     {
-        // Usa un attributo cache per evitare query duplicate quando viene chiamato più volte
-        $cacheKey = '_geometry_sync_cached';
-        if (isset($this->attributes[$cacheKey])) {
-            return $this->attributes[$cacheKey];
-        }
+        return cache()->remember(
+            "hiking_route_geometry_sync_{$this->id}",
+            now()->addHours(24),
+            function () {
+                $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
+                $geom = json_decode($geojson, true);
 
-        $geojson = $this->query()->where('id', $this->id)->selectRaw('ST_AsGeoJSON(geometry) as geom')->get()->pluck('geom')->first();
-        $geom = json_decode($geojson, true);
+                $osmfeaturesGeom = $this->osmfeatures_data['geometry'] ?? null;
 
-        $osmfeaturesGeom = $this->osmfeatures_data['geometry'] ?? null;
+                // Normalizza le geometrie rimuovendo la dimensione Z per il confronto
+                // La geometria nel DB ha sempre Z=0 aggiunta da ST_Force3DZ, mentre quella in osmfeatures_data potrebbe non averla
+                $normalizedDbGeom = $this->normalizeGeometry($geom);
+                $normalizedOsmfeaturesGeom = $osmfeaturesGeom ? $this->normalizeGeometry($osmfeaturesGeom) : null;
 
-        // Normalizza le geometrie rimuovendo la dimensione Z per il confronto
-        // La geometria nel DB ha sempre Z=0 aggiunta da ST_Force3DZ, mentre quella in osmfeatures_data potrebbe non averla
-        $normalizedDbGeom = $this->normalizeGeometry($geom);
-        $normalizedOsmfeaturesGeom = $osmfeaturesGeom ? $this->normalizeGeometry($osmfeaturesGeom) : null;
+                // Confronta usando JSON per un confronto robusto di array annidati complessi
+                // Gestisce correttamente il caso in cui una delle due geometrie è null
+                if ($normalizedDbGeom === null && $normalizedOsmfeaturesGeom === null) {
+                    $isSync = true;
+                } elseif ($normalizedDbGeom === null || $normalizedOsmfeaturesGeom === null) {
+                    $isSync = false;
+                } else {
+                    // Confronta le geometrie normalizzate usando JSON per un confronto deterministico
+                    $isSync = json_encode($normalizedDbGeom, JSON_UNESCAPED_SLASHES) === json_encode($normalizedOsmfeaturesGeom, JSON_UNESCAPED_SLASHES);
+                }
 
-        // Confronta usando JSON per un confronto robusto di array annidati complessi
-        // Gestisce correttamente il caso in cui una delle due geometrie è null
-        if ($normalizedDbGeom === null && $normalizedOsmfeaturesGeom === null) {
-            $isSync = true;
-        } elseif ($normalizedDbGeom === null || $normalizedOsmfeaturesGeom === null) {
-            $isSync = false;
-        } else {
-            // Confronta le geometrie normalizzate usando JSON per un confronto deterministico
-            $isSync = json_encode($normalizedDbGeom, JSON_UNESCAPED_SLASHES) === json_encode($normalizedOsmfeaturesGeom, JSON_UNESCAPED_SLASHES);
-        }
-
-        // Cache del risultato per questa istanza
-        $this->attributes[$cacheKey] = $isSync;
-
-        return $isSync;
+                return $isSync;
+            }
+        );
     }
 
     /**
