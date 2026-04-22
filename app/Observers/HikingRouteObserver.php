@@ -112,6 +112,8 @@ class HikingRouteObserver extends EcTrackObserver
 
     public function saved($hikingRoute): void
     {
+        cache()->forget("hiking_route_geometry_sync_{$hikingRoute->id}");
+
         UpdateEcTrackAwsJob::dispatch($hikingRoute);
 
         if ($hikingRoute->wasChanged('osm2cai_status')) {
