@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\IssuesStatusEnum;
 use App\Enums\UserRole;
 use App\Jobs\CalculateIntersectionsJob;
 use App\Models\Area;
@@ -56,6 +57,7 @@ use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\ActionRequest;
@@ -509,7 +511,9 @@ class HikingRoute extends OsmfeaturesResource
             })->onlyOnIndex(),
             Text::make(__('REF'), 'osmfeatures_data->properties->ref')->onlyOnIndex()->sortable(),
             Text::make(__('REI Code'), 'ref_rei')->hideFromDetail()->readonly(),
-            Text::make(__('Accessibility'), 'issues_status')->hideFromDetail(),
+            Select::make(__('Accessibility'), 'issues_status')
+                ->options(collect(IssuesStatusEnum::cases())->pluck('name', 'value')->all())
+                ->displayUsingLabels(),
             Text::make(__('Last Survey'), 'osmfeatures_data->properties->survey_date')->hideFromDetail(),
         ];
 
