@@ -772,5 +772,9 @@
   "You do not have permission to add routes to this project. Only the project creator or an administrator can add hiking routes.": "You do not have permission to add routes to this project. Only the project creator or an administrator can add hiking routes.",
   "Signage Project": "Signage Project",
   "Select the signage project to which you want to add the routes. You can see all your projects.": "Select the signage project to which you want to add the routes. You can see all your projects.",
-  "Select the signage project to which you want to add the routes. You can only see the projects you created.": "Select the signage project to which you want to add the routes. You can only see the projects you created."
+  "Select the signage project to which you want to add the routes. You can only see the projects you created.": "Select the signage project to which you want to add the routes. You can only see the projects you created.",
+  "Unknown": "Unknown",
+  "Open": "Open",
+  "Closed": "Closed",
+  "PartiallyClosed": "Partially Closed"
 }
