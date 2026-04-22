@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\IssuesStatusEnum;
 use App\Helpers\Osm2caiHelper;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\SiMTBRoute as SiMTBRouteModel;
@@ -9,6 +10,7 @@ use App\Nova\Cards\LinksCard;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
@@ -136,8 +138,8 @@ class SiMTBRoute extends HikingRoute
             $fields[] = $this->getParentRouteField();
         }
         $fields[] = Text::make('id', 'id');
-        $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
         $fields[] = NovaTabTranslatable::make([Text::make('name', 'name'), Tiptap::make(__('description'), 'properties->description')]);
+        $fields[] = FeatureCollectionMap::make(__('Geometry'), 'geometry');
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
             Tab::make(__('DEM'), $this->getDemTabFields()),
@@ -303,17 +305,29 @@ class SiMTBRoute extends HikingRoute
 
     public function getSicaiTabFields(): array
     {
+        $percorribilitaOptions = [];
+        foreach (IssuesStatusEnum::cases() as $status) {
+            $percorribilitaOptions[$status->value] = $status->value;
+        }
+
         return [
-            Text::make(__('Data'), 'properties->sicai->data')->readonly(),
+            Text::make(__('Data'), 'properties->sicai->data')
+                ->withMeta([
+                    'extraAttributes' => [
+                        'type' => 'date',
+                    ],
+                ]),
             Text::make(__('Tappa'), 'properties->sicai->tappa'),
             Text::make(__('Verso'), 'properties->sicai->verso'),
             Text::make(__('Segnaletica'), 'properties->sicai->segnaletica'),
             Text::make(__('Referente Nome'), 'properties->sicai->referente->name'),
             Text::make(__('Referente Email'), 'properties->sicai->referente->email'),
             Text::make(__('Note'), 'properties->sicai->note'),
-            Text::make(__('Percorribilità'), 'properties->sicai->percorribilità')->readonly(),
-            Text::make(__('s_plus'), 'properties->sicai->s_plus')->readonly(),
-            Text::make(__('s_minus'), 'properties->sicai->s_minus')->readonly(),
+            Select::make(__('Percorribilità'), 'properties->sicai->percorribilità')
+                ->options($percorribilitaOptions)
+                ->displayUsingLabels(),
+            Text::make(__('s_plus'), 'properties->sicai->s_plus'),
+            Text::make(__('s_minus'), 'properties->sicai->s_minus'),
         ];
     }
 
