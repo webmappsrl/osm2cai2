@@ -4,33 +4,57 @@ namespace App\Nova\Filters;
 
 use App\Enums\UserRole;
 use App\Models\Area;
-use Illuminate\Http\Request;
-use Laravel\Nova\Filters\Filter;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
-class AreaFilter extends Filter
+class AreaFilter extends BaseOSMFeaturesFilter
 {
-    /**
-     * The filter's component.
-     *
-     * @var string
-     */
-    public $component = 'select-filter';
-
-    public $name;
-
     public function __construct()
     {
-        $this->name = __('Area');
+        parent::__construct(__('Area'));
     }
 
-    /**
-     * Apply the filter to the given query.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  mixed  $value
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function apply(Request $request, $query, $value)
+    protected function getEmptyOptionLabel(): string
+    {
+        return __('No area');
+    }
+
+    protected function getEmptyOptionValue(): string
+    {
+        return 'no_area';
+    }
+
+    protected function getEntityOptions(NovaRequest $request): array
+    {
+        $options = [];
+        $user = $request->user();
+        if ($user && $user->hasRole(UserRole::RegionalReferent)) {
+            $areas = Area::whereIn('province_id', $user->region->provinces->pluck('id')->toArray())->orderBy('name')->get();
+            foreach ($areas as $item) {
+                $options[$item->name] = $item->id;
+            }
+        } else {
+            foreach (Area::orderBy('name')->get() as $item) {
+                $options[$item->name] = $item->id;
+            }
+        }
+
+        return $options;
+    }
+
+    protected function applyEmpty(NovaRequest $request, $query)
+    {
+        if ($query->getModel() instanceof \App\Models\HikingRoute) {
+            return $query->whereDoesntHave('areas');
+        }
+
+        if ($query->getModel() instanceof \App\Models\User) {
+            return $query->whereDoesntHave('areas');
+        }
+
+        return $query->whereNull('area_id');
+    }
+
+    protected function applyValue(NovaRequest $request, $query, $value)
     {
         if ($query->getModel() instanceof \App\Models\HikingRoute) {
             return $query->whereHas('areas', function ($query) use ($value) {
@@ -45,27 +69,5 @@ class AreaFilter extends Filter
         }
 
         return $query->where('area_id', $value);
-    }
-
-    /**
-     * Get the filter's available options.
-     *
-     * @return array
-     */
-    public function options(Request $request)
-    {
-        $options = [];
-        if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
-            $areas = Area::whereIn('province_id', auth()->user()->region->provinces->pluck('id')->toArray())->orderBy('name')->get();
-            foreach ($areas as $item) {
-                $options[$item->name] = $item->id;
-            }
-        } else {
-            foreach (Area::orderBy('name')->get() as $item) {
-                $options[$item->name] = $item->id;
-            }
-        }
-
-        return $options;
     }
 }
