@@ -11,6 +11,31 @@ class SiPoi extends EcPoi
 {
     protected $table = 'ec_pois';
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function (self $model): void {
+            if (empty($model->app_id)) {
+                $model->app_id = 2;
+            }
+
+            $properties = is_array($model->properties) ? $model->properties : [];
+            $sicai = is_array($properties['sicai'] ?? null) ? $properties['sicai'] : [];
+
+            // TODO: necessario per l'indexQuery corrente; rimuovere quando il filtro dei Punti Accoglienza
+            // sarà basato sul POI type. Aggiornare in modo coordinato:
+            // - app/Nova/SiPoi.php (indexQuery/filtri Nova)
+            // - tests/Unit/Models/SiPoiTest.php (default dbtable in creating)
+            if (empty($sicai['dbtable'])) {
+                $sicai['dbtable'] = 'pt_accoglienza_unofficial';
+            }
+
+            $properties['sicai'] = $sicai;
+            $model->properties = $properties;
+        });
+    }
+
     /**
      * Usa lo stesso morph class di EcPoi per le relazioni polimorfiche (Media Library, ecc.).
      * In questo modo i media salvati con model_type = App\Models\EcPoi
