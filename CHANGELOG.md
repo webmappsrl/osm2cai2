@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.0.0 (2026-04-23)
+
+
+### Features
+
+* **api:** ✨ add V3 Sector endpoints for list and detail ([014ecf6](https://github.com/webmappsrl/osm2cai2/commit/014ecf6f975893c231612a94683dedf9952c0682))
+* **api:** ✨ add V3 Sector endpoints for list and detail ([136aa1e](https://github.com/webmappsrl/osm2cai2/commit/136aa1ecb913ef42ce39c51b953bf21811324c40))
+* **command:** ✨ add SyncAccoglienzaPoiImagesCommand ([a29e413](https://github.com/webmappsrl/osm2cai2/commit/a29e413795479ae2622093e20f008bce53fc3341))
+* **DetailField:** ✨ add loading indicator for signage data ([9735697](https://github.com/webmappsrl/osm2cai2/commit/9735697566fccf241658c8351db78b7ad9f95391))
+* improve handling for SiPoi model creation OC:7680 ([#309](https://github.com/webmappsrl/osm2cai2/issues/309)) ([f6ad1bc](https://github.com/webmappsrl/osm2cai2/commit/f6ad1bc130886c405613ebad1f093fc8f1f7bdd0))
+* **itinerary:** ✨ add 'name' to searchable fields OC:7322 ([#302](https://github.com/webmappsrl/osm2cai2/issues/302)) ([08cb9e8](https://github.com/webmappsrl/osm2cai2/commit/08cb9e89d8e6cdd23bd68bf124be373db2a40420))
+* **nova:** ✨ add RegenerateEcPoiTaxonomyWhere action to SiPoi ([4a4eabe](https://github.com/webmappsrl/osm2cai2/commit/4a4eabe8f1073e1dd6e166d07c082de1c4c70b55))
+* **nova:** ✨ add select field for issue status in HikingRoute OC:7676 ([#307](https://github.com/webmappsrl/osm2cai2/issues/307)) ([de38e28](https://github.com/webmappsrl/osm2cai2/commit/de38e28f5f643a7edda4052c929b63f1981f0500))
+* **policies:** ✨ extend role permissions for runAction method ([3eee366](https://github.com/webmappsrl/osm2cai2/commit/3eee366ec8ac3ad7e1a9cf12f8ddd4f969fffe96))
+* **signage:** ✨ add action to add hiking routes to signage projects ([#303](https://github.com/webmappsrl/osm2cai2/issues/303)) ([374ad76](https://github.com/webmappsrl/osm2cai2/commit/374ad76bae694282247d221b8ce764d49afb63f5))
+* **signage:** ✨ introduce interactive select for signage arrow midpoints ([b8b2463](https://github.com/webmappsrl/osm2cai2/commit/b8b2463d849b46b8e94ac9576213a6a4d221d921))
+* **signagemap:** ✨ add reprocessSignage endpoint and ensure signage data integrity ([ed2883f](https://github.com/webmappsrl/osm2cai2/commit/ed2883f92741432d51024b38632bc35824138ff9))
+
+
+### Bug Fixes
+
+* **controller:** 🐛 ensure complete order of checkpoints in HikingRoute ([d473929](https://github.com/webmappsrl/osm2cai2/commit/d4739291926121990d2c41b07954747406e8ed27))
+* **HikingRoute:** 🐛 add explicit geometry casting in SQL query ([4b68745](https://github.com/webmappsrl/osm2cai2/commit/4b687459aa11b203bbbf598cdeaea04192b89980))
+* **nova:** 🛠️ set REI Code field to readonly on index view ([a3666f8](https://github.com/webmappsrl/osm2cai2/commit/a3666f8da96a7127ff7ce2a0b7e58edf31ff9e1a))
+* **nova:** 🛠️ set REI Code field to readonly on index view ([39ae150](https://github.com/webmappsrl/osm2cai2/commit/39ae150a4a93497c37476d2881b120a5fce2ed16))
+* **security:** 🔒 update user creation to use environment variable for default password ([6fbf84d](https://github.com/webmappsrl/osm2cai2/commit/6fbf84df9d984048c0fdc8c07bfcfd8eb568eec2))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
