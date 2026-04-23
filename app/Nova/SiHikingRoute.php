@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Helpers\Osm2caiHelper;
+use App\Enums\IssuesStatusEnum;
 use App\Models\HikingRoute as HikingRouteModel;
 use App\Models\SiHikingRoute as SiHikingRouteModel;
 use App\Nova\Actions\AddHikingRoutesToSignageProject;
@@ -12,6 +13,7 @@ use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
@@ -179,6 +181,9 @@ class SiHikingRoute extends HikingRoute
      */
     protected function sicaiEditFields(NovaRequest $request): array
     {
+        $fields[] = NovaTabTranslatable::make([
+            Tiptap::make(__('description'), 'properties->description')
+        ]);
         $fields[] = BelongsToMany::make(__('Ec Pois'), 'ecPois', SiPoi::class);
         $fields[] = Tab::group(__('Details'), [
             Tab::make(__('SICAI'), $this->getSicaiTabFields()),
@@ -339,23 +344,22 @@ class SiHikingRoute extends HikingRoute
     public function getSicaiTabFields(): array
     {
         return [
-            Text::make(__('Tappa'), 'properties->sicai->tappa'),
-            Text::make(__('Verifica'), 'properties->sicai->verifica'),
-            Text::make(__('Segnaletica'), 'properties->sicai->segnaletica'),
-            Text::make(__('Segnalazioni'), 'properties->sicai->segnalazioni'),
-            Text::make(__('Referente Nome'), 'properties->sicai->referente->name'),
-            Text::make(__('Referente Email'), 'properties->sicai->referente->email'),
-            Text::make(__('Data'), 'properties->sicai->data')->readonly(),
-            Text::make(__('Percorribilità'), 'properties->sicai->percorribilità')->readonly(),
-            Text::make(__('Referente regionale'), 'properties->sicai->referente_regionale')->readonly(),
-            Text::make(__('Email referente regionale'), 'properties->sicai->email_ref_regionale')->readonly(),
-            Text::make(__('Sezione'), 'properties->sicai->sezione')->readonly(),
-            Text::make(__('Sezione referente regionale'), 'properties->sicai->sezione_ref_regionale')->readonly(),
-            Text::make(__('Sezioni manutenzione'), 'properties->sicai->sezioni_manutenzione')->readonly(),
-            Boolean::make(__('Parcheggio'), 'properties->sicai->parcheggio')->readonly(),
-            Boolean::make(__('Stazione bus'), 'properties->sicai->stazioni->bus')->readonly(),
-            Boolean::make(__('Stazione treno'), 'properties->sicai->stazioni->treno')->readonly(),
-            Boolean::make(__('Punto accoglienza'), 'properties->sicai->pt_accoglienza')->readonly(),
+            Text::make(__('Verification'), 'properties->sicai->verifica'),
+            Text::make(__('Signage'), 'properties->sicai->segnaletica'),
+            Text::make(__('Referent Name'), 'properties->sicai->referente->name'),
+            Text::make(__('Referent Email'), 'properties->sicai->referente->email'),
+            Select::make(__('Accessibility'), 'properties->sicai->percorribilità')
+                ->options(IssuesStatusEnum::cases())
+                ->displayUsingLabels(),
+            Text::make(__('Regional Referent'), 'properties->sicai->referente_regionale'),
+            Text::make(__('Regional Referent Email'), 'properties->sicai->email_ref_regionale'),
+            Text::make(__('Section'), 'properties->sicai->sezione')->readonly(),
+            Text::make(__('Regional Referent Section'), 'properties->sicai->sezione_ref_regionale'),
+            Text::make(__('Maintenance Sections'), 'properties->sicai->sezioni_manutenzione'),
+            Boolean::make(__('Parking'), 'properties->sicai->parcheggio'),
+            Boolean::make(__('Bus Station'), 'properties->sicai->stazioni->bus'),
+            Boolean::make(__('Train Station'), 'properties->sicai->stazioni->treno'),
+            Boolean::make(__('Welcome Point'), 'properties->sicai->pt_accoglienza'),
         ];
     }
     /**
@@ -387,7 +391,7 @@ class SiHikingRoute extends HikingRoute
      */
     protected function getReferenteNameField(): Text
     {
-        return Text::make(__('Referente Nome'), 'referente_name')
+        return Text::make(__('Referent Name'), 'referente_name')
             ->resolveUsing(function () {
                 $referente = $this->resource->properties['referente'] ?? null;
 
@@ -407,7 +411,7 @@ class SiHikingRoute extends HikingRoute
      */
     protected function getReferenteEmailField(): Text
     {
-        return Text::make(__('Referente Email'), 'referente_email')
+        return Text::make(__('Referent Email'), 'referente_email')
             ->resolveUsing(function () {
                 $referente = $this->resource->properties['referente'] ?? null;
 
