@@ -34,7 +34,7 @@ class SiPoi extends EcPoi
      */
     public static function label(): string
     {
-        return __('SI Pois');
+        return __('Welcome Points');
     }
 
     /**
@@ -42,7 +42,7 @@ class SiPoi extends EcPoi
      */
     public static function singularLabel(): string
     {
-        return __('SI Poi');
+        return __('Welcome Point');
     }
 
     /**
@@ -110,23 +110,19 @@ class SiPoi extends EcPoi
         return [
             ID::make()->onlyOnDetail(),
             Text::make(__('CIN'), 'properties->sicai->CIN'),
-            Text::make(__('Data'), 'properties->sicai->data')->readonly(),
-            Text::make(__('Tappa 01'), 'properties->sicai->tappa01')->readonly(),
-            Text::make(__('Tappa 02'), 'properties->sicai->tappa02')->readonly(),
-            Text::make(__('Tappa 03'), 'properties->sicai->tappa03')->readonly(),
-            Text::make(__('Regione'), 'properties->sicai->Regione')->readonly(),
-            Text::make(__('Nome struttura'), 'properties->sicai->nome')->readonly(),
-            Text::make(__('Denominazione'), 'properties->sicai->denominazione')->readonly(),
-            Text::make(__('Note'), 'properties->sicai->note')->readonly(),
+            Text::make(__('Stage 01'), 'properties->sicai->tappa01'),
+            Text::make(__('Stage 02'), 'properties->sicai->tappa02'),
+            Text::make(__('Stage 03'), 'properties->sicai->tappa03'),
+            Text::make(__('Denomination'), 'properties->sicai->denominazione'),
             Text::make(__('Tourism'), 'properties->sicai->tourism')->readonly(),
-            Text::make(__('Materiale'), 'properties->sicai->materiale')->readonly(),
-            Select::make(__('Situazione'), 'properties->sicai->situazione')
+            Text::make(__('Material'), 'properties->sicai->materiale'),
+            Select::make(__('Situation'), 'properties->sicai->situazione')
                 ->options($this->situazioneOptions())
                 ->nullable()
                 ->displayUsingLabels(),
-            Text::make(__('Operatore'), 'properties->sicai->operator')->readonly(),
-            Text::make(__('Rifugio CAI'), 'properties->sicai->rifugio_cai')->readonly(),
-            Boolean::make(__('Punto accoglienza ufficiale'), 'properties->sicai->pt_accoglienza')->readonly(),
+            Text::make(__('Operator'), 'properties->sicai->operator'),
+            Text::make(__('CAI Hut'), 'properties->sicai->rifugio_cai'),
+            Boolean::make(__('Official Welcome Point'), 'properties->sicai->pt_accoglienza'),
         ];
     }
 
@@ -169,7 +165,10 @@ class SiPoi extends EcPoi
     {
         $fields = [];
         $fields[] = Boolean::make(__('Global'), 'global');
-        $fields[] = Text::make(__('Name'), 'name');
+        $fields[] = NovaTabTranslatable::make([
+            Text::make(__('Name'), 'name'),
+            Tiptap::make(__('description'), 'properties->description')
+        ]);
         $fields[] = Images::make(__('Image'), 'default');
         $fields[] = MapPoint::make(__('Geometry'), 'geometry');
         $fields[] = BelongsToMany::make(__('SI Hiking Routes'), 'siHikingRoutes', SiHikingRoute::class);
