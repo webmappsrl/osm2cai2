@@ -1257,7 +1257,7 @@ SQL;
         }
         $baseGeojson['properties']['description']['it'] ??= '';
 
-        $percorribilita = $this->properties['sicai']['percorribilità'] ?? null;
+        $percorribilita = $this->properties['sicai']['percorribilità'] ?? $this->issues_status ?? null;
         if ($percorribilita) {
             $baseGeojson['properties']['description']['it'] .= <<<HTML
             <br><p><strong>Percorribilità:</strong> 
@@ -1267,7 +1267,7 @@ SQL;
             </p>
             HTML;
 
-            $updatedAt = $this->properties['sicai']['data'] ?? $this->updated_at?->format('d/m/Y');
+            $updatedAt = $this->properties['sicai']['data'] ?? $this->issues_last_update?->format('d/m/Y') ?? null;
             if ($updatedAt) {
                 $baseGeojson['properties']['description']['it'] .= <<<HTML
                 <p><strong>Ultimo aggiornamento:</strong> {$updatedAt}</p>
