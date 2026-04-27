@@ -17,6 +17,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\HikingRoute::class => \App\Policies\HikingRoutePolicy::class,
         \App\Models\SignageProject::class => \App\Policies\SignageProjectPolicy::class,
         \App\Models\TrailSurvey::class => \App\Policies\TrailSurveyPolicy::class,
+        \App\Models\Club::class => \App\Policies\ClubPolicy::class,
         \Wm\WmPackage\Models\TaxonomyPoiType::class => \Wm\WmPackage\Policies\TaxonomyPoiTypePolicy::class,
         \Wm\WmPackage\Models\TaxonomyActivity::class => \Wm\WmPackage\Policies\TaxonomyActivityPolicy::class,
     ];
