@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\SicaiSituazioneEnum;
+use App\Nova\Filters\SicaiSituazioneFilter;
 use App\Models\SiPoi as SiPoiModel;
 use Wm\WmPackage\Nova\Actions\RegenerateEcPoiTaxonomyWhere;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
@@ -186,6 +187,14 @@ class SiPoi extends EcPoi
             Tab::make(__('Info'), $this->getInfoTabFields()),
         ]);
         return $fields;
+    }
+
+    public function filters(NovaRequest $request): array
+    {
+        return [
+            new SicaiSituazioneFilter(),
+            ...parent::filters($request),
+        ];
     }
 
     /**
