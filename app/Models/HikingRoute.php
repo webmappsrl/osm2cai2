@@ -386,9 +386,9 @@ class HikingRoute extends EcTrack
                 $webappLink = sprintf('https://%s.osm2caidev.webmapp.it/?track=%d', $this->app_id, $this->id);
             }
         } elseif ($appEnv === 'production') {
-            // Produzione: dominio *.osm2cai.webmapp.it con app_id come subdominio
+            // Produzione: dominio *.osm2cai.cai.it con app_id come subdominio
             if ($this->app_id) {
-                $webappLink = sprintf('https://%s.osm2cai.webmapp.it/?track=%d', $this->app_id, $this->id);
+                $webappLink = sprintf('https://%s.osm2cai.cai.it/?track=%d', $this->app_id, $this->id);
             }
         }
 
