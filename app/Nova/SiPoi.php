@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
@@ -107,6 +108,8 @@ class SiPoi extends EcPoi
      */
     public function getSicaiTabFields(): array
     {
+        $situazione = data_get($this->resource, 'properties.sicai.situazione');
+
         return [
             ID::make()->onlyOnDetail(),
             Text::make(__('CIN'), 'properties->sicai->CIN'),
@@ -122,7 +125,13 @@ class SiPoi extends EcPoi
                 ->displayUsingLabels(),
             Text::make(__('Operator'), 'properties->sicai->operator'),
             Text::make(__('CAI Hut'), 'properties->sicai->rifugio_cai'),
-            Boolean::make(__('Official Welcome Point'), 'properties->sicai->pt_accoglienza'),
+            Boolean::make(__('Official Welcome Point'), function () use ($situazione) {
+                return $situazione === SicaiSituazioneEnum::HaAderito->value;
+            })
+                ->readonly()
+                ->canSee(function () use ($situazione) {
+                    return $situazione === SicaiSituazioneEnum::HaAderito->value;
+                })
         ];
     }
 
