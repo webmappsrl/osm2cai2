@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRegionRequest;
 use App\Http\Requests\UpdateRegionRequest;
+use App\Models\HikingRoute;
 use App\Models\Region;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -93,7 +95,19 @@ class RegionController extends Controller
         return response()->stream(function () use ($region) {
             $query = $region->hikingRoutes()
                 ->where('osm2cai_status', '!=', 0)
-                ->selectRaw('hiking_routes.id, hiking_routes.name, hiking_routes.osmfeatures_data, hiking_routes.issues_status, hiking_routes.osm2cai_status, hiking_routes.created_at, hiking_routes.updated_at, ST_AsGeoJSON(geometry) as geom_geojson');
+                ->selectRaw('
+                    hiking_routes.id,
+                    hiking_routes.name,
+                    hiking_routes.osmfeatures_data,
+                    hiking_routes.properties,
+                    hiking_routes.issues_status,
+                    hiking_routes.issues_description,
+                    hiking_routes.issues_last_update,
+                    hiking_routes.osm2cai_status,
+                    hiking_routes.validation_date,
+                    hiking_routes.updated_at,
+                    ST_AsGeoJSON(geometry) as geom_geojson
+                ');
 
             echo '{"type":"FeatureCollection","features":[';
 
@@ -102,34 +116,33 @@ class RegionController extends Controller
                 $sectors = $hikingRoute->sectors()->pluck('name')->toArray();
                 $osmProps = $hikingRoute->osmfeatures_data['properties'] ?? [];
 
+                $properties = array_merge($hikingRoute->properties ?? [], [
+                    'id'                 => $hikingRoute->id,
+                    'relation_id'        => $osmProps['osm_id'] ?? null,
+                    'source'             => $osmProps['source'] ?? null,
+                    'ref_REI'            => $osmProps['ref_REI'] ?? null,
+                    'sda'                => $hikingRoute->osm2cai_status,
+                    'osm2cai_status'     => $hikingRoute->osm2cai_status,
+                    'issues_status'      => $hikingRoute->issues_status ?? '',
+                    'issues_description' => $hikingRoute->issues_description ?? '',
+                    'issues_last_update' => $hikingRoute->issues_last_update ?? '',
+                    'updated_at'         => $hikingRoute->updated_at,
+                    'public_page'        => url('/hiking-route/id/'.$hikingRoute->id),
+                    'osm2cai'            => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
+                    'itinerary'          => $this->getItineraryArray($hikingRoute),
+                    'sectors'            => $sectors,
+                ]);
+
+                if ($hikingRoute->osm2cai_status == 4) {
+                    $properties['validation_date'] = $hikingRoute->validation_date
+                        ? Carbon::parse($hikingRoute->validation_date)->format('Y-m-d')
+                        : null;
+                }
+
                 $feature = [
-                    'type' => 'Feature',
-                    'properties' => [
-                        'id' => $hikingRoute->id,
-                        'name' => $hikingRoute->name,
-                        'ref' => $osmProps['ref'] ?? null,
-                        'old_ref' => $osmProps['old_ref'] ?? null,
-                        'source_ref' => $osmProps['source_ref'] ?? null,
-                        'created_at' => $hikingRoute->created_at,
-                        'updated_at' => $hikingRoute->updated_at,
-                        'osm2cai_status' => $hikingRoute->osm2cai_status,
-                        'osm_id' => $osmProps['osm_id'] ?? null,
-                        'osm2cai' => url('/nova/resources/hiking-routes/'.$hikingRoute->id.'/edit'),
-                        'survey_date' => $osmProps['survey_date'] ?? null,
-                        'accessibility' => $hikingRoute->issues_status,
-                        'from' => $osmProps['from'] ?? null,
-                        'to' => $osmProps['to'] ?? null,
-                        'distance' => $osmProps['distance'] ?? null,
-                        'cai_scale' => $osmProps['cai_scale'] ?? null,
-                        'roundtrip' => $osmProps['roundtrip'] ?? null,
-                        'duration_forward' => $osmProps['duration_forward'] ?? null,
-                        'duration_backward' => $osmProps['duration_backward'] ?? null,
-                        'ascent' => $osmProps['ascent'] ?? null,
-                        'descent' => $osmProps['descent'] ?? null,
-                        'ref_REI' => $osmProps['ref_REI'] ?? null,
-                        'sectors' => $sectors,
-                    ],
-                    'geometry' => json_decode($hikingRoute->geom_geojson, true),
+                    'type'       => 'Feature',
+                    'properties' => $properties,
+                    'geometry'   => json_decode($hikingRoute->geom_geojson, true),
                 ];
 
                 if (! $first) {
@@ -146,5 +159,26 @@ class RegionController extends Controller
 
             echo ']}';
         }, 200, $headers);
+    }
+
+    private function getItineraryArray(HikingRoute $hikingRoute): array
+    {
+        $itinerary_array = [];
+        $itineraries = $hikingRoute->itineraries()->get();
+
+        foreach ($itineraries as $it) {
+            $edges = $it->generateItineraryEdges();
+            $prevRoute = $edges[$hikingRoute->id]['prev'] ?? null;
+            $nextRoute = $edges[$hikingRoute->id]['next'] ?? null;
+
+            $itinerary_array[] = [
+                'id'       => $it->id,
+                'name'     => $it->name,
+                'previous' => $prevRoute[0] ?? '',
+                'next'     => $nextRoute[0] ?? '',
+            ];
+        }
+
+        return $itinerary_array;
     }
 }
