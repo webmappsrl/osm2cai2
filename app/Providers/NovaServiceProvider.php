@@ -207,10 +207,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     ])->icon('none')->collapsable()->collapsedByDefault(),
                 ])->icon('eye')->collapsable(),
                 MenuSection::make(__('Webapp'), [
-                    MenuItem::externalLink(__('App del Sentierista'), 'http://1.osm2cai.webmapp.it/')->openInNewTab(),
-                    MenuItem::externalLink(__('Sicai'), 'http://2.osm2cai.webmapp.it/')->openInNewTab(),
-                    MenuItem::externalLink(__('Acqua Sorgente'), 'http://3.osm2cai.webmapp.it/')->openInNewTab(),
-                    MenuItem::externalLink(__('INFOMONT'), 'https://1.osm2cai.webmapp.it/map?layer=4')->openInNewTab(),
+                    MenuItem::externalLink(__('App del Sentierista'), 'http://1.osm2cai.cai.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('Sicai'), 'http://2.osm2cai.cai.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('Acqua Sorgente'), 'http://3.osm2cai.cai.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('INFOMONT'), 'https://infomont.cai.it')->openInNewTab(),
                 ])->icon('map')->collapsable()->collapsedByDefault(),
                 // Tools
                 MenuSection::make(__('Tools'), [
