@@ -7,6 +7,7 @@
 /storage/json/
 /storage/media-library/
 /storage/ugc/images
+/storage/api-docs/
 /vendor
 .env
 .env.backup
