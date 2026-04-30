@@ -18,6 +18,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
+use Wm\WmPackage\Nova\Actions\DownloadEcTrackAction;
 use Wm\WmPackage\Nova\Actions\TranslateModelAction;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
 
@@ -111,6 +112,7 @@ class SiHikingRoute extends HikingRoute
     {
         return [
             new TranslateModelAction,
+            new DownloadEcTrackAction,
             (new AddHikingRoutesToSignageProject())
                 ->canSee(function ($request) {
                     return true;
