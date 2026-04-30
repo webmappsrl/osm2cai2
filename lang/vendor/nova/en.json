@@ -67,6 +67,7 @@
   "Are you sure you want to run this action?": "Are you sure you want to run this action?",
   "Are you sure you want to stop impersonating?": "Are you sure you want to stop impersonating?",
   "Are you sure you want to validate this route? REF:": "Are you sure you want to validate this route? REF:",
+  "This operation may take 4 hours or more. The time may increase proportionally depending on other operations currently running on the server.": "This operation may take 4 hours or more. The time may increase proportionally depending on other operations currently running on the server.",
   "Are you sure you want to update all tracks of this app on AWS?": "Are you sure you want to update all tracks of this app on AWS?",
   "Are you sure you want to process all tracks of this app?": "Are you sure you want to process all tracks of this app?",
   "Are you sure you want to process all tracks of this layer?": "Are you sure you want to process all tracks of this layer?",

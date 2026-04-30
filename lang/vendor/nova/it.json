@@ -82,6 +82,7 @@
     "Are you sure you want to update all tracks of this app on AWS?": "Sei sicuro di voler aggiornare tutte le tracks di questa app su AWS?",
     "Are you sure you want to update this route?": "Sei sicuro di voler aggiornare questo percorso?",
     "Are you sure you want to validate this route? REF:": "Sei sicuro di voler validare questo percorso? RIF:",
+    "This operation may take 4 hours or more. The time may increase proportionally depending on other operations currently running on the server.": "L’operazione può richiedere 4 ore o più. Il tempo può aumentare in proporzione se sul server sono già in corso altre operazioni.",
     "Area": "Area",
     "Area Association": "Associazione Area",
     "Areas": "Aree",
