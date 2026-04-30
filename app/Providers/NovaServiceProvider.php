@@ -37,6 +37,7 @@ use App\Nova\SignageProject;
 use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
 use App\Nova\TaxonomyPoiType;
+use App\Nova\TaxonomyWhere;
 use App\Nova\TrailSurvey;
 use App\Nova\SiHikingRoute;
 use App\Nova\SiMTBRoute;
@@ -99,6 +100,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuSection::make(__('Taxonomies'), [
                             MenuItem::resource(TaxonomyPoiType::class),
                             MenuItem::resource(TaxonomyActivity::class),
+                            MenuItem::resource(TaxonomyWhere::class),
                         ])->icon('none')->collapsable()->collapsedByDefault(),
                         MenuSection::make(__('Files'), [
                             MenuItem::externalLink(__('Icons'), route('icons.upload.show'))->openInNewTab(),

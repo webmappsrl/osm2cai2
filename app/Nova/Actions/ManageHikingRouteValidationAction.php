@@ -110,9 +110,9 @@ class ManageHikingRouteValidationAction extends Action
     public static function getValidationConfirmText(HikingRoute $model)
     {
         if ($model->osm2cai_status == 4) {
-            return __('Are you sure you want to revert the validation of this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')';
+            return __('Are you sure you want to revert the validation of this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')'."\n".__('This operation may take 4 hours or more. The time may increase proportionally depending on other operations currently running on the server.');
         } elseif ($model->osm2cai_status == 3) {
-            return __('Are you sure you want to validate this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')';
+            return __('Are you sure you want to validate this route? REF:').' '.$model->ref.' (REI CODE: '.$model->ref_REI.' / '.$model->ref_REI_comp.')'."\n".__('This operation may take 4 hours or more. The time may increase proportionally depending on other operations currently running on the server.');
         }
 
         return __('Are you sure you want to perform this action?');
