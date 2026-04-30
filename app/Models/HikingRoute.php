@@ -1305,7 +1305,17 @@ SQL;
 
         if (isset($osmDataProperties['website'])) {
             $host = parse_url($osmDataProperties['website'], PHP_URL_HOST) ?: $osmDataProperties['website'];
-            $baseGeojson['properties']['related_url'][$host] = $osmDataProperties['website'];
+
+            $relatedUrl = $baseGeojson['properties']['related_url'] ?? [];
+            if (is_string($relatedUrl)) {
+                $decoded = json_decode($relatedUrl, true);
+                $relatedUrl = is_array($decoded) ? $decoded : [$relatedUrl => $relatedUrl];
+            }
+            if (! is_array($relatedUrl)) {
+                $relatedUrl = [];
+            }
+            $relatedUrl[$host] = $osmDataProperties['website'];
+            $baseGeojson['properties']['related_url'] = $relatedUrl;
         }
 
         return $baseGeojson;
