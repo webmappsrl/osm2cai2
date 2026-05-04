@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "85f1a140f47e4915116238d8a4eae80f",
+    "content-hash": "539d0403d3cf7bd2b55e6647787da00d",
     "packages": [
         {
             "name": "abordage/nova-html-card",
@@ -67,6 +67,77 @@
                 "source": "https://github.com/abordage/nova-html-card/tree/1.1.1"
             },
             "time": "2025-01-11T13:49:20+00:00"
+        },
+        {
+            "name": "apereo/phpcas",
+            "version": "1.6.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/apereo/phpCAS.git",
+                "reference": "b413d2981947fd4f97079f715e0571d0c8f2a2c5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/apereo/phpCAS/zipball/b413d2981947fd4f97079f715e0571d0c8f2a2c5",
+                "reference": "b413d2981947fd4f97079f715e0571d0c8f2a2c5",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-dom": "*",
+                "php": ">=7.1.0",
+                "psr/log": "^1.0 || ^2.0 || ^3.0"
+            },
+            "require-dev": {
+                "monolog/monolog": "^1.0.0 || ^2.0.0",
+                "phpstan/phpstan": "^1.5",
+                "phpunit/phpunit": ">=7.5"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.3.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "source/CAS.php"
+                ],
+                "classmap": [
+                    "source/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Joachim Fritschi",
+                    "email": "jfritschi@freenet.de",
+                    "homepage": "https://github.com/jfritschi"
+                },
+                {
+                    "name": "Adam Franco",
+                    "homepage": "https://github.com/adamfranco"
+                },
+                {
+                    "name": "Henry Pan",
+                    "homepage": "https://github.com/phy25"
+                }
+            ],
+            "description": "Provides a simple API for authenticating users against a CAS server",
+            "homepage": "https://wiki.jasig.org/display/CASC/phpCAS",
+            "keywords": [
+                "apereo",
+                "cas",
+                "jasig"
+            ],
+            "support": {
+                "issues": "https://github.com/apereo/phpCAS/issues",
+                "source": "https://github.com/apereo/phpCAS/tree/1.6.2"
+            },
+            "time": "2026-04-22T09:20:37+00:00"
         },
         {
             "name": "aws/aws-crt-php",
@@ -6105,7 +6176,7 @@
         },
         {
             "name": "osm2cai/signage-arrows",
-            "version": "dev-develop",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/SignageArrows",
@@ -6144,7 +6215,7 @@
         },
         {
             "name": "osm2cai/signage-map",
-            "version": "dev-develop",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/SignageMap",
@@ -12371,7 +12442,7 @@
         },
         {
             "name": "webmapp/wm-osmfeatures",
-            "version": "dev-3b5f9fb357005ae7992745f42b602b1d292ff737",
+            "version": "dev-182bb938890eee151524470d94c9ec51aeba1c54",
             "dist": {
                 "type": "path",
                 "url": "./wm-osmfeatures",
@@ -12678,7 +12749,7 @@
         },
         {
             "name": "wm/osm2cai-map-multi-linestring",
-            "version": "dev-develop",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/osm2cai-map-multi-linestring",
@@ -12714,7 +12785,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-develop",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",

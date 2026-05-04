@@ -10,13 +10,14 @@
     "require": {
         "php": "^8.4.0",
         "abordage/nova-html-card": "^1.1.1",
+        "apereo/phpcas": "^1.6",
         "badinansoft/nova-language-switch": "^3.0",
         "cweagans/composer-patches": "^1.7",
         "darkaonline/l5-swagger": "^8.6",
         "dompdf/dompdf": "^2.0",
         "ebess/advanced-nova-media-library": "^5.0",
         "guzzlehttp/guzzle": "^7.2",
-"interaction-design-foundation/nova-html-card": "^3.4.0",
+        "interaction-design-foundation/nova-html-card": "^3.4.0",
         "kongulov/nova-tab-translatable": "^2.1.5",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.25",
@@ -28,6 +29,7 @@
         "m-a-k-o/nova-custom-table-card": "dev-master",
         "maatwebsite/excel": "^3.1",
         "osm2cai/signage-arrows": "*",
+        "osm2cai/signage-map": "*",
         "outl1ne/nova-multiselect-field": "^5.0.1",
         "predis/predis": "^2.2",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
@@ -35,13 +37,12 @@
         "spatie/laravel-medialibrary": "^11.11",
         "spatie/laravel-translatable": "^6.3",
         "spatie/schema-org": "^3.23",
-"symm/gisconverter": "^1.0",
+        "symm/gisconverter": "^1.0",
         "tymon/jwt-auth": "^2.1",
         "webmapp/wm-osmfeatures": "*",
         "wm/map-multi-polygon": "*",
         "wm/map-point": "*",
         "wm/osm2cai-map-multi-linestring": "*",
-        "osm2cai/signage-map": "*",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },
@@ -59,6 +60,9 @@
         "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
+        "files": [
+            "app/helpers.php"
+        ],
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
