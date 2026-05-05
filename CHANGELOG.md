@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.0.0 (2026-05-05)
+
+
+### Features
+
+* **authentication:** ✨ integrate CAS authentication ([39f3680](https://github.com/webmappsrl/osm2cai2/commit/39f3680b78ccfcacf43d55c82a4d3abe87ee5db9))
+* **database:** ✨ add taxonomy and feature collection migrations ([51697aa](https://github.com/webmappsrl/osm2cai2/commit/51697aa3e97412bdea639c58c1744cff3adf28be))
+* improve handling for SiPoi model creation OC:7680 ([#309](https://github.com/webmappsrl/osm2cai2/issues/309)) ([f6ad1bc](https://github.com/webmappsrl/osm2cai2/commit/f6ad1bc130886c405613ebad1f093fc8f1f7bdd0))
+* **nova:** ✨ add DownloadEcTrackAction to SiHikingRoute resource ([80dcb9d](https://github.com/webmappsrl/osm2cai2/commit/80dcb9d3a7648db1c3eaac8ec9f600a559a29cb2))
+* **nova:** ✨ add select field for issue status in HikingRoute OC:7676 ([#307](https://github.com/webmappsrl/osm2cai2/issues/307)) ([de38e28](https://github.com/webmappsrl/osm2cai2/commit/de38e28f5f643a7edda4052c929b63f1981f0500))
+* **nova:** ✨ add SicaiSituazioneFilter to SiPoi oc:7717 ([c776a86](https://github.com/webmappsrl/osm2cai2/commit/c776a868250cc77261369219ae67c9aafa049673))
+* **nova:** ✨ add SicaiSituazioneFilter to SiPoi oc:7717 ([4f75035](https://github.com/webmappsrl/osm2cai2/commit/4f750350da328891f540678cffead425a5884727))
+* **nova:** ✨ add TaxonomyWhere resource to NovaServiceProvider ([5ab5b03](https://github.com/webmappsrl/osm2cai2/commit/5ab5b033a250fd137876edbc218946509769a4ff))
+* **nova:** ✨ enhance validation action messages with operation duration warnings ([520aff3](https://github.com/webmappsrl/osm2cai2/commit/520aff350ed4b50460bf4f9113781e0e2f365dfe))
+* **region:** 🚀 align geojson properties with v2 API oc:7764 ([b6338f3](https://github.com/webmappsrl/osm2cai2/commit/b6338f3b76a3ba3c2267b36b0d1c1b6a671fbedc))
+* **region:** 🚀 align geojson properties with v2 API oc:7764 ([4bc42c5](https://github.com/webmappsrl/osm2cai2/commit/4bc42c5035af8c8def7e8d92afe4ac3e8993d8ed))
+* **SiPoi:** ✨ enhance Sicai tab fields with situational logic ([e1686dc](https://github.com/webmappsrl/osm2cai2/commit/e1686dcc8562a72fd17652e36efafa8c3de2655a))
+* **SiPoi:** ✨ enhance Sicai tab fields with situational logic ([abf2943](https://github.com/webmappsrl/osm2cai2/commit/abf29433e941186e2ac127ca76c0ecf270f0c982))
+
+
+### Bug Fixes
+
+* **config:** 🛠️ add visibility setting to S3 filesystem configuration ([638d34a](https://github.com/webmappsrl/osm2cai2/commit/638d34a8494bb982dcdb6b2b61f282f29b845221))
+* **HikingRoute:** 🐛 add explicit geometry casting in SQL query ([4b68745](https://github.com/webmappsrl/osm2cai2/commit/4b687459aa11b203bbbf598cdeaea04192b89980))
+* **models:** 🐛 correct production domain for HikingRoute links oc:7763 ([809fcee](https://github.com/webmappsrl/osm2cai2/commit/809fcee7f5ce33c522ad814a50ed1e97bafbe17b))
+* **models:** 🐛 correct production domain for HikingRoute links oc:7763 ([dc98faa](https://github.com/webmappsrl/osm2cai2/commit/dc98faaa32fe17a3c5e127bda14af5b6b40c8573))
+* **models:** 🐛 handle related_url as array in HikingRoute ([d5e3c5b](https://github.com/webmappsrl/osm2cai2/commit/d5e3c5bd7b82df3f8ed673e43bee6367e99a426b))
+* **NovaServiceProvider:** 🐛 update external link URLs for 'Webapp' section oc:7759 ([14822f0](https://github.com/webmappsrl/osm2cai2/commit/14822f04f7accbfa6b7df39f3e1161efbc5e8454))
+* **NovaServiceProvider:** 🐛 update external link URLs for 'Webapp' section oc:7759 ([a9f4c78](https://github.com/webmappsrl/osm2cai2/commit/a9f4c78f7ed38bc116f1eabcb229ad14aebf822e))
+
+
+### Miscellaneous Chores
+
+* **config:** 🔧 update JWT token lifespan to 30 days oc:7801 ([dfd6457](https://github.com/webmappsrl/osm2cai2/commit/dfd645766275262fcdef4e86e0aab28d6de3bb1f))
+* **dependencies:** 🔄 update composer package versions and configurations ([358592d](https://github.com/webmappsrl/osm2cai2/commit/358592d5fbde6542b1940eaacfd4267dfe58a864))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
