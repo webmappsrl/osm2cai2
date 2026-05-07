@@ -59,7 +59,7 @@ class MountainGroups extends Resource
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
             MapMultiPolygon::make(__('Geometry'), 'geometry')->withMeta([
                 'center' => ['42.795977075', '10.326813853'],
-                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
+                'attribution' => 'CAI',
             ])->hideFromIndex(),
             BelongsToMany::make(__('Regions'), 'regions', Region::class)
                 ->searchable(),

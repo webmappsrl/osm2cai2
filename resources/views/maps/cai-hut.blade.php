@@ -54,9 +54,9 @@
 <body>
     <h1>{{ $caiHut->name }}</h1>
     @if ($caiHut->description)
-        <div class="description">
-            <p>{{ $caiHut->description }}</p>
-        </div>
+    <div class="description">
+        <p>{{ $caiHut->description }}</p>
+    </div>
     @endif
     <div id="map-container">
         <div id="map"></div>
@@ -65,13 +65,29 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var map = L.map('map').setView([{{ $latitude }}, {{ $longitude }}], 13);
+            var map = L.map('map').setView([{
+                {
+                    $latitude
+                }
+            }, {
+                {
+                    $longitude
+                }
+            }], 13);
 
-            L.tileLayer('https://api.webmapp.it/tiles/{z}/{x}/{y}.png', {
+            L.tileLayer('https://r3-it.storage.cloud.it/tiles/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            L.marker([{{ $latitude }}, {{ $longitude }}]).addTo(map)
+            L.marker([{
+                    {
+                        $latitude
+                    }
+                }, {
+                    {
+                        $longitude
+                    }
+                }]).addTo(map)
                 .bindPopup('<b>{{ $caiHut->name }}</b><br>{{ $caiHut->description }}')
                 .openPopup();
         });

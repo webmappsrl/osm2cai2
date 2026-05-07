@@ -108,7 +108,7 @@ public function fields(NovaRequest $request)
         Osm2caiMapMultiLinestring::make('geometry')->withMeta([
             'center' => [42, 10],
             'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-            'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+            'tiles' => 'https://r3-it.storage.cloud.it/tiles/{z}/{x}/{y}.png',
             'minZoom' => 5,
             'maxZoom' => 17,
             'defaultZoom' => 10

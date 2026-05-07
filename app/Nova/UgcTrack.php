@@ -61,8 +61,8 @@ class UgcTrack extends WmUgcTrack
                 ->onlyOnDetail(),
             Osm2caiMapMultiLinestring::make('geometry')->withMeta([
                 'center' => $centroid ?? [42, 10],
-                'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-                'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+                'attribution' => 'CAI',
+                'tiles' => 'https://r3-it.storage.cloud.it/tiles/{z}/{x}/{y}.png',
                 'defaultZoom' => 10,
                 'geojson' => json_encode($geojson),
             ])->hideFromIndex(),

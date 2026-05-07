@@ -40,8 +40,8 @@ class UgcPoi extends WmUgcPoi
         // Aggiungi MapPoint dopo tutti i campi comuni
         $commonFields[] = MapPoint::make('geometry')->withMeta([
             'center' => [43.7125, 10.4013],
-            'attribution' => '<a href="https://webmapp.it/">Webmapp</a> contributors',
-            'tiles' => 'https://api.webmapp.it/tiles/{z}/{x}/{y}.png',
+            'attribution' => 'CAI',
+            'tiles' => 'https://r3-it.storage.cloud.it/tiles/{z}/{x}/{y}.png',
             'minZoom' => 8,
             'maxZoom' => 14,
             'defaultZoom' => 10,

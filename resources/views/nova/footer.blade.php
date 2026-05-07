@@ -13,7 +13,4 @@
     <a href="https://php.net/" class="text-primary dim no-underline">PHP</a>
     v{{ phpversion() }}
 
-    <span class="px-1">&middot;</span>
-    &copy; <a class="font-bold text-green-600" target="blank" href="https://webmapp.it/">WEBMAPP</a>
-
 </div>

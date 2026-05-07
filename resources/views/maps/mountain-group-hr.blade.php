@@ -54,9 +54,9 @@
 <body>
     <h1>{{ $mountainGroup->name }}</h1>
     @if ($mountainGroup->description)
-        <div class="description">
-            <p>{{ $mountainGroup->description }}</p>
-        </div>
+    <div class="description">
+        <p>{{ $mountainGroup->description }}</p>
+    </div>
     @endif
     <div id="map-container">
         <div id="map"></div>
@@ -67,16 +67,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             var map = L.map('map');
 
-            L.tileLayer('https://api.webmapp.it/tiles/{z}/{x}/{y}.png', {
+            L.tileLayer('https://r3-it.storage.cloud.it/tiles/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            var geojsonFeature = {!! $geometry !!};
+            var geojsonFeature = {
+                !!$geometry!!
+            };
 
             var mountainGroupLayer = L.geoJSON(geojsonFeature).addTo(map);
             map.fitBounds(mountainGroupLayer.getBounds());
 
-            var hikingRoutes = {!! $hikingRoutesGeojson !!};
+            var hikingRoutes = {
+                !!$hikingRoutesGeojson!!
+            };
 
             hikingRoutes.forEach(function(route) {
                 L.geoJSON(route, {
