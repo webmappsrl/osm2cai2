@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
-use App\Models\User as UserModel;
 use App\Nova\App;
 use App\Nova\ArchaeologicalArea;
 use App\Nova\ArchaeologicalSite;
@@ -35,14 +34,14 @@ use App\Nova\Region;
 use App\Nova\Sector;
 use App\Nova\Sign;
 use App\Nova\SignageProject;
-use App\Nova\SiHikingRoute;
-use App\Nova\SiMTBRoute;
-use App\Nova\SiPoi;
 use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
 use App\Nova\TaxonomyPoiType;
 use App\Nova\TaxonomyWhere;
 use App\Nova\TrailSurvey;
+use App\Nova\SiHikingRoute;
+use App\Nova\SiMTBRoute;
+use App\Nova\SiPoi;
 use App\Nova\UgcMedia;
 use App\Nova\UgcPoi;
 use App\Nova\UgcTrack;
@@ -73,26 +72,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Nova::style('custom-fields-css', public_path('css/custom-nova.css'));
 
         Nova::mainMenu(function (Request $request) {
-            // Check if the user is a Sicai Manager
-            $isSicaiManagerOnly = function () {
-                /** @var UserModel|null $user */
-                $user = Auth::user();
-
-                if (! $user) {
-                    return false;
-                }
-
-                return $user->hasRole(UserRole::SicaiManager)
-                    && ! $user->hasRole(UserRole::Administrator)
-                    && $user->email !== 'team@webmapp.it';
-            };
-
-            $hideForSicaiManager = function () use ($isSicaiManagerOnly) {
-                return ! $isSicaiManagerOnly();
-            };
-
             return [
-                MenuSection::dashboard(Main::class)->icon('home')->canSee($hideForSicaiManager),
+                MenuSection::dashboard(Main::class)->icon('home'),
                 // Admin
                 MenuSection::make(__('Admin'), [
                     MenuItem::resource(User::class, __('User'))->canSee(function () {
@@ -165,7 +146,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         ->canSee(function () {
                             return optional(Auth::user())->hasRole(UserRole::RegionalReferent);
                         }),
-                ])->icon('chart-bar')->collapsable()->collapsedByDefault()->canSee($hideForSicaiManager),
+                ])->icon('chart-bar')->collapsable()->collapsedByDefault(),
 
                 // Rete Escursionistica
                 MenuSection::make(__('Rete Escursionistica'), [
@@ -185,15 +166,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(Province::class, __('Provinces')),
                         MenuItem::resource(Region::class, __('Regions')),
                     ])->icon('none')->collapsable()->collapsedByDefault(),
-                ])->icon('globe')->collapsable()->canSee($hideForSicaiManager),
+                ])->icon('globe')->collapsable(),
 
-                // Sentiero Italia CAI (only for users with the Sicai Manager role)
+                // Sentiero Italia CAI (solo utenti con ruolo Sicai Manager)
                 MenuSection::make(__('Sentiero Italia CAI'), [
                     MenuItem::resource(SiHikingRoute::class, __('Hiking Routes')),
                     MenuItem::resource(SiMTBRoute::class, __('MTB Routes')),
                     MenuItem::resource(SiPoi::class, __('SI Pois')),
                 ])->icon('map')->collapsable()->collapsedByDefault()->canSee(function () {
-                    /** @var UserModel|null $user */
                     $user = Auth::user();
 
                     if (! $user) {
@@ -210,7 +190,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(MountainGroups::class, __('Mountain Groups')),
                     MenuItem::resource(CaiHut::class, __('Huts')),
                     MenuItem::resource(NaturalSpring::class, __('Acqua Sorgente')),
-                ])->icon('database')->collapsable()->collapsedByDefault()->canSee($hideForSicaiManager),
+                ])->icon('database')->collapsable()->collapsedByDefault(),
 
                 // Rilievi
                 MenuSection::make(__('Rilievi'), [
@@ -227,12 +207,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(ArchaeologicalArea::class),
                         MenuItem::resource(GeologicalSite::class),
                     ])->icon('none')->collapsable()->collapsedByDefault(),
-                ])->icon('eye')->collapsable()->canSee($hideForSicaiManager),
+                ])->icon('eye')->collapsable(),
                 MenuSection::make(__('Webapp'), [
-                    MenuItem::externalLink(__('App del Sentierista'), 'http://1.osm2cai.cai.it/')->openInNewTab()->canSee($hideForSicaiManager),
+                    MenuItem::externalLink(__('App del Sentierista'), 'http://1.osm2cai.cai.it/')->openInNewTab(),
                     MenuItem::externalLink(__('Sicai'), 'http://2.osm2cai.cai.it/')->openInNewTab(),
-                    MenuItem::externalLink(__('Acqua Sorgente'), 'http://3.osm2cai.cai.it/')->openInNewTab()->canSee($hideForSicaiManager),
-                    MenuItem::externalLink(__('INFOMONT'), 'https://infomont.cai.it')->openInNewTab()->canSee($hideForSicaiManager),
+                    MenuItem::externalLink(__('Acqua Sorgente'), 'http://3.osm2cai.cai.it/')->openInNewTab(),
+                    MenuItem::externalLink(__('INFOMONT'), 'https://infomont.cai.it')->openInNewTab(),
                 ])->icon('map')->collapsable()->collapsedByDefault(),
                 // Tools
                 MenuSection::make(__('Tools'), [
@@ -242,7 +222,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink(__('Migration check'), route('migration-check'))->canSee(function () {
                         return optional(Auth::user())->hasRole(UserRole::Administrator);
                     })->openInNewTab(),
-                ])->icon('color-swatch')->collapsable()->collapsedByDefault()->canSee($hideForSicaiManager),
+                ])->icon('color-swatch')->collapsable()->collapsedByDefault(),
 
             ];
         });
@@ -294,7 +274,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             return $dashboards;
         }
 
-        /** @var UserModel $loggedInUser */
+        /** @var \App\Models\User $loggedInUser */
         if (method_exists($loggedInUser, 'hasRole') && $loggedInUser->hasRole(UserRole::Administrator)) {
             $dashboards[] = new Utenti;
             $dashboards[] = new Percorribilità;

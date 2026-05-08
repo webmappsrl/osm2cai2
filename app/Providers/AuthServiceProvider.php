@@ -17,14 +17,6 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\HikingRoute::class => \App\Policies\HikingRoutePolicy::class,
         \App\Models\SignageProject::class => \App\Policies\SignageProjectPolicy::class,
         \App\Models\TrailSurvey::class => \App\Policies\TrailSurveyPolicy::class,
-        // Policies for the Sentiero Italia CAI content must be declared
-        // explicitly: SiHikingRoute and SiMTBRoute extend HikingRoute, and
-        // without an explicit mapping Laravel would resolve HikingRoutePolicy
-        // via is_subclass_of, preventing the SicaiManager role from making
-        // any modifications.
-        \App\Models\SiHikingRoute::class => \App\Policies\SiHikingRoutePolicy::class,
-        \App\Models\SiMTBRoute::class => \App\Policies\SiMTBRoutePolicy::class,
-        \App\Models\SiPoi::class => \App\Policies\SiPoiPolicy::class,
         \Wm\WmPackage\Models\TaxonomyPoiType::class => \Wm\WmPackage\Policies\TaxonomyPoiTypePolicy::class,
         \Wm\WmPackage\Models\TaxonomyActivity::class => \Wm\WmPackage\Policies\TaxonomyActivityPolicy::class,
     ];
