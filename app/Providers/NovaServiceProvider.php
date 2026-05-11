@@ -38,6 +38,7 @@ use App\Nova\SourceSurvey;
 use App\Nova\TaxonomyActivity;
 use App\Nova\TaxonomyPoiType;
 use App\Nova\TaxonomyWhere;
+use App\Nova\Tile;
 use App\Nova\TrailSurvey;
 use App\Nova\SiHikingRoute;
 use App\Nova\SiMTBRoute;
@@ -86,7 +87,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return optional(Auth::user())->hasRole(UserRole::Administrator);
                     }),
                     MenuSection::make(__('MOBILE'), [
-                        MenuItem::resource(App::class),
+                        MenuSection::make(__('Apps'), [
+                            MenuItem::resource(App::class),
+                            MenuItem::resource(Tile::class),
+                        ])->icon('none')->collapsable()->collapsedByDefault(),
                         MenuItem::resource(WmUser::class),
                         MenuSection::make(__('Editorial Content'), [
                             MenuItem::resource(Layer::class),
