@@ -236,13 +236,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('map')->collapsable()->collapsedByDefault(),
                 // Tools
                 MenuSection::make(__('Tools'), [
-                    MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab(),
-                    MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab(),
+                    MenuItem::externalLink(__('LoScarpone-Export'), route('loscarpone-export'))->openInNewTab()->canSee($hideForSicaiManager),
+                    MenuItem::externalLink(__('API'), '/api/documentation')->openInNewTab()->canSee($hideForSicaiManager),
                     MenuItem::externalLink(__('Documentazione OSM2CAI'), 'https://catastorei.gitbook.io/documentazione-osm2cai')->openInNewTab(),
                     MenuItem::externalLink(__('Migration check'), route('migration-check'))->canSee(function () {
                         return optional(Auth::user())->hasRole(UserRole::Administrator);
                     })->openInNewTab(),
-                ])->icon('color-swatch')->collapsable()->collapsedByDefault()->canSee($hideForSicaiManager),
+                ])->icon('color-swatch')->collapsable()->collapsedByDefault(),
 
             ];
         });
