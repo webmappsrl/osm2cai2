@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
-use Wm\WmPackage\Jobs\Track\UpdateEcTrackAwsJob;
 
 class ForceUpdateOsmFeaturesFromToCommandTest extends TestCase
 {
@@ -49,11 +48,13 @@ class ForceUpdateOsmFeaturesFromToCommandTest extends TestCase
     private function createHikingRoute(
         string $osmfeaturesId,
         array $properties,
-        array $osmfeaturesData
+        array $osmfeaturesData,
+        string $name = 'OLD NAME'
     ): HikingRoute {
         return HikingRoute::factory()->createQuietly([
             'osmfeatures_id' => $osmfeaturesId,
             'osm2cai_status' => 4,
+            'name' => $name,
             'properties' => $properties,
             'osmfeatures_data' => $osmfeaturesData,
             'osmfeatures_updated_at' => Carbon::now()->subDay(),
@@ -104,18 +105,19 @@ class ForceUpdateOsmFeaturesFromToCommandTest extends TestCase
         $this->assertSame('', $route->osmfeatures_data['properties']['from'] ?? '');
         $this->assertSame('', $route->osmfeatures_data['properties']['to'] ?? '');
 
-        Queue::assertNotPushed(UpdateEcTrackAwsJob::class);
+        Queue::assertNothingPushed();
     }
 
     /** @test */
-    public function it_updates_properties_and_osmfeatures_data_and_dispatches_aws_job(): void
+    public function it_updates_properties_and_osmfeatures_data_quietly_and_does_not_update_name_by_default(): void
     {
         $osmfeaturesId = 'R12345679';
 
         $route = $this->createHikingRoute(
             $osmfeaturesId,
             ['from' => '', 'to' => ''],
-            ['properties' => ['ref' => 'REF001', 'from' => '', 'to' => '']]
+            ['properties' => ['ref' => 'REF001', 'from' => '', 'to' => '']],
+            'OLD NAME'
         );
 
         $this->fakeSingleFeature($osmfeaturesId, 'From API', 'To API');
@@ -131,9 +133,9 @@ class ForceUpdateOsmFeaturesFromToCommandTest extends TestCase
         $this->assertSame('To API', $route->properties['to']);
         $this->assertSame('From API', $route->osmfeatures_data['properties']['from']);
         $this->assertSame('To API', $route->osmfeatures_data['properties']['to']);
-        $this->assertSame('REF001 - From API - To API', $route->name);
+        $this->assertSame('OLD NAME', $route->name);
 
-        Queue::assertPushed(UpdateEcTrackAwsJob::class);
+        Queue::assertNothingPushed();
     }
 
     /** @test */
@@ -166,7 +168,56 @@ class ForceUpdateOsmFeaturesFromToCommandTest extends TestCase
         $this->assertSame('', $route->osmfeatures_data['properties']['from'] ?? '');
         $this->assertSame('DEST', $route->osmfeatures_data['properties']['to']);
 
-        Queue::assertPushed(UpdateEcTrackAwsJob::class);
+        Queue::assertNothingPushed();
+    }
+
+    /** @test */
+    public function it_updates_properties_from_osmfeatures_data_without_calling_api(): void
+    {
+        $osmfeaturesId = 'R12345681';
+
+        $route = $this->createHikingRoute(
+            $osmfeaturesId,
+            ['from' => '', 'to' => ''],
+            ['properties' => ['from' => 'FROM OSF', 'to' => 'TO OSF']]
+        );
+
+        Http::fake();
+
+        $this->artisan('osm2cai:force-update-osmfeatures-from-to', [
+            '--id' => $route->id,
+            '--delay' => 0,
+        ])->assertSuccessful();
+
+        $route->refresh();
+        $this->assertSame('FROM OSF', $route->properties['from']);
+        $this->assertSame('TO OSF', $route->properties['to']);
+
+        Http::assertNothingSent();
+    }
+
+    /** @test */
+    public function it_updates_name_only_when_option_is_enabled(): void
+    {
+        $osmfeaturesId = 'R12345682';
+
+        $route = $this->createHikingRoute(
+            $osmfeaturesId,
+            ['from' => '', 'to' => ''],
+            ['properties' => ['ref' => 'REF001', 'from' => '', 'to' => '']],
+            'OLD NAME'
+        );
+
+        $this->fakeSingleFeature($osmfeaturesId, 'From API', 'To API');
+
+        $this->artisan('osm2cai:force-update-osmfeatures-from-to', [
+            '--id' => $route->id,
+            '--delay' => 0,
+            '--update-name' => true,
+        ])->assertSuccessful();
+
+        $route->refresh();
+        $this->assertSame('REF001 - From API - To API', $route->name);
     }
 }
 

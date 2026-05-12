@@ -25,7 +25,8 @@ class ForceUpdateOsmFeaturesFromTo extends Command
                             {--timeout=30 : Timeout in secondi per ogni richiesta HTTP}
                             {--limit=0 : Numero massimo di hiking routes da elaborare (0 = nessun limite)}
                             {--id= : ID della HikingRoute da processare (utile per test/debug)}
-                            {--details : Stampa/logga il dettaglio per ogni record (valori locali vs API e motivazione)}';
+                            {--details : Stampa/logga il dettaglio per ogni record (valori locali vs API e motivazione)}
+                            {--update-name : Aggiorna anche il campo name (ref - from - to). Default: disabilitato}';
 
     /**
      * The console command description.
@@ -39,6 +40,8 @@ class ForceUpdateOsmFeaturesFromTo extends Command
     private bool $isDryRun = false;
 
     private bool $isDetails = false;
+
+    private bool $shouldUpdateName = false;
 
     private int $processed = 0;
 
@@ -55,6 +58,7 @@ class ForceUpdateOsmFeaturesFromTo extends Command
     {
         $this->isDryRun = (bool) $this->option('dry-run');
         $this->isDetails = (bool) $this->option('details');
+        $this->shouldUpdateName = (bool) $this->option('update-name');
         $batchSize = max(1, (int) $this->option('batch-size'));
         $delayMs = max(0, (int) $this->option('delay'));
         $timeout = max(1, (int) $this->option('timeout'));
@@ -65,7 +69,7 @@ class ForceUpdateOsmFeaturesFromTo extends Command
         $prefix = $this->isDryRun ? '[DRY RUN] ' : '';
 
         $this->info($prefix."Avvio aggiornamento forzato di 'from'/'to' su HikingRoute (batch={$batchSize}, delay={$delayMs}ms).");
-        $logger->info("ForceUpdateOsmFeaturesFromTo: start (dry-run={$this->isDryRun}, details={$this->isDetails}, batch={$batchSize}, delay={$delayMs}ms, limit={$limit}, id={$id})");
+        $logger->info("ForceUpdateOsmFeaturesFromTo: start (dry-run={$this->isDryRun}, details={$this->isDetails}, update-name={$this->shouldUpdateName}, batch={$batchSize}, delay={$delayMs}ms, limit={$limit}, id={$id})");
 
         $ids = $this->buildBaseQuery()
             ->when(! empty($id), fn ($q) => $q->where('id', (int) $id))
@@ -95,7 +99,10 @@ class ForceUpdateOsmFeaturesFromTo extends Command
                 ->get()
                 ->keyBy('id');
 
-            $responses = $this->fetchBatch($routes, $timeout);
+            $routesNeedingFetch = $routes->filter(fn (HikingRoute $route) => $this->needsFetchFromApi($route));
+            $responses = $routesNeedingFetch->isEmpty()
+                ? []
+                : $this->fetchBatch($routesNeedingFetch, $timeout);
 
             foreach ($routes as $id => $route) {
                 $this->processed++;
@@ -166,83 +173,114 @@ class ForceUpdateOsmFeaturesFromTo extends Command
      */
     private function processSingleRoute(HikingRoute $route, mixed $response, $logger): void
     {
-        if ($response instanceof Throwable || $response instanceof ConnectionException) {
-            $this->errors++;
-            $logger->error("ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) - request failed: ".$response->getMessage());
-
-            return;
-        }
-
-        if (! $response instanceof Response || $response->failed() || $response->json() === null) {
-            $this->errors++;
-            $status = $response instanceof Response ? $response->status() : 'no-response';
-            $logger->error("ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) - invalid response (status: {$status})");
-
-            return;
-        }
-
-        $data = $response->json();
-        $from = $data['properties']['from'] ?? null;
-        $to = $data['properties']['to'] ?? null;
-
         $properties = is_array($route->properties) ? $route->properties : [];
         $localFrom = $properties['from'] ?? null;
         $localTo = $properties['to'] ?? null;
+
+        if (! $this->isEmptyValue($localFrom) && ! $this->isEmptyValue($localTo)) {
+            $this->skipped++;
+            $logger->info("ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) - skip: local already has from/to");
+
+            return;
+        }
+
         $changed = false;
         $reasons = [];
 
-        // Preparazione aggiornamento "ibrido": oltre a properties, aggiorna osmfeatures_data.properties.from/to
-        // solo se sono vuoti e solo con valori non vuoti provenienti dall'API.
-        $osmfeaturesData = $route->osmfeatures_data;
-        if (is_string($osmfeaturesData)) {
-            $decoded = json_decode($osmfeaturesData, true);
-            if (is_array($decoded)) {
-                $osmfeaturesData = $decoded;
-            }
-        }
+        // 1) Se in properties mancano from/to, prima prova a recuperarli da osmfeatures_data.
+        $osmfeaturesData = $this->decodeOsmfeaturesData($route->osmfeatures_data);
         $osmfeaturesDataChanged = false;
-        if (is_array($osmfeaturesData)) {
-            $osmfeaturesData['properties'] ??= [];
-            $osfLocalFrom = $osmfeaturesData['properties']['from'] ?? null;
-            $osfLocalTo = $osmfeaturesData['properties']['to'] ?? null;
-            $osfRef = $osmfeaturesData['properties']['ref'] ?? null;
-        } else {
-            $osfLocalFrom = null;
-            $osfLocalTo = null;
-            $osfRef = null;
-        }
+        $osmfeaturesDataProps = is_array($osmfeaturesData) ? ($osmfeaturesData['properties'] ?? []) : [];
+        $osfLocalFrom = is_array($osmfeaturesDataProps) ? ($osmfeaturesDataProps['from'] ?? null) : null;
+        $osfLocalTo = is_array($osmfeaturesDataProps) ? ($osmfeaturesDataProps['to'] ?? null) : null;
+        $osfRef = is_array($osmfeaturesDataProps) ? ($osmfeaturesDataProps['ref'] ?? null) : null;
 
-        if (! $this->isEmptyValue($from) && $this->isEmptyValue($localFrom)) {
-            $properties['from'] = $from;
+        if ($this->isEmptyValue($localFrom) && ! $this->isEmptyValue($osfLocalFrom)) {
+            $properties['from'] = $osfLocalFrom;
             $changed = true;
-            $reasons[] = "set from (local empty, api='{$from}')";
+            $reasons[] = "set from (from osmfeatures_data='{$osfLocalFrom}')";
         }
 
-        if (! $this->isEmptyValue($to) && $this->isEmptyValue($localTo)) {
-            $properties['to'] = $to;
+        if ($this->isEmptyValue($localTo) && ! $this->isEmptyValue($osfLocalTo)) {
+            $properties['to'] = $osfLocalTo;
             $changed = true;
-            $reasons[] = "set to (local empty, api='{$to}')";
+            $reasons[] = "set to (from osmfeatures_data='{$osfLocalTo}')";
         }
 
-        if (is_array($osmfeaturesData)) {
-            if (! $this->isEmptyValue($from) && $this->isEmptyValue($osfLocalFrom)) {
-                $osmfeaturesData['properties']['from'] = $from;
-                $osmfeaturesDataChanged = true;
-                $reasons[] = "set osmfeatures_data.from (was empty, api='{$from}')";
+        $localFromAfterOsmfeatures = $properties['from'] ?? null;
+        $localToAfterOsmfeatures = $properties['to'] ?? null;
+
+        // 2) Se mancano ancora from/to, fai fetch a osmfeatures e aggiorna sia properties che osmfeatures_data.
+        $needsApiFrom = $this->isEmptyValue($localFromAfterOsmfeatures);
+        $needsApiTo = $this->isEmptyValue($localToAfterOsmfeatures);
+
+        $apiFrom = null;
+        $apiTo = null;
+
+        if ($needsApiFrom || $needsApiTo) {
+            if ($response instanceof Throwable || $response instanceof ConnectionException) {
+                $this->errors++;
+                $logger->error("ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) - request failed: ".$response->getMessage());
+
+                return;
             }
-            if (! $this->isEmptyValue($to) && $this->isEmptyValue($osfLocalTo)) {
-                $osmfeaturesData['properties']['to'] = $to;
-                $osmfeaturesDataChanged = true;
-                $reasons[] = "set osmfeatures_data.to (was empty, api='{$to}')";
+
+            if (! $response instanceof Response || $response->failed() || $response->json() === null) {
+                $this->errors++;
+                $status = $response instanceof Response ? $response->status() : 'no-response';
+                $logger->error("ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) - invalid response (status: {$status})");
+
+                return;
+            }
+
+            $data = $response->json();
+            $apiFrom = $data['properties']['from'] ?? null;
+            $apiTo = $data['properties']['to'] ?? null;
+
+            if ($needsApiFrom && ! $this->isEmptyValue($apiFrom)) {
+                $properties['from'] = $apiFrom;
+                $changed = true;
+                $reasons[] = "set from (from api='{$apiFrom}')";
+            }
+
+            if ($needsApiTo && ! $this->isEmptyValue($apiTo)) {
+                $properties['to'] = $apiTo;
+                $changed = true;
+                $reasons[] = "set to (from api='{$apiTo}')";
+            }
+
+            if (is_array($osmfeaturesData)) {
+                $osmfeaturesData['properties'] ??= [];
+                if (! $this->isEmptyValue($apiFrom)) {
+                    $osmfeaturesData['properties']['from'] = $apiFrom;
+                    $osmfeaturesDataChanged = true;
+                    $reasons[] = "set osmfeatures_data.from (from api='{$apiFrom}')";
+                }
+                if (! $this->isEmptyValue($apiTo)) {
+                    $osmfeaturesData['properties']['to'] = $apiTo;
+                    $osmfeaturesDataChanged = true;
+                    $reasons[] = "set osmfeatures_data.to (from api='{$apiTo}')";
+                }
+            } else {
+                $osmfeaturesData = ['properties' => []];
+                if (! $this->isEmptyValue($apiFrom)) {
+                    $osmfeaturesData['properties']['from'] = $apiFrom;
+                    $osmfeaturesDataChanged = true;
+                    $reasons[] = "set osmfeatures_data.from (from api='{$apiFrom}')";
+                }
+                if (! $this->isEmptyValue($apiTo)) {
+                    $osmfeaturesData['properties']['to'] = $apiTo;
+                    $osmfeaturesDataChanged = true;
+                    $reasons[] = "set osmfeatures_data.to (from api='{$apiTo}')";
+                }
             }
         }
 
-        // Se abbiamo una ref e stiamo aggiornando from/to, aggiorna anche il name (ref - from - to).
-        // Usiamo i valori finali presenti in osmfeatures_data se disponibili, altrimenti quelli in properties.
+        // 3) Aggiornamento name opzionale (default: disabilitato)
         $nameChanged = false;
         $newName = null;
         $refForName = $this->isEmptyValue($osfRef) ? null : (string) $osfRef;
-        if ($refForName !== null && ($changed || $osmfeaturesDataChanged)) {
+        if ($this->shouldUpdateName && $refForName !== null && ($changed || $osmfeaturesDataChanged)) {
             $fromForName = is_array($osmfeaturesData) ? ($osmfeaturesData['properties']['from'] ?? null) : null;
             $toForName = is_array($osmfeaturesData) ? ($osmfeaturesData['properties']['to'] ?? null) : null;
             if ($this->isEmptyValue($fromForName)) {
@@ -264,14 +302,15 @@ class ForceUpdateOsmFeaturesFromTo extends Command
         if ($this->isDetails) {
             $msg = "ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) "
                 ."local[from='".($localFrom ?? 'NULL')."', to='".($localTo ?? 'NULL')."'] "
-                ."api[from='".($from ?? 'NULL')."', to='".($to ?? 'NULL')."']";
+                ."osmfeatures_data[from='".($osfLocalFrom ?? 'NULL')."', to='".($osfLocalTo ?? 'NULL')."'] "
+                ."api[from='".($apiFrom ?? 'NULL')."', to='".($apiTo ?? 'NULL')."']";
             $this->line($msg);
             $logger->info($msg);
         }
 
         if (! $changed && ! $osmfeaturesDataChanged) {
             $this->skipped++;
-            $reason = $this->buildSkipReason($localFrom, $localTo, $from, $to);
+            $reason = $this->buildSkipReason($localFrom, $localTo, $apiFrom, $apiTo);
             $logger->info("ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) - nothing to update ({$reason})");
             if ($this->isDetails) {
                 $this->line("  -> skip: {$reason}");
@@ -292,8 +331,6 @@ class ForceUpdateOsmFeaturesFromTo extends Command
         }
 
         try {
-            // NOTA: usiamo update() (non quietly) così scattano gli observer
-            // e quindi il job AWS della traccia viene dispatchato automaticamente.
             $updatePayload = ['properties' => $properties];
             if ($osmfeaturesDataChanged) {
                 $updatePayload['osmfeatures_data'] = $osmfeaturesData;
@@ -301,7 +338,8 @@ class ForceUpdateOsmFeaturesFromTo extends Command
             if ($nameChanged) {
                 $updatePayload['name'] = $newName;
             }
-            $route->update($updatePayload);
+            $route->fill($updatePayload);
+            $route->saveQuietly();
             $this->updated++;
             $actions = implode(', ', $reasons);
             $logger->info("ForceUpdateOsmFeaturesFromTo: id {$route->id} ({$route->osmfeatures_id}) - updated ({$actions}) (osm2cai_status={$route->osm2cai_status})");
@@ -373,6 +411,43 @@ class ForceUpdateOsmFeaturesFromTo extends Command
             ]
         );
 
-        $logger->info("ForceUpdateOsmFeaturesFromTo: end - processed={$this->processed}, updated={$this->updated}, skipped={$this->skipped}, errors={$this->errors}, dry-run={$this->isDryRun}, details={$this->isDetails}");
+        $logger->info("ForceUpdateOsmFeaturesFromTo: end - processed={$this->processed}, updated={$this->updated}, skipped={$this->skipped}, errors={$this->errors}, dry-run={$this->isDryRun}, details={$this->isDetails}, update-name={$this->shouldUpdateName}");
+    }
+
+    private function decodeOsmfeaturesData(mixed $osmfeaturesData): ?array
+    {
+        if (is_array($osmfeaturesData)) {
+            return $osmfeaturesData;
+        }
+
+        if (is_string($osmfeaturesData)) {
+            $decoded = json_decode($osmfeaturesData, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return null;
+    }
+
+    private function needsFetchFromApi(HikingRoute $route): bool
+    {
+        $properties = is_array($route->properties) ? $route->properties : [];
+        $localFrom = $properties['from'] ?? null;
+        $localTo = $properties['to'] ?? null;
+
+        if (! $this->isEmptyValue($localFrom) && ! $this->isEmptyValue($localTo)) {
+            return false;
+        }
+
+        $osmfeaturesData = $this->decodeOsmfeaturesData($route->osmfeatures_data);
+        $props = is_array($osmfeaturesData) ? ($osmfeaturesData['properties'] ?? []) : [];
+        $osfFrom = is_array($props) ? ($props['from'] ?? null) : null;
+        $osfTo = is_array($props) ? ($props['to'] ?? null) : null;
+
+        $needsFrom = $this->isEmptyValue($localFrom) && $this->isEmptyValue($osfFrom);
+        $needsTo = $this->isEmptyValue($localTo) && $this->isEmptyValue($osfTo);
+
+        return $needsFrom || $needsTo;
     }
 }
