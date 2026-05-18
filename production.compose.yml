@@ -4,16 +4,19 @@ services:
     extends:
       file: compose.yml
       service: php
+    ports: []
   db:
     extends:
       file: compose.yml
       service: db
     # Override: aggiunge shm_size per prestazioni produzione
     shm_size: '256mb'
+    ports: []
   redis:
     extends:
       file: compose.yml
       service: redis
+    ports: []
   elasticsearch:
     extends:
       file: compose.yml
@@ -29,6 +32,7 @@ services:
       - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
       # Heap 6g: per prestazioni migliori; la macchina deve avere almeno ~8GB liberi per evitare OOM
       - ES_JAVA_OPTS=-Xms6g -Xmx6g
+    ports: []
   elasticsearch-init:
     extends:
       file: compose.yml
@@ -37,6 +41,7 @@ services:
     extends:
       file: compose.yml
       service: kibana
+    ports: []
   horizon:
     extends:
       file: compose.yml

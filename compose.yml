@@ -8,8 +8,8 @@ services:
     container_name: "php81-${APP_NAME}"
     image: wm-phpfpm:8.4-fpm
     ports:
-      - ${DOCKER_PHP_PORT}:9000
-      - ${DOCKER_SERVE_PORT}:8000
+      - 127.0.0.1:${DOCKER_PHP_PORT}:9000
+      - 127.0.0.1:${DOCKER_SERVE_PORT}:8000
     volumes:
       - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
       - "../wm-package:/var/www/html/wm-package"
@@ -31,7 +31,7 @@ services:
     volumes:
       - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
     ports:
-      - ${DOCKER_PSQL_PORT}:5432
+      - 127.0.0.1:${DOCKER_PSQL_PORT}:5432
     networks:
       - laravel
   redis:
@@ -39,7 +39,7 @@ services:
     container_name: "redis-${APP_NAME}"
     restart: always
     ports:
-      - 6379:6379
+      - 127.0.0.1:6379:6379
     networks:
       - laravel
   elasticsearch:
@@ -60,8 +60,8 @@ services:
         soft: -1
         hard: -1
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "127.0.0.1:9200:9200"
+      - "127.0.0.1:9300:9300"
     volumes:
       - "./docker/volumes/elasticsearch/data:/usr/share/elasticsearch/data"
     healthcheck:
@@ -131,7 +131,7 @@ services:
       - SERVER_BASEPATH=/kibana
       - SERVER_REWRITEBASEPATH=false
     ports:
-      - ${DOCKER_KIBANA_PORT:-5601}:5601
+      - 127.0.0.1:${DOCKER_KIBANA_PORT:-5601}:5601
     networks:
       - laravel
   horizon:
