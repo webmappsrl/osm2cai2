@@ -37,7 +37,7 @@ class ClubPolicy
      */
     public function update(User $user, Club $club): bool
     {
-        return false;
+        return $user->hasRole(UserRole::Administrator);
     }
 
     /**
@@ -45,7 +45,7 @@ class ClubPolicy
      */
     public function delete(User $user, Club $club): bool
     {
-        return false;
+        return $user->hasRole(UserRole::Administrator);
     }
 
     /**
