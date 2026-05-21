@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Wm\WmPackage\Models\EcTrack;
 use Wm\WmPackage\Models\EcPoiEcTrack;
-use App\Models\SiHikingRoute;
+use Wm\WmPackage\Models\EcTrack;
+use Wm\WmPackage\Models\TaxonomyPoiType;
 
 class SiPoi extends EcPoi
 {
     protected $table = 'ec_pois';
+
+    public const DEFAULT_TAXONOMY_POI_TYPE_IDENTIFIER = 'punto-accoglienza';
 
     protected static function boot()
     {
@@ -34,6 +36,21 @@ class SiPoi extends EcPoi
             $properties['sicai'] = $sicai;
             $model->properties = $properties;
         });
+
+        static::created(function (self $model): void {
+            if ($model->taxonomyPoiTypes()->exists()) {
+                return;
+            }
+
+            $taxonomyPoiType = TaxonomyPoiType::where(
+                'identifier',
+                self::DEFAULT_TAXONOMY_POI_TYPE_IDENTIFIER
+            )->first();
+
+            if ($taxonomyPoiType !== null) {
+                $model->taxonomyPoiTypes()->attach($taxonomyPoiType->id);
+            }
+        });
     }
 
     /**
@@ -45,7 +62,6 @@ class SiPoi extends EcPoi
     {
         return EcPoi::class;
     }
-
 
     public function ecTracks(): BelongsToMany
     {

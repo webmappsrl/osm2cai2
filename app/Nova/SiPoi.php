@@ -3,15 +3,18 @@
 namespace App\Nova;
 
 use App\Enums\SicaiSituazioneEnum;
-use App\Nova\Filters\SicaiSituazioneFilter;
+use App\Enums\UserRole;
 use App\Models\SiPoi as SiPoiModel;
-use Wm\WmPackage\Nova\Actions\RegenerateEcPoiTaxonomyWhere;
+use App\Models\User as UserModel;
+use App\Nova\Filters\SicaiSituazioneFilter;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\FormData;
+
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
@@ -19,8 +22,9 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use Wm\MapPoint\MapPoint;
-use Wm\WmPackage\Nova\Fields\PropertiesPanel;
+use Wm\WmPackage\Nova\Actions\RegenerateEcPoiTaxonomyWhere;
 use Wm\WmPackage\Nova\Fields\FeatureCollectionMap\src\FeatureCollectionMap;
+use Wm\WmPackage\Nova\Fields\PropertiesPanel;
 
 class SiPoi extends EcPoi
 {
@@ -48,12 +52,29 @@ class SiPoi extends EcPoi
     }
 
     /**
-     * Limita l’index agli EC provenienti da pt_accoglienza_unofficial (app_id = 2).
+     * Restrict the index to EC POIs coming from pt_accoglienza_unofficial (app_id = 2).
+     *
+     * Replicates the logic of Wm\WmPackage\Nova\AbstractEcResource::indexQuery
+     * (filters by user_id when the user is not Administrator) but also exempts
+     * users with the SicaiManager role from the filter: they must be able to
+     * see all Sentiero Italia CAI Welcome Points, not just the ones they
+     * created themselves.
      */
     public static function indexQuery(NovaRequest $request, $query): Builder
     {
         /** @var Builder $query */
-        $query = parent::indexQuery($request, $query);
+        /** @var UserModel|null $user */
+        $user = Auth::user();
+
+        if ($user
+            && ! $user->hasRole(UserRole::Administrator->value)
+            && ! $user->hasRole(UserRole::SicaiManager->value)
+        ) {
+            $table = $query->getModel()->getTable();
+            if (Schema::hasColumn($table, 'user_id')) {
+                $query->where('user_id', $user->id);
+            }
+        }
 
         return $query
             ->where('app_id', 2)
