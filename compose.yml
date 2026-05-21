@@ -1,5 +1,6 @@
 services:
   php:
+    hostname: osm2cai.cai.it
     extra_hosts:
       - host.docker.internal:host-gateway
     # user: root
@@ -135,6 +136,7 @@ services:
     networks:
       - laravel
   horizon:
+    hostname: osm2cai.cai.it
     extra_hosts:
       - host.docker.internal:host-gateway
     build: ./docker/configs/phpfpm
