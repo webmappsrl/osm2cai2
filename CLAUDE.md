@@ -139,6 +139,19 @@ I job in `app/Jobs/` gestiscono operazioni asincrone:
 - `GeoBufferTrait` per operazioni di buffer di prossimità
 - Utilità di conversione geometria in `app/Services/GeometryService.php`
 
+## Decisioni architetturali
+
+### Cleanup manual_data SiHikingRoute (oc:7954)
+- Nei command che modificano record durante l'iterazione usare sempre `chunkById()` invece di `chunk()`: `chunk()` usa LIMIT/OFFSET e salta record quando la result set cambia sotto di lui.
+- L'operatore `?` di PostgreSQL (esistenza chiave JSONB) va scritto `??` dentro `whereRaw()` per evitare che PDO lo interpreti come placeholder di bind.
+- `--verbose` è riservato da Symfony Console: usare `$this->output->isVerbose()` attivato dal flag nativo `-v` invece di dichiarare un'opzione custom.
+
+## Feature disponibili
+
+| Feature | Ticket | Moduli toccati | Note |
+|---|---|---|---|
+| Cleanup manual_data SiHikingRoute | oc:7954 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Rimuove `properties->manual_data` dalle SiHikingRoute (app_id=2, layer_id=6) per ripristinare DEM come current value. Idempotente, supporta `--dry-run` e `-v`. |
+
 ### Configurazione dei Test
 I test usano un DB PostgreSQL/PostGIS reale (non SQLite in-memory). La connessione DB in `phpunit.xml` è lasciata non commentata per PostGIS.
 Suite di test: `Unit`, `Api`, `Feature` (sotto `tests/`).
