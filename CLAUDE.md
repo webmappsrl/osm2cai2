@@ -141,6 +141,12 @@ I job in `app/Jobs/` gestiscono operazioni asincrone:
 
 ## Decisioni architetturali
 
+### Fix valori campi DEM export Excel (oc:7982)
+- `EcTrackExcelExporter` legge i valori top-level (`properties.ascent` ecc.) non le sub-sorgenti (`dem_data`, `osm_data`). Nova invece usa `classifyField` (trait `HasDemClassification`). I due sistemi divergono se i valori top-level non sono aggiornati — il command `osm2cai:cleanup-si-hiking-routes-manual-data` li allinea.
+- La condizione `osmid !== null` va verificata prima di leggere `osm_data` per replicare esattamente `classifyField` — senza questo check i record senza osmid userebbero erroneamente i valori OSM.
+- `safeArray()` duplicato nel command per evitare dipendenze dal trait Nova (`HasDemClassification`) in un Artisan command.
+- Root cause strutturale (exporter che legge top-level invece di `classifyField`) tracciata in oc:7984.
+
 ### Cleanup manual_data SiHikingRoute (oc:7954)
 - Nei command che modificano record durante l'iterazione usare sempre `chunkById()` invece di `chunk()`: `chunk()` usa LIMIT/OFFSET e salta record quando la result set cambia sotto di lui.
 - L'operatore `?` di PostgreSQL (esistenza chiave JSONB) va scritto `??` dentro `whereRaw()` per evitare che PDO lo interpreti come placeholder di bind.
@@ -150,6 +156,7 @@ I job in `app/Jobs/` gestiscono operazioni asincrone:
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Fix valori campi DEM export Excel | oc:7982 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Estende il command a tutti i record app_id=2: rimuove `manual_data` se presente e ripristina i valori top-level DEM con priorità OSM→DEM→null. Idempotente. |
 | Cleanup manual_data SiHikingRoute | oc:7954 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Rimuove `properties->manual_data` dalle SiHikingRoute (app_id=2, layer_id=6) per ripristinare DEM come current value. Idempotente, supporta `--dry-run` e `-v`. |
 
 ### Configurazione dei Test
