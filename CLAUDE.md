@@ -141,6 +141,13 @@ I job in `app/Jobs/` gestiscono operazioni asincrone:
 
 ## Decisioni architetturali
 
+### Fix sync WMFE/PBF per figli SiHikingRoute aggiornati via saveQuietly (oc:8197)
+- `HikingRouteObserver::syncOsm2caiStatusToChildSiHikingRoutes()` propaga `osm2cai_status`/`validator_id`/`validation_date` ai figli con `saveQuietly()`, che bypassa gli Observer e salta il dispatch di `UpdateEcTrackAwsJob` (WMFE) e la rigenerazione PBF — causa di desincronizzazione DB↔WMFE↔PBF su SiHikingRoute figlie.
+- Fix: dispatch esplicito di `UpdateEcTrackAwsJob` dopo ogni `saveQuietly()` di un figlio effettivamente cambiato, e rigenerazione PBF solo se il figlio ha anche `wasChanged('geometry')` (oggi sempre `false` in questo metodo, guardia per estensibilità futura).
+- Non risolti in questo ciclo (deliberatamente fuori scope): altri path `saveQuietly()`/`updateQuietly()` esistenti (sync osmfeatures bulk, `ForceUpdateOsmFeaturesFromTo`, SignageMap, cleanup SI) possono generare lo stesso sintomo; il servizio centralizzato `EcTrackSyncService` proposto come soluzione a medio termine; i dati storici già desincronizzati (tracciati in oc:8200).
+- Verificato: `UpdateEcTrackAwsJob` ricarica sempre il modello come `config('wm-package.ec_track_model')` (= `HikingRoute`), mai come `SiHikingRoute` — ma non impatta il JSON reale su WMFE perché `EcTrackResource` usa `getGeojson()`/relazione `ecPois` diretta, non `getFeatureCollectionMap()` (l'override specifico di `SiHikingRoute`).
+- Duplicazione nota (non risolta): la logica di dispatch WMFE/PBF è ripetuta manualmente sia in `saved()` (per il parent) sia in `syncOsm2caiStatusToChildSiHikingRoutes()` (per i figli) — refactor futuro possibile: estrarre in un metodo condiviso.
+
 ### Fix valori campi DEM export Excel (oc:7982)
 - `EcTrackExcelExporter` legge i valori top-level (`properties.ascent` ecc.) non le sub-sorgenti (`dem_data`, `osm_data`). Nova invece usa `classifyField` (trait `HasDemClassification`). I due sistemi divergono se i valori top-level non sono aggiornati — il command `osm2cai:cleanup-si-hiking-routes-manual-data` li allinea.
 - La condizione `osmid !== null` va verificata prima di leggere `osm_data` per replicare esattamente `classifyField` — senza questo check i record senza osmid userebbero erroneamente i valori OSM.
@@ -156,6 +163,7 @@ I job in `app/Jobs/` gestiscono operazioni asincrone:
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Fix sync WMFE/PBF per figli SiHikingRoute | oc:8197 | `app/Observers/HikingRouteObserver.php` | Dispatch esplicito di `UpdateEcTrackAwsJob`/PBF dopo `saveQuietly()` sui figli, per evitare desincronizzazione DB↔WMFE↔PBF. Vedi anche oc:8200 (rigenerazione forzata dati storici). |
 | Fix valori campi DEM export Excel | oc:7982 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Estende il command a tutti i record app_id=2: rimuove `manual_data` se presente e ripristina i valori top-level DEM con priorità OSM→DEM→null. Idempotente. |
 | Cleanup manual_data SiHikingRoute | oc:7954 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Rimuove `properties->manual_data` dalle SiHikingRoute (app_id=2, layer_id=6) per ripristinare DEM come current value. Idempotente, supporta `--dry-run` e `-v`. |
 
