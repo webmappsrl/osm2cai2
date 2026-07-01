@@ -148,6 +148,14 @@ class HikingRouteObserver extends EcTrackObserver
             $child->validation_date = $newValidationDate;
 
             $child->saveQuietly();
+
+            // saveQuietly() bypassa gli Observer: la sync verso WMFE (e, se serve, PBF)
+            // deve essere dispatchata esplicitamente qui. Vedi oc:8197.
+            UpdateEcTrackAwsJob::dispatch($child);
+
+            if ($child->wasChanged('geometry')) {
+                $this->updatePbfsForHikingRoute($child);
+            }
         }
     }
 
