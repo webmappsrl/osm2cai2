@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.0.0 (2026-07-01)
+
+
+### Features
+
+* add command for SiHikingRoute data cleanup OC:7954 ([#314](https://github.com/webmappsrl/osm2cai2/issues/314)) ([1a28ce9](https://github.com/webmappsrl/osm2cai2/commit/1a28ce9e7f0378d2622f8b21fc53296ca4c6f004))
+* add Tile resource and migrations for tiles and app_tile ([#312](https://github.com/webmappsrl/osm2cai2/issues/312)) ([ed7c985](https://github.com/webmappsrl/osm2cai2/commit/ed7c985f779448b939006311277939782fabe5f3))
+* **authentication:** ✨ integrate CAS authentication ([39f3680](https://github.com/webmappsrl/osm2cai2/commit/39f3680b78ccfcacf43d55c82a4d3abe87ee5db9))
+* **command:** ✨ add ForceUpdateOsmFeaturesFromTo command for batch updating HikingRoute properties oc:7783 ([#310](https://github.com/webmappsrl/osm2cai2/issues/310)) ([53b0ee3](https://github.com/webmappsrl/osm2cai2/commit/53b0ee3aa7cd1da43fca6f0df99ee306a4c56c14))
+* enhance user role permissions for SICAI OC: 7784 ([626019a](https://github.com/webmappsrl/osm2cai2/commit/626019ab1db5c1a3fb47932f5e048254a84edcba))
+* enhance user role permissions for SICAI OC: 7784 ([#311](https://github.com/webmappsrl/osm2cai2/issues/311)) ([2cb34a4](https://github.com/webmappsrl/osm2cai2/commit/2cb34a4be5564bc6e91fd984ee03d603d81b61e7))
+* **nova:** ✨ add DownloadEcTrackAction to SiHikingRoute resource ([80dcb9d](https://github.com/webmappsrl/osm2cai2/commit/80dcb9d3a7648db1c3eaac8ec9f600a559a29cb2))
+* **nova:** ✨ add SicaiSituazioneFilter to SiPoi oc:7717 ([c776a86](https://github.com/webmappsrl/osm2cai2/commit/c776a868250cc77261369219ae67c9aafa049673))
+* **nova:** ✨ add SicaiSituazioneFilter to SiPoi oc:7717 ([4f75035](https://github.com/webmappsrl/osm2cai2/commit/4f750350da328891f540678cffead425a5884727))
+* **nova:** ✨ enhance validation action messages with operation duration warnings ([520aff3](https://github.com/webmappsrl/osm2cai2/commit/520aff350ed4b50460bf4f9113781e0e2f365dfe))
+* **region:** 🚀 align geojson properties with v2 API oc:7764 ([b6338f3](https://github.com/webmappsrl/osm2cai2/commit/b6338f3b76a3ba3c2267b36b0d1c1b6a671fbedc))
+* **si_poi:** add default taxonomy type on creation OC:7786 ([#313](https://github.com/webmappsrl/osm2cai2/issues/313)) ([3fdecdf](https://github.com/webmappsrl/osm2cai2/commit/3fdecdf88119c260777d27a2ce670d4df0e3e8cc))
+* **SiPoi:** ✨ enhance Sicai tab fields with situational logic ([e1686dc](https://github.com/webmappsrl/osm2cai2/commit/e1686dcc8562a72fd17652e36efafa8c3de2655a))
+* **SiPoi:** ✨ enhance Sicai tab fields with situational logic ([abf2943](https://github.com/webmappsrl/osm2cai2/commit/abf29433e941186e2ac127ca76c0ecf270f0c982))
+
+
+### Bug Fixes
+
+* **config:** 🛠️ add visibility setting to S3 filesystem configuration ([638d34a](https://github.com/webmappsrl/osm2cai2/commit/638d34a8494bb982dcdb6b2b61f282f29b845221))
+* **models:** 🐛 handle related_url as array in HikingRoute ([d5e3c5b](https://github.com/webmappsrl/osm2cai2/commit/d5e3c5bd7b82df3f8ed673e43bee6367e99a426b))
+* **oc:7982:** extend cleanup command to app_id=2 and restore top-level DEM fields ([4fc3d39](https://github.com/webmappsrl/osm2cai2/commit/4fc3d396376c228ca2b977c45f5b57adbb1ac035))
+* **oc:8197:** dispatch WMFE/PBF sync for children updated via saveQuietly ([100c249](https://github.com/webmappsrl/osm2cai2/commit/100c24939cdad00c1d4d8c92aa4c1b6838c97545))
+
+
+### Miscellaneous Chores
+
+* **compose:** 🔧 add hostname to php and horizon services ([a3219f7](https://github.com/webmappsrl/osm2cai2/commit/a3219f7e3516d5762955c26fda0412680e72f7aa))
+* **compose:** 🔧 restrict service accessibility to localhost ([a815894](https://github.com/webmappsrl/osm2cai2/commit/a815894860f454aaf348142d3e67b5723258a16a))
+* **config:** 🔧 update JWT token lifespan to 30 days oc:7801 ([dfd6457](https://github.com/webmappsrl/osm2cai2/commit/dfd645766275262fcdef4e86e0aab28d6de3bb1f))
+
 ## [1.1.1](https://github.com/webmappsrl/osm2cai2/compare/v1.1.0...v1.1.1) (2025-04-24)
 
 
