@@ -4,6 +4,8 @@ namespace App\Nova\Filters;
 
 use App\Enums\UserRole;
 use App\Models\Area;
+use App\Models\User;
+use App\Models\HikingRoute;
 use Illuminate\Http\Request;
 use Laravel\Nova\Filters\Filter;
 
@@ -32,13 +34,24 @@ class AreaFilter extends Filter
      */
     public function apply(Request $request, $query, $value)
     {
-        if ($query->getModel() instanceof \App\Models\HikingRoute) {
+        $model = $query->getModel();
+
+        // Gestione del caso "senza area"
+        if ($value === 'no_area') {
+            if ($model instanceof HikingRoute || $model instanceof User) {
+                return $query->whereDoesntHave('areas');
+            }
+
+            return $query->whereNull('area_id');
+        }
+
+        if ($model instanceof HikingRoute) {
             return $query->whereHas('areas', function ($query) use ($value) {
                 $query->where('area_id', $value);
             });
         }
 
-        if ($query->getModel() instanceof \App\Models\User) {
+        if ($model instanceof User) {
             return $query->whereHas('areas', function ($query) use ($value) {
                 $query->where('area_id', $value);
             });
@@ -55,6 +68,10 @@ class AreaFilter extends Filter
     public function options(Request $request)
     {
         $options = [];
+        
+        // Aggiungi l'opzione "Senza area" come prima opzione
+        $options[__('Senza area')] = 'no_area';
+
         if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             $areas = Area::whereIn('province_id', auth()->user()->region->provinces->pluck('id')->toArray())->orderBy('name')->get();
             foreach ($areas as $item) {
