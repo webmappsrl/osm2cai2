@@ -163,6 +163,7 @@ I job in `app/Jobs/` gestiscono operazioni asincrone:
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Identità polimorfica delle tracce | oc:8620 | `app/Models/HikingRoute.php` | `getMorphClass()` fissa `App\Models\HikingRoute` per tutta la gerarchia: senza, le sottoclassi SI leggono relazioni vuote e la traccia sparisce dal layer su Elasticsearch. Vedi [docs/knowledge/identita-polimorfica-delle-tracce.md](docs/knowledge/identita-polimorfica-delle-tracce.md). |
 | Fix sync WMFE/PBF per figli SiHikingRoute | oc:8197 | `app/Observers/HikingRouteObserver.php` | Dispatch esplicito di `UpdateEcTrackAwsJob`/PBF dopo `saveQuietly()` sui figli, per evitare desincronizzazione DB↔WMFE↔PBF. Vedi anche oc:8200 (rigenerazione forzata dati storici). |
 | Fix valori campi DEM export Excel | oc:7982 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Estende il command a tutti i record app_id=2: rimuove `manual_data` se presente e ripristina i valori top-level DEM con priorità OSM→DEM→null. Idempotente. |
 | Cleanup manual_data SiHikingRoute | oc:7954 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Rimuove `properties->manual_data` dalle SiHikingRoute (app_id=2, layer_id=6) per ripristinare DEM come current value. Idempotente, supporta `--dry-run` e `-v`. |
