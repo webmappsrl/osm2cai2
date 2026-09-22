@@ -4,6 +4,8 @@ namespace App\Nova\Filters;
 
 use App\Enums\UserRole;
 use App\Models\Province;
+use App\Models\User;
+use App\Models\HikingRoute;
 use Illuminate\Http\Request;
 use Laravel\Nova\Filters\Filter;
 
@@ -32,13 +34,24 @@ class ProvinceFilter extends Filter
      */
     public function apply(Request $request, $query, $value)
     {
-        if ($query->getModel() instanceof \App\Models\HikingRoute) {
+        $model = $query->getModel();
+
+        // Gestione del caso "senza provincia"
+        if ($value === 'no_province') {
+            if ($model instanceof HikingRoute || $model instanceof User) {
+                return $query->whereDoesntHave('provinces');
+            }
+
+            return $query->whereNull('province_id');
+        }
+
+        if ($model instanceof HikingRoute) {
             return $query->whereHas('provinces', function ($query) use ($value) {
                 $query->where('province_id', $value);
             });
         }
 
-        if ($query->getModel() instanceof \App\Models\User) {
+        if ($model instanceof User) {
             return $query->whereHas('provinces', function ($query) use ($value) {
                 $query->where('name', Province::find($value)->name);
             });
@@ -55,6 +68,10 @@ class ProvinceFilter extends Filter
     public function options(Request $request)
     {
         $options = [];
+        
+        // Aggiungi l'opzione "Senza provincia" come prima opzione
+        $options[__('Senza provincia')] = 'no_province';
+
         if (auth()->user()->hasRole(UserRole::RegionalReferent)) {
             $provinces = Province::where('region_id', auth()->user()->region->id)->orderBy('name')->get();
             foreach ($provinces as $item) {
