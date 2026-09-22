@@ -133,6 +133,28 @@ class HikingRoute extends EcTrack
     }
 
     /**
+     * Usa un'unica identita' polimorfica per tutta la gerarchia.
+     *
+     * GeometryModel::getMorphClass() (wm-package) compone il morph type come
+     * 'App\Models\'.class_basename($this): per le sottoclassi produce
+     * 'App\Models\SiHikingRoute' e 'App\Models\SiMTBRoute', valori che nel
+     * database non esistono su nessuna riga. I pivot polimorfici
+     * (layerables, taxonomy_activityables, media, signage_projectables)
+     * contengono solo 'App\Models\HikingRoute', perche' la tabella e' una
+     * sola e le sottoclassi sono viste Nova filtrate per app_id.
+     *
+     * Senza questo override le relazioni tornano vuote quando il record e'
+     * caricato da una sottoclasse, e toSearchableArray() indicizza
+     * 'layers' => [] su Elasticsearch: la traccia sparisce dal layer (oc:8620).
+     *
+     * Stesso rimedio gia' adottato per i POI in SiPoi::getMorphClass().
+     */
+    public function getMorphClass()
+    {
+        return HikingRoute::class;
+    }
+
+    /**
      * Override toSearchableArray to handle null geometry gracefully
      */
     public function toSearchableArray()
