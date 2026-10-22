@@ -46,12 +46,14 @@ return [
 
         'wmdumps' => [
             'driver' => 's3',
-            'key' => env('AWS_DUMPS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_DUMPS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_DUMPS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
+            'key' => env('AWS_DUMPS_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('AWS_DUMPS_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('AWS_DUMPS_DEFAULT_REGION', env('AWS_DEFAULT_REGION')),
+            'bucket' => env('AWS_DUMPS_BUCKET', env('AWS_FE_BUCKET', env('AWS_BUCKET'))),
+            'root' => env('AWS_DUMPS_ROOT', 'backups/'),
+            'url' => env('AWS_DUMPS_URL', env('AWS_URL')),
+            'endpoint' => env('AWS_DUMPS_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => env('AWS_DUMPS_USE_PATH_STYLE_ENDPOINT', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
         ],
         'wmfemitur' => [
             'driver' => 's3',
