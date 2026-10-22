@@ -103,7 +103,11 @@ Expected: nota — `php -i` da CLI non legge i `php_admin_value` del pool; la ve
 Run: `curl -s -o /dev/null -w '%{http_code}' http://localhost:8008` → atteso 200/302; poi oversize (140MB > post_max_size 128M): `head -c 140000000 /dev/zero > /tmp/big.bin && curl -s -o /dev/null -w '%{http_code}' -H 'Expect:' -F "file=@/tmp/big.bin" http://localhost:8008/ ; rm /tmp/big.bin` → atteso 413 o errore gestito, e subito dopo di nuovo home 200/302 (worker vivo).
 Expected: l'app risponde prima e dopo l'oversize.
 
+> ⚠️ L'implementazione ha deviato dall'ordine dei task: [notes.md](notes.md#ordine-dei-task)
+
 ### Task 3: UAT — patch del server
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#task-3-interventi-extra-su-uat)
 
 **Files:** nessuno nel repo; operazioni su `uat.osm2cai` (root), checkout `/root/html/osm2cai2`, compose `compose.yml`.
 
@@ -138,6 +142,8 @@ e `curl -s -o /dev/null -w '%{http_code}' https://osm2cai.uat.maphub.it`
 Expected: `PHP 8.4.27` in entrambi, Horizon `running`, home 200/302.
 
 ### Task 4: Produzione — patch del server
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#task-4-estensioni-su-prod)
 
 **Files:** nessuno nel repo; operazioni su `cai.osm2cai` (utente `netseven`, tutti i comandi docker/git con `sudo`).
 

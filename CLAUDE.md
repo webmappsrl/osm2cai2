@@ -163,6 +163,7 @@ I job in `app/Jobs/` gestiscono operazioni asincrone:
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Messa in sicurezza PHP2Shell | oc:8840 | `docker/configs/phpfpm/`, `compose.yml`, `config/filesystems.php` | Pin `php:8.4.27-fpm`, pool FPM 32M/128M + `upload_progress` off, heap ES default 2g, fallback disco `wmdumps`. Vedi [docs/knowledge/messa-in-sicurezza-php2shell-shard-osm2cai2.md](docs/knowledge/messa-in-sicurezza-php2shell-shard-osm2cai2.md); procedura server in [docs/howto/aggiornare-immagini-php-sui-server.md](docs/howto/aggiornare-immagini-php-sui-server.md). |
 | Identità polimorfica delle tracce | oc:8620 | `app/Models/HikingRoute.php` | `getMorphClass()` fissa `App\Models\HikingRoute` per tutta la gerarchia: senza, le sottoclassi SI leggono relazioni vuote e la traccia sparisce dal layer su Elasticsearch. Vedi [docs/knowledge/identita-polimorfica-delle-tracce.md](docs/knowledge/identita-polimorfica-delle-tracce.md). |
 | Fix sync WMFE/PBF per figli SiHikingRoute | oc:8197 | `app/Observers/HikingRouteObserver.php` | Dispatch esplicito di `UpdateEcTrackAwsJob`/PBF dopo `saveQuietly()` sui figli, per evitare desincronizzazione DB↔WMFE↔PBF. Vedi anche oc:8200 (rigenerazione forzata dati storici). |
 | Fix valori campi DEM export Excel | oc:7982 | `app/Console/Commands/CleanupSiHikingRoutesManualDataCommand.php` | Estende il command a tutti i record app_id=2: rimuove `manual_data` se presente e ripristina i valori top-level DEM con priorità OSM→DEM→null. Idempotente. |
