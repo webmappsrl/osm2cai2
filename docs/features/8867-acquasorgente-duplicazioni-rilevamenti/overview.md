@@ -109,6 +109,11 @@ camminiditalia il 12 ottobre. osm2cai2 non lo ha perché è fermo a una versione
       ma compare in una sezione a sé del report (`gruppi multi-utente`), così prima di eseguire si
       vede a chi resta assegnato ciascun rilevamento. Riguarda **13 gruppi di tracce, 30 record,
       17 in eccesso**; sui POI non se ne presenta nessuno (0 su 128)
+- [ ] Un gruppo in cui il record più vecchio **non ha utente** (`user_id` NULL) mentre una copia ce
+      l'ha **non si fonde**: finisce in «da verificare (padre senza utente)», distinto da quello per
+      geometria diversa, perché fonderlo lascerebbe il rilevamento senza proprietario. Tre casi
+      reali, tutte tracce (`235`/`419`, `302`/`320`, `286`/`336`). Se il padre ha un utente e la
+      copia è NULL, o sono NULL tutti, la fusione procede: non si perde nessuna attribuzione
 - [ ] Il command riconosce anche i duplicati **senza uuid**, raggruppando per utente, istante di
       compilazione (`properties.createdAt`) e posizione — attivabile con un'opzione dedicata,
       spento per default

@@ -33,6 +33,9 @@ class FixDuplicatedUgcCommandTest extends TestCase
     {
         parent::setUp();
 
+        // Snapshot dei CSV esistenti: il tearDown cancella solo quelli creati dal test, mai i report veri.
+        $this->csvPrecedenti = glob(storage_path('backups/fix-duplicated-ugc-*.csv')) ?: [];
+
         Storage::fake('wmfe');
         Storage::fake('conf');
 
@@ -81,7 +84,6 @@ class FixDuplicatedUgcCommandTest extends TestCase
 
     private function esegui(array $opzioni = []): string
     {
-        $this->csvPrecedenti = glob(storage_path('backups/fix-duplicated-ugc-*.csv')) ?: [];
         Artisan::call('osm2cai:fix-duplicated-ugc', array_merge(['--app-id' => $this->ugcApp->id], $opzioni));
 
         return Artisan::output();
@@ -170,6 +172,67 @@ class FixDuplicatedUgcCommandTest extends TestCase
         $this->creaPoi('uuid-mono', '2026-01-02 10:00:00');
 
         $this->assertStringNotContainsString('multi-utente', $this->esegui());
+    }
+
+    /** Imposta user_id a NULL con un UPDATE: la colonna è nullable, ma factory e observer assegnano sempre un utente. */
+    private function senzaUtente(UgcPoi $poi): void
+    {
+        DB::table('ugc_pois')->where('id', $poi->id)->update(['user_id' => null]);
+    }
+
+    public function test_un_gruppo_con_il_padre_senza_utente_e_una_copia_con_utente_non_si_fonde()
+    {
+        $padre = $this->creaPoi('uuid-padre-nullo', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-padre-nullo', '2026-01-02 10:00:00');
+        $this->senzaUtente($padre);
+
+        $output = $this->esegui(['--execute' => true]);
+
+        $this->assertSame(2, UgcPoi::where('properties->uuid', 'uuid-padre-nullo')->count());
+        $this->assertSame(0, DB::table('ugc_duplicates_archive')->where('uuid', 'uuid-padre-nullo')->count());
+        $this->assertStringContainsString('da verificare (padre senza utente)', $output);
+        $this->assertStringNotContainsString('geometria diversa', $output);
+    }
+
+    public function test_la_geometria_diversa_e_il_padre_senza_utente_si_distinguono_nel_report()
+    {
+        $padre = $this->creaPoi('uuid-entrambi', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-entrambi', '2026-01-02 10:00:00', null, 'POINT Z (10.6 44.6 0)');
+        $this->creaPoi('uuid-solo-geo', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-solo-geo', '2026-01-02 10:00:00', null, 'POINT Z (10.6 44.6 0)');
+        $this->senzaUtente($padre);
+
+        $output = $this->esegui();
+
+        $this->assertStringContainsString('da verificare (geometria diversa, padre senza utente)', $output);
+        $this->assertStringContainsString('da verificare (geometria diversa)', $output);
+    }
+
+    public function test_si_fonde_se_la_copia_e_senza_utente_o_se_lo_sono_tutti()
+    {
+        // Padre con utente e copia NULL: nessuna attribuzione si perde.
+        $this->creaPoi('uuid-copia-nulla', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-copia-nulla', '2026-01-02 10:00:00');
+        $this->senzaUtente($copia);
+        // Tutti NULL.
+        $a = $this->creaPoi('uuid-tutti-nulli', '2026-01-01 10:00:00');
+        $b = $this->creaPoi('uuid-tutti-nulli', '2026-01-02 10:00:00');
+        $this->senzaUtente($a);
+        $this->senzaUtente($b);
+
+        $output = $this->esegui(['--execute' => true]);
+
+        $this->assertSame(1, UgcPoi::where('properties->uuid', 'uuid-copia-nulla')->count());
+        $this->assertSame(1, UgcPoi::where('properties->uuid', 'uuid-tutti-nulli')->count());
+        $this->assertStringNotContainsString('da verificare', $output);
+    }
+
+    public function test_senza_gruppi_non_scrive_il_csv()
+    {
+        $output = $this->esegui();
+
+        $this->assertSame([], array_diff(glob(storage_path('backups/fix-duplicated-ugc-*.csv')) ?: [], $this->csvPrecedenti));
+        $this->assertStringContainsString('report CSV non scritto', $output);
     }
 
     public function test_il_vecchio_nome_non_esiste_piu()

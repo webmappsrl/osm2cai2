@@ -173,6 +173,13 @@ del package):
   sugli account di alcuni sviluppatori durante vecchie prove di migrazione. Regola decisa: si tiene
   comunque il record più vecchio (in 12 casi su 13 è dell'utente originale); i gruppi devono solo
   essere visibili nel report prima dell'esecuzione. Un `user_id` NULL conta come utente distinto.
+- **Guardia sul padre senza utente**: un gruppo il cui record più vecchio ha `user_id` NULL mentre una
+  copia ha un utente non si fonde ed esce come `da verificare (padre senza utente)` (se vale anche la
+  geometria diversa, `da verificare (geometria diversa, padre senza utente)`). Fonderlo lascerebbe il
+  rilevamento senza proprietario, buttando l'attribuzione a un utente vero: si segnala invece di forzare.
+  Sui dati di produzione sono 3 gruppi di tracce (`235`/`419`, `302`/`320`, `286`/`336`). Padre con
+  utente e copia NULL, o tutti NULL, si fondono normalmente. La guardia sta nel command, non in
+  `UgcDuplicatesService`. Il report CSV, inoltre, non si scrive se non ci sono gruppi da riportare.
 - **`ugc_duplicates_archive.app_id` è `string`, non `integer`**: in osm2cai2 `ugc_pois.app_id` e
   `ugc_tracks.app_id` sono varchar e fra i valori reali c'è `iNaturalist` (103 POI); con un integer
   l'`INSERT ... SELECT` di `UgcDuplicatesService::mergeGroup` fallisce. Corretta la migration di Task 4

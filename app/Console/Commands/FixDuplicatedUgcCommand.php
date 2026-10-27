@@ -48,7 +48,16 @@ class FixDuplicatedUgcCommand extends Command
             foreach ($service->groups($modelClass, $appId) as $group) {
                 // Gli utenti si leggono prima della fusione: dopo, le copie non esistono più.
                 $users = $this->usersOf($modelClass, $group);
-                $skip = $group['max_distance_m'] > $maxDistance;
+                // Motivi per cui il gruppo non si tocca: vanno distinti, chi legge deve capire perché è lì.
+                $motivi = [];
+                if ($group['max_distance_m'] > $maxDistance) {
+                    $motivi[] = 'geometria diversa';
+                }
+                // Padre senza utente e una copia con utente: fondere butterebbe via l'attribuzione.
+                if ($users[$group['parent_id']] === '-' && count(array_filter($users, fn ($u) => $u !== '-')) > 0) {
+                    $motivi[] = 'padre senza utente';
+                }
+                $skip = $motivi !== [];
                 if ($execute && ! $skip) {
                     $discarded = $service->mergeGroup($modelClass, $group);
                     foreach ($discarded as $media) {
@@ -56,7 +65,7 @@ class FixDuplicatedUgcCommand extends Command
                         $media->delete();
                     }
                 }
-                $esito = $skip ? 'da verificare' : ($execute ? 'unito' : 'da unire');
+                $esito = $skip ? 'da verificare ('.implode(', ', $motivi).')' : ($execute ? 'unito' : 'da unire');
                 $row = [$typeName, $group['uuid'], $group['parent_id'], implode(' ', $group['copy_ids']), sprintf('%.2f', $group['max_distance_m']), $esito];
                 $rows[] = $row;
                 $csvRows[] = array_merge($row, [implode(' ', array_map(fn ($id) => $id.':'.$users[$id], array_keys($users)))]);
@@ -88,9 +97,9 @@ class FixDuplicatedUgcCommand extends Command
             $this->warn(count($multiUser).' gruppi multi-utente: il rilevamento resta assegnato all\'utente del padre (il record più vecchio).');
             $this->table(['tipo', 'uuid', 'padre', 'utente che resta', 'copie (id:utente)', 'esito'], $multiUser);
         }
-        $csvPath = $this->writeCsv($csvRows);
         $this->info(count($rows).' gruppi trovati'.($execute ? '.' : ' (report, nessuna scrittura).'));
-        $this->info('Report CSV: '.$csvPath);
+        // Senza gruppi non si lascia un file vuoto: lo schedule giornaliero ne accumulerebbe uno al giorno.
+        $this->info($csvRows !== [] ? 'Report CSV: '.$this->writeCsv($csvRows) : 'Nessun gruppo da riportare: report CSV non scritto.');
         $this->warn($execute
             ? 'Fatto. Le copie sono in ugc_duplicates_archive; il rollback si fa dal backup del DB.'
             : 'Report: prima di --execute fai il backup del DB.');
