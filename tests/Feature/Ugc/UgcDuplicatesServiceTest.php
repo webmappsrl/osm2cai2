@@ -6,6 +6,7 @@ use App\Models\UgcPoi;
 use App\Models\UgcTrack;
 use App\Services\UgcDuplicatesService;
 use App\Services\UgcMediaHashService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -185,6 +186,8 @@ class UgcDuplicatesServiceTest extends TestCase
     {
         $padre = $this->creaPoi('uuid-archivio', '2026-01-01 10:00:00');
         $copia = $this->creaPoi('uuid-archivio', '2026-01-02 10:00:00', ['note' => 'della copia']);
+        // Geometria della copia diversa da quella del padre: in archivio deve finire la sua.
+        DB::update("UPDATE ugc_pois SET geometry = ST_GeomFromText('POINT Z (10.5005 44.5005 0)', 4326) WHERE id = ?", [$copia->id]);
         $foto = $this->aggiungiFoto($copia, 'image_0.png');
         // L'observer del package assegna lo user_id dal proprietario dell'app: si legge dal record.
         $userIdCopia = (int) $copia->fresh()->user_id;
@@ -198,10 +201,78 @@ class UgcDuplicatesServiceTest extends TestCase
         $this->assertSame($copia->id, (int) $riga->original_id);
         $this->assertSame($padre->id, (int) $riga->reference_id);
         $this->assertSame($userIdCopia, (int) $riga->user_id);
-        $this->assertSame($this->ugcApp->id, (int) $riga->app_id);
-        $this->assertNotNull($riga->geometry);
+        // app_id è una stringa (negli UGC vale anche 'iNaturalist'): niente cast.
+        $this->assertSame((string) $this->ugcApp->id, $riga->app_id);
         $this->assertSame('della copia', json_decode($riga->properties, true)['note']);
         $this->assertSame([$foto->id], json_decode($riga->media_ids, true));
+
+        $xy = DB::selectOne('SELECT ST_X(geometry::geometry) AS x, ST_Y(geometry::geometry) AS y FROM ugc_duplicates_archive WHERE id = ?', [$riga->id]);
+        $this->assertEqualsWithDelta(10.5005, $xy->x, 0.000001);
+        $this->assertEqualsWithDelta(44.5005, $xy->y, 0.000001);
+    }
+
+    public function test_un_gruppo_con_app_id_inaturalist_attraversa_la_fusione_e_si_archivia_come_stringa()
+    {
+        // 103 POI veri in produzione hanno app_id = 'iNaturalist' (ugc_pois.app_id è varchar): con
+        // un archivio integer l'INSERT ... SELECT falliva con SQLSTATE[42804].
+        $padre = $this->creaPoi('uuid-inat', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-inat', '2026-01-02 10:00:00');
+        // Si imposta dopo la creazione: l'observer del package risolve l'app dall'app_id.
+        DB::update("UPDATE ugc_pois SET app_id = 'iNaturalist' WHERE id IN (?, ?)", [$padre->id, $copia->id]);
+
+        $gruppo = $this->service->groups(UgcPoi::class)->firstWhere('uuid', 'uuid-inat');
+        $this->assertSame($padre->id, $gruppo['parent_id']);
+
+        $this->service->mergeGroup(UgcPoi::class, $gruppo);
+
+        $this->assertSame(1, UgcPoi::where('properties->uuid', 'uuid-inat')->count());
+        $riga = DB::table('ugc_duplicates_archive')->where('uuid', 'uuid-inat')->first();
+        $this->assertNotNull($riga);
+        $this->assertSame('iNaturalist', $riga->app_id);
+        $this->assertSame($copia->id, (int) $riga->original_id);
+    }
+
+    public function test_se_la_fusione_fallisce_a_meta_la_transazione_riporta_tutto_com_era()
+    {
+        $padre = $this->creaPoi('uuid-atomico', '2026-01-01 10:00:00', ['note' => 'del padre']);
+        $copiaA = $this->creaPoi('uuid-atomico', '2026-01-02 10:00:00', ['note' => 'copia A']);
+        $copiaB = $this->creaPoi('uuid-atomico', '2026-01-03 10:00:00', ['note' => 'copia B']);
+        $fotoA = $this->aggiungiFoto($copiaA, 'image_0.png', 1);
+        $fotoB = $this->aggiungiFoto($copiaB, 'image_0.png', 2);
+        $gruppo = $this->gruppo('uuid-atomico');
+        $propertiesPadre = DB::table('ugc_pois')->where('id', $padre->id)->value('properties');
+
+        // Guasto reale a metà percorso: l'archiviazione della seconda copia viene rifiutata dal
+        // database. A quel punto sono già stati fatti l'UPDATE del padre, lo spostamento dei media
+        // e l'INSERT in archivio della prima copia. Trigger e funzione vivono nella transazione del
+        // test e spariscono con il suo rollback.
+        DB::unprepared("
+            CREATE FUNCTION test_rifiuta_archivio() RETURNS trigger AS \$\$
+            BEGIN RAISE EXCEPTION 'archivio rifiutato (test)'; END;
+            \$\$ LANGUAGE plpgsql;
+            CREATE TRIGGER test_rifiuta_archivio BEFORE INSERT ON ugc_duplicates_archive
+            FOR EACH ROW WHEN (NEW.original_id = {$copiaB->id}) EXECUTE FUNCTION test_rifiuta_archivio();
+        ");
+
+        try {
+            $this->service->mergeGroup(UgcPoi::class, $gruppo);
+            $this->fail('mergeGroup doveva sollevare: il guasto non è stato provocato');
+        } catch (QueryException $e) {
+            $this->assertStringContainsString('archivio rifiutato (test)', $e->getMessage());
+        }
+
+        // Tutto com'era: copie al loro posto, padre intatto, media non spostati, archivio vuoto.
+        $this->assertSame(3, UgcPoi::where('properties->uuid', 'uuid-atomico')->count());
+        $this->assertNotNull(UgcPoi::find($copiaA->id));
+        $this->assertNotNull(UgcPoi::find($copiaB->id));
+        $this->assertEquals(
+            json_decode($propertiesPadre, true),
+            json_decode(DB::table('ugc_pois')->where('id', $padre->id)->value('properties'), true)
+        );
+        $this->assertSame($copiaA->id, (int) $fotoA->fresh()->model_id);
+        $this->assertSame($copiaB->id, (int) $fotoB->fresh()->model_id);
+        $this->assertCount(0, $padre->fresh()->getMedia('default'));
+        $this->assertSame(0, DB::table('ugc_duplicates_archive')->where('uuid', 'uuid-atomico')->count());
     }
 
     public function test_le_properties_si_uniscono_in_ordine_cronologico_tenendo_le_chiavi_del_server()
