@@ -8,6 +8,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\Media;
@@ -164,15 +166,20 @@ class RecoverPreviousDuplicateFixTest extends TestCase
         ]);
         $solo = $this->creaPoi(['uuid' => 'solo', 'has_been_duplicated' => true]);
         $pulita = $this->creaPoi(['uuid' => 'pulita']);
+        // Qualunque riga con la chiave duplicated, di qualunque tipo, esce dalla pulizia: duplication_info si conserva.
         $falsa = $this->creaPoi(['uuid' => 'falsa', 'duplicated' => false, 'duplication_info' => ['x' => 1]]);
+        $stringa = $this->creaPoi(['uuid' => 'stringa', 'duplicated' => 'true', 'duplication_info' => ['parent_ugc_poi_id' => 1]]);
+        $primaStringa = $this->riga($stringa);
 
-        $this->esegui(['--execute' => true]);
+        $output = $this->esegui(['--execute' => true]);
 
         $proprieta = fn (UgcPoi $p) => json_decode(DB::table('ugc_pois')->where('id', $p->id)->value('properties'), true);
         $this->assertSame(['uuid' => 'erede', 'altro' => 'resta'], $proprieta($erede));
         $this->assertSame(['uuid' => 'solo'], $proprieta($solo));
         $this->assertSame(['uuid' => 'pulita'], $proprieta($pulita));
-        $this->assertArrayNotHasKey('duplication_info', $proprieta($falsa));
+        $this->assertSame(['x' => 1], $proprieta($falsa)['duplication_info']);
+        $this->assertSame($primaStringa, $this->riga($stringa), 'un duplicated stringa non è copia riconosciuta e non si tocca');
+        $this->assertStringContainsString('2 schede hanno la chiave duplicated', $output);
         $this->assertNotNull(UgcPoi::find($erede->id), 'la scheda non si cancella');
     }
 
@@ -248,8 +255,17 @@ class RecoverPreviousDuplicateFixTest extends TestCase
         $padre = $this->creaPoi(['uuid' => 'p', 'has_been_duplicated' => true]);
         $copia = $this->creaCopiaMarcata($padre->id);
         $foto = $this->foto($copia, 'image_0.png');
+        $orfana = $this->creaCopiaMarcata($padre->id + 100000);
+        $prima = $this->riga($orfana);
 
         $output = $this->esegui();
+
+        // Il ramo delle orfane è una scrittura: senza --execute resta intatta, chiavi di duplicazione comprese.
+        $this->assertSame($prima, $this->riga($orfana));
+        $proprietaOrfana = json_decode(DB::table('ugc_pois')->where('id', $orfana->id)->value('properties'), true);
+        $this->assertTrue($proprietaOrfana['duplicated']);
+        $this->assertArrayHasKey('duplication_info', $proprietaOrfana);
+        $this->assertStringContainsString('verrebbe sanata', $output);
 
         $this->assertNotNull(UgcPoi::find($copia->id));
         $this->assertSame($this->servizio->id, (int) DB::table('ugc_pois')->where('id', $copia->id)->value('user_id'));
@@ -267,10 +283,19 @@ class RecoverPreviousDuplicateFixTest extends TestCase
     {
         $padre = $this->creaPoi(['uuid' => 'p']);
         $this->creaCopiaMarcata($padre->id);
+        // Ruolo e permesso diretto dell'utente di servizio: sono morph senza foreign key, vanno via con lui.
+        $this->servizio->assignRole(Role::findOrCreate('Administrator', 'web'));
+        $this->servizio->givePermissionTo(Permission::findOrCreate('validate source surveys', 'web'));
+        $altroUtente = User::factory()->create();
+        $altroUtente->assignRole('Administrator');
+        $this->assertSame(1, DB::table('model_has_roles')->where('model_id', $this->servizio->id)->count());
 
         $output = $this->esegui(['--execute' => true]);
 
         $this->assertFalse(DB::table('users')->where('email', self::EMAIL_SERVIZIO)->exists());
+        $this->assertSame(0, DB::table('model_has_roles')->where('model_id', $this->servizio->id)->count());
+        $this->assertSame(0, DB::table('model_has_permissions')->where('model_id', $this->servizio->id)->count());
+        $this->assertSame(1, DB::table('model_has_roles')->where('model_id', $altroUtente->id)->count(), 'i ruoli degli altri utenti non si toccano');
         $this->assertStringContainsString('eliminato', $output);
         $this->assertSame(1, DB::table('ugc_duplicates_archive')->count());
     }
@@ -287,6 +312,26 @@ class RecoverPreviousDuplicateFixTest extends TestCase
         $this->assertTrue(DB::table('users')->where('id', $this->servizio->id)->exists());
         $this->assertNotNull(UgcPoi::find($altro->id));
         $this->assertStringContainsString('ugc_pois.user_id: 1', $output);
+    }
+
+    public function test_i_riferimenti_senza_foreign_key_impediscono_l_eliminazione_dell_utente()
+    {
+        $padre = $this->creaPoi(['uuid' => 'p']);
+        $this->creaCopiaMarcata($padre->id);
+        DB::table('favorites')->insert(['user_id' => $this->servizio->id, 'favoriteable_type' => 'App\\Models\\UgcPoi', 'favoriteable_id' => $padre->id]);
+        DB::table('nova_notifications')->insert([
+            'id' => (string) \Illuminate\Support\Str::uuid(), 'type' => 'x', 'notifiable_type' => 'App\\Models\\User',
+            'notifiable_id' => $this->servizio->id, 'data' => '{}',
+        ]);
+
+        $dry = $this->esegui();
+        $output = $this->esegui(['--execute' => true]);
+
+        $this->assertStringContainsString('non verrebbe eliminato', $dry);
+        $this->assertTrue(DB::table('users')->where('id', $this->servizio->id)->exists());
+        $this->assertStringContainsString('NON eliminato', $output);
+        $this->assertStringContainsString('favorites.user_id: 1', $output);
+        $this->assertStringContainsString('nova_notifications.notifiable_id: 1', $output);
     }
 
     public function test_e_idempotente()

@@ -8,6 +8,7 @@ use App\Services\UgcDuplicatesService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * STRATO 2 di oc:8867 — resta anche dopo l'aggiornamento di wm-package.
@@ -39,8 +40,20 @@ class RecoverPreviousDuplicateFixCommand extends Command
     /** Chiavi lasciate dalla vecchia bonifica anche sulle schede che non sono copie. */
     private const INHERITED_KEYS = ['duplication_info', 'has_been_duplicated'];
 
-    /** Copia marcata. jsonb_exists al posto dell'operatore ?, che PDO leggerebbe come placeholder. */
+    /** Copia marcata: solo il boolean true, come l'ha scritto la vecchia bonifica. */
     private const IS_MARKED_COPY = "coalesce(properties->'duplicated' = 'true'::jsonb, false)";
+
+    /**
+     * Colonne che puntano a users senza vincolo di foreign key (il catalogo non le vede). Si contano
+     * lo stesso: l'eliminazione dell'utente è l'unica operazione che l'archivio non può annullare.
+     */
+    private const REFERENCES_WITHOUT_FK = [
+        ['action_events', 'user_id'],
+        ['cas_users', 'user_id'],
+        ['favorites', 'user_id'],
+        ['hiking_routes', 'user_id'],
+        ['signage_projects', 'user_id'],
+    ];
 
     protected $signature = 'osm2cai:recover-previous-duplicate-fix
                             {--execute : Applica le modifiche; senza, produce solo la segnalazione}';
@@ -254,9 +267,16 @@ class RecoverPreviousDuplicateFixCommand extends Command
     /** Toglie le chiavi ereditate dalle schede che non sono copie. Restituisce quante sono (o sarebbero). */
     private function ripulisciChiaviEreditate(bool $execute): int
     {
+        // Si escludono tutte le righe con la chiave duplicated, di qualunque tipo: un "true" stringa non è
+        // riconosciuto come copia, e ripulirlo farebbe perdere il puntatore al padre senza archiviare nulla.
         $query = DB::table('ugc_pois')
-            ->whereRaw('NOT '.self::IS_MARKED_COPY)
+            ->whereRaw("NOT jsonb_exists(properties, 'duplicated')")
             ->whereRaw("(jsonb_exists(properties, 'duplication_info') OR jsonb_exists(properties, 'has_been_duplicated'))");
+
+        $nonRiconosciute = DB::table('ugc_pois')->whereRaw("jsonb_exists(properties, 'duplicated')")->whereRaw('NOT '.self::IS_MARKED_COPY)->count();
+        if ($nonRiconosciute > 0) {
+            $this->warn("{$nonRiconosciute} schede hanno la chiave duplicated con un valore diverso dal boolean true: non sono copie riconosciute e non si toccano.");
+        }
 
         if (! $execute) {
             return $query->count();
@@ -325,8 +345,8 @@ class RecoverPreviousDuplicateFixCommand extends Command
     }
 
     /**
-     * Record che puntano all'utente, da qualunque tabella con una foreign key verso users.
-     * Si leggono i vincoli dal catalogo: se domani una tabella nuova referenzia users, l'utente
+     * Record che puntano all'utente: ogni tabella con una foreign key verso users, più le colonne senza
+     * vincolo elencate in REFERENCES_WITHOUT_FK e le notifiche Nova. I vincoli si leggono dal catalogo: se domani una tabella nuova referenzia users, l'utente
      * non viene eliminato da sotto a dei dati, e un DELETE non fallisce a metà.
      *
      * @return array<string, int> "tabella.colonna" => numero di record (solo se > 0)
@@ -346,6 +366,23 @@ class RecoverPreviousDuplicateFixCommand extends Command
             $n = DB::table($riga->tabella)->where($riga->colonna, $userId)->count();
             if ($n > 0) {
                 $residui["{$riga->tabella}.{$riga->colonna}"] = $n;
+            }
+        }
+
+        foreach (self::REFERENCES_WITHOUT_FK as [$tabella, $colonna]) {
+            if (! Schema::hasColumn($tabella, $colonna)) {
+                continue;
+            }
+            $n = DB::table($tabella)->where($colonna, $userId)->count();
+            if ($n > 0) {
+                $residui["{$tabella}.{$colonna}"] = $n;
+            }
+        }
+        // Notifiche di Nova: morph senza FK.
+        if (Schema::hasTable('nova_notifications')) {
+            $n = DB::table('nova_notifications')->where('notifiable_type', (new User)->getMorphClass())->where('notifiable_id', $userId)->count();
+            if ($n > 0) {
+                $residui['nova_notifications.notifiable_id'] = $n;
             }
         }
 
