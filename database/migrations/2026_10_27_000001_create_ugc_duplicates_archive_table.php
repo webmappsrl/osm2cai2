@@ -26,7 +26,10 @@ return new class extends Migration
             $table->unsignedBigInteger('reference_id');
             $table->string('uuid')->nullable();
             $table->integer('user_id')->nullable();
-            $table->integer('app_id')->nullable();
+            // Diverge dall'originale del package (integer): in osm2cai2 ugc_pois.app_id e ugc_tracks.app_id
+            // sono varchar e fra i valori reali c'è 'iNaturalist'. L'archivio deve registrare fedelmente
+            // quello che c'era: un integer farebbe fallire l'INSERT ... SELECT del servizio di fusione.
+            $table->string('app_id')->nullable();
             $table->jsonb('properties')->nullable();
             $table->jsonb('media_ids')->nullable();
             $table->timestamp('original_created_at')->nullable();
