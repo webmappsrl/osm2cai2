@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\FindsExistingUgcByUuid;
 use Wm\WmPackage\Http\Controllers\Api\UgcPoiController as BaseUgcPoiController;
 
 /**
@@ -11,4 +12,7 @@ use Wm\WmPackage\Http\Controllers\Api\UgcPoiController as BaseUgcPoiController;
  * in AppServiceProvider::register(). Va eliminata (insieme al bind) quando
  * wm-package verrà aggiornato con la correzione.
  */
-class UgcPoiController extends BaseUgcPoiController {}
+class UgcPoiController extends BaseUgcPoiController
+{
+    use FindsExistingUgcByUuid;
+}

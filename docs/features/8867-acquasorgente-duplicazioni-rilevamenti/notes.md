@@ -139,3 +139,19 @@ ricascarci.
   versioni che l'uuid non lo generavano, rimaste in coda. Si può verificare nel repo dell'app.
 - **Le 102 foto rimaste sulle copie**: la causa esatta non è provata. Si saprebbe leggendo il log
   del canale `ugc` in produzione.
+
+## Divergenze dello strato 1 rispetto a oc:8718
+
+Il codice di `store()`, `findExistingByUuid()`, `fillModelWithRequest()` e `UgcMediaHashService` è copiato
+dal package (`origin/main`) senza modifiche alla logica. Scostamenti:
+
+- **Trait al posto della classe astratta**: nel package la correzione sta in `Abstracts\UgcController`,
+  che qui non si tocca; vive nel trait `App\Http\Controllers\Api\Concerns\FindsExistingUgcByUuid`, usato
+  da `UgcPoiController` e `UgcTrackController` locali.
+- **`fillModelWithRequest` sovrascritto nel trait**: la versione locale del package usa
+  `addMultipleMediaFromRequest` e non ha lo scarto delle immagini per hash.
+- **`getModelIstance()` chiamato senza `$request`**: così si aggira la ricerca per uuid dentro
+  `getModelIstance($request)` (`$request->input('properties.uuid')`), che non vede l'uuid nel campo
+  multipart `feature`, senza toccare il package.
+- **`UgcMediaHashService` in `App\Services`** invece di `Wm\WmPackage\Services\Models`; cambia solo il
+  namespace, la classe base resta `Wm\WmPackage\Services\BaseService`.
