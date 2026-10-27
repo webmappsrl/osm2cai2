@@ -130,6 +130,68 @@ ricascarci.
 - «I record `platform` sono vuoti» — **falso**: avevo guardato `raw_data`, mentre i dati stanno in
   `properties.form`, popolato in 773 su 776.
 
+## Esiti del collaudo sul dump di produzione (27/10/2026)
+
+Eseguito in locale sul database `osm2cai2` (dump del 26/10/2026), nell'ordine che conta: **prima la
+sanatoria, poi la bonifica per uuid**, perché i record senza uuid che il raggruppamento per istante
+troverebbe sono in realtà copie già marcate dalla vecchia bonifica; fonderli fra loro invece di
+riunirli al padre rifarebbe il danno. Tutti i numeri annunciati dal dry-run coincidono con quelli
+realizzati.
+
+| Misura | Prima | Dopo la sanatoria | Dopo la bonifica per uuid |
+|---|---|---|---|
+| `ugc_pois` | 10.002 | 9.344 (-658) | 9.170 (-174) |
+| `ugc_tracks` | 1.616 | 1.616 | 1.541 (-75) |
+| POI copie marcate `duplicated` | 660 | 0 | 0 |
+| POI con chiavi ereditate (non copie) | 462 | 0 | 0 |
+| Media UGC (POI 12.778 + tracce 309) | 13.087 | 13.087 | 13.087 |
+| Media attaccati alle copie marcate | 536 | 0 | 0 |
+| Media orfani (senza record) | 0 | 0 | 0 |
+| Utente di servizio 7736 | esiste, 660 POI | eliminato | eliminato |
+| `ugc_duplicates_archive` | 0 | 658 | 907 (+249) |
+| Media con sha256 | 0 | 0 | 0 |
+
+- **Dry-run, numeri annunciati**: sanatoria 660 copie marcate (658 da sanare, 2 orfane `506`/`513`),
+  536 media sulle copie, 462 schede da ripulire; bonifica per uuid 192 gruppi, **252** record in
+  eccesso (POI 174 + tracce 78), di cui **249 da unire** (189 gruppi: 128 di POI, 61 di tracce) e 3
+  gruppi da verificare per padre senza utente (`235`/`419`, `302`/`320`, `286`/`336`, tracce). Il dry-run
+  della bonifica rifatto dopo la sanatoria è risultato **identico** a quello di prima.
+- **Realizzato**: 658 copie archiviate e cancellate (0 fallite), 2 orfane ripristinate come rilevamenti
+  normali dell'utente 96, 462 schede ripulite, utente 7736 eliminato; poi 189 gruppi uniti, 249 record
+  cancellati (174 POI + 75 tracce), 3 gruppi lasciati com'erano (le 6 tracce esistono ancora).
+- **I record cancellati sono esattamente quelli annunciati**: l'insieme degli id spariti da
+  `ugc_pois`/`ugc_tracks` (907) coincide con quello di `ugc_duplicates_archive`, e i 249 della bonifica
+  per uuid sono tutti e soli gli id elencati dal dry-run. Nessun `original_id` archiviato esiste ancora e
+  nessun `reference_id` punta a un record inesistente.
+- **Nessuna fotografia persa**: 13.087 media UGC prima e dopo, stessi identificativi. **767 media
+  riassegnati** al padre (536 dalla sanatoria + 231 dalla bonifica; la somma di `media_ids` in archivio
+  è 767) e **0 doppioni scartati**. In locale i file su Aruba non sono leggibili, quindi `hashOf()`
+  restituisce `null` e, per scelta prudente, ogni media viene spostato invece che scartato: **lo scarto
+  dei doppioni per hash non è esercitato da questo collaudo**, si collauderà solo in produzione dopo il
+  popolamento degli hash.
+- **`osm2cai:backfill-ugc-media-hash --execute`**: 13.087 media da trattare, 0 hash calcolati, 13.087
+  falliti in 13 secondi. Atteso e innocuo in locale (file non leggibili), il command esce con SUCCESS e
+  non scrive nulla. In produzione l'esito atteso è il contrario: 0 falliti.
+- **`--by-timestamp`**: 0 gruppi per istante di compilazione, **sia prima sia dopo la sanatoria**.
+  Prima, perché il raggruppamento esclude già le copie marcate (`23d26a26`); dopo, perché le copie non
+  esistono più. Coerente con l'ipotesi che i 162 POI senza uuid duplicati citati nelle misure fossero le
+  copie della vecchia bonifica e non reinvii nuovi (non c'è la prova diretta: il conteggio dei 162 non è
+  stato rifatto). Resta l'opzione per i casi futuri, spenta per default. Dopo la
+  bonifica, con `--by-timestamp`, l'unico risultato sono i 3 gruppi «padre senza utente» già noti.
+- **Scostamento sui conti**: le «252 righe in eccesso» di riferimento comprendono i 3 gruppi bloccati
+  (3 record), quindi i record cancellati sono 249 e non 252. Non è un errore: la differenza è la guardia.
+- **Prevenzione con le rotte in cache**: `route:cache` poi `UgcStoreDeduplicationTest`: 8 passati. Il
+  bind nel container sopravvive alla compilazione delle rotte. `config:cache` non si è eseguito (lo ha
+  bloccato il sistema dei permessi e non serve: con la config in cache i test girerebbero con il `.env`
+  del dump invece del `.env.testing`); a fine prova `route:clear`, nessun file di cache residuo.
+- **Suite completa** (`php artisan test`): 376 passati, **120 falliti**, nessuno in `tests/Feature/Ugc`
+  (85 passati su 85). I 120 sono tutti in test di `hiking_routes` (`SignageMapControllerTest`,
+  `HikingRouteControllerV2Test`, `UserTest`, job `CheckNearby*`, …) e dipendono verosimilmente dallo
+  schema del DB `osm2cai2_testing`, rimasto indietro rispetto al codice: la tabella `apps` è vuota (violazione della FK
+  `hiking_routes_app_id_foreign`, 109 casi) e a `hiking_routes` manca la colonna `osmfeatures_data` (7
+  casi). Nessun file di quei test è toccato dal branch, e non si è rifatto il confronto su `main`. Non sembrano regressioni di questo lavoro, ma vanno riallineati
+  (`db:restore`/migrate del DB di test) prima di fidarsi della suite intera.
+
 ## Follow-up
 
 - **`db:download` è rotto**: cerca `backups/maphub/osm2cai2/last_dump.sql.gz` su un endpoint
@@ -160,6 +222,22 @@ dal package (`origin/main`) senza modifiche alla logica.
 **Divergenze rispetto a `origin/main`** (sono le uniche da considerare il giorno dell'aggiornamento
 del package):
 
+- **Nome del command**: `osm2cai:fix-duplicated-ugc` invece di `wm:fix-duplicated-ugc`. Il file
+  `app/Console/Commands/FixDuplicatedUgcCommand.php` è **misto**: nasce come porting del command del
+  package, ma contiene anche l'aggancio dello strato 2 (`use GroupsByTimestamp`, opzione
+  `--by-timestamp`, voce `(per istante)` nei report). Per questo non si cancella alla cieca: vedi il
+  registro in `docs/knowledge/custom-in-attesa-dell-aggiornamento-di-wm-package.md`.
+- **Bind nel container** in `AppServiceProvider::register()` dei due controller del package verso quelli
+  locali, al posto di rotte riscritte (il package carica lo stesso file di rotte due volte, con
+  prefissi `api/v2` e `api`: riusarne i nomi farebbe fallire `route:cache`). Non esiste nel package.
+- **Canale di log `duplicated-ugc` ridichiarato in `config/logging.php`**: il package lo dichiara già in
+  `config/wm-logging.php` (anche nella versione in uso) e `WmPackageServiceProvider` lo fonde nella config
+  dell'app, quindi quello locale è **ridondante**, con gli stessi valori (`daily`, 14 giorni). Resta per
+  non dipendere dal merge; all'aggiornamento si può togliere senza effetti.
+- **Schedule**: `Kernel` esegue `osm2cai:fix-duplicated-ugc` alle 06:00 in sola segnalazione, al posto
+  del vecchio `osm2cai:fix-duplicated-ugc-pois`.
+- **Webhook da geohub rimosso** (`WebhookController` e rotte `webhook/ugc/*`): non è una divergenza dal
+  package, è codice di osm2cai2 che non serve più.
 - **Trait al posto della classe astratta**: nel package la correzione sta in `Abstracts\UgcController`,
   che qui non si tocca; vive nel trait `App\Http\Controllers\Api\Concerns\FindsExistingUgcByUuid`, usato
   da `UgcPoiController` e `UgcTrackController` locali.
