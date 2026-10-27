@@ -9,7 +9,7 @@ use Wm\WmPackage\Models\Media;
 use Wm\WmPackage\Services\BaseService;
 
 /**
- * STRATO 1 di oc:8867 — copia locale destinata a essere cancellata.
+ * STRATO 1 — DA CANCELLARE (oc:8867): copia locale destinata a essere cancellata.
  *
  * Porting di Wm\WmPackage\Services\Models\UgcDuplicatesService di wm-package (oc:8718).
  * Va eliminata quando wm-package verrà aggiornato con la correzione.

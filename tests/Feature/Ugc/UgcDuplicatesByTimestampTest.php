@@ -283,4 +283,60 @@ class UgcDuplicatesByTimestampTest extends TestCase
 
         $this->assertSame(0, $command->trovati);
     }
+
+    /**
+     * Un POI senza uuid per ogni motivo di esclusione, più uno trattabile e uno con uuid. Con $conMarcata
+     * anche una copia marcata dalla vecchia bonifica (ma il command si ferma finché ne esistono).
+     */
+    private function creaEsclusi(bool $conMarcata = false): void
+    {
+        // Senza istante di compilazione (assente) e con istante vuoto.
+        $this->creaPoi(null, '2026-01-01 10:00:00');
+        $this->creaPoi('', '2026-01-02 10:00:00');
+        // Con properties NULL (esistono nei dati reali): non devono sfuggire al conteggio.
+        $senzaProperties = $this->creaPoi(null, '2026-01-08 10:00:00');
+        DB::table('ugc_pois')->where('id', $senzaProperties->id)->update(['properties' => null]);
+        // Con istante ma senza utente.
+        $senzaUtente = $this->creaPoi(self::ISTANTE, '2026-01-03 10:00:00');
+        DB::table('ugc_pois')->where('id', $senzaUtente->id)->update(['user_id' => null]);
+        // Con istante e utente ma senza geometria.
+        $senzaGeometria = $this->creaPoi(self::ISTANTE, '2026-01-04 10:00:00');
+        DB::table('ugc_pois')->where('id', $senzaGeometria->id)->update(['geometry' => null]);
+        // Trattabile (non è un escluso) e con uuid (non è nel perimetro).
+        $this->creaPoi(self::ISTANTE, '2026-01-05 10:00:00');
+        $this->creaPoi(self::ISTANTE, '2026-01-06 10:00:00', null, 'POINT Z (10.5 44.5 0)', ['uuid' => 'con-uuid']);
+        // Copia marcata dalla vecchia bonifica: la tratta la sanatoria, non si conta qui.
+        if ($conMarcata) {
+            $this->creaPoi(null, '2026-01-07 10:00:00', null, 'POINT Z (10.5 44.5 0)', ['duplicated' => true]);
+        }
+    }
+
+    public function test_il_servizio_conta_i_senza_uuid_esclusi_per_motivo()
+    {
+        $this->creaEsclusi(true);
+
+        $esclusi = UgcDuplicatesByTimestampService::make()->excluded(UgcPoi::class, $this->ugcApp->id);
+
+        $this->assertSame(['senza_istante' => 3, 'senza_utente' => 1, 'senza_geometria' => 1], $esclusi);
+    }
+
+    public function test_con_by_timestamp_il_command_stampa_quanti_senza_uuid_restano_da_revisionare_a_mano()
+    {
+        $this->creaEsclusi();
+
+        $output = $this->esegui(['--by-timestamp' => true, '--type' => 'pois']);
+
+        $this->assertStringContainsString('Rilevamenti senza uuid che --by-timestamp non può valutare: 5', $output);
+        $this->assertStringContainsString('revisionati a mano', $output);
+        // Tabella per motivo: 3 senza istante, 1 senza utente, 1 senza geometria.
+        $this->assertMatchesRegularExpression('/\|\s*pois\s*\|\s*3\s*\|\s*1\s*\|\s*1\s*\|/', $output);
+    }
+
+    public function test_il_conteggio_vale_anche_con_execute_e_senza_by_timestamp_non_compare()
+    {
+        $this->creaEsclusi();
+
+        $this->assertStringContainsString('non può valutare: 5', $this->esegui(['--by-timestamp' => true, '--type' => 'pois', '--execute' => true]));
+        $this->assertStringNotContainsString('non può valutare', $this->esegui(['--type' => 'pois']));
+    }
 }

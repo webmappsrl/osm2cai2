@@ -117,8 +117,10 @@ camminiditalia il 12 ottobre. osm2cai2 non lo ha perché è fermo a una versione
 - [ ] Il command riconosce anche i duplicati **senza uuid**, raggruppando per utente, istante di
       compilazione (`properties.createdAt`) e posizione — attivabile con un'opzione dedicata,
       spento per default
-- [ ] I rilevamenti privi sia di uuid sia di istante di compilazione non vengono mai uniti: finiscono
-      nell'elenco da revisionare a mano
+- [ ] I rilevamenti privi sia di uuid sia di istante di compilazione non vengono mai uniti: con
+      `--by-timestamp` il command stampa (e scrive nel log) quanti sono, insieme a quelli esclusi perché
+      privi di utente o di geometria, perché restino da revisionare a mano (un conteggio per tipo e
+      motivo, non un elenco)
 - [ ] Le fotografie scartate come doppioni si cancellano **dopo** il commit della transazione
 
 ### Sostituzione del command esistente
@@ -186,14 +188,21 @@ package diventerebbero tre.
       Aruba e nessuno dei 21.625 media ha `sha256` salvato, quindi in locale `hashOf()` torna
       `null` e ogni media viene spostato invece che scartato. Si prova **in produzione**, dove il
       dry-run è a sola lettura e non cancella nulla: stampa quante fotografie sposterebbe e quante
-      scarterebbe
+      scarterebbe, leggendo lo sha256 già nei `custom_properties` (dopo il popolamento) senza calcolarlo mai:
+      un media senza hash conta come «da spostare» e viene segnalato a parte
 - [ ] Il popolamento di `custom_properties.sha256` è un **passaggio a sé**, da far girare prima
       del dry-run: così il dry-run resta a sola lettura e l'hash non va ricalcolato ogni volta.
       Serve comunque a regime, visto che oggi nessun media ce l'ha
-- [ ] Ordine di esecuzione in produzione: popolamento degli hash → dry-run → lettura dei numeri →
-      `--execute` (sanatoria inclusa) → **solo dopo**, e solo se serve, il raggruppamento per
-      istante (`--by-timestamp`, dry-run e poi `--execute`)
-- [ ] La sanatoria va eseguita **prima** del raggruppamento per istante, e `--by-timestamp`
+- [ ] Ordine di esecuzione in produzione, **vincolante**: popolamento degli hash → sanatoria
+      (`recover-previous-duplicate-fix`, dry-run, lettura dei numeri, poi `--execute`) → bonifica per uuid
+      (`fix-duplicated-ugc`, dry-run, lettura dei numeri, poi `--execute`) → **solo dopo**, e solo se
+      serve, il raggruppamento per istante (`--by-timestamp`, dry-run e poi `--execute`). Il perché: fondendo
+      una copia marcata dalla vecchia bonifica, le chiavi `duplicated`, `duplication_info` e
+      `has_been_duplicated` passerebbero sulla scheda tenuta, e la sanatoria non la ripulirebbe più (esclude
+      ogni riga con la chiave `duplicated`): un record legittimo resterebbe marcato per sempre. Per questo
+      `fix-duplicated-ugc` **si ferma con un errore**, in dry-run come con `--execute`, se in `ugc_pois`
+      esistono ancora righe con `properties->duplicated`
+- [ ] La sanatoria va eseguita **prima** della bonifica e quindi anche del raggruppamento per istante, e `--by-timestamp`
       **esclude** i record marcati `properties.duplicated`. Sul dump di produzione le 660 copie
       marcate hanno tutte lo stesso utente di servizio, e quelle senza uuid (162 record, 58 gruppi)
       avrebbero formato gruppi per istante: fonderle fra loro avrebbe lasciato il padre vero

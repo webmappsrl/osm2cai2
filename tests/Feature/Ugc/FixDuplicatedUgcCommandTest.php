@@ -17,7 +17,8 @@ use Wm\WmPackage\Models\UgcTrack;
 use Wm\WmPackage\Models\User;
 
 /**
- * STRATO 1 di oc:8867: il command osm2cai:fix-duplicated-ugc unisce i duplicati per uuid (POI e
+ * STRATO 1 — NON CANCELLARE (oc:8867): test del command misto osm2cai:fix-duplicated-ugc, che resta
+ * (dopo l'aggiornamento di wm-package cambia solo il `use` del servizio). Il command osm2cai:fix-duplicated-ugc unisce i duplicati per uuid (POI e
  * tracce), produce il report a video e in CSV, e segnala i gruppi con record di più utenti.
  */
 class FixDuplicatedUgcCommandTest extends TestCase
@@ -425,5 +426,91 @@ class FixDuplicatedUgcCommandTest extends TestCase
         $this->assertSame(['tipo', 'uuid', 'padre', 'copie', 'distanza max (m)', 'esito', 'utenti'], $righe[0]);
         $this->assertCount(2, $righe);
         $this->assertSame(['pois', 'uuid-csv', (string) $padre->id, (string) $copia->id, '0.00', 'da unire', $padre->id.':'.$this->user->id.' '.$copia->id.':'.$altro->id], $righe[1]);
+    }
+
+    /** Imposta lo sha256 nei custom_properties con un UPDATE: l'upload non lo popola, e così il test lo controlla. */
+    private function conHash(Media $media, ?string $hash): Media
+    {
+        DB::table('media')->where('id', $media->id)->update(['custom_properties' => json_encode($hash === null ? [] : ['sha256' => $hash])]);
+
+        return $media->refresh();
+    }
+
+    /** Scritture sul database (INSERT, UPDATE, DELETE) emesse durante $azione. */
+    private function scrittureDurante(callable $azione): array
+    {
+        $scritture = [];
+        DB::listen(function ($query) use (&$scritture) {
+            if (preg_match('/^\s*(insert|update|delete)\b/i', $query->sql)) {
+                $scritture[] = $query->sql;
+            }
+        });
+        $azione();
+
+        return $scritture;
+    }
+
+    public function test_il_dry_run_stampa_quante_fotografie_sposterebbe_e_quante_scarterebbe()
+    {
+        $padre = $this->creaPoi('uuid-foto', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-foto', '2026-01-02 10:00:00');
+        $this->conHash($this->aggiungiFoto($padre, 'image_0.png'), 'hash-a');
+        $doppione = $this->conHash($this->aggiungiFoto($copia, 'image_0.png'), 'hash-a');
+        $nuova = $this->conHash($this->aggiungiFoto($copia, 'image_1.png'), 'hash-b');
+        // Un secondo doppione, ma di una foto che la scheda tenuta non ha: si sposta la prima, si scarta la seconda.
+        $altra = $this->creaPoi('uuid-foto', '2026-01-03 10:00:00');
+        $this->conHash($this->aggiungiFoto($altra, 'image_2.png'), 'hash-b');
+
+        $output = $this->esegui();
+
+        $this->assertStringContainsString('1 da spostare sul padre, 2 da scartare come doppioni', $output);
+        $this->assertStringNotContainsString('senza sha256', $output);
+        // Nessuna scrittura: i media sono dove stavano e il doppione esiste ancora.
+        $this->assertNotNull(Media::find($doppione->id));
+        $this->assertSame($copia->id, (int) Media::find($nuova->id)->model_id);
+    }
+
+    public function test_il_dry_run_con_hash_mancante_conta_il_media_da_spostare_lo_segnala_e_non_scrive()
+    {
+        $padre = $this->creaPoi('uuid-senza-hash', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-senza-hash', '2026-01-02 10:00:00');
+        $this->conHash($this->aggiungiFoto($padre, 'image_0.png'), 'hash-a');
+        // Stessa foto del padre, ma senza hash: il file è leggibile (storage finto), quindi hashOf() la
+        // riconoscerebbe e scriverebbe l'hash. In dry-run non deve farlo.
+        $senzaHash = $this->conHash($this->aggiungiFoto($copia, 'image_0.png'), null);
+
+        $scritture = $this->scrittureDurante(function () use (&$output) {
+            $output = $this->esegui();
+        });
+
+        $this->assertStringContainsString('1 da spostare sul padre, 0 da scartare', $output);
+        $this->assertStringContainsString('1 fotografie senza sha256', $output);
+        $this->assertStringContainsString('osm2cai:backfill-ugc-media-hash --execute', $output);
+        $this->assertSame([], $scritture, 'Il dry-run non deve scrivere sul database: '.implode(' | ', $scritture));
+        $this->assertNull(Media::find($senzaHash->id)->getCustomProperty('sha256'));
+    }
+
+    public function test_con_execute_non_stampa_la_stima_delle_fotografie()
+    {
+        $padre = $this->creaPoi('uuid-foto-exec', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-foto-exec', '2026-01-02 10:00:00');
+        $this->aggiungiFoto($padre, 'image_0.png');
+        $this->aggiungiFoto($copia, 'image_0.png');
+
+        $output = $this->esegui(['--execute' => true]);
+
+        $this->assertStringNotContainsString('stima, nessuna scrittura', $output);
+    }
+
+    public function test_il_dry_run_non_conta_le_fotografie_dei_gruppi_che_non_si_fondono()
+    {
+        $padre = $this->creaPoi('uuid-bloccato', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-bloccato', '2026-01-02 10:00:00', null, 'POINT Z (11.5 44.5 0)');
+        $this->conHash($this->aggiungiFoto($padre, 'image_0.png'), 'hash-a');
+        $this->conHash($this->aggiungiFoto($copia, 'image_0.png'), 'hash-a');
+
+        $output = $this->esegui();
+
+        $this->assertStringContainsString('0 da spostare sul padre, 0 da scartare', $output);
     }
 }

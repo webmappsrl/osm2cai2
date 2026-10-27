@@ -37,12 +37,12 @@ ssh prod.osm2cai "docker exec php81-osm2cai2 php artisan down --secret=migrazion
 Verifica su browser: `https://osm2cai.cai.it/` deve mostrare pagina di manutenzione.
 Il team può bypassare la manutenzione visitando `https://osm2cai.cai.it/migrazione-cai-2026` (imposta un cookie di bypass).
 
-- [ ] **Step 2: Fix UGC POI duplicati sul server Webmapp**
+- [ ] **Step 2: Report UGC duplicati sul server Webmapp (sola lettura)**
 
 ```bash
 ssh prod.osm2cai "docker exec php81-osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php artisan osm2cai:fix-duplicated-ugc'"
 ```
-Attendi il completamento prima di procedere.
+Il command senza `--execute` non modifica nulla: stampa i gruppi di POI e tracce duplicati, la stima delle fotografie e scrive il report in `storage/backups`. La correzione vera non fa parte di questo step: si applica con `--execute`, solo dopo `osm2cai:backfill-ugc-media-hash --execute` e `osm2cai:recover-previous-duplicate-fix --execute` (ordine in `docs/features/8867-acquasorgente-duplicazioni-rilevamenti/notes.md`). Se il command esce con errore perché esistono ancora copie marcate `duplicated`, esegui prima la sanatoria. Attendi il completamento prima di procedere.
 
 - [ ] **Step 3: Stoppa Horizon sul server Webmapp**
 

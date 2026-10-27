@@ -3,15 +3,18 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\GroupsByTimestamp;
+use App\Models\UgcPoi;
+use App\Models\UgcTrack;
 use App\Services\UgcDuplicatesService;
+use App\Services\UgcMediaHashService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Wm\WmPackage\Models\UgcPoi;
-use Wm\WmPackage\Models\UgcTrack;
 
 /**
- * STRATO 1 di oc:8867 — porting di Wm\WmPackage\Commands\WmFixDuplicatedUgcCommand (oc:8718, origin/main).
+ * STRATO 1 — NON CANCELLARE (oc:8867). File misto: porting di Wm\WmPackage\Commands\WmFixDuplicatedUgcCommand
+ * (oc:8718, origin/main) con in più l'aggancio dello strato 2. Resta anche dopo l'aggiornamento di
+ * wm-package (è lo schedulato delle 06:00): cambiano solo i `use` di UgcDuplicatesService e UgcMediaHashService.
  *
  * Divergenze volute rispetto all'originale (annotate in docs/features/8867-.../notes.md):
  * --max-distance ha default 0, report CSV sotto storage/backups, sezione dei gruppi multi-utente.
@@ -45,6 +48,11 @@ class FixDuplicatedUgcCommand extends Command
         }
         $types = $type !== null ? [$type => self::TYPES[$type]] : self::TYPES;
         $execute = (bool) $this->option('execute');
+
+        // Guardia sull'ordine di esecuzione: vale anche in dry-run (vedi guardiaCopieMarcate()).
+        if (in_array(UgcPoi::class, $types, true) && ! $this->guardiaCopieMarcate()) {
+            return self::FAILURE;
+        }
         $appOption = $this->option('app-id');
         if ($appOption !== null && $appOption !== '' && ! ctype_digit((string) $appOption)) {
             // Il servizio filtra per id numerico: un valore come "iNaturalist" diventerebbe 0 e darebbe zero gruppi in silenzio.
@@ -74,6 +82,10 @@ class FixDuplicatedUgcCommand extends Command
         $esiti = [];
         $mediaCancellati = 0;
         $mediaFalliti = 0;
+        // Solo in dry-run: stima delle fotografie dei gruppi che si fonderebbero, letta senza scrivere.
+        $stima = ['spostate' => 0, 'scartate' => 0, 'senza_hash' => 0];
+        // Solo con --by-timestamp: rilevamenti senza uuid che il raggruppamento non può trattare.
+        $esclusi = [];
         foreach ($types as $typeName => $modelClass) {
             foreach ($service->groups($modelClass, $appId)->concat($this->groupsByTimestamp($modelClass, $appId)) as $group) {
                 // Gli utenti si leggono prima della fusione: dopo, le copie non esistono più.
@@ -91,6 +103,11 @@ class FixDuplicatedUgcCommand extends Command
                     $motivi[] = 'padre senza utente';
                 }
                 $skip = $motivi !== [];
+                if (! $execute && ! $skip) {
+                    foreach ($this->stimaMedia($modelClass, $group) as $chiave => $n) {
+                        $stima[$chiave] += $n;
+                    }
+                }
                 if ($execute && ! $skip) {
                     $discarded = $service->mergeGroup($modelClass, $group);
                     foreach ($discarded as $media) {
@@ -102,7 +119,7 @@ class FixDuplicatedUgcCommand extends Command
                             $mediaFalliti++;
                             Log::channel('duplicated-ugc')->error('Cancellazione del media doppione fallita', [
                                 'media_id' => $media->id,
-                                'uuid' => $group['uuid'],
+                                'uuid' => $uuidLabel,
                                 'errore' => $e->getMessage(),
                             ]);
                         }
@@ -126,6 +143,9 @@ class FixDuplicatedUgcCommand extends Command
                     'esito' => $esito,
                 ]);
             }
+            if (($fuoriGruppo = $this->excludedByTimestamp($modelClass, $appId)) !== null) {
+                $esclusi[$typeName] = $fuoriGruppo;
+            }
         }
 
         Log::channel('duplicated-ugc')->info('osm2cai:fix-duplicated-ugc completato', [
@@ -138,6 +158,8 @@ class FixDuplicatedUgcCommand extends Command
             'esiti' => $esiti,
             'media_cancellati' => $mediaCancellati,
             'media_falliti' => $mediaFalliti,
+            'media_stimati' => $execute ? null : $stima,
+            'senza_uuid_esclusi' => $esclusi ?: null,
         ]);
         $this->table(['tipo', 'uuid', 'padre', 'copie', 'distanza max (m)', 'esito'], $rows);
         if ($multiUser !== []) {
@@ -151,6 +173,11 @@ class FixDuplicatedUgcCommand extends Command
         }
         if ($execute) {
             $this->info("Media doppioni cancellati: {$mediaCancellati}, falliti: {$mediaFalliti}".($mediaFalliti > 0 ? ' (id nel log duplicated-ugc).' : '.'));
+        } else {
+            $this->riferisciStimaMedia($stima);
+        }
+        if ($esclusi !== []) {
+            $this->riferisciEsclusi($esclusi);
         }
 
         $status = self::SUCCESS;
@@ -168,6 +195,106 @@ class FixDuplicatedUgcCommand extends Command
             : 'Report: prima di --execute fai il backup del DB.');
 
         return $status;
+    }
+
+    /**
+     * Guardia sull'ordine di esecuzione. Se in ugc_pois restano righe con la chiave
+     * properties->duplicated (la vecchia bonifica), la sanatoria deve girare prima: fondendo una copia
+     * marcata le sue chiavi (duplicated, duplication_info, has_been_duplicated) passano sulla scheda
+     * tenuta, che poi la sanatoria non ripulisce più (esclude per costruzione ogni riga con la chiave
+     * duplicated). Il risultato sono record legittimi marcati in modo permanente.
+     *
+     * Vale anche in dry-run, e non come semplice avviso: i gruppi che il dry-run annuncerebbe prima
+     * della sanatoria non sono quelli che la bonifica unirebbe dopo (le copie marcate cambiano il
+     * conteggio), quindi i numeri letti sarebbero fuorvianti; l'esecuzione schedulata delle 06:00, poi,
+     * non deve passare inosservata. Si controlla la chiave, di qualunque valore, come fa la sanatoria
+     * per decidere se una riga è ripulibile.
+     *
+     * @return bool false se il command deve fermarsi
+     */
+    private function guardiaCopieMarcate(): bool
+    {
+        $marcate = DB::table('ugc_pois')->whereRaw("jsonb_exists(properties, 'duplicated')")->count();
+        if ($marcate === 0) {
+            return true;
+        }
+
+        $this->error("In ugc_pois ci sono ancora {$marcate} righe con la chiave properties.duplicated (copie lasciate dalla vecchia bonifica).");
+        $this->error('Esegui prima la sanatoria: php artisan osm2cai:recover-previous-duplicate-fix (dry-run) e poi con --execute.');
+        $this->line('Fondere ora le copie marcate farebbe passare duplicated, duplication_info e has_been_duplicated sulle schede tenute, e la sanatoria non le ripulirebbe più.');
+        $this->line('Se dopo la sanatoria restano righe con la chiave duplicated (valore diverso dal boolean true) vanno riviste a mano: la sanatoria non le tocca.');
+        Log::channel('duplicated-ugc')->warning('osm2cai:fix-duplicated-ugc fermato: copie marcate duplicated ancora presenti', ['righe' => $marcate]);
+
+        return false;
+    }
+
+    /**
+     * Stima in sola lettura delle fotografie di un gruppo che si fonderebbe, con la stessa regola di
+     * UgcDuplicatesService::moveMedia(): una fotografia della copia con lo stesso sha256 di una già
+     * presente sul padre (o su una copia precedente) si scarta, le altre si spostano. Legge soltanto
+     * custom_properties.sha256 e non chiama mai UgcMediaHashService::hashOf(), che per i media senza
+     * hash scaricherebbe il file e lo salverebbe: un media senza hash conta come «da spostare» e
+     * viene segnalato a parte.
+     *
+     * @return array{spostate: int, scartate: int, senza_hash: int}
+     */
+    private function stimaMedia(string $modelClass, array $group): array
+    {
+        $morph = (new $modelClass)->getMorphClass();
+        $ids = array_merge([$group['parent_id']], $group['copy_ids']);
+        $hash = DB::raw("custom_properties->>'".UgcMediaHashService::HASH_PROPERTY."' AS hash");
+        $perRecord = DB::table('media')->where('model_type', $morph)->whereIn('model_id', $ids)
+            ->orderBy('id')->get(['id', 'model_id', $hash])->groupBy('model_id');
+
+        $stima = ['spostate' => 0, 'scartate' => 0, 'senza_hash' => 0];
+        $noti = [];
+        foreach ($perRecord->get($group['parent_id'], collect()) as $media) {
+            if (is_string($media->hash) && $media->hash !== '') {
+                $noti[$media->hash] = true;
+            } else {
+                // Il padre non ha l'hash: non si può sapere se la copia lo duplica, quindi si segnala.
+                $stima['senza_hash']++;
+            }
+        }
+        foreach ($group['copy_ids'] as $copyId) {
+            foreach ($perRecord->get($copyId, collect()) as $media) {
+                if (! is_string($media->hash) || $media->hash === '') {
+                    $stima['senza_hash']++;
+                    $stima['spostate']++;
+
+                    continue;
+                }
+                if (isset($noti[$media->hash])) {
+                    $stima['scartate']++;
+
+                    continue;
+                }
+                $noti[$media->hash] = true;
+                $stima['spostate']++;
+            }
+        }
+
+        return $stima;
+    }
+
+    /** @param array{spostate: int, scartate: int, senza_hash: int} $stima */
+    private function riferisciStimaMedia(array $stima): void
+    {
+        $this->info("Fotografie dei gruppi da unire (stima, nessuna scrittura): {$stima['spostate']} da spostare sul padre, {$stima['scartate']} da scartare come doppioni (stesso sha256).");
+        if ($stima['senza_hash'] > 0) {
+            $this->warn("{$stima['senza_hash']} fotografie senza sha256: l'hash non è disponibile e non si calcola in dry-run, quelle delle copie contano come da spostare (la stima degli scarti è per difetto). Esegui prima osm2cai:backfill-ugc-media-hash --execute.");
+        }
+    }
+
+    /** @param array<string, array{senza_istante: int, senza_utente: int, senza_geometria: int}> $esclusi per tipo */
+    private function riferisciEsclusi(array $esclusi): void
+    {
+        $totale = array_sum(array_map('array_sum', $esclusi));
+        $this->info("Rilevamenti senza uuid che --by-timestamp non può valutare: {$totale}. Non finiscono in nessun gruppo (non sono necessariamente duplicati): se servono controlli, vanno revisionati a mano.");
+        $this->table(
+            ['tipo', 'senza istante di compilazione', 'senza utente', 'senza geometria'],
+            array_map(fn ($tipo, $n) => [$tipo, $n['senza_istante'], $n['senza_utente'], $n['senza_geometria']], array_keys($esclusi), $esclusi)
+        );
     }
 
     /**

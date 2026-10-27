@@ -23,8 +23,9 @@ use Wm\WmPackage\Services\BaseService;
  * positivi). Per questo un record senza createdAt non viene mai unito a nessuno.
  *
  * Fa solo il raggruppamento: la fusione resta a UgcDuplicatesService (strato 1), che qui si richiama
- * soltanto per misurare la distanza. All'aggiornamento di wm-package cambia solo il namespace di
- * quel servizio.
+ * soltanto per misurare la distanza. All'aggiornamento di wm-package cambia solo il riferimento a quel
+ * servizio: oggi è `App\Services\UgcDuplicatesService` (stesso namespace, quindi senza `use`) e va
+ * sostituito con `use Wm\WmPackage\Services\Models\UgcDuplicatesService;`.
  */
 class UgcDuplicatesByTimestampService extends BaseService
 {
@@ -74,5 +75,37 @@ class UgcDuplicatesByTimestampService extends BaseService
                 'max_distance_m' => $this->duplicates->maxDistanceMeters($table, $parentId, $ids),
             ];
         });
+    }
+
+    /**
+     * Rilevamenti senza uuid che groups() non può mai raggruppare, divisi per il primo motivo che li
+     * esclude (in quest'ordine: nessun istante di compilazione, nessun utente, nessuna geometria).
+     * Non sono duplicati accertati né esclusi: sono rilevamenti che il criterio non sa valutare, e
+     * vanno revisionati a mano (comprese le righe con properties NULL, che il coalesce non lascia cadere). Le copie marcate properties.duplicated non si contano: le tratta la
+     * sanatoria.
+     *
+     * @param  class-string<GeometryModel>  $modelClass
+     * @return array{senza_istante: int, senza_utente: int, senza_geometria: int}
+     */
+    public function excluded(string $modelClass, ?int $appId = null): array
+    {
+        $table = (new $modelClass)->getTable();
+        $appFilter = $appId !== null ? 'AND app_id = ?' : '';
+        $bindings = $appId !== null ? [$appId] : [];
+
+        $row = DB::selectOne("
+            SELECT count(*) FILTER (WHERE properties->>'createdAt' IS NULL OR properties->>'createdAt' = '') AS senza_istante,
+                   count(*) FILTER (WHERE properties->>'createdAt' IS NOT NULL AND properties->>'createdAt' <> '' AND user_id IS NULL) AS senza_utente,
+                   count(*) FILTER (WHERE properties->>'createdAt' IS NOT NULL AND properties->>'createdAt' <> '' AND user_id IS NOT NULL AND geometry IS NULL) AS senza_geometria
+            FROM {$table}
+            WHERE (properties->>'uuid' IS NULL OR properties->>'uuid' = '')
+              AND NOT coalesce(jsonb_exists(properties, 'duplicated'), false) {$appFilter}
+        ", $bindings);
+
+        return [
+            'senza_istante' => (int) $row->senza_istante,
+            'senza_utente' => (int) $row->senza_utente,
+            'senza_geometria' => (int) $row->senza_geometria,
+        ];
     }
 }

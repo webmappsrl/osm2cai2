@@ -130,6 +130,30 @@ ricascarci.
 - «I record `platform` sono vuoti» — **falso**: avevo guardato `raw_data`, mentre i dati stanno in
   `properties.form`, popolato in 773 su 776.
 
+## Ordine di esecuzione in produzione (vincolante)
+
+1. `php artisan migrate`
+2. `osm2cai:backfill-ugc-media-hash --execute` (popola gli sha256)
+3. `osm2cai:recover-previous-duplicate-fix` (dry-run, si leggono i numeri), poi `--execute`
+4. `osm2cai:fix-duplicated-ugc` (dry-run, si leggono i numeri, comprese le fotografie che sposterebbe e
+   scarterebbe), poi `--execute`
+5. Solo se serve: `osm2cai:fix-duplicated-ugc --by-timestamp`, dry-run e poi `--execute`
+
+**La sanatoria va prima della bonifica.** `UgcDuplicatesService::SERVER_PROPERTY_KEYS` protegge dal merge
+solo `id`, `created_at`, `updated_at`, `taxonomy_where`, `taxonomyWheres`: fondendo una copia marcata dalla
+vecchia bonifica, le chiavi `duplicated`, `duplication_info` e `has_been_duplicated` passano sulla scheda
+tenuta. Quella scheda poi non si ripulisce più, perché `ripulisciChiaviEreditate()` esclude per costruzione
+ogni riga che porti la chiave `duplicated`: un record legittimo resta marcato in modo permanente. Per questo
+`osm2cai:fix-duplicated-ugc` ha una guardia: se in `ugc_pois` esiste anche una sola riga con la chiave
+`properties->duplicated` (di qualunque valore) esce con errore e non fa nulla, **sia in dry-run sia con
+`--execute`**. In dry-run l'errore è preferito al semplice avviso perché i numeri che il dry-run
+annuncerebbe prima della sanatoria non sono quelli della bonifica dopo (le copie marcate cambiano i gruppi),
+e perché lo schedulato delle 06:00, che gira in dry-run, deve segnalare la condizione invece di produrre un
+report fuorviante. Effetto collaterale da sapere: fino a quando la sanatoria non è stata eseguita in
+produzione, lo schedulato delle 06:00 esce con errore ogni giorno. Se dopo la sanatoria restano righe con la
+chiave `duplicated` con valore diverso dal boolean `true`, la sanatoria non le tocca e la guardia continua a
+fermare la bonifica: vanno riviste a mano.
+
 ## Esiti del collaudo sul dump di produzione (27/10/2026)
 
 Eseguito in locale sul database `osm2cai2` (dump del 26/10/2026), nell'ordine che conta: **prima la
@@ -184,13 +208,12 @@ realizzati.
   bind nel container sopravvive alla compilazione delle rotte. `config:cache` non si è eseguito (lo ha
   bloccato il sistema dei permessi e non serve: con la config in cache i test girerebbero con il `.env`
   del dump invece del `.env.testing`); a fine prova `route:clear`, nessun file di cache residuo.
-- **Suite completa** (`php artisan test`): 376 passati, **120 falliti**, nessuno in `tests/Feature/Ugc`
-  (85 passati su 85). I 120 sono tutti in test di `hiking_routes` (`SignageMapControllerTest`,
-  `HikingRouteControllerV2Test`, `UserTest`, job `CheckNearby*`, …) e dipendono verosimilmente dallo
-  schema del DB `osm2cai2_testing`, rimasto indietro rispetto al codice: la tabella `apps` è vuota (violazione della FK
-  `hiking_routes_app_id_foreign`, 109 casi) e a `hiking_routes` manca la colonna `osmfeatures_data` (7
-  casi). Nessun file di quei test è toccato dal branch, e non si è rifatto il confronto su `main`. Non sembrano regressioni di questo lavoro, ma vanno riallineati
-  (`db:restore`/migrate del DB di test) prima di fidarsi della suite intera.
+- **Suite completa** (`php artisan test`): nessun test in `tests/Feature/Ugc` fallisce. La prima esecuzione
+  sul database di test aveva dato «376 passati, 120 falliti», ma non erano regressioni del branch: erano test
+  che si appoggiano a dati preesistenti (la tabella `apps` vuota, la colonna `osmfeatures_data` assente) su un
+  database `osm2cai2_testing` indietro rispetto al codice. Riallineato l'ambiente, la **baseline reale è di 8
+  test falliti, che falliscono identici anche su `develop`** (percorsi, segnaletica ed Elasticsearch): nessuno
+  riguarda questo lavoro.
 
 ## Follow-up
 
@@ -213,6 +236,18 @@ realizzati.
   `UgcDuplicatesService::mergeGroup()` (strato 1) e quello in `RecoverPreviousDuplicateFixCommand`
   (strato 2). Voluto: lo strato 2 deve sopravvivere alla cancellazione dello strato 1, quindi non
   dipende da un metodo condiviso. Se la tabella cambia, vanno aggiornati entrambi.
+
+## Limiti noti, decisi di non correggere
+
+- **Le fotografie scartate come doppioni non lasciano traccia prima di essere cancellate.** I loro id non sono
+  registrati da nessuna parte (l'archivio `ugc_duplicates_archive.media_ids` ricorda solo quelle *spostate*),
+  e se la cancellazione fallisce restano agganciate a un record ormai inesistente (orfane; l'id si legge solo
+  nel log `duplicated-ugc`). Esposizione attuale misurata: **zero scarti** nel collaudo (i file su Aruba non
+  sono leggibili, quindi nessun hash e nessun doppione scartato).
+- **Le bonifiche non considerano la tabella legacy `ugc_media`** (FK con `ON DELETE SET NULL`, 9.247 righe)
+  **né i pivot `trail_survey_ugc_poi` e `trail_survey_ugc_track`** (`cascadeOnDelete`): cancellare una copia
+  azzera il riferimento nella prima e fa sparire le righe dei secondi. Esposizione attuale misurata: **zero
+  record coinvolti** oggi. Il percorso però esiste, e un rilancio futuro su dati più vecchi lo incontrerebbe.
 
 ## Divergenze dello strato 1 rispetto a oc:8718
 
@@ -285,6 +320,28 @@ del package):
   (nata in questo branch, mai eseguita altrove). All'aggiornamento di `wm-package` la sua migration ha la
   guardia `hasTable` e non ricreerà la tabella: la colonna resterà `string`. Il test
   `UgcDuplicatesArchiveSchemaTest` sorveglia che non regredisca.
+- **Tie-break diversi fra store e bonifica** (in parità con il package): lo store sceglie il record esistente
+  con `orderBy('id')` (`findExistingByUuid()`), la bonifica sceglie il padre con `ORDER BY created_at, id`
+  (`UgcDuplicatesService::groups()`). Se `created_at` non segue l'ordine degli id (record importati o
+  riscritti) i due criteri possono indicare padri diversi: il reinvio aggiorna una riga, la bonifica ne
+  tiene un'altra. Non si corregge qui, per non divergere dal package.
+- **Dry-run con la stima delle fotografie** (assente nel package): `osm2cai:fix-duplicated-ugc` senza
+  `--execute` stampa quante fotografie dei gruppi da unire si sposterebbero e quante si scarterebbero come
+  doppioni, con la stessa regola di `moveMedia()`, leggendo solo `custom_properties.sha256` e senza mai
+  chiamare `hashOf()` (che scarica il file e scrive l'hash). Un media senza hash conta come «da spostare» e
+  si segnala a parte, quindi senza il popolamento la stima degli scarti è per difetto. Un test lo verifica,
+  compreso che non scriva nulla.
+- **Conteggio dei senza uuid non trattabili** (strato 2): con `--by-timestamp`, a fine esecuzione, il command
+  stampa e scrive nel log quanti rilevamenti senza uuid il raggruppamento esclude (senza istante di
+  compilazione, senza utente, senza geometria; per il primo motivo che si applica, in quest'ordine). Sul dump
+  collaudato sono 1.973 (1.849 POI e 124 tracce, tutti per mancanza dell'istante, compresi 3 POI e 5 tracce
+  con `properties` NULL). Verosimilmente in gran parte i rilevamenti `platform` descritti nei follow-up
+  (senza uuid né `createdAt`, che non si duplicano mai; non verificato rilevamento per rilevamento): il
+  numero non è una stima dei duplicati ma di ciò che il criterio non sa valutare.
+- **Guardia sull'ordine di esecuzione** (strato 2, nel command misto): vedi la sezione «Ordine di esecuzione».
+- **Il model_type dei media si legge sempre da `getMorphClass()`**: i command usano i modelli
+  `App\Models\UgcPoi/UgcTrack` e ne ricavano il morph, senza stringhe letterali. Oggi il morph di quelle
+  classi coincide con quello dei modelli del package grazie alla morphMap in `AppServiceProvider::boot()`.
 
 **Scostamenti rispetto alla versione del package in uso qui** (il codice è invece **identico a
 `origin/main`**, quindi non sono divergenze da cercare all'aggiornamento):

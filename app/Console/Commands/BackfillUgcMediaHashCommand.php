@@ -33,7 +33,8 @@ class BackfillUgcMediaHashCommand extends Command
         $chunk = max(1, (int) $this->option('chunk'));
 
         $query = Media::query()
-            ->whereIn('model_type', [UgcPoi::class, UgcTrack::class])
+            // Il model_type dei media è il morph class (morphMap), non il nome della classe: si legge dai modelli.
+            ->whereIn('model_type', [(new UgcPoi)->getMorphClass(), (new UgcTrack)->getMorphClass()])
             ->whereNull('custom_properties->'.UgcMediaHashService::HASH_PROPERTY);
 
         $total = (clone $query)->count();

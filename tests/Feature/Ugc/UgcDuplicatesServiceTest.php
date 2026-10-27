@@ -19,7 +19,8 @@ use Wm\WmPackage\Models\UgcTrack as PackageUgcTrack;
 use Wm\WmPackage\Models\User;
 
 /**
- * STRATO 1 di oc:8867: UgcDuplicatesService unisce i rilevamenti con lo stesso properties.uuid nel
+ * STRATO 1 — DA CANCELLARE (oc:8867): testa la copia locale di UgcDuplicatesService (il package ha i suoi
+ * test, WmFixDuplicatedUgc*Test). UgcDuplicatesService unisce i rilevamenti con lo stesso properties.uuid nel
  * più vecchio, sposta le foto, archivia le copie e le cancella.
  *
  * I record si creano con le factory del package (quelle locali hanno definition() vuoto); il servizio

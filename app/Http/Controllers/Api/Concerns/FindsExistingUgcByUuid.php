@@ -11,7 +11,7 @@ use Wm\WmPackage\Models\Abstracts\GeometryModel;
 use Wm\WmPackage\Services\GeometryComputationService;
 
 /**
- * STRATO 1 di oc:8867 — copia locale destinata a essere cancellata.
+ * STRATO 1 — DA CANCELLARE (oc:8867): copia locale destinata a essere cancellata.
  *
  * Porting di store(), findExistingByUuid() e fillModelWithRequest() di
  * Wm\WmPackage\Http\Controllers\Api\Abstracts\UgcController (oc:8718). Nel package la correzione

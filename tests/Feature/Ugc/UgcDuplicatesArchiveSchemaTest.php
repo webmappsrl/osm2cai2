@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
+/**
+ * STRATO 1 — NON CANCELLARE (oc:8867): sorveglia la migration di ugc_duplicates_archive (che resta) e
+ * che app_id non regredisca a integer.
+ */
 class UgcDuplicatesArchiveSchemaTest extends TestCase
 {
     use DatabaseTransactions;

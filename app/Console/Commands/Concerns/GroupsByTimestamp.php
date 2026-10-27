@@ -30,4 +30,21 @@ trait GroupsByTimestamp
 
         return UgcDuplicatesByTimestampService::make()->groups($modelClass, $appId);
     }
+
+    /**
+     * Conteggio dei rilevamenti senza uuid che il raggruppamento per istante esclude (privi di istante di
+     * compilazione, di utente o di geometria): non si possono unire a nessuno e restano da revisionare a mano.
+     * Null se --by-timestamp non è attivo.
+     *
+     * @param  class-string  $modelClass
+     * @return array{senza_istante: int, senza_utente: int, senza_geometria: int}|null
+     */
+    protected function excludedByTimestamp(string $modelClass, ?int $appId): ?array
+    {
+        if (! $this->input->hasOption('by-timestamp') || ! $this->option('by-timestamp')) {
+            return null;
+        }
+
+        return UgcDuplicatesByTimestampService::make()->excluded($modelClass, $appId);
+    }
 }

@@ -12,7 +12,8 @@ use Wm\WmPackage\Models\UgcPoi;
 use Wm\WmPackage\Models\User;
 
 /**
- * STRATO 1 di oc:8867: UgcMediaHashService non deve mai far perdere una foto. Se l'hash non si
+ * STRATO 1 — DA CANCELLARE (oc:8867): testa la copia locale di UgcMediaHashService (il package ha i suoi
+ * test). UgcMediaHashService non deve mai far perdere una foto. Se l'hash non si
  * calcola il media conta come "diverso" (null), non solleva eccezioni.
  */
 class UgcMediaHashServiceTest extends TestCase

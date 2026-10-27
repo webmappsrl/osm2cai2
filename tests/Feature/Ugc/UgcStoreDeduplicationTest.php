@@ -13,7 +13,9 @@ use Wm\WmPackage\Models\UgcTrack;
 use Wm\WmPackage\Models\User;
 
 /**
- * STRATO 1 di oc:8867: lo store dei rilevamenti UGC deve riconoscere il retry dell'app
+ * STRATO 1 — NON CANCELLARE (oc:8867): resta e va modificato solo il `use` di UgcMediaHashService
+ * (da App\Services a Wm\WmPackage\Services\Models). Dopo l'aggiornamento di wm-package diventa la prova
+ * che il package fa ciò che qui si è riscritto. Lo store dei rilevamenti UGC deve riconoscere il retry dell'app
  * (stesso properties.uuid) e aggiornare il record invece di crearne uno nuovo.
  *
  * Si asserisce sui modelli del package (Wm\WmPackage\Models\UgcPoi / UgcTrack), che sono quelli

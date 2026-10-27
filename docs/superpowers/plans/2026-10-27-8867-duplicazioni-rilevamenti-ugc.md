@@ -607,8 +607,17 @@ git commit -m "docs(oc:8867): esiti del collaudo, divergenze dallo strato 1 e re
 
 Non fa parte del piano di sviluppo, ma è la ragione per cui Task 9 esiste.
 
+**L'ordine è vincolante: la sanatoria (`recover-previous-duplicate-fix`) va prima della bonifica
+(`fix-duplicated-ugc`).** Le copie lasciate dalla vecchia bonifica portano le chiavi `duplicated`,
+`duplication_info` e `has_been_duplicated`; se la bonifica le fonde per prime, quelle chiavi passano
+sulla scheda tenuta (`UgcDuplicatesService::SERVER_PROPERTY_KEYS` protegge solo `id`, `created_at`,
+`updated_at`, `taxonomy_where`, `taxonomyWheres`), e la sanatoria poi non la ripulisce più, perché
+esclude per costruzione ogni riga con la chiave `duplicated`: un record legittimo resta marcato per
+sempre. Per questo `fix-duplicated-ugc` si ferma con un errore (anche in dry-run) finché in `ugc_pois`
+esistono righe con `properties->duplicated`.
+
 1. `php artisan migrate`
 2. `php artisan osm2cai:backfill-ugc-media-hash --execute` (popola gli sha256 leggendo i file da Aruba)
-3. `php artisan osm2cai:fix-duplicated-ugc` → si leggono i numeri, dry-run a sola lettura
-4. `php artisan osm2cai:fix-duplicated-ugc --execute`
-5. `php artisan osm2cai:recover-previous-duplicate-fix` → poi `--execute`
+3. `php artisan osm2cai:recover-previous-duplicate-fix` → si leggono i numeri (dry-run a sola lettura), poi `--execute`
+4. `php artisan osm2cai:fix-duplicated-ugc` → si leggono i numeri, comprese le fotografie che sposterebbe e scarterebbe (dry-run a sola lettura), poi `--execute`
+5. Solo se serve: `php artisan osm2cai:fix-duplicated-ugc --by-timestamp` → dry-run, poi `--execute`

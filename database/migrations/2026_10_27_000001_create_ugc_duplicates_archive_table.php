@@ -5,8 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-// STRATO 1 (oc:8867): cherry-pick della migration di wm-package (origin/main, file .stub).
-// Codice transitorio: da cancellare quando wm-package verrà aggiornato e la pubblicherà lui.
+// STRATO 1 — NON CANCELLARE (oc:8867): cherry-pick della migration di wm-package (origin/main, file .stub).
+// Non si cancella nemmeno all'aggiornamento di wm-package: la tabella esiste in produzione con le copie
+// archiviate, e la migration del package ha la guardia hasTable e non la ricrea.
 // La guardia hasTable rende la migration innocua se la tabella esiste già.
 return new class extends Migration
 {
