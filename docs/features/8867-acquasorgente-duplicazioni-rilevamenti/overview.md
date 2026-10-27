@@ -144,8 +144,9 @@ package diventerebbero tre.
       copie
 - [ ] Il confronto delle fotografie **non scarica più le immagini da AWS**: l'hash si legge da
       `custom_properties.sha256` e si calcola al volo solo per i media che non ce l'hanno. È il
-      punto da cui con ogni probabilità vengono le 102 foto rimaste indietro: oggi, se il download
-      fallisce, il media esce in silenzio dalla lista di quelli da spostare
+      punto debole del command attuale: oggi, se il download fallisce, il media esce in silenzio
+      dalla lista di quelli da spostare. La causa delle fotografie rimaste sulle copie marcate non è
+      provata
 - [ ] Viene aggiunta la guardia sulle geometrie, nella forma definita sopra: si fonde solo a
       geometrie identiche, senza soglie metriche
 - [ ] Il report in CSV sotto `storage/backups` **resta**, perché è il modo in cui oggi si
@@ -167,12 +168,16 @@ package diventerebbero tre.
       nessun record assegnato e **viene eliminato**: non deve restare nel sistema
 - [ ] Nessun nuovo utente di servizio viene creato: il command non ne ha più bisogno, perché le
       copie si archiviano e si cancellano
-- [ ] Una copia il cui padre non esiste più (**2 casi su 660**) non viene cancellata: finisce
-      nell'elenco da revisionare a mano
+- [ ] Una copia il cui padre non esiste più (**2 casi su 660**, copie `506` e `513`) è l'unico
+      superstite del suo gruppo, non è copia di niente: **non si cancella**. Se l'utente originale
+      in `duplication_info` esiste, le si ripristina `user_id` e le si tolgono `duplicated`,
+      `duplication_info` e `has_been_duplicated`, e diventa un rilevamento normale del suo autore;
+      resta comunque nell'elenco da guardare, perché il caso è anomalo. Se l'utente originale manca
+      o non esiste, o se il padre è a sua volta una copia marcata, la copia resta com'è e si segnala
 - [ ] Bonifica e sanatoria si collaudano **in locale sul dump di produzione**, verificando che il
       conteggio del dry-run coincida con quello che il command poi cancella. I numeri di
-      riferimento sono 192 gruppi, 252 record in eccesso, 660 copie marcate, 102 fotografie da
-      recuperare; in produzione saranno cresciuti (~15 record in eccesso al mese su
+      riferimento sono 192 gruppi, 252 record in eccesso, 660 copie marcate, 536 fotografie
+      attaccate alle copie marcate (su 295 copie); in produzione saranno cresciuti (~15 record in eccesso al mese su
       AcquaSorgente), quindi il dry-run si rifà lì prima di eseguire
 - [ ] La prevenzione si collauda in locale **con le rotte in cache** (`route:cache` +
       `config:cache`, come in produzione dopo `optimize`), perché è lì che il bind del controller
@@ -199,12 +204,20 @@ package diventerebbero tre.
 
 ## Rischi
 
-**Perdita di fotografie durante la bonifica.** In 57 gruppi su 77 la scheda più vecchia — quella
-che il command tiene — non ha fotografie, e sui duplicati ce ne sono **139**. Se la bonifica non
-spostasse i media, il cliente vedrebbe schede singole ma senza foto, cioè un danno peggiore di
-quello segnalato. Non è un rischio teorico: il command attuale i media li sposta
-(`FixDuplicatedUgcPois.php:386`), ma solo con `--execute` e solo dopo lo scarto per hash, e sui
-dati di produzione **102 fotografie sono rimaste sulle copie nascoste**. Mitigazione: `moveMedia` sposta i file **prima** del `DELETE`, dentro la stessa
+**Fotografie sulle copie marcate dalla vecchia bonifica: il danno non c'è.** Le fotografie
+attaccate alle copie marcate sono **536**, su **295 copie** (app 1: 388, app 3: 148), e **nessuna
+copia ha fotografie mentre la scheda tenuta ne è priva**: ogni scheda tenuta che ha copie
+fotografate ha già fotografie proprie (535 su 536 hanno anche un media della stessa dimensione sul
+padre). Quindi nessun cliente sta perdendo immagini: la sanatoria le sposta perché è giusto che
+stiano sulla scheda che resta, non per recuperare qualcosa di perso. Il numero «102 fotografie
+rimaste sulle copie», usato nelle versioni precedenti di questo documento, non è riproducibile da
+alcun conteggio ed è sbagliato.
+
+**Perdita di fotografie durante la bonifica ordinaria.** In 57 gruppi su 77 la scheda più vecchia —
+quella che il command tiene — non ha fotografie, e sui duplicati ce ne sono **139**. Se la bonifica
+non spostasse i media, il cliente vedrebbe schede singole ma senza foto, cioè un danno peggiore di
+quello segnalato. Il command attuale i media li sposta (`FixDuplicatedUgcPois.php:386`), ma solo
+con `--execute` e solo dopo lo scarto per hash. Mitigazione: `moveMedia` sposta i file **prima** del `DELETE`, dentro la stessa
 transazione; al momento della cancellazione le copie non hanno più media agganciati. Le foto
 scartate perché identiche per hash si cancellano dopo il commit, perché Spatie rimuove il file
 subito e un rollback non lo riporta indietro.

@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\Log;
  * riassegnati all'utente di servizio duplicated-ugc-pois@webmapp.it, lasciando le fotografie attaccate
  * alle copie e le chiavi duplication_info / has_been_duplicated anche su schede che non sono copie.
  *
+ * Una copia il cui padre non esiste più è l'unico superstite del suo gruppo: se l'utente originale è
+ * valido torna rilevamento normale del suo autore (user_id ripristinato, chiavi di duplicazione tolte,
+ * nessuna cancellazione); altrimenti resta com'è e va a revisione manuale.
+ *
  * Non ripete la logica dello strato 1: lo spostamento dei media (con lo scarto per hash) è
  * UgcDuplicatesService::moveMedia(). Qui c'è solo ciò che è specifico di questo stato.
  * Le tracce non furono mai trattate dalla vecchia bonifica: il command non le tocca, ma ne segnala
@@ -24,6 +28,12 @@ use Illuminate\Support\Facades\Log;
  */
 class RecoverPreviousDuplicateFixCommand extends Command
 {
+    private const SANABILE = 'sanabile';
+
+    private const ORFANA = 'orfana';
+
+    private const DA_REVISIONARE = 'da_revisionare';
+
     private const SERVICE_USER_EMAIL = 'duplicated-ugc-pois@webmapp.it';
 
     /** Chiavi lasciate dalla vecchia bonifica anche sulle schede che non sono copie. */
@@ -48,6 +58,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
 
         $daRevisionare = [];
         $trattate = 0;
+        $orfane = 0;
         $falliti = 0;
         $mediaSuCopie = 0;
         $mediaSpostati = 0;
@@ -62,11 +73,27 @@ class RecoverPreviousDuplicateFixCommand extends Command
             $parentId = $info['parent_ugc_poi_id'] ?? null;
             $parentUserId = $info['parent_ugc_poi_user_id'] ?? null;
 
-            $motivo = $this->motivoDaRevisionare($parentId, $parentUserId);
-            if ($motivo !== null) {
+            [$esito, $motivo] = $this->classifica($parentId, $parentUserId);
+            if ($esito === self::DA_REVISIONARE) {
                 // Una copia che non si sa dove ricondurre non si tocca: resta com'è, a revisione manuale.
                 $daRevisionare[] = [$copyId, $parentId ?? '-', $motivo];
                 Log::channel('duplicated-ugc')->warning('Copia marcata da revisionare a mano', ['copia' => $copyId, 'padre' => $parentId, 'motivo' => $motivo]);
+
+                continue;
+            }
+            if ($esito === self::ORFANA) {
+                // Padre sparito e utente originale valido: è l'unico superstite del gruppo, non è copia di niente.
+                // Diventa un rilevamento normale del suo autore; non si cancella. Resta nell'elenco perché il caso è anomalo.
+                $daRevisionare[] = [$copyId, $parentId, $execute
+                    ? "{$motivo}: sanata, ora rilevamento normale dell'utente {$parentUserId}"
+                    : "{$motivo}: verrebbe sanata, rilevamento normale dell'utente {$parentUserId}"];
+                if ($copy->user_id !== null && (int) $copy->user_id === (int) $serviceUserId) {
+                    $copieDellUtenteDiServizio++;
+                }
+                if ($execute) {
+                    $this->sanaOrfana((int) $copyId, (int) $parentUserId, $info);
+                }
+                $orfane++;
 
                 continue;
             }
@@ -108,7 +135,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
             }
         }
 
-        $this->riferisciCopie($execute, $trattate, $falliti, $mediaSuCopie, $mediaSpostati, $mediaCancellati, $mediaFalliti, $daRevisionare);
+        $this->riferisciCopie($execute, $trattate, $orfane, $falliti, $mediaSuCopie, $mediaSpostati, $mediaCancellati, $mediaFalliti, $daRevisionare);
 
         $schedeDaRipulire = $this->ripulisciChiaviEreditate($execute);
         $this->info($execute
@@ -122,6 +149,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
             'modalita' => $execute ? 'execute' : 'report',
             'copie_marcate' => count($copyIds),
             'copie_trattate' => $trattate,
+            'copie_orfane_sanate' => $orfane,
             'copie_da_revisionare' => count($daRevisionare),
             'copie_fallite' => $falliti,
             'media_sulle_copie' => $mediaSuCopie,
@@ -140,31 +168,45 @@ class RecoverPreviousDuplicateFixCommand extends Command
         return $falliti > 0 || $mediaFalliti > 0 ? self::FAILURE : self::SUCCESS;
     }
 
-    /** Perché la copia non si può sanare in automatico; null se si può. */
-    private function motivoDaRevisionare(mixed $parentId, mixed $parentUserId): ?string
+    /**
+     * Che cosa fare della copia: SANABILE (padre e utente originale validi), ORFANA (padre inesistente
+     * ma utente originale valido) o DA_REVISIONARE (resta com'è). Il secondo elemento è il motivo.
+     *
+     * @return array{0: string, 1: ?string}
+     */
+    private function classifica(mixed $parentId, mixed $parentUserId): array
     {
         if (! is_numeric($parentId)) {
-            return 'padre non indicato in duplication_info';
+            return [self::DA_REVISIONARE, 'padre non indicato in duplication_info'];
         }
         $padre = DB::table('ugc_pois')
             ->where('id', (int) $parentId)
             ->selectRaw(self::IS_MARKED_COPY.' AS copia')
             ->first();
-        if ($padre === null) {
-            return 'il padre non esiste più';
-        }
-        if ($padre->copia) {
+        if ($padre !== null && $padre->copia) {
             // Spostare le foto su un record che a sua volta è una copia marcata le perderebbe di vista.
-            return 'il padre è a sua volta una copia marcata';
+            return [self::DA_REVISIONARE, 'il padre è a sua volta una copia marcata'];
         }
+        // Se il padre manca lo si dice anche quando il vero ostacolo è l'utente.
+        $prefisso = $padre === null ? 'il padre non esiste più e ' : '';
         if (! is_numeric($parentUserId)) {
-            return 'utente originale non indicato in duplication_info';
+            return [self::DA_REVISIONARE, $prefisso.'utente originale non indicato in duplication_info'];
         }
         if (! DB::table('users')->where('id', (int) $parentUserId)->exists()) {
-            return 'l\'utente originale non esiste più';
+            return [self::DA_REVISIONARE, $prefisso.'l\'utente originale non esiste più'];
         }
 
-        return null;
+        return $padre === null ? [self::ORFANA, 'il padre non esiste più'] : [self::SANABILE, null];
+    }
+
+    /** Copia senza più padre: restituisce il rilevamento al suo autore e toglie ogni traccia di duplicazione. */
+    private function sanaOrfana(int $copyId, int $userId, array $info): void
+    {
+        DB::update(
+            "UPDATE ugc_pois SET user_id = ?, properties = properties - 'duplicated' - 'duplication_info' - 'has_been_duplicated' WHERE id = ?",
+            [$userId, $copyId]
+        );
+        Log::channel('duplicated-ugc')->warning('Copia orfana ripristinata come rilevamento normale', ['copia' => $copyId, 'utente' => $userId, 'duplication_info' => $info]);
     }
 
     /**
@@ -192,19 +234,19 @@ class RecoverPreviousDuplicateFixCommand extends Command
         });
     }
 
-    private function riferisciCopie(bool $execute, int $trattate, int $falliti, int $mediaSuCopie, int $mediaSpostati, int $mediaCancellati, int $mediaFalliti, array $daRevisionare): void
+    private function riferisciCopie(bool $execute, int $trattate, int $orfane, int $falliti, int $mediaSuCopie, int $mediaSpostati, int $mediaCancellati, int $mediaFalliti, array $daRevisionare): void
     {
         if ($execute) {
-            $this->info("Copie sanate: {$trattate}, fallite: {$falliti}.");
+            $this->info("Copie sanate (archiviate e cancellate): {$trattate}, fallite: {$falliti}. Copie orfane ripristinate come rilevamenti normali: {$orfane}.");
             $this->info("Foto spostate sulla scheda tenuta: {$mediaSpostati}; doppioni cancellati: {$mediaCancellati}, falliti: {$mediaFalliti}".($mediaFalliti > 0 ? ' (id nel log duplicated-ugc).' : '.'));
         } else {
-            $this->info("Copie da sanare: {$trattate}.");
+            $this->info("Copie da sanare (archiviare e cancellare): {$trattate}. Copie orfane da ripristinare come rilevamenti normali: {$orfane}.");
             // Senza --execute non si calcolano gli hash: scriverebbero nei custom_properties dei media.
             $this->info("Media attaccati a quelle copie: {$mediaSuCopie} (quanti si spostano e quanti sono doppioni lo dice l'hash, calcolato solo con --execute).");
         }
 
         if ($daRevisionare !== []) {
-            $this->warn(count($daRevisionare).' copie NON si toccano e vanno revisionate a mano.');
+            $this->warn(count($daRevisionare).' copie da guardare a mano (le orfane con utente valido si sanano comunque, le altre restano intatte).');
             $this->table(['copia', 'padre', 'motivo'], $daRevisionare);
         }
     }

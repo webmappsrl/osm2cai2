@@ -176,24 +176,71 @@ class RecoverPreviousDuplicateFixTest extends TestCase
         $this->assertNotNull(UgcPoi::find($erede->id), 'la scheda non si cancella');
     }
 
-    public function test_una_copia_il_cui_padre_non_esiste_piu_non_viene_cancellata()
+    public function test_una_copia_orfana_con_utente_originale_valido_viene_sanata_e_non_cancellata()
     {
         $padre = $this->creaPoi(['uuid' => 'p']);
         $orfana = $this->creaCopiaMarcata($padre->id + 100000);
-        $sanabile = $this->creaCopiaMarcata($padre->id);
+        $this->creaPoi(['uuid' => 'altro', 'has_been_duplicated' => true]);
         $fotoOrfana = $this->foto($orfana, 'image_0.png');
 
         $output = $this->esegui(['--execute' => true]);
 
-        $this->assertNotNull(UgcPoi::find($orfana->id));
-        $this->assertSame($this->servizio->id, (int) DB::table('ugc_pois')->where('id', $orfana->id)->value('user_id'));
+        $this->assertNotNull(UgcPoi::find($orfana->id), 'non si cancella');
+        $riga = DB::table('ugc_pois')->where('id', $orfana->id)->first();
+        $this->assertSame($this->autore->id, (int) $riga->user_id);
+        $this->assertSame(['uuid' => 'uuid-'.($padre->id + 100000)], json_decode($riga->properties, true));
         $this->assertSame([$fotoOrfana->id], $this->mediaDi($orfana));
-        $this->assertNull(UgcPoi::find($sanabile->id));
-        $this->assertStringContainsString('il padre non esiste più', $output);
+        $this->assertSame(0, DB::table('ugc_duplicates_archive')->count());
+        // Resta nell'elenco da guardare, ma non in sospeso.
+        $this->assertStringContainsString('il padre non esiste più: sanata', $output);
         $this->assertStringContainsString((string) $orfana->id, $output);
-        // L'utente di servizio ha ancora la copia orfana: non si elimina.
+        // Non ha più nulla assegnato all'utente di servizio: si elimina.
+        $this->assertFalse(DB::table('users')->where('id', $this->servizio->id)->exists());
+    }
+
+    public function test_una_copia_orfana_senza_utente_originale_valido_resta_intatta()
+    {
+        $padre = $this->creaPoi(['uuid' => 'p']);
+        $senzaUtente = $this->creaPoi([
+            'uuid' => 'x',
+            'duplicated' => true,
+            'duplication_info' => ['parent_ugc_poi_id' => $padre->id + 100000],
+        ], $this->servizio->id);
+        $utenteInesistente = $this->creaPoi([
+            'uuid' => 'y',
+            'duplicated' => true,
+            'duplication_info' => ['parent_ugc_poi_id' => $padre->id + 100001, 'parent_ugc_poi_user_id' => 99999999],
+        ], $this->servizio->id);
+        $prima = [$senzaUtente->id => $this->riga($senzaUtente), $utenteInesistente->id => $this->riga($utenteInesistente)];
+
+        $output = $this->esegui(['--execute' => true]);
+
+        foreach ($prima as $id => $riga) {
+            $this->assertSame($riga, $this->riga(UgcPoi::find($id)), "la copia {$id} non va toccata");
+        }
+        $this->assertStringContainsString('il padre non esiste più e utente originale non indicato', $output);
+        $this->assertStringContainsString('il padre non esiste più e l\'utente originale non esiste più', $output);
+        // Hanno ancora l'utente di servizio: non si elimina.
         $this->assertTrue(DB::table('users')->where('id', $this->servizio->id)->exists());
         $this->assertStringContainsString('NON eliminato', $output);
+    }
+
+    public function test_un_padre_che_e_a_sua_volta_una_copia_marcata_va_a_revisione_e_non_si_tocca()
+    {
+        // Resta marcata: ha un utente originale inesistente, quindi non si sana.
+        $altraCopia = $this->creaCopiaMarcata(1, 99999999);
+        $figlia = $this->creaCopiaMarcata($altraCopia->id);
+        $prima = $this->riga($figlia);
+
+        $output = $this->esegui(['--execute' => true]);
+
+        $this->assertSame($prima, $this->riga(UgcPoi::find($figlia->id)));
+        $this->assertStringContainsString('il padre è a sua volta una copia marcata', $output);
+    }
+
+    private function riga(UgcPoi $poi): array
+    {
+        return (array) DB::table('ugc_pois')->where('id', $poi->id)->first();
     }
 
     public function test_senza_execute_non_scrive_nulla()

@@ -30,9 +30,13 @@ rilevamenti `device` senza uuid; i restanti 106 sono rilevamenti unici senza dop
 e sui duplicati ce ne sono 139.
 
 **Eredità della vecchia bonifica**: 660 copie marcate `properties.duplicated` e riassegnate
-all'utente 7736, 462 schede con `duplication_info` ereditato per errore, **102 fotografie rimaste
-sulle copie** (148 totali, di cui 46 presenti anche sul padre con lo stesso nome file). Dei 660
-padri, 658 esistono ancora.
+all'utente 7736, 462 schede con `duplication_info` ereditato per errore, **536 fotografie
+attaccate alle copie** (su 295 copie; app 1: 388, app 3: 148). Zero copie hanno fotografie mentre la
+scheda tenuta ne è priva: il danno «schede senza foto» non esiste in questi dati. (Il «102
+fotografie rimaste sulle copie» scritto prima era un conteggio errato, non riproducibile.) Dei 660
+padri, 658 esistono ancora; le 2 copie senza padre (`506`, `513`, app 1, senza foto, utente
+originale 96) sono l'unico superstite del loro gruppo e la sanatoria le restituisce all'autore
+senza cancellarle.
 
 **Versioni dell'app** (AcquaSorgente): la 3.1.10 duplica un rilevamento su due — 144 su 265 su
 android, 19 su 43 su ios — contro il 5% della 3.1.8 e lo 0,6% della 3.0.4. In circolazione dal
@@ -117,7 +121,8 @@ ricascarci.
 - «Il command non sposta i media, li elenca soltanto» — **falso**: li sposta
   (`FixDuplicatedUgcPois.php:386`, `$media->model_id = <padre>`), ma solo con `--execute` e solo
   dopo lo scarto per hash fatto **scaricando le immagini da AWS**. Se il download fallisce il
-  media esce in silenzio dalla lista: è il candidato più probabile per le 102 foto rimaste.
+  media esce in silenzio dalla lista: è un punto debole noto, ma non provato come causa delle
+  fotografie rimaste sulle copie.
 - «Il perimetro è AcquaSorgente» — **falso**: il difetto è nello store, riguarda POI e tracce di
   tutte le app. 252 record in eccesso, non 103.
 - «I backup di produzione sono fermi dal 20/05/2026» — **falso**: quello è il bucket AWS
@@ -137,8 +142,15 @@ ricascarci.
 - **Perché 153 rilevamenti `device` sono senza uuid**: fenomeno esaurito, ultimo caso il
   28/06/2026, su tutte le versioni e piattaforme. Ipotesi non verificata: schede create da
   versioni che l'uuid non lo generavano, rimaste in coda. Si può verificare nel repo dell'app.
-- **Le 102 foto rimaste sulle copie**: la causa esatta non è provata. Si saprebbe leggendo il log
+- **Le fotografie rimaste sulle copie marcate (536)**: la causa esatta non è provata. Si saprebbe leggendo il log
   del canale `ugc` in produzione.
+
+## Da sapere sullo strato 2
+
+- **La struttura di `ugc_duplicates_archive` è scritta in due punti**: l'INSERT in
+  `UgcDuplicatesService::mergeGroup()` (strato 1) e quello in `RecoverPreviousDuplicateFixCommand`
+  (strato 2). Voluto: lo strato 2 deve sopravvivere alla cancellazione dello strato 1, quindi non
+  dipende da un metodo condiviso. Se la tabella cambia, vanno aggiornati entrambi.
 
 ## Divergenze dello strato 1 rispetto a oc:8718
 
