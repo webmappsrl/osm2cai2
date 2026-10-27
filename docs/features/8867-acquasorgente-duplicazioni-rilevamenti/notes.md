@@ -153,6 +153,16 @@ del package):
   da `UgcPoiController` e `UgcTrackController` locali.
 - **`UgcMediaHashService` in `App\Services`** invece di `Wm\WmPackage\Services\Models`; cambia solo il
   namespace, la classe base resta `Wm\WmPackage\Services\BaseService`.
+- **`UgcDuplicatesService` in `App\Services`** invece di `Wm\WmPackage\Services\Models`, con
+  `moveMedia()` **`public`** invece di `private`: la sanatoria (Task 8) è un Artisan command e deve
+  spostare i media senza riscrivere la logica. Divergenza deliberata, l'unica di logica: SQL e corpo dei
+  metodi sono identici a `origin/main`.
+- **`ugc_duplicates_archive.app_id` è `string`, non `integer`**: in osm2cai2 `ugc_pois.app_id` e
+  `ugc_tracks.app_id` sono varchar e fra i valori reali c'è `iNaturalist` (103 POI); con un integer
+  l'`INSERT ... SELECT` di `UgcDuplicatesService::mergeGroup` fallisce. Corretta la migration di Task 4
+  (nata in questo branch, mai eseguita altrove). All'aggiornamento di `wm-package` la sua migration ha la
+  guardia `hasTable` e non ricreerà la tabella: la colonna resterà `string`. Il test
+  `UgcDuplicatesArchiveSchemaTest` sorveglia che non regredisca.
 
 **Scostamenti rispetto alla versione del package in uso qui** (il codice è invece **identico a
 `origin/main`**, quindi non sono divergenze da cercare all'aggiornamento):
