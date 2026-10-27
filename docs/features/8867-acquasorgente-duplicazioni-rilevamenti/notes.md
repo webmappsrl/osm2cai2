@@ -165,14 +165,16 @@ del package):
 - **Report CSV** in `storage/backups/fix-duplicated-ugc-<timestamp>.csv`, che nell'originale non c'è: è
   il modo in cui oggi si revisionano i gruppi prima di applicare. Stesse colonne della tabella a video
   più `utenti` (`id:user_id` di ogni record del gruppo, padre per primo; `-` se `user_id` è NULL).
-  Viene scritto anche senza `--execute`, quindi anche dall'esecuzione schedulata delle 06:00 in sola
-  segnalazione.
+  Senza `--execute` ha nome fisso (`fix-duplicated-ugc.csv`) e si sovrascrive a ogni esecuzione: è un
+  report rigenerabile, e l'esecuzione schedulata delle 06:00 non accumula file. Con `--execute` porta il
+  timestamp, perché quell'esecuzione è irripetibile e la sua traccia si conserva. Con zero gruppi non
+  si scrive nulla. Il canale di log `duplicated-ugc` è `daily` con 14 giorni di rotazione.
 - **Sezione `gruppi multi-utente`**: una seconda tabella a video con i gruppi i cui record
   appartengono a più utenti, così prima di eseguire si vede a chi resterebbe assegnato ciascun
   rilevamento. Sui dati di produzione sono 13 gruppi di tracce (30 record), dove le copie sono finite
   sugli account di alcuni sviluppatori durante vecchie prove di migrazione. Regola decisa: si tiene
   comunque il record più vecchio (in 12 casi su 13 è dell'utente originale); i gruppi devono solo
-  essere visibili nel report prima dell'esecuzione. Un `user_id` NULL conta come utente distinto.
+  essere visibili nel report prima dell'esecuzione. Nel conteggio degli utenti distinti un `user_id` NULL non conta: i gruppi sono 13, quelli con un NULL mescolato a un solo utente reale non compaiono (i bloccati per padre senza utente restano visibili con il loro esito).
 - **Guardia sul padre senza utente**: un gruppo il cui record più vecchio ha `user_id` NULL mentre una
   copia ha un utente non si fonde ed esce come `da verificare (padre senza utente)` (se vale anche la
   geometria diversa, `da verificare (geometria diversa, padre senza utente)`). Fonderlo lascerebbe il
@@ -180,6 +182,13 @@ del package):
   Sui dati di produzione sono 3 gruppi di tracce (`235`/`419`, `302`/`320`, `286`/`336`). Padre con
   utente e copia NULL, o tutti NULL, si fondono normalmente. La guardia sta nel command, non in
   `UgcDuplicatesService`. Il report CSV, inoltre, non si scrive se non ci sono gruppi da riportare.
+- **`--app-id` non numerico è un errore**: l'originale lo castava a `(int)`, quindi `--app-id=iNaturalist`
+  diventava `0` e restituiva zero gruppi in silenzio (e `iNaturalist` è un valore reale su 103 POI). Il
+  servizio filtra per id intero, quindi il command esce con FAILURE e un messaggio esplicito.
+- **Riepilogo per esito, cancellazione dei media protetta, CSV verificato prima delle fusioni**: il command
+  stampa la ripartizione "N da unire; N da verificare (motivo)"; ogni `delete()` di media doppione è in
+  try/catch (logga l'id del media e prosegue) e a fine run riporta cancellati e falliti; la cartella del
+  report si controlla prima di toccare i dati, così un errore di scrittura non arriva a fusioni già fatte.
 - **`ugc_duplicates_archive.app_id` è `string`, non `integer`**: in osm2cai2 `ugc_pois.app_id` e
   `ugc_tracks.app_id` sono varchar e fra i valori reali c'è `iNaturalist` (103 POI); con un integer
   l'`INSERT ... SELECT` di `UgcDuplicatesService::mergeGroup` fallisce. Corretta la migration di Task 4

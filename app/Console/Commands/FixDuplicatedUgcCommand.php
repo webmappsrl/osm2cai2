@@ -38,40 +38,75 @@ class FixDuplicatedUgcCommand extends Command
         }
         $types = $type !== null ? [$type => self::TYPES[$type]] : self::TYPES;
         $execute = (bool) $this->option('execute');
-        $appId = $this->option('app-id') !== null && $this->option('app-id') !== '' ? (int) $this->option('app-id') : null;
+        $appOption = $this->option('app-id');
+        if ($appOption !== null && $appOption !== '' && ! ctype_digit((string) $appOption)) {
+            // Il servizio filtra per id numerico: un valore come "iNaturalist" diventerebbe 0 e darebbe zero gruppi in silenzio.
+            $this->error('--app-id accetta solo app numeriche (id intero): "'.$appOption.'" non è valido.');
+
+            return self::FAILURE;
+        }
+        $appId = $appOption !== null && $appOption !== '' ? (int) $appOption : null;
         $maxDistance = (float) $this->option('max-distance');
+
+        // Si verifica prima delle fusioni: un fallimento a fine run arriverebbe a modifiche già committate.
+        $backupDir = storage_path('backups');
+        if (! is_dir($backupDir) && ! @mkdir($backupDir, 0775, true) && ! is_dir($backupDir)) {
+            $this->error('Impossibile creare la cartella del report: '.$backupDir);
+
+            return self::FAILURE;
+        }
+        if (! is_writable($backupDir)) {
+            $this->error('La cartella del report non è scrivibile: '.$backupDir);
+
+            return self::FAILURE;
+        }
 
         $rows = [];
         $csvRows = [];
         $multiUser = [];
+        $esiti = [];
+        $mediaCancellati = 0;
+        $mediaFalliti = 0;
         foreach ($types as $typeName => $modelClass) {
             foreach ($service->groups($modelClass, $appId) as $group) {
                 // Gli utenti si leggono prima della fusione: dopo, le copie non esistono più.
                 $users = $this->usersOf($modelClass, $group);
+                $utentiReali = array_filter($users, fn ($u) => $u !== null);
                 // Motivi per cui il gruppo non si tocca: vanno distinti, chi legge deve capire perché è lì.
                 $motivi = [];
                 if ($group['max_distance_m'] > $maxDistance) {
                     $motivi[] = 'geometria diversa';
                 }
                 // Padre senza utente e una copia con utente: fondere butterebbe via l'attribuzione.
-                if ($users[$group['parent_id']] === '-' && count(array_filter($users, fn ($u) => $u !== '-')) > 0) {
+                if ($users[$group['parent_id']] === null && $utentiReali !== []) {
                     $motivi[] = 'padre senza utente';
                 }
                 $skip = $motivi !== [];
                 if ($execute && ! $skip) {
                     $discarded = $service->mergeGroup($modelClass, $group);
                     foreach ($discarded as $media) {
-                        // Dopo il commit: cancella riga e file del media doppione.
-                        $media->delete();
+                        // Dopo il commit: cancella riga e file del media doppione. Un fallimento non ferma il run.
+                        try {
+                            $media->delete();
+                            $mediaCancellati++;
+                        } catch (\Throwable $e) {
+                            $mediaFalliti++;
+                            Log::channel('duplicated-ugc')->error('Cancellazione del media doppione fallita', [
+                                'media_id' => $media->id,
+                                'uuid' => $group['uuid'],
+                                'errore' => $e->getMessage(),
+                            ]);
+                        }
                     }
                 }
                 $esito = $skip ? 'da verificare ('.implode(', ', $motivi).')' : ($execute ? 'unito' : 'da unire');
+                $esiti[$esito] = ($esiti[$esito] ?? 0) + 1;
                 $row = [$typeName, $group['uuid'], $group['parent_id'], implode(' ', $group['copy_ids']), sprintf('%.2f', $group['max_distance_m']), $esito];
                 $rows[] = $row;
-                $csvRows[] = array_merge($row, [implode(' ', array_map(fn ($id) => $id.':'.$users[$id], array_keys($users)))]);
-                if (count(array_unique($users)) > 1) {
-                    // Si tiene comunque il più vecchio: la sezione serve a vedere prima a chi resta assegnato.
-                    $multiUser[] = [$typeName, $group['uuid'], $group['parent_id'], $users[$group['parent_id']], implode(' ', array_map(fn ($id) => $id.':'.$users[$id], $group['copy_ids'])), $esito];
+                $csvRows[] = array_merge($row, [implode(' ', array_map(fn ($id) => $id.':'.($users[$id] ?? '-'), array_keys($users)))]);
+                // Conta solo gli utenti reali: un user_id NULL non è un utente in più.
+                if (count(array_unique($utentiReali)) > 1) {
+                    $multiUser[] = [$typeName, $group['uuid'], $group['parent_id'], $users[$group['parent_id']] ?? '-', implode(' ', array_map(fn ($id) => $id.':'.($users[$id] ?? '-'), $group['copy_ids'])), $esito];
                 }
                 Log::channel('duplicated-ugc')->info('Gruppo UGC duplicato', [
                     'tipo' => $typeName,
@@ -91,26 +126,45 @@ class FixDuplicatedUgcCommand extends Command
             'max_distance_m' => $maxDistance,
             'gruppi' => count($rows),
             'gruppi_multi_utente' => count($multiUser),
+            'esiti' => $esiti,
+            'media_cancellati' => $mediaCancellati,
+            'media_falliti' => $mediaFalliti,
         ]);
         $this->table(['tipo', 'uuid', 'padre', 'copie', 'distanza max (m)', 'esito'], $rows);
         if ($multiUser !== []) {
-            $this->warn(count($multiUser).' gruppi multi-utente: il rilevamento resta assegnato all\'utente del padre (il record più vecchio).');
-            $this->table(['tipo', 'uuid', 'padre', 'utente che resta', 'copie (id:utente)', 'esito'], $multiUser);
+            $this->warn(count($multiUser).' gruppi con record di più utenti. Se il gruppo si fonde resta il record più vecchio (il padre), e il rilevamento è assegnato al suo utente; i gruppi "da verificare" non vengono toccati.');
+            $this->table(['tipo', 'uuid', 'padre', 'utente del padre', 'copie (id:utente)', 'esito'], $multiUser);
         }
         $this->info(count($rows).' gruppi trovati'.($execute ? '.' : ' (report, nessuna scrittura).'));
-        // Senza gruppi non si lascia un file vuoto: lo schedule giornaliero ne accumulerebbe uno al giorno.
-        $this->info($csvRows !== [] ? 'Report CSV: '.$this->writeCsv($csvRows) : 'Nessun gruppo da riportare: report CSV non scritto.');
+        if ($rows !== []) {
+            ksort($esiti);
+            $this->info('Riepilogo: '.implode('; ', array_map(fn ($esito, $n) => "{$n} {$esito}", array_keys($esiti), $esiti)).'.');
+        }
+        if ($execute) {
+            $this->info("Media doppioni cancellati: {$mediaCancellati}, falliti: {$mediaFalliti}".($mediaFalliti > 0 ? ' (id nel log duplicated-ugc).' : '.'));
+        }
+
+        $status = self::SUCCESS;
+        if ($csvRows === []) {
+            // Senza gruppi non si lascia un file vuoto.
+            $this->info('Nessun gruppo da riportare: report CSV non scritto.');
+        } elseif (($csvPath = $this->writeCsv($backupDir, $execute, $csvRows)) !== null) {
+            $this->info('Report CSV: '.$csvPath);
+        } else {
+            $this->error('Report CSV non scritto: impossibile aprire il file in '.$backupDir.($execute ? ' (le fusioni sono già state applicate).' : '.'));
+            $status = self::FAILURE;
+        }
         $this->warn($execute
             ? 'Fatto. Le copie sono in ugc_duplicates_archive; il rollback si fa dal backup del DB.'
             : 'Report: prima di --execute fai il backup del DB.');
 
-        return self::SUCCESS;
+        return $status;
     }
 
     /**
-     * Utente di ogni record del gruppo, padre per primo.
+     * Utente di ogni record del gruppo, padre per primo; null se il record non ha utente.
      *
-     * @return array<int, int|string> id del record => user_id
+     * @return array<int, int|null> id del record => user_id
      */
     private function usersOf(string $modelClass, array $group): array
     {
@@ -119,21 +173,24 @@ class FixDuplicatedUgcCommand extends Command
 
         $users = [];
         foreach ($ids as $id) {
-            $users[$id] = $byId[$id] ?? '-';
+            $users[$id] = $byId[$id] ?? null;
         }
 
         return $users;
     }
 
-    /** Scrive il report in storage/backups e ne restituisce il percorso. */
-    private function writeCsv(array $csvRows): string
+    /**
+     * Scrive il report e ne restituisce il percorso, o null se il file non si apre. Senza --execute il
+     * nome è fisso e il file si sovrascrive (report rigenerabile); con --execute porta il timestamp,
+     * perché l'esecuzione è irripetibile e la sua traccia si conserva.
+     */
+    private function writeCsv(string $dir, bool $execute, array $csvRows): ?string
     {
-        $dir = storage_path('backups');
-        if (! is_dir($dir)) {
-            mkdir($dir, 0775, true);
+        $path = $dir.'/fix-duplicated-ugc'.($execute ? '-'.date('Ymd-His') : '').'.csv';
+        $handle = @fopen($path, 'w');
+        if ($handle === false) {
+            return null;
         }
-        $path = $dir.'/fix-duplicated-ugc-'.date('Ymd-His').'.csv';
-        $handle = fopen($path, 'w');
         fputcsv($handle, ['tipo', 'uuid', 'padre', 'copie', 'distanza max (m)', 'esito', 'utenti'], ',', '"', '');
         foreach ($csvRows as $row) {
             fputcsv($handle, $row, ',', '"', '');

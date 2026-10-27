@@ -67,9 +67,10 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
         ],
         'duplicated-ugc' => [
-            'driver' => 'single',
+            'driver' => 'daily',
             'path' => storage_path('logs/duplicated-ugc.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
         ],
         'calculate-intersections' => [
             'driver' => 'stack',

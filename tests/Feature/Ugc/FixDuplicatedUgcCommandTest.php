@@ -3,6 +3,7 @@
 namespace Tests\Feature\Ugc;
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Console\Exception\CommandNotFoundException;
 use Tests\TestCase;
 use Wm\WmPackage\Models\App;
+use Wm\WmPackage\Models\Media;
 use Wm\WmPackage\Models\UgcPoi;
 use Wm\WmPackage\Models\UgcTrack;
 use Wm\WmPackage\Models\User;
@@ -29,6 +31,12 @@ class FixDuplicatedUgcCommandTest extends TestCase
     /** @var string[] CSV già presenti prima del command: il tearDown cancella solo quelli nuovi */
     private array $csvPrecedenti = [];
 
+    /** Contenuto del report a nome fisso prima del test (null se non c'era): il tearDown lo ripristina */
+    private ?string $csvFissoPrecedente = null;
+
+    /** Quando è true, la cancellazione di un Media solleva un'eccezione (file già assente sullo storage) */
+    private bool $falliscoCancellazioneMedia = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,8 +44,17 @@ class FixDuplicatedUgcCommandTest extends TestCase
         // Snapshot dei CSV esistenti: il tearDown cancella solo quelli creati dal test, mai i report veri.
         $this->csvPrecedenti = glob(storage_path('backups/fix-duplicated-ugc-*.csv')) ?: [];
 
+        $fisso = storage_path('backups/fix-duplicated-ugc.csv');
+        $this->csvFissoPrecedente = is_file($fisso) ? file_get_contents($fisso) : null;
+
         Storage::fake('wmfe');
         Storage::fake('conf');
+
+        Media::deleting(function () {
+            if ($this->falliscoCancellazioneMedia) {
+                throw new \RuntimeException('file già assente');
+            }
+        });
 
         $this->user = User::factory()->create();
         $this->ugcApp = App::factory()->create();
@@ -51,7 +68,23 @@ class FixDuplicatedUgcCommandTest extends TestCase
             }
         }
 
+        $fisso = storage_path('backups/fix-duplicated-ugc.csv');
+        if ($this->csvFissoPrecedente === null) {
+            File::delete($fisso);
+        } else {
+            file_put_contents($fisso, $this->csvFissoPrecedente);
+        }
+        $this->falliscoCancellazioneMedia = false;
+
         parent::tearDown();
+    }
+
+    /** PNG reale: con altro contenuto la generazione delle miniature di Spatie solleva CouldNotLoadImage. */
+    private function aggiungiFoto(UgcPoi $poi, string $nome): Media
+    {
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+
+        return $poi->addMedia(UploadedFile::fake()->createWithContent($nome, $png))->toMediaCollection('default');
     }
 
     private function creaPoi(string $uuid, string $createdAt, ?User $utente = null, string $wkt = 'POINT Z (10.5 44.5 0)'): UgcPoi
@@ -159,7 +192,7 @@ class FixDuplicatedUgcCommandTest extends TestCase
 
         $output = $this->esegui();
 
-        $this->assertStringContainsString('gruppi multi-utente', $output);
+        $this->assertStringContainsString('1 gruppi con record di più utenti', $output);
         $this->assertSame(2, substr_count($output, 'uuid-multi'), 'una volta nella tabella principale e una nella sezione multi-utente');
         $this->assertSame(1, substr_count($output, 'uuid-mono'));
         $this->assertStringContainsString($copia->id.':'.$altro->id, $output);
@@ -171,7 +204,7 @@ class FixDuplicatedUgcCommandTest extends TestCase
         $this->creaPoi('uuid-mono', '2026-01-01 10:00:00');
         $this->creaPoi('uuid-mono', '2026-01-02 10:00:00');
 
-        $this->assertStringNotContainsString('multi-utente', $this->esegui());
+        $this->assertStringNotContainsString('più utenti', $this->esegui());
     }
 
     /** Imposta user_id a NULL con un UPDATE: la colonna è nullable, ma factory e observer assegnano sempre un utente. */
@@ -232,7 +265,143 @@ class FixDuplicatedUgcCommandTest extends TestCase
         $output = $this->esegui();
 
         $this->assertSame([], array_diff(glob(storage_path('backups/fix-duplicated-ugc-*.csv')) ?: [], $this->csvPrecedenti));
+        $fisso = storage_path('backups/fix-duplicated-ugc.csv');
+        $this->assertSame($this->csvFissoPrecedente, is_file($fisso) ? file_get_contents($fisso) : null);
         $this->assertStringContainsString('report CSV non scritto', $output);
+    }
+
+    public function test_un_user_id_null_non_conta_come_utente_nella_sezione_multi_utente()
+    {
+        $this->creaPoi('uuid-null-multi', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-null-multi', '2026-01-02 10:00:00');
+        $this->senzaUtente($copia);
+
+        $output = $this->esegui();
+
+        $this->assertStringContainsString('da unire', $output);
+        $this->assertStringNotContainsString('multi-utente', $output);
+        $this->assertStringNotContainsString('più utenti', $output);
+    }
+
+    public function test_il_gruppo_bloccato_per_padre_senza_utente_resta_nella_sezione_se_ha_piu_utenti_reali()
+    {
+        $altro = User::factory()->create();
+        $padre = $this->creaPoi('uuid-bloccato-multi', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-bloccato-multi', '2026-01-02 10:00:00');
+        $this->creaPoi('uuid-bloccato-multi', '2026-01-03 10:00:00', $altro);
+        $this->senzaUtente($padre);
+
+        $output = $this->esegui();
+
+        $this->assertStringContainsString('1 gruppi con record di più utenti', $output);
+        $this->assertSame(2, substr_count($output, 'uuid-bloccato-multi'));
+        $this->assertStringContainsString('da verificare (padre senza utente)', $output);
+    }
+
+    public function test_il_riepilogo_dice_quanti_gruppi_si_fondono_e_quanti_no()
+    {
+        $this->creaPoi('uuid-ok-1', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-ok-1', '2026-01-02 10:00:00');
+        $this->creaPoi('uuid-ok-2', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-ok-2', '2026-01-02 10:00:00');
+        $this->creaPoi('uuid-geo', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-geo', '2026-01-02 10:00:00', null, 'POINT Z (10.6 44.6 0)');
+        $padre = $this->creaPoi('uuid-orfano', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-orfano', '2026-01-02 10:00:00');
+        $this->senzaUtente($padre);
+
+        $output = $this->esegui();
+
+        $this->assertStringContainsString('Riepilogo: 2 da unire; 1 da verificare (geometria diversa); 1 da verificare (padre senza utente).', $output);
+    }
+
+    public function test_type_non_valido_da_errore()
+    {
+        $this->assertSame(1, Artisan::call('osm2cai:fix-duplicated-ugc', ['--type' => 'foo']));
+        $this->assertStringContainsString('--type deve essere tracks oppure pois', Artisan::output());
+    }
+
+    public function test_app_id_non_numerico_da_errore_esplicito_e_non_tocca_nulla()
+    {
+        $this->creaPoi('uuid-app', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-app', '2026-01-02 10:00:00');
+
+        $this->assertSame(1, Artisan::call('osm2cai:fix-duplicated-ugc', ['--app-id' => 'iNaturalist', '--execute' => true]));
+
+        $this->assertStringContainsString('--app-id accetta solo app numeriche', Artisan::output());
+        $this->assertSame(2, UgcPoi::where('properties->uuid', 'uuid-app')->count());
+    }
+
+    public function test_max_distance_maggiore_di_zero_fonde_anche_geometrie_diverse()
+    {
+        $this->creaPoi('uuid-vicino', '2026-01-01 10:00:00');
+        // Circa 1,1 m a nord del padre (0.00001 gradi di latitudine).
+        $this->creaPoi('uuid-vicino', '2026-01-02 10:00:00', null, 'POINT Z (10.5 44.50001 0)');
+
+        $this->esegui(['--execute' => true, '--max-distance' => '0']);
+        $this->assertSame(2, UgcPoi::where('properties->uuid', 'uuid-vicino')->count());
+
+        $output = $this->esegui(['--execute' => true, '--max-distance' => '5']);
+
+        $this->assertSame(1, UgcPoi::where('properties->uuid', 'uuid-vicino')->count());
+        $this->assertStringContainsString('unito', $output);
+    }
+
+    public function test_con_execute_il_csv_ha_il_nome_con_timestamp_e_non_sovrascrive_quello_fisso()
+    {
+        $this->creaPoi('uuid-ts', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-ts', '2026-01-02 10:00:00');
+        $fisso = storage_path('backups/fix-duplicated-ugc.csv');
+        file_put_contents($fisso, 'sentinella');
+
+        $this->esegui(['--execute' => true]);
+
+        $this->assertCount(1, array_diff(glob(storage_path('backups/fix-duplicated-ugc-*.csv')), $this->csvPrecedenti));
+        $this->assertSame('sentinella', file_get_contents($fisso));
+    }
+
+    public function test_senza_execute_il_csv_a_nome_fisso_viene_sovrascritto()
+    {
+        $this->creaPoi('uuid-fisso', '2026-01-01 10:00:00');
+        $this->creaPoi('uuid-fisso', '2026-01-02 10:00:00');
+        $fisso = storage_path('backups/fix-duplicated-ugc.csv');
+        file_put_contents($fisso, 'vecchio');
+
+        $this->esegui();
+        $this->esegui();
+
+        $this->assertStringContainsString('uuid-fisso', file_get_contents($fisso));
+        $this->assertSame([], array_diff(glob(storage_path('backups/fix-duplicated-ugc-*.csv')), $this->csvPrecedenti));
+    }
+
+    public function test_un_media_che_non_si_cancella_non_interrompe_il_run_e_viene_contato()
+    {
+        $padre = $this->creaPoi('uuid-media', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-media', '2026-01-02 10:00:00');
+        $this->aggiungiFoto($padre, 'image_0.png');
+        $this->aggiungiFoto($copia, 'image_0.png');
+        // Un secondo gruppo, fuso dopo il primo: deve arrivare in fondo comunque.
+        $this->creaPoi('uuid-dopo', '2026-02-01 10:00:00');
+        $this->creaPoi('uuid-dopo', '2026-02-02 10:00:00');
+        $this->falliscoCancellazioneMedia = true;
+
+        $output = $this->esegui(['--execute' => true]);
+
+        $this->assertStringContainsString('Media doppioni cancellati: 0, falliti: 1', $output);
+        $this->assertSame(1, UgcPoi::where('properties->uuid', 'uuid-media')->count());
+        $this->assertSame(1, UgcPoi::where('properties->uuid', 'uuid-dopo')->count());
+    }
+
+    public function test_un_media_doppione_cancellato_viene_contato()
+    {
+        $padre = $this->creaPoi('uuid-media-ok', '2026-01-01 10:00:00');
+        $copia = $this->creaPoi('uuid-media-ok', '2026-01-02 10:00:00');
+        $this->aggiungiFoto($padre, 'image_0.png');
+        $this->aggiungiFoto($copia, 'image_0.png');
+
+        $output = $this->esegui(['--execute' => true]);
+
+        $this->assertStringContainsString('Media doppioni cancellati: 1, falliti: 0', $output);
     }
 
     public function test_il_vecchio_nome_non_esiste_piu()
@@ -250,9 +419,9 @@ class FixDuplicatedUgcCommandTest extends TestCase
 
         $this->esegui();
 
-        $nuovi = array_diff(glob(storage_path('backups/fix-duplicated-ugc-*.csv')), $this->csvPrecedenti);
-        $this->assertCount(1, $nuovi);
-        $righe = array_map(fn ($riga) => str_getcsv($riga, ',', '"', ''), file(reset($nuovi), FILE_IGNORE_NEW_LINES));
+        // Senza --execute il nome è fisso e nessun file con timestamp viene creato.
+        $this->assertSame([], array_diff(glob(storage_path('backups/fix-duplicated-ugc-*.csv')), $this->csvPrecedenti));
+        $righe = array_map(fn ($riga) => str_getcsv($riga, ',', '"', ''), file(storage_path('backups/fix-duplicated-ugc.csv'), FILE_IGNORE_NEW_LINES));
         $this->assertSame(['tipo', 'uuid', 'padre', 'copie', 'distanza max (m)', 'esito', 'utenti'], $righe[0]);
         $this->assertCount(2, $righe);
         $this->assertSame(['pois', 'uuid-csv', (string) $padre->id, (string) $copia->id, '0.00', 'da unire', $padre->id.':'.$this->user->id.' '.$copia->id.':'.$altro->id], $righe[1]);
