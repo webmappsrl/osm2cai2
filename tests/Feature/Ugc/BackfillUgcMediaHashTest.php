@@ -88,10 +88,31 @@ class BackfillUgcMediaHashTest extends TestCase
     {
         $media = $this->mediaSenzaHash('a.png', 5);
 
+        // Il servizio non deve proprio essere chiamato: hashOf() scrive sul database.
+        $this->mock(UgcMediaHashService::class, function ($mock) {
+            $mock->shouldNotReceive('hashOf');
+        });
+
         $this->artisan('osm2cai:backfill-ugc-media-hash')
-            ->expectsOutputToContain('Media UGC senza sha256:')
+            ->expectsOutputToContain('Media UGC senza sha256: 1')
             ->assertSuccessful();
 
         $this->assertNull($this->hashSalvato($media));
+    }
+
+    public function test_tratta_i_media_di_ugc_track_e_ignora_quelli_di_altri_tipi()
+    {
+        $dellaTraccia = $this->mediaSenzaHash('a.png', 5);
+        $altroTipo = $this->mediaSenzaHash('b.png', 7);
+        // Il file resta leggibile: cambia solo il tipo del modello proprietario.
+        Media::whereKey($dellaTraccia->id)->update(['model_type' => 'App\\Models\\UgcTrack']);
+        Media::whereKey($altroTipo->id)->update(['model_type' => 'App\\Models\\EcPoi']);
+
+        $this->artisan('osm2cai:backfill-ugc-media-hash', ['--execute' => true])
+            ->expectsOutputToContain('Hash calcolati: 1. Falliti: 0.')
+            ->assertSuccessful();
+
+        $this->assertNotNull($this->hashSalvato($dellaTraccia));
+        $this->assertNull($this->hashSalvato($altroTipo));
     }
 }
