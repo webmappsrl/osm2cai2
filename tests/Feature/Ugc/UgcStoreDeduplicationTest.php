@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Ugc;
 
+use App\Services\UgcMediaHashService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -75,6 +76,22 @@ class UgcStoreDeduplicationTest extends TestCase
         return $this->actingAs($user ?? $this->user, 'api')->post($url, $payload, ['Accept' => 'application/json']);
     }
 
+    private function contaPoi(string $uuid): int
+    {
+        return UgcPoi::where('properties->uuid', $uuid)->count();
+    }
+
+    /**
+     * Immagine con byte sempre uguali: simula l'app che a ogni retry rimanda le stesse foto con
+     * nome posizionale. Ogni chiamata restituisce un nuovo UploadedFile.
+     */
+    private function immagine(string $nome = 'image_0.png'): UploadedFile
+    {
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+
+        return UploadedFile::fake()->createWithContent($nome, $png);
+    }
+
     public function test_due_invii_con_lo_stesso_uuid_aggiornano_lo_stesso_record()
     {
         $feature = $this->poiFeature('uuid-retry-poi');
@@ -85,7 +102,7 @@ class UgcStoreDeduplicationTest extends TestCase
         $first->assertStatus(201);
         $second->assertStatus(201);
         $this->assertSame($first->json('id'), $second->json('id'));
-        $this->assertSame(1, UgcPoi::count());
+        $this->assertSame(1, $this->contaPoi('uuid-retry-poi'));
     }
 
     public function test_il_reinvio_senza_foto_non_cancella_quelle_gia_salvate()
@@ -103,6 +120,11 @@ class UgcStoreDeduplicationTest extends TestCase
         $this->assertCount(1, $poi->getMedia('default'));
     }
 
+    /**
+     * Test-guardia: passa anche senza la correzione (senza fix i record sono comunque 2). Sorveglia
+     * il filtro per utente di findExistingByUuid(): se lo si toglie, il secondo utente aggiornerebbe
+     * il record del primo e questo test fallisce.
+     */
     public function test_lo_stesso_uuid_di_un_altro_utente_crea_un_record_nuovo()
     {
         $feature = $this->poiFeature('uuid-condiviso');
@@ -111,9 +133,13 @@ class UgcStoreDeduplicationTest extends TestCase
         $this->storeMultipart('/api/v2/ugc/poi/store', $feature)->assertStatus(201);
         $this->storeMultipart('/api/v2/ugc/poi/store', $feature, [], $altroUtente)->assertStatus(201);
 
-        $this->assertSame(2, UgcPoi::count());
+        $this->assertSame(2, $this->contaPoi('uuid-condiviso'));
     }
 
+    /**
+     * Test-guardia: passa anche senza la correzione, perché il formato JSON al primo livello era già
+     * riconosciuto dal package. Sorveglia la non-regressione di quel formato, non prova il fix.
+     */
     public function test_riconosce_il_rilevamento_anche_quando_i_campi_sono_al_primo_livello()
     {
         $feature = $this->poiFeature('uuid-primo-livello');
@@ -129,7 +155,7 @@ class UgcStoreDeduplicationTest extends TestCase
         $first->assertStatus(201);
         $second->assertStatus(201);
         $this->assertSame($first->json('id'), $second->json('id'));
-        $this->assertSame(1, UgcPoi::count());
+        $this->assertSame(1, $this->contaPoi('uuid-primo-livello'));
     }
 
     public function test_due_invii_di_una_traccia_con_lo_stesso_uuid_aggiornano_lo_stesso_record()
@@ -142,6 +168,60 @@ class UgcStoreDeduplicationTest extends TestCase
         $first->assertStatus(201);
         $second->assertStatus(201);
         $this->assertSame($first->json('id'), $second->json('id'));
-        $this->assertSame(1, UgcTrack::count());
+        $this->assertSame(1, UgcTrack::where('properties->uuid', 'uuid-retry-track')->count());
+    }
+
+    public function test_il_reinvio_con_la_stessa_immagine_non_la_salva_due_volte()
+    {
+        $feature = $this->poiFeature('uuid-stessa-immagine');
+
+        $first = $this->storeMultipart('/api/v2/ugc/poi/store', $feature, [$this->immagine()]);
+        $second = $this->storeMultipart('/api/v2/ugc/poi/store', $feature, [$this->immagine()]);
+
+        $first->assertStatus(201);
+        $second->assertStatus(201);
+        $this->assertSame($first->json('id'), $second->json('id'));
+        $poi = UgcPoi::findOrFail($first->json('id'));
+        $this->assertCount(1, $poi->getMedia('default'));
+        $this->assertNotEmpty($poi->getFirstMedia('default')->getCustomProperty(UgcMediaHashService::HASH_PROPERTY));
+    }
+
+    public function test_il_reinvio_con_un_immagine_diversa_la_aggiunge()
+    {
+        $feature = $this->poiFeature('uuid-immagine-nuova');
+
+        $first = $this->storeMultipart('/api/v2/ugc/poi/store', $feature, [$this->immagine()]);
+        $second = $this->storeMultipart('/api/v2/ugc/poi/store', $feature, [
+            $this->immagine(),
+            UploadedFile::fake()->image('image_1.png', 3, 3),
+        ]);
+
+        $first->assertStatus(201);
+        $second->assertStatus(201);
+        $poi = UgcPoi::findOrFail($first->json('id'));
+        $this->assertCount(2, $poi->getMedia('default'));
+    }
+
+    public function test_il_reinvio_non_cancella_le_properties_scritte_dal_server()
+    {
+        $feature = $this->poiFeature('uuid-merge-properties', ['note' => 'prima']);
+
+        $first = $this->storeMultipart('/api/v2/ugc/poi/store', $feature);
+        $first->assertStatus(201);
+
+        // Chiave scritta dal server che l'app non conosce (es. layer_id calcolato).
+        $poi = UgcPoi::findOrFail($first->json('id'));
+        $poi->properties = array_merge($poi->properties, ['layer_id' => 42]);
+        $poi->saveQuietly();
+
+        $feature['properties']['note'] = 'dopo';
+        $second = $this->storeMultipart('/api/v2/ugc/poi/store', $feature);
+        $second->assertStatus(201);
+
+        $this->assertSame($first->json('id'), $second->json('id'));
+        $poi = UgcPoi::findOrFail($first->json('id'));
+        $this->assertSame(42, $poi->properties['layer_id']);
+        // Le properties ricevute vanno sopra quelle salvate.
+        $this->assertSame('dopo', $poi->properties['note']);
     }
 }

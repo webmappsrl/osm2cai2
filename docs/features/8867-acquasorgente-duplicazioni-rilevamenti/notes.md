@@ -143,15 +143,23 @@ ricascarci.
 ## Divergenze dello strato 1 rispetto a oc:8718
 
 Il codice di `store()`, `findExistingByUuid()`, `fillModelWithRequest()` e `UgcMediaHashService` è copiato
-dal package (`origin/main`) senza modifiche alla logica. Scostamenti:
+dal package (`origin/main`) senza modifiche alla logica.
+
+**Divergenze rispetto a `origin/main`** (sono le uniche da considerare il giorno dell'aggiornamento
+del package):
 
 - **Trait al posto della classe astratta**: nel package la correzione sta in `Abstracts\UgcController`,
   che qui non si tocca; vive nel trait `App\Http\Controllers\Api\Concerns\FindsExistingUgcByUuid`, usato
   da `UgcPoiController` e `UgcTrackController` locali.
-- **`fillModelWithRequest` sovrascritto nel trait**: la versione locale del package usa
-  `addMultipleMediaFromRequest` e non ha lo scarto delle immagini per hash.
-- **`getModelIstance()` chiamato senza `$request`**: così si aggira la ricerca per uuid dentro
-  `getModelIstance($request)` (`$request->input('properties.uuid')`), che non vede l'uuid nel campo
-  multipart `feature`, senza toccare il package.
 - **`UgcMediaHashService` in `App\Services`** invece di `Wm\WmPackage\Services\Models`; cambia solo il
   namespace, la classe base resta `Wm\WmPackage\Services\BaseService`.
+
+**Scostamenti rispetto alla versione del package in uso qui** (il codice è invece **identico a
+`origin/main`**, quindi non sono divergenze da cercare all'aggiornamento):
+
+- **`fillModelWithRequest` sovrascritto nel trait**: la versione in uso usa
+  `addMultipleMediaFromRequest` e non ha lo scarto delle immagini per hash.
+- **`getModelIstance()` chiamato senza `$request`** in `store()`: la versione in uso chiama
+  `getModelIstance($request)` e cerca l'uuid con `$request->input('properties.uuid')`, che non lo
+  vede dentro il campo multipart `feature`; chiamandolo senza `$request` il difetto si aggira senza
+  toccare il package.
