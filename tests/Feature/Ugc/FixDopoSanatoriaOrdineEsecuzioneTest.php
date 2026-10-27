@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\UgcPoi;
+use Wm\WmPackage\Models\UgcTrack;
 use Wm\WmPackage\Models\User;
 
 /**
@@ -173,6 +174,23 @@ class FixDopoSanatoriaOrdineEsecuzioneTest extends TestCase
         [$exit] = $this->bonifica(['--type' => 'tracks']);
 
         $this->assertSame(0, $exit);
+    }
+
+    public function test_la_guardia_scatta_anche_per_le_tracce_marcate_con_type_tracks()
+    {
+        UgcTrack::factory()->create([
+            'user_id' => $this->autore->id,
+            'app_id' => $this->ugcApp->id,
+            'name' => 'Traccia',
+            'properties' => ['uuid' => 'uuid-traccia', 'duplicated' => true],
+            'geometry' => DB::raw("ST_GeomFromText('LINESTRING Z (10.5 44.5 0, 10.6 44.6 0)', 4326)"),
+        ]);
+
+        [$exit, $output] = $this->bonifica(['--type' => 'tracks']);
+
+        $this->assertSame(1, $exit);
+        $this->assertStringContainsString('ugc_tracks', $output);
+        $this->assertStringContainsString('Esegui prima la sanatoria', $output);
     }
 
     public function test_nell_ordine_giusto_sanatoria_poi_bonifica_nessuna_scheda_tenuta_resta_marcata()

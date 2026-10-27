@@ -75,7 +75,7 @@ sotto).
 |---|---|
 | `app/Services/UgcDuplicatesByTimestampService.php` | riconosce i duplicati senza uuid per utente, istante di compilazione e posizione, e conta quelli che non può valutare. Serve solo qui: su camminiditalia tutti i rilevamenti hanno l'uuid (0 su 369), qui no |
 | `app/Console/Commands/Concerns/GroupsByTimestamp.php` | aggancia `--by-timestamp` a un command di fusione |
-| `app/Console/Commands/RecoverPreviousDuplicateFixCommand.php` | sanatoria dello stato lasciato dal vecchio command di duplicazione, che esiste solo in osm2cai2. È un'operazione una tantum: **dopo che è stata eseguita in produzione si può cancellare** invece di adeguarla |
+| `app/Console/Commands/RecoverPreviousDuplicateFixCommand.php` | sanatoria dello stato lasciato dal vecchio command di duplicazione, che esiste solo in osm2cai2. È un'operazione una tantum: **dopo che è stata eseguita in produzione si può cancellare** invece di adeguarla. Attenzione: il messaggio della guardia di `FixDuplicatedUgcCommand` (codice permanente) rimanda a questo command; chi lo cancella deve aggiornare anche quel messaggio, o togliere la guardia se a quel punto non serve più |
 | `app/Console/Commands/BackfillUgcMediaHashCommand.php` | popola lo sha256 dei media UGC già salvati, che il package calcola solo per quelli nuovi. Anche questo è una tantum |
 | `tests/Feature/Ugc/UgcDuplicatesByTimestampTest.php`, `RecoverPreviousDuplicateFixTest.php`, `BackfillUgcMediaHashTest.php`, `FixDopoSanatoriaOrdineEsecuzioneTest.php` | testano i file qui sopra e il loro intreccio con il command misto |
 

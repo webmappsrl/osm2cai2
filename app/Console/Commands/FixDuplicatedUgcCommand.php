@@ -50,7 +50,7 @@ class FixDuplicatedUgcCommand extends Command
         $execute = (bool) $this->option('execute');
 
         // Guardia sull'ordine di esecuzione: vale anche in dry-run (vedi guardiaCopieMarcate()).
-        if (in_array(UgcPoi::class, $types, true) && ! $this->guardiaCopieMarcate()) {
+        if (! $this->guardiaCopieMarcate($types)) {
             return self::FAILURE;
         }
         $appOption = $this->option('app-id');
@@ -212,14 +212,24 @@ class FixDuplicatedUgcCommand extends Command
      *
      * @return bool false se il command deve fermarsi
      */
-    private function guardiaCopieMarcate(): bool
+    private function guardiaCopieMarcate(array $types): bool
     {
-        $marcate = DB::table('ugc_pois')->whereRaw("jsonb_exists(properties, 'duplicated')")->count();
+        // Si controllano solo le tabelle dei tipi da trattare (--type): UgcDuplicatesService::groups() non esclude le righe marcate.
+        $marcate = 0;
+        $tabelle = [];
+        foreach ($types as $modelClass) {
+            $tabella = (new $modelClass)->getTable();
+            $n = DB::table($tabella)->whereRaw("jsonb_exists(properties, 'duplicated')")->count();
+            if ($n > 0) {
+                $marcate += $n;
+                $tabelle[] = $tabella;
+            }
+        }
         if ($marcate === 0) {
             return true;
         }
 
-        $this->error("In ugc_pois ci sono ancora {$marcate} righe con la chiave properties.duplicated (copie lasciate dalla vecchia bonifica).");
+        $this->error('In '.implode(', ', $tabelle)." ci sono ancora {$marcate} righe con la chiave properties.duplicated (copie lasciate dalla vecchia bonifica).");
         $this->error('Esegui prima la sanatoria: php artisan osm2cai:recover-previous-duplicate-fix (dry-run) e poi con --execute.');
         $this->line('Fondere ora le copie marcate farebbe passare duplicated, duplication_info e has_been_duplicated sulle schede tenute, e la sanatoria non le ripulirebbe più.');
         $this->line('Se dopo la sanatoria restano righe con la chiave duplicated (valore diverso dal boolean true) vanno riviste a mano: la sanatoria non le tocca.');
@@ -290,6 +300,9 @@ class FixDuplicatedUgcCommand extends Command
     private function riferisciEsclusi(array $esclusi): void
     {
         $totale = array_sum(array_map('array_sum', $esclusi));
+        if ($totale === 0) {
+            return;
+        }
         $this->info("Rilevamenti senza uuid che --by-timestamp non può valutare: {$totale}. Non finiscono in nessun gruppo (non sono necessariamente duplicati): se servono controlli, vanno revisionati a mano.");
         $this->table(
             ['tipo', 'senza istante di compilazione', 'senza utente', 'senza geometria'],

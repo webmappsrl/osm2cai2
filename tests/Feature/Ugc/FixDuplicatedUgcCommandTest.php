@@ -513,4 +513,11 @@ class FixDuplicatedUgcCommandTest extends TestCase
 
         $this->assertStringContainsString('0 da spostare sul padre, 0 da scartare', $output);
     }
+
+    public function test_by_timestamp_senza_esclusi_non_stampa_la_sezione_degli_esclusi()
+    {
+        $output = $this->esegui(['--by-timestamp' => true, '--type' => 'pois']);
+
+        $this->assertStringNotContainsString('non può valutare', $output);
+    }
 }
