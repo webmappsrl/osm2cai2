@@ -157,6 +157,22 @@ del package):
   `moveMedia()` **`public`** invece di `private`: la sanatoria (Task 8) è un Artisan command e deve
   spostare i media senza riscrivere la logica. Divergenza deliberata, l'unica di logica: SQL e corpo dei
   metodi sono identici a `origin/main`.
+- **`osm2cai:fix-duplicated-ugc` ha `--max-distance=0` di default**, non `1`: si fonde solo a geometrie
+  identiche. Un reinvio porta gli stessi byte e non ricalcola la posizione (verificato su 192 gruppi
+  su 192 nei dati di produzione); una geometria diversa significa che l'utente ha spostato il punto da
+  un altro endpoint, cioè una volontà espressa che un command non deve ribaltare. Con `--max-distance`
+  maggiore di zero si torna al comportamento dell'originale.
+- **Report CSV** in `storage/backups/fix-duplicated-ugc-<timestamp>.csv`, che nell'originale non c'è: è
+  il modo in cui oggi si revisionano i gruppi prima di applicare. Stesse colonne della tabella a video
+  più `utenti` (`id:user_id` di ogni record del gruppo, padre per primo; `-` se `user_id` è NULL).
+  Viene scritto anche senza `--execute`, quindi anche dall'esecuzione schedulata delle 06:00 in sola
+  segnalazione.
+- **Sezione `gruppi multi-utente`**: una seconda tabella a video con i gruppi i cui record
+  appartengono a più utenti, così prima di eseguire si vede a chi resterebbe assegnato ciascun
+  rilevamento. Sui dati di produzione sono 13 gruppi di tracce (30 record), dove le copie sono finite
+  sugli account di alcuni sviluppatori durante vecchie prove di migrazione. Regola decisa: si tiene
+  comunque il record più vecchio (in 12 casi su 13 è dell'utente originale); i gruppi devono solo
+  essere visibili nel report prima dell'esecuzione. Un `user_id` NULL conta come utente distinto.
 - **`ugc_duplicates_archive.app_id` è `string`, non `integer`**: in osm2cai2 `ugc_pois.app_id` e
   `ugc_tracks.app_id` sono varchar e fra i valori reali c'è `iNaturalist` (103 POI); con un integer
   l'`INSERT ... SELECT` di `UgcDuplicatesService::mergeGroup` fallisce. Corretta la migration di Task 4

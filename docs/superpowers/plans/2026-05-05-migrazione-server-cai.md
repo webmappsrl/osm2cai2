@@ -40,7 +40,7 @@ Il team può bypassare la manutenzione visitando `https://osm2cai.cai.it/migrazi
 - [ ] **Step 2: Fix UGC POI duplicati sul server Webmapp**
 
 ```bash
-ssh prod.osm2cai "docker exec php81-osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php artisan osm2cai:fix-duplicated-ugc-pois --execute=1'"
+ssh prod.osm2cai "docker exec php81-osm2cai2 bash -c 'cd /var/www/html/osm2cai2 && php artisan osm2cai:fix-duplicated-ugc'"
 ```
 Attendi il completamento prima di procedere.
 

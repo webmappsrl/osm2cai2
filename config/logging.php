@@ -66,6 +66,11 @@ return [
             'path' => storage_path('logs/ugc.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
+        'duplicated-ugc' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/duplicated-ugc.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
         'calculate-intersections' => [
             'driver' => 'stack',
             'channels' => ['single'],
