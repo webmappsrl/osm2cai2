@@ -39,16 +39,21 @@ class UgcDuplicatesByTimestampService extends BaseService
     {
         $table = (new $modelClass)->getTable();
         $appFilter = $appId !== null ? 'AND app_id = ?' : '';
-        $bindings = $appId !== null ? [(string) $appId] : [];
+        $bindings = $appId !== null ? [$appId] : [];
 
         // Sono esclusi i record senza uuid E senza istante (createdAt assente o vuoto), quelli senza
         // utente e quelli senza geometria: senza uno dei tre elementi del criterio non si può dire
         // che due record siano la stessa scheda. La geometria deve coincidere esattamente.
+        // Sono esclusi anche i record marcati properties.duplicated: sono copie già trattate dalla
+        // vecchia bonifica, il loro padre vero è quello indicato da duplication_info e le riunisce
+        // la sanatoria; fonderle fra loro lascerebbe il padre senza le sue fotografie. Così i due
+        // trattamenti non si sovrappongono per costruzione. L'operatore ? di jsonb si scrive ??.
         $rows = DB::select("
             SELECT array_agg(id ORDER BY created_at, id) AS ids
             FROM {$table}
             WHERE (properties->>'uuid' IS NULL OR properties->>'uuid' = '')
               AND properties->>'createdAt' IS NOT NULL AND properties->>'createdAt' <> ''
+              AND NOT (properties ?? 'duplicated')
               AND user_id IS NOT NULL
               AND geometry IS NOT NULL {$appFilter}
             GROUP BY user_id, app_id, properties->>'createdAt', ST_AsEWKB(geometry::geometry)
@@ -64,6 +69,8 @@ class UgcDuplicatesByTimestampService extends BaseService
                 'uuid' => null,
                 'parent_id' => $parentId,
                 'copy_ids' => $ids,
+                // Con la geometria nella chiave la distanza è 0 per costruzione: si calcola comunque, per
+                // restituire la stessa forma dello strato 1 e passare per la stessa guardia del command.
                 'max_distance_m' => $this->duplicates->maxDistanceMeters($table, $parentId, $ids),
             ];
         });

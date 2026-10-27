@@ -20,6 +20,9 @@ class FixDuplicatedUgcCommand extends Command
 {
     use GroupsByTimestamp;
 
+    /** Al posto dell'uuid nei report dei gruppi riconosciuti per istante di compilazione (strato 2). */
+    private const CRITERIO_ISTANTE = '(per istante)';
+
     /** Valori di --type e modello corrispondente. */
     private const TYPES = ['tracks' => UgcTrack::class, 'pois' => UgcPoi::class];
 
@@ -75,6 +78,8 @@ class FixDuplicatedUgcCommand extends Command
             foreach ($service->groups($modelClass, $appId)->concat($this->groupsByTimestamp($modelClass, $appId)) as $group) {
                 // Gli utenti si leggono prima della fusione: dopo, le copie non esistono più.
                 $users = $this->usersOf($modelClass, $group);
+                // I gruppi per istante vengono da un'inferenza, non da una chiave dichiarata: si vede nel report.
+                $uuidLabel = $group['uuid'] ?? self::CRITERIO_ISTANTE;
                 $utentiReali = array_filter($users, fn ($u) => $u !== null);
                 // Motivi per cui il gruppo non si tocca: vanno distinti, chi legge deve capire perché è lì.
                 $motivi = [];
@@ -105,16 +110,16 @@ class FixDuplicatedUgcCommand extends Command
                 }
                 $esito = $skip ? 'da verificare ('.implode(', ', $motivi).')' : ($execute ? 'unito' : 'da unire');
                 $esiti[$esito] = ($esiti[$esito] ?? 0) + 1;
-                $row = [$typeName, $group['uuid'], $group['parent_id'], implode(' ', $group['copy_ids']), sprintf('%.2f', $group['max_distance_m']), $esito];
+                $row = [$typeName, $uuidLabel, $group['parent_id'], implode(' ', $group['copy_ids']), sprintf('%.2f', $group['max_distance_m']), $esito];
                 $rows[] = $row;
                 $csvRows[] = array_merge($row, [implode(' ', array_map(fn ($id) => $id.':'.($users[$id] ?? '-'), array_keys($users)))]);
                 // Conta solo gli utenti reali: un user_id NULL non è un utente in più.
                 if (count(array_unique($utentiReali)) > 1) {
-                    $multiUser[] = [$typeName, $group['uuid'], $group['parent_id'], $users[$group['parent_id']] ?? '-', implode(' ', array_map(fn ($id) => $id.':'.($users[$id] ?? '-'), $group['copy_ids'])), $esito];
+                    $multiUser[] = [$typeName, $uuidLabel, $group['parent_id'], $users[$group['parent_id']] ?? '-', implode(' ', array_map(fn ($id) => $id.':'.($users[$id] ?? '-'), $group['copy_ids'])), $esito];
                 }
                 Log::channel('duplicated-ugc')->info('Gruppo UGC duplicato', [
                     'tipo' => $typeName,
-                    'uuid' => $group['uuid'],
+                    'uuid' => $uuidLabel,
                     'padre' => $group['parent_id'],
                     'copie' => $group['copy_ids'],
                     'distanza_max_m' => round($group['max_distance_m'], 2),

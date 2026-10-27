@@ -22,7 +22,9 @@ trait GroupsByTimestamp
      */
     protected function groupsByTimestamp(string $modelClass, ?int $appId): Collection
     {
-        if (! $this->option('by-timestamp')) {
+        // Se il command non dichiara {--by-timestamp} nella signature (es. agganciato al command del
+        // package dimenticando la riga) il raggruppamento resta spento, invece di esplodere a runtime.
+        if (! $this->input->hasOption('by-timestamp') || ! $this->option('by-timestamp')) {
             return collect();
         }
 

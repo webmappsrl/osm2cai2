@@ -186,7 +186,16 @@ package diventerebbero tre.
       del dry-run: così il dry-run resta a sola lettura e l'hash non va ricalcolato ogni volta.
       Serve comunque a regime, visto che oggi nessun media ce l'ha
 - [ ] Ordine di esecuzione in produzione: popolamento degli hash → dry-run → lettura dei numeri →
-      `--execute`
+      `--execute` (sanatoria inclusa) → **solo dopo**, e solo se serve, il raggruppamento per
+      istante (`--by-timestamp`, dry-run e poi `--execute`)
+- [ ] La sanatoria va eseguita **prima** del raggruppamento per istante, e `--by-timestamp`
+      **esclude** i record marcati `properties.duplicated`. Sul dump di produzione le 660 copie
+      marcate hanno tutte lo stesso utente di servizio, e quelle senza uuid (162 record, 58 gruppi)
+      avrebbero formato gruppi per istante: fonderle fra loro avrebbe lasciato il padre vero
+      (`duplication_info.parent_ugc_poi_id`, che ha sempre l'uuid) senza le sue fotografie, cioè il
+      danno da riparare rifatto da capo. Con l'esclusione i due trattamenti non si sovrappongono per
+      costruzione, e sul dump `--by-timestamp` non trova alcun gruppo: la sanatoria fa già tutto il
+      lavoro, l'opzione resta per i casi futuri
 
 ## Rischi
 

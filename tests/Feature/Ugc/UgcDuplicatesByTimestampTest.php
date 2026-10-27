@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Ugc;
 
+use App\Console\Commands\Concerns\GroupsByTimestamp;
 use App\Services\UgcDuplicatesByTimestampService;
+use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Tests\TestCase;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\UgcPoi;
@@ -210,5 +214,73 @@ class UgcDuplicatesByTimestampTest extends TestCase
         DB::table('ugc_pois')->whereIn('id', [$a->id, $b->id])->update(['user_id' => null]);
 
         $this->assertSame([], $this->gruppi());
+    }
+
+    public function test_i_record_marcati_duplicated_non_entrano_in_nessun_gruppo()
+    {
+        // Copie già trattate dalla vecchia bonifica: le riunisce la sanatoria al loro padre vero, non
+        // vanno fuse fra loro, nemmeno con utente, istante e posizione identici.
+        $marcata = ['duplicated' => true, 'duplication_info' => ['parent_ugc_poi_id' => 1]];
+        $a = $this->creaPoi(self::ISTANTE, '2026-01-01 10:00:00', null, 'POINT Z (10.5 44.5 0)', $marcata);
+        $b = $this->creaPoi(self::ISTANTE, '2026-01-02 10:00:00', null, 'POINT Z (10.5 44.5 0)', $marcata);
+        // Una sola marcata insieme a un record non marcato: il non marcato resta solo, nessun gruppo.
+        $c = $this->creaPoi(self::ISTANTE, '2026-01-03 10:00:00', null, 'POINT Z (10.5 44.5 0)', $marcata);
+        $d = $this->creaPoi(self::ISTANTE, '2026-01-04 10:00:00');
+
+        $this->assertSame([], $this->gruppi());
+
+        $this->esegui(['--execute' => true, '--by-timestamp' => true]);
+
+        $this->assertSame(4, UgcPoi::whereIn('id', [$a->id, $b->id, $c->id, $d->id])->count());
+        $this->assertSame(0, DB::table('ugc_duplicates_archive')->count());
+    }
+
+    public function test_un_max_distance_elevato_non_allenta_i_gruppi_per_istante()
+    {
+        // Geometrie vicine (circa 8 m) ma diverse: restano separate, la soglia non le avvicina.
+        $a = $this->creaPoi(self::ISTANTE, '2026-01-01 10:00:00');
+        $b = $this->creaPoi(self::ISTANTE, '2026-01-02 10:00:00', null, 'POINT Z (10.5001 44.5 0)');
+
+        $this->assertSame([], $this->gruppi());
+
+        $this->esegui(['--execute' => true, '--by-timestamp' => true, '--max-distance' => 1000]);
+
+        $this->assertNotNull(UgcPoi::find($a->id));
+        $this->assertNotNull(UgcPoi::find($b->id));
+    }
+
+    public function test_il_report_distingue_i_gruppi_per_istante_da_quelli_per_uuid()
+    {
+        $this->creaPoi(self::ISTANTE, '2026-01-01 10:00:00');
+        $this->creaPoi(self::ISTANTE, '2026-01-02 10:00:00');
+
+        $output = $this->esegui(['--by-timestamp' => true]);
+
+        $this->assertStringContainsString('(per istante)', $output);
+        $this->assertStringContainsString('(per istante)', file_get_contents(storage_path('backups/fix-duplicated-ugc.csv')));
+    }
+
+    public function test_senza_l_opzione_dichiarata_nella_signature_il_concern_non_esplode()
+    {
+        $command = new class extends Command
+        {
+            use GroupsByTimestamp;
+
+            protected $signature = 'test:senza-by-timestamp';
+
+            public ?int $trovati = null;
+
+            public function handle(): int
+            {
+                $this->trovati = $this->groupsByTimestamp(UgcPoi::class, null)->count();
+
+                return self::SUCCESS;
+            }
+        };
+        $command->setLaravel($this->app);
+
+        $command->run(new ArrayInput([]), new NullOutput);
+
+        $this->assertSame(0, $command->trovati);
     }
 }
