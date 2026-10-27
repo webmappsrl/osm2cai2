@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\GroupsByTimestamp;
 use App\Services\UgcDuplicatesService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,8 @@ use Wm\WmPackage\Models\UgcTrack;
  */
 class FixDuplicatedUgcCommand extends Command
 {
+    use GroupsByTimestamp;
+
     /** Valori di --type e modello corrispondente. */
     private const TYPES = ['tracks' => UgcTrack::class, 'pois' => UgcPoi::class];
 
@@ -24,7 +27,8 @@ class FixDuplicatedUgcCommand extends Command
                             {--type= : tracks oppure pois; senza, entrambi}
                             {--execute : Applica le modifiche; senza, produce solo il report}
                             {--app-id= : Limita ai record con questo app_id}
-                            {--max-distance=0 : Oltre questa distanza in metri fra le geometrie il gruppo non viene toccato (0 = solo geometrie identiche)}';
+                            {--max-distance=0 : Oltre questa distanza in metri fra le geometrie il gruppo non viene toccato (0 = solo geometrie identiche)}
+                            {--by-timestamp : Raggruppa anche i record senza uuid per utente, istante di compilazione e posizione (inferenza, spenta per default)}';
 
     protected $description = 'Unisce gli UGC (tracce e POI) duplicati per properties.uuid nel più vecchio, archiviando le copie (oc:8867).';
 
@@ -68,7 +72,7 @@ class FixDuplicatedUgcCommand extends Command
         $mediaCancellati = 0;
         $mediaFalliti = 0;
         foreach ($types as $typeName => $modelClass) {
-            foreach ($service->groups($modelClass, $appId) as $group) {
+            foreach ($service->groups($modelClass, $appId)->concat($this->groupsByTimestamp($modelClass, $appId)) as $group) {
                 // Gli utenti si leggono prima della fusione: dopo, le copie non esistono più.
                 $users = $this->usersOf($modelClass, $group);
                 $utentiReali = array_filter($users, fn ($u) => $u !== null);
