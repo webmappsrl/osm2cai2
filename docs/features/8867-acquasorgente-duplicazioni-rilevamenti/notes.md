@@ -156,6 +156,19 @@ fermare la bonifica: vanno riviste a mano.
 
 ## Esiti del collaudo sul dump di produzione (27/10/2026)
 
+Il collaudo è stato **rifatto da capo** su dump ripristinato, con il codice definitivo: la prima
+esecuzione era avvenuta prima delle correzioni della review finale, quindi senza la guardia
+sull'ordine. I numeri qui sotto sono quelli della seconda esecuzione e coincidono con quelli della
+prima, con due aggiunte che la prima non poteva dare:
+
+- **la guardia sull'ordine è stata provata davvero.** Prima della sanatoria, `osm2cai:fix-duplicated-ugc`
+  si rifiuta di partire in tutte le forme provate — dry-run, `--execute`, `--app-id=3`, `--type=pois`
+  — uscendo con codice 1 e il messaggio che rimanda alla sanatoria. Con `--type=tracks` invece parte,
+  ed è corretto: le copie marcate sono tutte POI, su `ugc_tracks` sono zero, quindi non c'è niente da
+  sanare prima di toccare le tracce. Nessuna scrittura durante le prove;
+- **la stima delle fotografie nel dry-run**: annunciate 231 da spostare e 0 da scartare, realizzate
+  231 spostate (201 POI, 30 tracce) e 0 scartate.
+
 Eseguito in locale sul database `osm2cai2` (dump del 26/10/2026), nell'ordine che conta: **prima la
 sanatoria, poi la bonifica per uuid**, perché i record senza uuid che il raggruppamento per istante
 troverebbe sono in realtà copie già marcate dalla vecchia bonifica; fonderli fra loro invece di
