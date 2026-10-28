@@ -110,6 +110,32 @@ class UgcEcPoiViaArchivioTest extends TestCase
         );
     }
 
+    public function test_con_due_ecpoi_da_copie_diverse_si_sceglie_il_piu_vecchio(): void
+    {
+        $padre = $this->creaPoi();
+        $copiaA = $padre->id + 100000;
+        $copiaB = $padre->id + 100001;
+        $this->archivia($padre->getMorphClass(), $copiaA, $padre->id);
+        $this->archivia($padre->getMorphClass(), $copiaB, $padre->id);
+
+        // Creati in ordine inverso rispetto agli original_id: conta l'id dell'EcPoi, non l'ordine dell'archivio.
+        $ecPoiVecchio = $this->creaEcPoiPromossoDa($copiaB);
+        $this->creaEcPoiPromossoDa($copiaA);
+
+        // Un UPDATE sposta la riga fisicamente in coda: senza ORDER BY Postgres restituirebbe l'altro EcPoi.
+        DB::table('ec_pois')->where('id', $ecPoiVecchio)->update(['updated_at' => now()]);
+
+        Log::spy();
+
+        $this->assertTrue($this->giaPromosso($padre));
+
+        Log::shouldHaveReceived('warning')->withArgs(
+            fn ($msg, $ctx) => ($ctx['trovato_via_archivio'] ?? false) === true
+                && $ctx['ec_poi_id'] === $ecPoiVecchio
+                && $ctx['original_id'] === $copiaB
+        )->once();
+    }
+
     public function test_un_poi_senza_nessun_ecpoi_risulta_non_promosso(): void
     {
         $poi = $this->creaPoi();

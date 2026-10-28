@@ -261,7 +261,9 @@ trait UgcCommonModelTrait
             return null;
         }
 
-        $ecPoi = EcPoi::whereIn('properties->ugc->ugc_poi_id', $originalIds)->first();
+        // Più EcPoi possono essere nati da copie diverse dello stesso POI: si sceglie il più vecchio,
+        // così `ec_poi_id` e `original_id` nel log sono riproducibili.
+        $ecPoi = EcPoi::whereIn('properties->ugc->ugc_poi_id', $originalIds)->orderBy('id')->first();
 
         if (! $ecPoi) {
             return null;
