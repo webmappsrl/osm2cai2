@@ -66,6 +66,14 @@ return [
             'path' => storage_path('logs/ugc.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
+        // STRATO 1 — NON CANCELLARE (oc:8867): il file resta, va tolto solo questo canale all'aggiornamento
+        // di wm-package (ridondante: il package lo dichiara già in config/wm-logging.php).
+        'duplicated-ugc' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/duplicated-ugc.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
         'calculate-intersections' => [
             'driver' => 'stack',
             'channels' => ['single'],

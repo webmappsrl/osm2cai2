@@ -2,9 +2,23 @@
 
 # Notes — Messa in sicurezza PHP2Shell sullo shard osm2cai2
 
-## Deviazioni dal piano
+## Esito (22/10/2026)
 
-(nessuna al momento)
+- **Locale, UAT e prod su PHP 8.4.27** in entrambi i container (FPM + Horizon), verificato con `php -v` dentro i container; limiti FPM attivi (oversize 140MB → 413 con worker vivo su UAT e prod); Horizon running ovunque; immagini precedenti taggate `pre-8840` sui server.
+- **Verifica di compromissione: nessuna evidenza.** UAT: zero 2xx sui pattern exploit nella finestra PHP2Shell (dal 20/10/2026) — i 452 «200» nei log sono scansioni CGI (CVE-2024-4577) del settembre 2025 a cui rispondeva la rotta catch-all di Laravel, pattern non applicabile a FPM; prod: zero 2xx in tutto lo storico. Nessun file PHP anomalo dal 20/10, cron/utenti/`authorized_keys` regolari su entrambi.
+- **Backup DB verificato vivo**: disco `wmdumps` → object storage Aruba (bucket `wmfe`), 7 dump giornalieri in `backups/osm2cai2/`, ultimo del 21/10 (1,66GB).
+- Merge: PR #317 su `develop`, `develop` → `main` (`abbd0bed`); prod patchata con pull di `main`.
+
+## Divergenze dal piano, task per task
+
+### Ordine dei task
+Il merge su `develop`/`main` (Task 6) è stato eseguito **prima** dei Task 4 (prod) e 5 (verifica compromissione), su direttiva del dev: prod è stata patchata con un pull di `main` invece del checkout mirato dal branch. Nessun effetto collaterale: il deploy automatico non raggiunge i server (CI rotta).
+
+### Task 3: interventi extra su UAT
+Durante la patch UAT è esplosa una crisi di memoria preesistente (OOM killer su Redis ed Elasticsearch). Su direttiva del dev: Horizon temporaneamente fermato (riavviato a fine lavori), code Redis svuotate (4,97GB di job vecchi), heap ES parametrizzato a 2g in `compose.yml` → cluster green dopo ~11 mesi di crash loop. Su UAT il checkout resta sul branch `oc_6723` con i file della patch come modifiche locali del working tree (saranno assorbite quando quel branch verrà allineato).
+
+### Task 4: estensioni su prod
+Oltre al piano: ricreato anche il container Elasticsearch (heap 2g, stabile, zero OOM dopo la ricreazione — prima 3 kill nella sola giornata del 22/10); svuotata la coda `pbf` (394.508 job accumulati) su richiesta del dev; integrato nel repo il fix `wmdumps` vivo solo sul working tree di prod.
 
 ## Bug trovati
 
