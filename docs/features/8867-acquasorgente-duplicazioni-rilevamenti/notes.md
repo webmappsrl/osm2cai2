@@ -132,8 +132,72 @@ ricascarci.
 
 ## Ordine di esecuzione in produzione (vincolante)
 
-1. `php artisan migrate`
-2. `osm2cai:backfill-ugc-media-hash --execute` (popola gli sha256)
+> La scaletta operativa passo per passo, con i comandi da lanciare uno alla volta, i numeri attesi e i
+> punti in cui fermarsi, sta in [esecuzione-in-produzione.md](esecuzione-in-produzione.md). Qui resta il
+> perché dell'ordine.
+
+Si lavora sul server di produzione (`netseven@195.231.60.153`, Aruba/CAI — vedi
+[docs/howto/aggiornare-immagini-php-sui-server.md](../../howto/aggiornare-immagini-php-sui-server.md)),
+dentro il container `php81-osm2cai2`. Il demone docker lì vuole `sudo`, quindi ogni comando è nella forma:
+
+```bash
+ssh netseven@195.231.60.153
+cd /var/www/html/osm2cai2
+sudo docker exec -it php81-osm2cai2 php artisan <comando>
+```
+
+Qui sotto, per brevità, è scritto solo `<comando>`. Le query SQL si lanciano invece con
+`sudo docker exec -i postgres-osm2cai2 psql -U osm2cai2 -d osm2cai2 -c "<query>"`.
+
+0. **Backup del database**: `wm:backup-run --only-db`. È lo stesso command dello schedulato
+   delle 20:00 (`wm-package/src/Providers/ScheduleServiceProvider.php:18`): fa il `pg_dump` della
+   connessione `pgsql`, lo comprime e carica lo zip su Aruba (disk `wmdumps`, bucket `wmfe`,
+   `r3-it.storage.cloud.it`) come `backups/osm2cai2/only_db_<istante>.zip` — circa 1,7 GB e una dozzina
+   di minuti, a giudicare dai notturni. Va fatto adesso e non ci si affida a quello della sera prima:
+   torcendo indietro a un notturno si perderebbero i rilevamenti arrivati nel frattempo. È l'unica via
+   di ritorno per le righe cancellate, perché `ugc_duplicates_archive` conserva il contenuto archiviato
+   ma non rimette in piedi le righe, e l'eliminazione dell'utente `7736` non si annulla. Un backup solo
+   copre tutti i passi che seguono, se si eseguono di fila.
+
+   Poi se ne tiene una copia **sul server di produzione**, così il ripristino non dipende dalla rete
+   verso Aruba:
+
+   ```bash
+   sudo docker exec -it php81-osm2cai2 php artisan wm:backup-run --only-db          # dump → Aruba
+   sudo docker exec -it php81-osm2cai2 php artisan wm:download-db-backup --latest   # → storage/backups/last_dump.sql.gz
+   sudo docker exec -it php81-osm2cai2 mv storage/backups/last_dump.sql.gz storage/backups/pre-oc8867.sql.gz
+   ```
+
+   `wm:download-db-backup --latest` sceglie il `only_db_*.zip` più recente della cartella, cioè quello
+   appena caricato, e lo estrae; è lo stesso command dello schedulato delle 20:10
+   (`wm-package/src/Providers/ScheduleServiceProvider.php:29`). **Il `mv` non è facoltativo**: quel
+   command scrive sempre su `last_dump.sql.gz`, quindi lo schedulato della sera stessa sovrascriverebbe
+   la copia di prima della bonifica — verificato il 28/10/2026: in `storage/backups` c'era
+   `last_dump.sql.gz` di 1,9 GB datato 27/10 20:11, cioè lo schedulato delle 20:10 gira e funziona
+   (il command rotto è `db:download`, un altro). Spazio: servono ~1,9 GB e sul server ce ne sono 104
+   liberi su 157. Il ripristino si fa con `wm-package/src/Scripts/restore_db.sh`.
+1. `migrate`
+2. `osm2cai:backfill-ugc-media-hash --execute` (popola gli sha256). Tratta **solo i media dei
+   rilevamenti che risultano duplicati**, per uuid o per istante: ~1.300 fotografie e ~2,6 GB letti da
+   Aruba, invece dei 13.087 media e 24 GB di tutto l'UGC. Gli altri non vengono confrontati da nessuno;
+   se un domani servirà, `UgcMediaHashService::hashOf()` calcola l'hash al primo uso.
+2bis. **Controllo degli hash prima di andare avanti.** Lo scarto delle fotografie doppione si fonda
+   sullo sha256: due file vuoti hanno lo stesso hash, quindi verrebbero presi per doppioni pur non
+   essendolo. Oggi 6.687 media UGC su 13.087 hanno `size = 0` nella tabella `media`: **è il metadato a
+   mancare, non il file**. Verificato leggendo i file veri su Aruba (bucket `wmfe`, raggiungibile con le
+   credenziali del disk `wmdumps`): un campione di 12 media con `size = 0` ha 12 file pieni, zero vuoti
+   — per esempio il media `9352` pesa 4,6 MB. Il controllo qui sotto resta come rete, perché un file
+   vuoto o illeggibile allo stesso modo su padre e copia porterebbe a cancellare foto diverse:
+
+   ```sql
+   -- quanti media hanno l'hash del file vuoto: deve essere 0
+   select count(*) from media
+   where model_type in ('App\Models\UgcPoi','App\Models\UgcTrack')
+     and custom_properties->>'sha256' = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+   ```
+
+   Se non è 0 **non si prosegue**: quei media vanno esclusi dallo scarto, altrimenti si cancellano
+   fotografie diverse fra loro solo perché illeggibili allo stesso modo.
 3. `osm2cai:recover-previous-duplicate-fix` (dry-run, si leggono i numeri), poi `--execute`
 4. `osm2cai:fix-duplicated-ugc` (dry-run, si leggono i numeri, comprese le fotografie che sposterebbe e
    scarterebbe), poi `--execute`
@@ -264,7 +328,8 @@ realizzati.
 
 - **EcPoi promossi da una copia poi cancellata**: dopo il collaudo sul dump 101 EcPoi hanno
   `properties->ugc->ugc_poi_id` orfano; per 100 il padre è ricostruibile da `ugc_duplicates_archive` e per
-  **17** di questi il padre risulta non promosso, quindi un operatore potrebbe promuoverlo di nuovo creando
+  **17** di questi (riconducibili a **14 UgcPoi padre distinti**: tre padri hanno due EcPoi ciascuno) il
+  padre risulta non promosso, quindi un operatore potrebbe promuoverlo di nuovo creando
   un secondo EcPoi per lo stesso punto (esempio: EcPoi `13522` «Sorgente SEC» punta all'UgcPoi `4079`,
   cancellato; l'archivio dice `reference_id = 3759`, vivo). I dati non si toccano: cambia solo la lettura
   in `UgcCommonModelTrait::checkExistingEcPoi()`, che se la ricerca diretta non trova nulla risale dagli
@@ -273,6 +338,27 @@ realizzati.
   Il warning nel log indica `trovato_via_archivio` e l'`original_id`. Lo scopo è evitare la doppia promozione.
   L'archivio va quindi **conservato** finché ci sono EcPoi con riferimenti orfani. Test:
   `tests/Feature/Ugc/UgcEcPoiViaArchivioTest.php`.
+
+## Verifica visiva delle fotografie (28/10/2026)
+
+Le 1.325 fotografie coinvolte sono state lette **sui file veri di Aruba** (bucket `wmfe`, raggiungibile
+dalle credenziali del disk `wmdumps`), confrontando l'ETag come fa lo sha256 del command:
+
+| | |
+|---|---:|
+| già sul record tenuto | 558 |
+| **cancellate perché identiche a una del padre** | **592** |
+| spostate sul padre e conservate | 175 |
+| illeggibili (non si toccano) | 0 |
+
+Gli stessi numeri erano stati ottenuti il giorno prima per altra via. Le coppie sono state poi guardate
+una per una, affiancate, in un documento generato apposta (`storage/app/oc8867/report-foto.php`, usa e
+getta, non nel branch): le 592 che si cancellano sono lo stesso scatto già presente sul record tenuto.
+
+**Decisione: non si tiene una copia dei file cancellati.** Era stata valutata (copiarli sotto
+`storage/backups/` prima della cancellazione, ~1,2 GB, con una modifica al command) e scartata dopo la
+verifica visiva: ogni file cancellato continua a esistere, identico, nell'oggetto del media che resta
+attaccato al record tenuto. Il backup del database del passo 0 copre comunque le righe.
 
 ## Divergenze dello strato 1 rispetto a oc:8718
 

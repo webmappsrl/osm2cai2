@@ -193,7 +193,11 @@ package diventerebbero tre.
 - [ ] Il popolamento di `custom_properties.sha256` è un **passaggio a sé**, da far girare prima
       del dry-run: così il dry-run resta a sola lettura e l'hash non va ricalcolato ogni volta.
       Serve comunque a regime, visto che oggi nessun media ce l'ha
-- [ ] Ordine di esecuzione in produzione, **vincolante**: popolamento degli hash → sanatoria
+- [ ] Ordine di esecuzione in produzione, **vincolante**: backup del database
+      (`php artisan wm:backup-run --only-db`, lo stesso command dello schedulato delle 20:00: carica lo
+      zip su Aruba in `backups/osm2cai2/`; poi `wm:download-db-backup --latest` per tenerne una copia
+      sul server, da rinominare subito perché lo schedulato delle 20:10 riscrive lo stesso nome)
+      → popolamento degli hash → sanatoria
       (`recover-previous-duplicate-fix`, dry-run, lettura dei numeri, poi `--execute`) → bonifica per uuid
       (`fix-duplicated-ugc`, dry-run, lettura dei numeri, poi `--execute`) → **solo dopo**, e solo se
       serve, il raggruppamento per istante (`--by-timestamp`, dry-run e poi `--execute`). Il perché: fondendo
