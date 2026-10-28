@@ -30,3 +30,4 @@ public/wm-osmfeatures.log
 .DS_Store
 .claude/
 /storage/json/conf/
+.env.testing

@@ -32,7 +32,7 @@ class Kernel extends ConsoleKernel
             ->hourlyAt(10)
             ->description('Take Horizon snapshot');
 
-        // VERIFICARE: questo parte alle 05:00 CET quando osmfeatures 
+        // VERIFICARE: questo parte alle 05:00 CET quando osmfeatures
         // potrebbe ancora essere in import (finisce 05:00-06:00 CET)
         // Potrebbe essere necessario spostarlo dopo le 08:00 CET
         $schedule->command('osm2cai:update-hiking-routes')
@@ -51,9 +51,9 @@ class Kernel extends ConsoleKernel
             ->dailyAt('07:00')
             ->description('Update hiking routes status');
 
-        $schedule->command('osm2cai:fix-duplicated-ugc-pois')
+        $schedule->command('osm2cai:fix-duplicated-ugc')
             ->dailyAt('06:00')
-            ->description('Fix duplicated ugc pois (monitoring)');
+            ->description('Report duplicated ugc pois and tracks (monitoring)');
     }
 
     /**
@@ -63,7 +63,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__ . '/Commands');
+        $this->load(__DIR__.'/Commands');
 
         require base_path('routes/console.php');
     }
