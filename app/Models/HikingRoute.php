@@ -1306,6 +1306,10 @@ SQL;
 
         $resource = 'hiking-routes';
 
+        if (isset($baseGeojson['properties']['sicai'])) {
+            $baseGeojson['properties']['sicai'] = $this->filterSicaiPropertiesForApi($baseGeojson['properties']['sicai']);
+        }
+
         // Determina la risorsa Nova corretta in base al tipo di percorso
         if ((int) $this->app_id === 2) {
             $layerIds = $this->layers?->pluck('id')->toArray() ?? [];
@@ -1313,9 +1317,6 @@ SQL;
                 $resource = 'si-hiking-routes';
             } else {
                 $resource = 'si-m-t-b-routes';
-            }
-            if (isset($baseGeojson['properties']['sicai'])) {
-                $baseGeojson['properties']['sicai'] = $this->filterSicaiPropertiesForApi($baseGeojson['properties']['sicai']);
             }
         }
 
@@ -1341,6 +1342,20 @@ SQL;
         }
 
         return $baseGeojson;
+    }
+
+    /**
+     * Properties del percorso senza i dati personali del blocco SICAI: unico punto da cui le API pubbliche leggono `properties`.
+     */
+    public function getPublicProperties(): array
+    {
+        $properties = is_array($this->properties) ? $this->properties : [];
+
+        if (array_key_exists('sicai', $properties)) {
+            $properties['sicai'] = $this->filterSicaiPropertiesForApi($properties['sicai']);
+        }
+
+        return $properties;
     }
 
     private function filterSicaiPropertiesForApi(mixed $sicai): mixed

@@ -34,6 +34,7 @@ class ExportResource extends JsonResource
 
         switch (true) {
             case $this->resource instanceof HikingRoute:
+                $result['properties'] = $this->resource->getPublicProperties();
                 $result['geometry_osm'] = json_decode($this->resource->geometry_osm, true);
                 $result['geometry_raw_data'] = json_decode($this->resource->geometry_raw_data, true);
                 $result['natural_springs'] = json_decode($this->resource->nearby_natural_springs, true);
