@@ -130,6 +130,47 @@ ricascarci.
 - «I record `platform` sono vuoti» — **falso**: avevo guardato `raw_data`, mentre i dati stanno in
   `properties.form`, popolato in 773 su 776.
 
+## Messa in produzione — 28/10/2026
+
+Eseguita seguendo [esecuzione-in-produzione.md](esecuzione-in-produzione.md), un comando alla volta.
+
+| ora | passo | esito |
+|---|---|---|
+| 12:55 | deploy, `migrate`, `horizon:terminate` | server su `c272d4d`, `ugc_duplicates_archive` creata; **da qui i duplicati non si formano più** |
+| 13:00 | `backfill-ugc-media-hash --execute` | 1.584 hash calcolati, **0 falliti**; nessun media con l'hash del file vuoto |
+| 13:05 | `down` | app in manutenzione |
+| 13:21 | `wm:backup-run --only-db` | `only_db_2026-10-28-13-06-18.zip`, 1,65 GB su Aruba |
+| 13:28 | `recover-previous-duplicate-fix --execute` | 658 copie archiviate e cancellate, 2 orfane ripristinate, 462 UgcPoi ripuliti, utente `7736` eliminato, 1 foto spostata e **535 doppione cancellate**, 0 fallimenti |
+| 13:30 | `fix-duplicated-ugc --execute` | 193 gruppi, **190 uniti**, 3 lasciati (padre senza utente), **57 foto doppione cancellate**, 0 fallimenti |
+| 13:30 | `up` | online, 302 in 0,25 s — **25 minuti di fermo** |
+| 13:34 | `wm:download-db-backup --latest` + copia | `storage/backups/pre-oc8867.sql.gz`, 1,9 GB |
+
+Stato finale: `ugc_pois` 9.179, `ugc_tracks` 1.542, media UGC 12.511 (**−592**), copie marcate 0, chiavi
+ereditate 0, utente `7736` assente, archivio 908 righe, **media orfani 0**. Nessun EcPoi creato o
+modificato (controllato su `created_at`/`updated_at`: l'ultimo risale al 27/10). Caso del ticket:
+resta `10828` con la sua fotografia, `10830` archiviato con `reference_id = 10828`.
+`--by-timestamp` trova 3 gruppi, tutti «da verificare» (padre senza utente): **non è stato eseguito**,
+non c'è nulla da unire per quella via.
+
+**Le 592 fotografie cancellate sono esattamente quelle previste** dall'analisi degli ETag del 27/10
+(535 nella sanatoria + 57 nella bonifica), e le 175 spostate coincidono con la previsione.
+
+Cose imparate sul campo:
+
+- **Il deploy automatico non funziona dal 21/05/2026** e non per causa nostra: `composer install`
+  cerca `symm/gisconverter` (`composer.json:40`), repository GitHub che non esiste più — il
+  `composer.lock` risolve `ndamiens/gisconverter`. Il workflow muore prima dei test, quindi in
+  produzione si deploya a mano. **Ticket a sé.**
+- **`composer dump-autoload` va lanciato come root** (`docker exec -u root`): dentro il container si è
+  `www-data` ma `vendor/` appartiene a `root`. Al primo tentativo è fallito con «Permission denied».
+  Serviva: le 10 classi nuove non sarebbero state trovate dall'autoloader ottimizzato (16.361 → 16.393
+  classi). Non serviva invece `composer install`: il merge non tocca `composer.json` né il lock.
+- **Config e rotte non sono in cache** su questo server (in `bootstrap/cache` c'è solo
+  `packages.php`), quindi niente `config:cache`/`route:cache` dopo il deploy.
+- Il backup è il passo più lungo della finestra di fermo (16 minuti su 25). La copia del dump sul
+  server è stata spostata **dopo** il riavvio dell'app: il punto di ripristino è il file su Aruba, già
+  completo, e scaricarlo ad app ferma avrebbe allungato il disservizio senza aggiungere sicurezza.
+
 ## Ordine di esecuzione in produzione (vincolante)
 
 > La scaletta operativa passo per passo, con i comandi da lanciare uno alla volta, i numeri attesi e i
