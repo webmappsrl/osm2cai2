@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Schema;
  * Sana lo stato lasciato dalla precedente esecuzione del command di bonifica, che esiste solo in questo
  * progetto: invece di cancellare i POI duplicati li aveva marcati con properties.duplicated = true e
  * riassegnati all'utente di servizio duplicated-ugc-pois@webmapp.it, lasciando le fotografie attaccate
- * alle copie e le chiavi duplication_info / has_been_duplicated anche su schede che non sono copie.
+ * alle copie e le chiavi duplication_info / has_been_duplicated anche su UgcPoi che non sono copie.
  *
  * Una copia il cui padre non esiste più è l'unico superstite del suo gruppo: se l'utente originale è
  * valido torna rilevamento normale del suo autore (user_id ripristinato, chiavi di duplicazione tolte,
@@ -37,7 +37,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
 
     private const SERVICE_USER_EMAIL = 'duplicated-ugc-pois@webmapp.it';
 
-    /** Chiavi lasciate dalla vecchia bonifica anche sulle schede che non sono copie. */
+    /** Chiavi lasciate dalla vecchia bonifica anche sugli UgcPoi che non sono copie. */
     private const INHERITED_KEYS = ['duplication_info', 'has_been_duplicated'];
 
     /** Copia marcata: solo il boolean true, come l'ha scritto la vecchia bonifica. */
@@ -58,7 +58,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
     protected $signature = 'osm2cai:recover-previous-duplicate-fix
                             {--execute : Applica le modifiche; senza, produce solo la segnalazione}';
 
-    protected $description = 'Sana lo stato lasciato dalla bonifica precedente dei POI duplicati: sposta le foto sulle schede tenute, archivia e cancella le copie marcate, ripulisce le chiavi ereditate ed elimina l\'utente di servizio (oc:8867).';
+    protected $description = 'Sana lo stato lasciato dalla bonifica precedente dei POI duplicati: sposta le foto sugli UgcPoi tenuti, archivia e cancella le copie marcate, ripulisce le chiavi ereditate ed elimina l\'utente di servizio (oc:8867).';
 
     public function handle(UgcDuplicatesService $service): int
     {
@@ -150,10 +150,10 @@ class RecoverPreviousDuplicateFixCommand extends Command
 
         $this->riferisciCopie($execute, $trattate, $orfane, $falliti, $mediaSuCopie, $mediaSpostati, $mediaCancellati, $mediaFalliti, $daRevisionare);
 
-        $schedeDaRipulire = $this->ripulisciChiaviEreditate($execute);
+        $ugcPoisDaRipulire = $this->ripulisciChiaviEreditate($execute);
         $this->info($execute
-            ? "Schede ripulite dalle chiavi ereditate: {$schedeDaRipulire}."
-            : "Schede da ripulire dalle chiavi ereditate: {$schedeDaRipulire}.");
+            ? "UgcPoi ripuliti dalle chiavi ereditate: {$ugcPoisDaRipulire}."
+            : "UgcPoi da ripulire dalle chiavi ereditate: {$ugcPoisDaRipulire}.");
 
         $this->segnalaTracce($serviceUserId);
         $this->gestisciUtenteDiServizio($execute, $serviceUserId, $copieDellUtenteDiServizio);
@@ -169,7 +169,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
             'media_spostati' => $mediaSpostati,
             'media_cancellati' => $mediaCancellati,
             'media_falliti' => $mediaFalliti,
-            'schede_ripulite' => $schedeDaRipulire,
+            'ugc_pois_ripuliti' => $ugcPoisDaRipulire,
         ]);
 
         if ($execute) {
@@ -251,7 +251,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
     {
         if ($execute) {
             $this->info("Copie sanate (archiviate e cancellate): {$trattate}, fallite: {$falliti}. Copie orfane ripristinate come rilevamenti normali: {$orfane}.");
-            $this->info("Foto spostate sulla scheda tenuta: {$mediaSpostati}; doppioni cancellati: {$mediaCancellati}, falliti: {$mediaFalliti}".($mediaFalliti > 0 ? ' (id nel log duplicated-ugc).' : '.'));
+            $this->info("Foto spostate sull'UgcPoi tenuto: {$mediaSpostati}; doppioni cancellati: {$mediaCancellati}, falliti: {$mediaFalliti}".($mediaFalliti > 0 ? ' (id nel log duplicated-ugc).' : '.'));
         } else {
             $this->info("Copie da sanare (archiviare e cancellare): {$trattate}. Copie orfane da ripristinare come rilevamenti normali: {$orfane}.");
             // Senza --execute non si calcolano gli hash: scriverebbero nei custom_properties dei media.
@@ -264,7 +264,7 @@ class RecoverPreviousDuplicateFixCommand extends Command
         }
     }
 
-    /** Toglie le chiavi ereditate dalle schede che non sono copie. Restituisce quante sono (o sarebbero). */
+    /** Toglie le chiavi ereditate dagli UgcPoi che non sono copie. Restituisce quanti sono (o sarebbero). */
     private function ripulisciChiaviEreditate(bool $execute): int
     {
         // Si escludono tutte le righe con la chiave duplicated, di qualunque tipo: un "true" stringa non è
@@ -275,14 +275,14 @@ class RecoverPreviousDuplicateFixCommand extends Command
 
         $nonRiconosciute = DB::table('ugc_pois')->whereRaw("jsonb_exists(properties, 'duplicated')")->whereRaw('NOT '.self::IS_MARKED_COPY)->count();
         if ($nonRiconosciute > 0) {
-            $this->warn("{$nonRiconosciute} schede hanno la chiave duplicated con un valore diverso dal boolean true: non sono copie riconosciute e non si toccano.");
+            $this->warn("{$nonRiconosciute} UgcPoi hanno la chiave duplicated con un valore diverso dal boolean true: non sono copie riconosciute e non si toccano.");
         }
 
         if (! $execute) {
             return $query->count();
         }
 
-        // Aggiornamento a livello di riga: nessun evento, nessun updated_at toccato, la scheda resta com'è.
+        // Aggiornamento a livello di riga: nessun evento, nessun updated_at toccato, il resto della riga non cambia.
         return $query->update(['properties' => DB::raw("properties - 'duplication_info' - 'has_been_duplicated'")]);
     }
 

@@ -4,18 +4,18 @@
 
 ## Cosa cambia
 
-Oggi ogni reinvio di un rilevamento da parte dell'app crea una nuova scheda: il controllo che
+Oggi ogni reinvio di un rilevamento da parte dell'app crea un nuovo record: il controllo che
 dovrebbe riconoscere un rilevamento già salvato cerca il suo `uuid` al primo livello della
 richiesta, mentre l'app lo manda dentro il campo `feature`. Dopo questo intervento lo store
-riconosce il rilevamento già presente e lo **aggiorna** invece di duplicarlo, e le schede
-duplicate già in archivio vengono unite in una sola, con tutte le fotografie sulla scheda che
+riconosce il rilevamento già presente e lo **aggiorna** invece di duplicarlo, e i record
+duplicati già in archivio vengono uniti in uno solo, con tutte le fotografie sul record che
 resta. Viene inoltre sanato quanto lasciato indietro dall'esecuzione precedente del command di
-bonifica: fotografie rimaste su copie nascoste, schede sporcate da informazioni di duplicazione
-che non le riguardano, copie ancora in tabella sotto un utente di servizio.
+bonifica: fotografie rimaste su copie nascoste, record sporcati da informazioni di duplicazione
+che non li riguardano, copie ancora in tabella sotto un utente di servizio.
 
 ## Perché
 
-Il cliente segnala schede di monitoraggio sdoppiate, con dati identici ma non sempre completi —
+Il cliente segnala record di monitoraggio sdoppiati, con dati identici ma non sempre completi —
 una copia con la foto e una senza. L'esempio che porta riguarda AcquaSorgente, ma il difetto sta
 nello store, che è lo stesso per tutte le app e per entrambi i tipi di rilevamento. Sui dati di
 produzione del 26/10/2026:
@@ -42,12 +42,12 @@ La causa è provata. In `wm-package`, `UgcPoiController::getModelIstance()` legg
 `$request->input('properties.uuid')`; l'app invia un multipart con il geojson serializzato nel
 campo `feature`, dove quella lettura restituisce `null`, e la riga successiva fa
 `return new UgcPoi`. La validazione invece il campo `feature` lo apre
-(`Controller.php:45-49`), quindi l'uuid finisce comunque dentro la scheda salvata: da qui
+(`Controller.php:45-49`), quindi l'uuid finisce comunque dentro il record salvato: da qui
 duplicati che portano tutti lo stesso uuid. Verificato sulla stessa richiesta nei due formati:
 dove la validazione legge `f7353f52…`, il controllo anti-duplicato legge `null`.
 
-Il reinvio nasce dall'app: in `_pushUgcPois` la scheda esce dalla coda locale solo se la risposta
-è positiva, e `saveApiPoi` trasforma qualunque errore in `null`, quindi la scheda viene rimandata
+Il reinvio nasce dall'app: in `_pushUgcPois` il record esce dalla coda locale solo se la risposta
+è positiva, e `saveApiPoi` trasforma qualunque errore in `null`, quindi il record viene rimandato
 alla sincronizzazione successiva. I due record citati dal cliente, `10828` e `10830`, hanno lo
 stesso uuid e lo stesso istante di compilazione, e sono stati salvati a diciotto ore di distanza.
 
@@ -87,13 +87,13 @@ camminiditalia il 12 ottobre. osm2cai2 non lo ha perché è fermo a una versione
       package e senza divergenze. Effetto collaterale noto e accettato: un campo svuotato dal
       client non si svuota sul server. Riguarda solo lo store, dove arrivano reinvii che mandano
       sempre lo stesso contenuto; la correzione voluta dall'utente passa da `/api/v3/ugc/poi/edit`
-- [ ] Una fotografia si salva solo se il suo `sha256` è diverso da quelle già presenti sulla scheda
+- [ ] Una fotografia si salva solo se il suo `sha256` è diverso da quelle già presenti sul record
 - [ ] L'unico posto dove finiscono le copie rimosse è la tabella `ugc_duplicates_archive`
       introdotta da oc:8718: niente più marcature `properties.duplicated` né riassegnazioni
 - [ ] Esiste una tabella `ugc_duplicates_archive` con la stessa struttura di quella di oc:8718
       (`model_type`, `original_id`, `reference_id` senza vincolo di chiave esterna, uuid, utente,
       app, properties, media_ids, geometria, date originali)
-- [ ] Un command di bonifica raggruppa i duplicati **per uuid**, tiene la scheda più vecchia, vi
+- [ ] Un command di bonifica raggruppa i duplicati **per uuid**, tiene il record più vecchio, vi
       sposta le fotografie scartando i doppioni per hash, archivia le copie e le cancella
 - [ ] Il command tratta sia `ugc_pois` sia `ugc_tracks`, con un'opzione per limitarlo a uno dei due
 - [ ] Il command ha una modalità di sola segnalazione come comportamento di default, e applica le
@@ -156,12 +156,12 @@ package diventerebbero tre.
 
 ### Sanatoria dell'esecuzione precedente
 
-- [ ] Per ogni copia marcata `properties.duplicated`, la scheda tenuta si ritrova da
+- [ ] Per ogni copia marcata `properties.duplicated`, il record tenuto si ritrova da
       `duplication_info.parent_ugc_poi_id`; le fotografie ancora attaccate alla copia le vengono
       spostate addosso, con lo stesso scarto per hash
 - [ ] Le copie così trattate vengono archiviate in `ugc_duplicates_archive` e cancellate, come
       quelle della bonifica ordinaria
-- [ ] Le schede che hanno ereditato `duplication_info` o `has_been_duplicated` senza essere copie
+- [ ] I record che hanno ereditato `duplication_info` o `has_been_duplicated` senza essere copie
       vengono ripulite di quelle chiavi
 - [ ] L'utente originale di ogni copia viene **ripristinato** da
       `duplication_info.parent_ugc_poi_user_id` prima dell'archiviazione, così l'archivio registra
@@ -202,7 +202,7 @@ package diventerebbero tre.
       (`fix-duplicated-ugc`, dry-run, lettura dei numeri, poi `--execute`) → **solo dopo**, e solo se
       serve, il raggruppamento per istante (`--by-timestamp`, dry-run e poi `--execute`). Il perché: fondendo
       una copia marcata dalla vecchia bonifica, le chiavi `duplicated`, `duplication_info` e
-      `has_been_duplicated` passerebbero sulla scheda tenuta, e la sanatoria non la ripulirebbe più (esclude
+      `has_been_duplicated` passerebbero sul record tenuto, e la sanatoria non la ripulirebbe più (esclude
       ogni riga con la chiave `duplicated`): un record legittimo resterebbe marcato per sempre. Per questo
       `fix-duplicated-ugc` **si ferma con un errore**, in dry-run come con `--execute`, se in `ugc_pois`
       esistono ancora righe con `properties->duplicated`
@@ -219,16 +219,16 @@ package diventerebbero tre.
 
 **Fotografie sulle copie marcate dalla vecchia bonifica: il danno non c'è.** Le fotografie
 attaccate alle copie marcate sono **536**, su **295 copie** (app 1: 388, app 3: 148), e **nessuna
-copia ha fotografie mentre la scheda tenuta ne è priva**: ogni scheda tenuta che ha copie
+copia ha fotografie mentre il record tenuto ne è priva**: ogni record tenuto che ha copie
 fotografate ha già fotografie proprie (535 su 536 hanno anche un media della stessa dimensione sul
 padre). Quindi nessun cliente sta perdendo immagini: la sanatoria le sposta perché è giusto che
-stiano sulla scheda che resta, non per recuperare qualcosa di perso. Il numero «102 fotografie
+stiano sul record che resta, non per recuperare qualcosa di perso. Il numero «102 fotografie
 rimaste sulle copie», usato nelle versioni precedenti di questo documento, non è riproducibile da
 alcun conteggio ed è sbagliato.
 
-**Perdita di fotografie durante la bonifica ordinaria.** In 57 gruppi su 77 la scheda più vecchia —
+**Perdita di fotografie durante la bonifica ordinaria.** In 57 gruppi su 77 il record più vecchio —
 quella che il command tiene — non ha fotografie, e sui duplicati ce ne sono **139**. Se la bonifica
-non spostasse i media, il cliente vedrebbe schede singole ma senza foto, cioè un danno peggiore di
+non spostasse i media, il cliente vedrebbe record singoli ma senza foto, cioè un danno peggiore di
 quello segnalato. Il command attuale i media li sposta (`FixDuplicatedUgcPois.php:386`), ma solo
 con `--execute` e solo dopo lo scarto per hash. Mitigazione: `moveMedia` sposta i file **prima** del `DELETE`, dentro la stessa
 transazione; al momento della cancellazione le copie non hanno più media agganciati. Le foto
@@ -262,7 +262,7 @@ prima di eseguire. La regola regge finché le copie arrivano dopo l'originale: s
 il contrario, assegnerebbe il rilevamento al dev.
 
 **Cambiamento di comportamento visibile dall'app.** Un client che oggi riceve sempre un `201` con
-un id nuovo comincerà a ricevere l'id della scheda esistente. È il comportamento voluto, ma va
+un id nuovo comincerà a ricevere l'id del record esistente. È il comportamento voluto, ma va
 verificato che l'app lo gestisca: è già in produzione su camminiditalia dal 7 ottobre senza
 problemi segnalati.
 
@@ -270,7 +270,7 @@ problemi segnalati.
 Là il reinvio porta con sé tutte le fotografie; qui `10830` — reinvio del 25 ottobre — arriva
 **senza**. I test vanno rifatti su questo caso, non dati per buoni da là.
 
-**La sanatoria tocca record già manipolati una volta.** Sono 660 copie marcate e 462 schede con
+**La sanatoria tocca record già manipolati una volta.** Sono 660 copie marcate e 462 record con
 chiavi ereditate, su tutti gli app_id, non solo AcquaSorgente. Le informazioni su cui si basa il
 recupero — `duplication_info.parent_ugc_poi_id` — sono state scritte dalla versione precedente del
 command e non sono state verificate: una copia il cui padre è stato nel frattempo cancellato, o il
@@ -301,7 +301,7 @@ custom, così all'aggiornamento si elimina il primo strato senza toccare il seco
 - **Il difetto in `wm-package`**: già corretto in oc:8718, non si tocca. Qui si fa solo il porting.
 - **Il raggruppamento per istante di compilazione nel package**: su camminiditalia tutti i
   rilevamenti hanno l'uuid (0 su 369), quindi là non servirebbe a nulla.
-- **Il retry lato app**: `saveApiPoi` tratta ogni errore come `null` e rimanda la scheda. Si
+- **Il retry lato app**: `saveApiPoi` tratta ogni errore come `null` e rimanda il record. Si
   interviene sul server, che è l'unico lato che possiamo correggere senza una nuova versione
   dell'app.
 - **La correzione di `db:download`**, che cerca il dump in un percorso che non esiste più

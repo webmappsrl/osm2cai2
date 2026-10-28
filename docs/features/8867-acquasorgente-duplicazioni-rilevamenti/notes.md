@@ -26,13 +26,13 @@ settembre 14, agosto 18, luglio 15, giugno 28, maggio 21.
 **162 POI, 0 tracce**. Su AcquaSorgente: 38 certi, 9 sospetti (manca anche `createdAt`), su 153
 rilevamenti `device` senza uuid; i restanti 106 sono rilevamenti unici senza doppioni.
 
-**Fotografie a rischio**: in 57 gruppi su 77 di AcquaSorgente la scheda più vecchia non ha foto,
+**Fotografie a rischio**: in 57 gruppi su 77 di AcquaSorgente il record più vecchio non ha foto,
 e sui duplicati ce ne sono 139.
 
 **Eredità della vecchia bonifica**: 660 copie marcate `properties.duplicated` e riassegnate
-all'utente 7736, 462 schede con `duplication_info` ereditato per errore, **536 fotografie
+all'utente 7736, 462 record con `duplication_info` ereditato per errore, **536 fotografie
 attaccate alle copie** (su 295 copie; app 1: 388, app 3: 148). Zero copie hanno fotografie mentre la
-scheda tenuta ne è priva: il danno «schede senza foto» non esiste in questi dati. (Il «102
+record tenuto ne è priva: il danno «record senza foto» non esiste in questi dati. (Il «102
 fotografie rimaste sulle copie» scritto prima era un conteggio errato, non riproducibile.) Dei 660
 padri, 658 esistono ancora; le 2 copie senza padre (`506`, `513`, app 1, senza foto, utente
 originale 96) sono l'unico superstite del loro gruppo e la sanatoria le restituisce all'autore
@@ -55,7 +55,7 @@ android, 19 su 43 su ios — contro il 5% della 3.1.8 e lo 0,6% della 3.0.4. In 
    → `NULL`, geojson al primo livello → l'uuid.
 4. Per le **tracce** non c'è nemmeno il tentativo: `UgcTrackController::getModelIstance()` fa
    `return new UgcTrack` e basta.
-5. Il reinvio nasce dall'app: in `_pushUgcPois` la scheda esce dalla coda solo `if (res)`, e
+5. Il reinvio nasce dall'app: in `_pushUgcPois` il record esce dalla coda solo `if (res)`, e
    `saveApiPoi` ha `catchError(_ => of(null))`, quindi ogni errore diventa un reinvio.
 
 Caso del ticket: `10828` e `10830`, stesso uuid, stesso `createdAt` **e** stesso `updatedAt`
@@ -205,8 +205,8 @@ Qui sotto, per brevità, è scritto solo `<comando>`. Le query SQL si lanciano i
 
 **La sanatoria va prima della bonifica.** `UgcDuplicatesService::SERVER_PROPERTY_KEYS` protegge dal merge
 solo `id`, `created_at`, `updated_at`, `taxonomy_where`, `taxonomyWheres`: fondendo una copia marcata dalla
-vecchia bonifica, le chiavi `duplicated`, `duplication_info` e `has_been_duplicated` passano sulla scheda
-tenuta. Quella scheda poi non si ripulisce più, perché `ripulisciChiaviEreditate()` esclude per costruzione
+vecchia bonifica, le chiavi `duplicated`, `duplication_info` e `has_been_duplicated` passano sul record
+tenuta. Quella record poi non si ripulisce più, perché `ripulisciChiaviEreditate()` esclude per costruzione
 ogni riga che porti la chiave `duplicated`: un record legittimo resta marcato in modo permanente. Per questo
 `osm2cai:fix-duplicated-ugc` ha una guardia: se in `ugc_pois` esiste anche una sola riga con la chiave
 `properties->duplicated` (di qualunque valore) esce con errore e non fa nulla, **sia in dry-run sia con
@@ -253,12 +253,12 @@ realizzati.
 | Media con sha256 | 0 | 0 | 0 |
 
 - **Dry-run, numeri annunciati**: sanatoria 660 copie marcate (658 da sanare, 2 orfane `506`/`513`),
-  536 media sulle copie, 462 schede da ripulire; bonifica per uuid 192 gruppi, **252** record in
+  536 media sulle copie, 462 record da ripulire; bonifica per uuid 192 gruppi, **252** record in
   eccesso (POI 174 + tracce 78), di cui **249 da unire** (189 gruppi: 128 di POI, 61 di tracce) e 3
   gruppi da verificare per padre senza utente (`235`/`419`, `302`/`320`, `286`/`336`, tracce). Il dry-run
   della bonifica rifatto dopo la sanatoria è risultato **identico** a quello di prima.
 - **Realizzato**: 658 copie archiviate e cancellate (0 fallite), 2 orfane ripristinate come rilevamenti
-  normali dell'utente 96, 462 schede ripulite, utente 7736 eliminato; poi 189 gruppi uniti, 249 record
+  normali dell'utente 96, 462 record ripuliti, utente 7736 eliminato; poi 189 gruppi uniti, 249 record
   cancellati (174 POI + 75 tracce), 3 gruppi lasciati com'erano (le 6 tracce esistono ancora).
 - **I record cancellati sono esattamente quelli annunciati**: l'insieme degli id spariti da
   `ugc_pois`/`ugc_tracks` (907) coincide con quello di `ugc_duplicates_archive`, e i 249 della bonifica
@@ -302,7 +302,7 @@ realizzati.
   senza uuid né device né `createdAt`, in arrivo fino al 23/10/2026. Non si duplicano mai. Da dove
   entrino non è stato determinato. Ticket a sé.
 - **Perché 153 rilevamenti `device` sono senza uuid**: fenomeno esaurito, ultimo caso il
-  28/06/2026, su tutte le versioni e piattaforme. Ipotesi non verificata: schede create da
+  28/06/2026, su tutte le versioni e piattaforme. Ipotesi non verificata: record creati da
   versioni che l'uuid non lo generavano, rimaste in coda. Si può verificare nel repo dell'app.
 - **Le fotografie rimaste sulle copie marcate (536)**: la causa esatta non è provata. Si saprebbe leggendo il log
   del canale `ugc` in produzione.

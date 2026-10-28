@@ -18,7 +18,7 @@ use Wm\WmPackage\Services\BaseService;
  * Il rischio da evitare è la fusione di monitoraggi legittimi: una sorgente d'acqua viene rilevata
  * più volte nel tempo, dallo stesso utente e nello stesso punto (1.121 coppie in produzione, anche
  * una al mese per un anno). Utente e posizione da soli le unirebbero, cancellando una serie storica.
- * L'istante di compilazione resta identico nei reinvii della stessa scheda e cambia sempre fra due
+ * L'istante di compilazione resta identico nei reinvii dello stesso rilevamento e cambia sempre fra due
  * monitoraggi distinti (verificato su 174 coppie di duplicati e 1.121 di monitoraggi, zero falsi
  * positivi). Per questo un record senza createdAt non viene mai unito a nessuno.
  *
@@ -44,7 +44,7 @@ class UgcDuplicatesByTimestampService extends BaseService
 
         // Sono esclusi i record senza uuid E senza istante (createdAt assente o vuoto), quelli senza
         // utente e quelli senza geometria: senza uno dei tre elementi del criterio non si può dire
-        // che due record siano la stessa scheda. La geometria deve coincidere esattamente.
+        // che due record siano lo stesso rilevamento. La geometria deve coincidere esattamente.
         // Sono esclusi anche i record marcati properties.duplicated: sono copie già trattate dalla
         // vecchia bonifica, il loro padre vero è quello indicato da duplication_info e le riunisce
         // la sanatoria; fonderle fra loro lascerebbe il padre senza le sue fotografie. Così i due

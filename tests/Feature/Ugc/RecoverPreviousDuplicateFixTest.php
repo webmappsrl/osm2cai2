@@ -19,7 +19,7 @@ use Wm\WmPackage\Models\User;
 /**
  * STRATO 2 di oc:8867: il command osm2cai:recover-previous-duplicate-fix sana lo stato lasciato dalla
  * bonifica precedente (copie marcate duplicated, riassegnate all'utente di servizio, con le foto
- * ancora attaccate e le chiavi ereditate dalle schede tenute).
+ * ancora attaccate e le chiavi ereditate dagli UgcPoi tenuti).
  */
 class RecoverPreviousDuplicateFixTest extends TestCase
 {
@@ -156,7 +156,7 @@ class RecoverPreviousDuplicateFixTest extends TestCase
         $this->assertNotSame($this->servizio->id, (int) $archiviata->user_id);
     }
 
-    public function test_ripulisce_le_chiavi_ereditate_dalle_schede_che_non_sono_copie()
+    public function test_ripulisce_le_chiavi_ereditate_dagli_ugc_poi_che_non_sono_copie()
     {
         $erede = $this->creaPoi([
             'uuid' => 'erede',
@@ -179,8 +179,8 @@ class RecoverPreviousDuplicateFixTest extends TestCase
         $this->assertSame(['uuid' => 'pulita'], $proprieta($pulita));
         $this->assertSame(['x' => 1], $proprieta($falsa)['duplication_info']);
         $this->assertSame($primaStringa, $this->riga($stringa), 'un duplicated stringa non è copia riconosciuta e non si tocca');
-        $this->assertStringContainsString('2 schede hanno la chiave duplicated', $output);
-        $this->assertNotNull(UgcPoi::find($erede->id), 'la scheda non si cancella');
+        $this->assertStringContainsString('2 UgcPoi hanno la chiave duplicated', $output);
+        $this->assertNotNull(UgcPoi::find($erede->id), 'il record non si cancella');
     }
 
     public function test_una_copia_orfana_con_utente_originale_valido_viene_sanata_e_non_cancellata()

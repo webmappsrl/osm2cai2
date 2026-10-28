@@ -200,7 +200,7 @@ class FixDuplicatedUgcCommand extends Command
     /**
      * Guardia sull'ordine di esecuzione. Se in ugc_pois restano righe con la chiave
      * properties->duplicated (la vecchia bonifica), la sanatoria deve girare prima: fondendo una copia
-     * marcata le sue chiavi (duplicated, duplication_info, has_been_duplicated) passano sulla scheda
+     * marcata le sue chiavi (duplicated, duplication_info, has_been_duplicated) passano sul record
      * tenuta, che poi la sanatoria non ripulisce più (esclude per costruzione ogni riga con la chiave
      * duplicated). Il risultato sono record legittimi marcati in modo permanente.
      *
@@ -231,7 +231,7 @@ class FixDuplicatedUgcCommand extends Command
 
         $this->error('In '.implode(', ', $tabelle)." ci sono ancora {$marcate} righe con la chiave properties.duplicated (copie lasciate dalla vecchia bonifica).");
         $this->error('Esegui prima la sanatoria: php artisan osm2cai:recover-previous-duplicate-fix (dry-run) e poi con --execute.');
-        $this->line('Fondere ora le copie marcate farebbe passare duplicated, duplication_info e has_been_duplicated sulle schede tenute, e la sanatoria non le ripulirebbe più.');
+        $this->line('Fondere ora le copie marcate farebbe passare duplicated, duplication_info e has_been_duplicated sui record tenuti, e la sanatoria non le ripulirebbe più.');
         $this->line('Se dopo la sanatoria restano righe con la chiave duplicated (valore diverso dal boolean true) vanno riviste a mano: la sanatoria non le tocca.');
         Log::channel('duplicated-ugc')->warning('osm2cai:fix-duplicated-ugc fermato: copie marcate duplicated ancora presenti', ['righe' => $marcate]);
 

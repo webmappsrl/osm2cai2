@@ -137,7 +137,7 @@ class UgcDuplicatesByTimestampTest extends TestCase
 
     public function test_i_record_senza_uuid_e_senza_istante_non_vengono_mai_uniti()
     {
-        // Né uuid né createdAt (assente, vuoto o null): non c'è nulla che dica che siano la stessa scheda.
+        // Né uuid né createdAt (assente, vuoto o null): non c'è nulla che dica che siano lo stesso rilevamento.
         $this->creaPoi(null, '2026-01-01 10:00:00');
         $this->creaPoi(null, '2026-01-02 10:00:00');
         $this->creaPoi('', '2026-01-03 10:00:00');

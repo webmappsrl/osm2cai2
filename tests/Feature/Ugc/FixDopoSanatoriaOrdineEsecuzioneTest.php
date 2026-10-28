@@ -17,7 +17,7 @@ use Wm\WmPackage\Models\User;
  * STRATO 2 di oc:8867: l'ordine di esecuzione dei due command è vincolante. La sanatoria
  * (osm2cai:recover-previous-duplicate-fix) va prima della bonifica (osm2cai:fix-duplicated-ugc): fondendo una
  * copia marcata dalla vecchia bonifica le chiavi duplicated, duplication_info e has_been_duplicated
- * passerebbero sulla scheda tenuta, che la sanatoria non ripulisce più (esclude ogni riga con la chiave
+ * passerebbero sul record tenuto, che la sanatoria non ripulisce più (esclude ogni riga con la chiave
  * duplicated). La bonifica quindi si ferma, in dry-run come con --execute, finché ne restano.
  */
 class FixDopoSanatoriaOrdineEsecuzioneTest extends TestCase
@@ -84,7 +84,7 @@ class FixDopoSanatoriaOrdineEsecuzioneTest extends TestCase
         return $poi;
     }
 
-    /** Scheda tenuta e copia lasciata dalla vecchia bonifica: stesso uuid, copia marcata e dell'utente di servizio. */
+    /** Record tenuto e copia lasciata dalla vecchia bonifica: stesso uuid, copia marcata e dell'utente di servizio. */
     private function creaCoppiaDellaVecchiaBonifica(string $uuid): array
     {
         $padre = $this->creaPoi(['uuid' => $uuid, 'has_been_duplicated' => true, 'duplication_info' => ['copies' => 1]], null, '2026-01-01 10:00:00');
@@ -193,13 +193,13 @@ class FixDopoSanatoriaOrdineEsecuzioneTest extends TestCase
         $this->assertStringContainsString('Esegui prima la sanatoria', $output);
     }
 
-    public function test_nell_ordine_giusto_sanatoria_poi_bonifica_nessuna_scheda_tenuta_resta_marcata()
+    public function test_nell_ordine_giusto_sanatoria_poi_bonifica_nessun_record_tenuto_resta_marcato()
     {
         [$padre, $copia] = $this->creaCoppiaDellaVecchiaBonifica('uuid-vecchia');
         $a = $this->creaPoi(['uuid' => 'uuid-normale'], null, '2026-02-01 10:00:00');
         $b = $this->creaPoi(['uuid' => 'uuid-normale'], null, '2026-02-02 10:00:00');
 
-        // Prima la sanatoria: archivia la copia marcata e ripulisce la scheda tenuta.
+        // Prima la sanatoria: archivia la copia marcata e ripulisce il record tenuto.
         Artisan::call('osm2cai:recover-previous-duplicate-fix', ['--execute' => true]);
         $this->assertNull(UgcPoi::find($copia->id));
         $this->assertSame(0, $this->righeMarcate());
@@ -211,7 +211,7 @@ class FixDopoSanatoriaOrdineEsecuzioneTest extends TestCase
         $this->assertNotNull(UgcPoi::find($padre->id));
         $this->assertNull(UgcPoi::find($b->id));
         $this->assertNotNull(UgcPoi::find($a->id));
-        // Nessuna chiave della vecchia bonifica è passata su una scheda legittima.
+        // Nessuna chiave della vecchia bonifica è passata su un record legittimo.
         $this->assertSame(0, $this->righeMarcate());
     }
 

@@ -457,7 +457,7 @@ class FixDuplicatedUgcCommandTest extends TestCase
         $this->conHash($this->aggiungiFoto($padre, 'image_0.png'), 'hash-a');
         $doppione = $this->conHash($this->aggiungiFoto($copia, 'image_0.png'), 'hash-a');
         $nuova = $this->conHash($this->aggiungiFoto($copia, 'image_1.png'), 'hash-b');
-        // Un secondo doppione, ma di una foto che la scheda tenuta non ha: si sposta la prima, si scarta la seconda.
+        // Un secondo doppione, ma di una foto che il record tenuto non ha: si sposta la prima, si scarta la seconda.
         $altra = $this->creaPoi('uuid-foto', '2026-01-03 10:00:00');
         $this->conHash($this->aggiungiFoto($altra, 'image_2.png'), 'hash-b');
 
