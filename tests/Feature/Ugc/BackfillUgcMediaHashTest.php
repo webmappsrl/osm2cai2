@@ -98,6 +98,33 @@ class BackfillUgcMediaHashTest extends TestCase
         $this->assertNotNull($this->hashSalvato($duplicato));
     }
 
+    public function test_tratta_anche_le_copie_della_vecchia_bonifica_e_i_loro_padri()
+    {
+        // Queste copie non hanno un uuid duplicato: sono riconoscibili solo da properties.duplicated,
+        // e le guarda osm2cai:recover-previous-duplicate-fix. Se restassero fuori, i loro hash si
+        // calcolerebbero durante la sanatoria, cioè ad app ferma.
+        $comuni = [
+            'user_id' => User::factory()->create()->id,
+            'app_id' => App::factory()->create()->id,
+        ];
+        $padre = PackageUgcPoi::factory()->create($comuni + ['properties' => ['uuid' => (string) Str::uuid()]]);
+        $copia = PackageUgcPoi::factory()->create($comuni + ['properties' => [
+            'uuid' => (string) Str::uuid(),
+            'duplicated' => true,
+            'duplication_info' => ['parent_ugc_poi_id' => $padre->id],
+        ]]);
+
+        $mediaDelPadre = $this->mediaSenzaHash($padre, 'padre.png', 5);
+        $mediaDellaCopia = $this->mediaSenzaHash($copia, 'copia.png', 7);
+
+        $this->artisan('osm2cai:backfill-ugc-media-hash', ['--execute' => true])
+            ->expectsOutputToContain('Hash calcolati: 2. Falliti: 0.')
+            ->assertSuccessful();
+
+        $this->assertNotNull($this->hashSalvato($mediaDelPadre));
+        $this->assertNotNull($this->hashSalvato($mediaDellaCopia));
+    }
+
     public function test_non_ricalcola_quelli_che_ce_l_hanno_gia()
     {
         $media = $this->mediaSuUnDuplicato('a.png', 5);

@@ -8,6 +8,7 @@ use App\Services\UgcDuplicatesByTimestampService;
 use App\Services\UgcDuplicatesService;
 use App\Services\UgcMediaHashService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Wm\WmPackage\Models\Media;
@@ -93,8 +94,9 @@ class BackfillUgcMediaHashCommand extends Command
     }
 
     /**
-     * Id dei rilevamenti che fanno parte di un gruppo di duplicati, padri e copie: per uuid e per
-     * istante di compilazione, cioè i due criteri che la bonifica può usare.
+     * Id dei rilevamenti le cui fotografie verranno confrontate: i gruppi di duplicati per uuid e per
+     * istante di compilazione (osm2cai:fix-duplicated-ugc) e, per i soli UgcPoi, le copie lasciate
+     * dalla vecchia bonifica con i loro padri (osm2cai:recover-previous-duplicate-fix).
      *
      * @return int[]
      */
@@ -111,6 +113,36 @@ class BackfillUgcMediaHashCommand extends Command
             }
         }
 
-        return array_values(array_unique($ids));
+        return array_values(array_unique(array_merge($ids, $this->idsDellaVecchiaBonifica($modelClass))));
+    }
+
+    /**
+     * Copie marcate dalla vecchia bonifica e padri a cui la sanatoria le ricondurrà. Riguarda solo gli
+     * UgcPoi: le tracce non furono mai trattate da quella bonifica.
+     *
+     * @return int[]
+     */
+    private function idsDellaVecchiaBonifica(string $modelClass): array
+    {
+        if ($modelClass !== UgcPoi::class) {
+            return [];
+        }
+
+        // L'operatore jsonb ? va raddoppiato dentro una query con bind (regola di oc:7954).
+        $righe = DB::select("
+            SELECT id, properties->'duplication_info'->>'parent_ugc_poi_id' AS parent_id
+            FROM ugc_pois
+            WHERE properties ?? 'duplicated'
+        ");
+
+        $ids = [];
+        foreach ($righe as $riga) {
+            $ids[] = (int) $riga->id;
+            if (is_numeric($riga->parent_id)) {
+                $ids[] = (int) $riga->parent_id;
+            }
+        }
+
+        return $ids;
     }
 }
