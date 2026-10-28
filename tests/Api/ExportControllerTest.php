@@ -201,6 +201,37 @@ class ExportControllerTest extends TestCase
         $this->test_single_feature_endpoint('/api/v2/export/hiking-routes', HikingRoute::class);
     }
 
+    public function test_hiking_route_single_feature_export_does_not_expose_sicai_personal_data(): void
+    {
+        $hikingRoute = HikingRoute::factory()->createQuietly([
+            'osm2cai_status' => 4,
+            'geometry' => DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)"),
+            'properties' => ['sicai' => [
+                'referente' => ['name' => 'Mario Rossi', 'email' => 'mario@example.com'],
+                'referente_regionale' => 'Luigi Verdi',
+                'email_ref_regionale' => 'luigi@example.com',
+                'sezione_ref_regionale' => 'Sez. Test',
+                'sezioni_manutenzione' => 'Sez. A, Sez. B',
+                'sezione' => 'Sez. Tappa',
+                'percorribilità' => 'Percorribile',
+                'segnaletica' => 'Buona',
+            ]],
+        ]);
+
+        $response = $this->getJson('/api/v2/export/hiking-routes/'.$hikingRoute->id);
+        $response->assertStatus(200);
+        $sicai = $response->json('data.properties.sicai');
+
+        foreach (['referente', 'referente_regionale', 'email_ref_regionale', 'sezione_ref_regionale', 'sezioni_manutenzione'] as $key) {
+            $this->assertArrayNotHasKey($key, $sicai);
+        }
+        $this->assertSame('Sez. Tappa', $sicai['sezione']);
+        $this->assertSame('Percorribile', $sicai['percorribilità']);
+        $this->assertSame('Buona', $sicai['segnaletica']);
+        $this->assertStringNotContainsString('mario@example.com', $response->getContent());
+        $this->assertStringNotContainsString('luigi@example.com', $response->getContent());
+    }
+
     public function test_users_list(): void
     {
         $this->test_list_endpoint('/api/v2/export/users/list', User::class);
