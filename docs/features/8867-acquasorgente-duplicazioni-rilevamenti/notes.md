@@ -360,6 +360,34 @@ getta, non nel branch): le 592 che si cancellano sono lo stesso scatto già pres
 verifica visiva: ogni file cancellato continua a esistere, identico, nell'oggetto del media che resta
 attaccato al record tenuto. Il backup del database del passo 0 copre comunque le righe.
 
+## Collaudo delle fotografie sui file veri (28/10/2026)
+
+Nei primi collaudi nessuna fotografia veniva mai scartata: in locale i file non esistono su MinIO,
+quindi ogni hash falliva e il percorso «leggi dallo storage, calcola lo sha256, riconosci il doppione,
+cancella riga e file» non era mai stato eseguito per intero. Per chiuderlo sono stati copiati **da
+Aruba a MinIO** (lettura sola su Aruba) i file di un campione di gruppi scelto per coprire le
+casistiche: 10 gruppi con doppioni, 8 col padre senza fotografie proprie (solo spostamento, compreso
+il media `21177` da 19,7 MB caricato in multipart), 1 gruppo lasciato **di proposito senza file**.
+MinIO e Aruba usano lo stesso driver S3: cambia l'endpoint, non il codice.
+
+Esito su 45 media:
+
+| | |
+|---|---:|
+| cancellati (riga **e** file) | 13 |
+| spostati sull'UgcPoi tenuto | 19 |
+| rimasti dov'erano (del padre) | 13 |
+| incoerenze fra riga e file | 0 |
+
+- Ognuno dei 13 cancellati ha ancora il gemello vivo con il file presente (es. `21071` cancellato,
+  `16774` vivo sull'UgcPoi `8011`).
+- Il gruppo senza file (padre `9934`): i 4 media sono **vivi, senza hash, spostati sul padre**. È la
+  prova che un file illeggibile porta a spostare e mai a cancellare.
+- Gli sha256 salvati coincidono con quelli ricalcolati rileggendo i file, anche per il multipart.
+
+Nota di metodo: le scritture su MinIO fallivano in silenzio (`put()` restituisce `false` senza
+eccezione) perché il disco era pieno. Il controllo va fatto sui file, non sul valore di ritorno.
+
 ## Divergenze dello strato 1 rispetto a oc:8718
 
 Il codice di `store()`, `findExistingByUuid()`, `fillModelWithRequest()` e `UgcMediaHashService` è copiato

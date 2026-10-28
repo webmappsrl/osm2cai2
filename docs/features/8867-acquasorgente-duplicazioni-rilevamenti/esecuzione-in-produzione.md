@@ -78,16 +78,22 @@ copie marcate 660, utente di servizio 1 (id `7736`).
 sudo docker exec -it php81-osm2cai2 php artisan osm2cai:backfill-ugc-media-hash
 ```
 
-Senza `--execute` conta soltanto. Atteso: **~1.300**, non tutti i 13.087 media UGC — il command guarda
-solo i rilevamenti che fanno parte di un gruppo di duplicati, gli unici che la bonifica confronta.
+Senza `--execute` conta soltanto. Atteso: **~1.580**, non tutti i 13.087 media UGC — il command guarda
+solo i rilevamenti che la bonifica confronta: i gruppi di duplicati (per uuid e per istante) e le copie
+lasciate dalla vecchia bonifica con i loro padri. Sul dump erano esattamente 1.583.
 
 ### B2. Calcolo degli hash
 ```bash
 sudo docker exec -it php81-osm2cai2 php artisan osm2cai:backfill-ugc-media-hash --execute
 ```
 
-Legge quelle fotografie da Aruba per calcolarne lo sha256: **~2,6 GB, una decina di minuti**. Non tocca
-UgcPoi, UgcTrack, EcPoi: scrive solo `custom_properties.sha256` sui media, quindi l'app può restare su.
+Legge quelle fotografie da Aruba per calcolarne lo sha256: **~10 GB, una ventina di minuti** (i media
+coinvolti pesano in media 6,3 MB l'uno). Non tocca UgcPoi, UgcTrack, EcPoi: scrive solo
+`custom_properties.sha256` sui media, quindi l'app può restare su.
+
+Un media il cui file non si legge finisce fra i «falliti» e **resta senza hash**: più avanti verrà
+spostato sul padre e mai scartato. Un errore di lettura non si trasforma mai in una cancellazione —
+provato in locale lasciando di proposito un gruppo senza file (vedi notes.md, collaudo delle fotografie).
 
 Al termine stampa `Hash calcolati: N. Falliti: M.`
 
