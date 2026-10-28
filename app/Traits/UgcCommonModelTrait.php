@@ -4,12 +4,14 @@ namespace App\Traits;
 
 use App\Enums\ValidatedStatusEnum;
 use App\Models\EcPoi;
+use App\Models\UgcPoi;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Wm\WmPackage\Models\App;
 use Wm\WmPackage\Models\TaxonomyPoiType;
 
@@ -193,6 +195,12 @@ trait UgcCommonModelTrait
 
     /**
      * Controlla se esiste già un EC POI per questo UGC
+     *
+     * Prima cerca l'EcPoi che punta direttamente a questo id. Se non lo trova, e solo allora, risale
+     * dall'archivio della bonifica dei duplicati (oc:8867): se l'EcPoi era stato promosso da una copia
+     * poi cancellata, il suo `properties->ugc->ugc_poi_id` punta a un id che non esiste più, mentre il
+     * padre sopravvissuto risulterebbe "mai promosso" e si potrebbe promuovere una seconda volta.
+     * Si cambia solo la lettura: il riferimento storico dell'EcPoi non viene mai riscritto.
      */
     private function checkExistingEcPoi(): bool
     {
@@ -207,7 +215,62 @@ trait UgcCommonModelTrait
             return true;
         }
 
+        $viaArchivio = $this->findEcPoiViaDuplicatesArchive();
+
+        if ($viaArchivio) {
+            Log::warning('⚠️ EC POI già esistente per questo UGC (trovato attraverso l\'archivio dei duplicati)', [
+                'ugc_id' => $this->id,
+                'ec_poi_id' => $viaArchivio['ec_poi']->id,
+                'trovato_via_archivio' => true,
+                'original_id' => $viaArchivio['original_id'],
+            ]);
+
+            return true;
+        }
+
         return false;
+    }
+
+    /**
+     * Cerca un EcPoi promosso da una copia di questo UGC cancellata dalla bonifica dei duplicati.
+     *
+     * Vale solo per gli UgcPoi: `properties->ugc->ugc_poi_id` contiene un id di UgcPoi, quindi per le
+     * tracce un confronto con gli id archiviati darebbe falsi positivi fra tabelle diverse. Il filtro
+     * su model_type resta comunque, per non incrociare mai gli id di tabelle diverse nell'archivio.
+     *
+     * @return array{ec_poi: EcPoi, original_id: int}|null
+     */
+    private function findEcPoiViaDuplicatesArchive(): ?array
+    {
+        if (! $this instanceof UgcPoi) {
+            return null;
+        }
+
+        // Ambienti dove la migration dell'archivio non è ancora girata: si comporta come prima.
+        if (! Schema::hasTable('ugc_duplicates_archive')) {
+            return null;
+        }
+
+        $originalIds = DB::table('ugc_duplicates_archive')
+            ->where('model_type', $this->getMorphClass())
+            ->where('reference_id', $this->id)
+            ->pluck('original_id')
+            ->all();
+
+        if (empty($originalIds)) {
+            return null;
+        }
+
+        $ecPoi = EcPoi::whereIn('properties->ugc->ugc_poi_id', $originalIds)->first();
+
+        if (! $ecPoi) {
+            return null;
+        }
+
+        return [
+            'ec_poi' => $ecPoi,
+            'original_id' => (int) ($ecPoi->properties['ugc']['ugc_poi_id'] ?? 0),
+        ];
     }
 
     /**

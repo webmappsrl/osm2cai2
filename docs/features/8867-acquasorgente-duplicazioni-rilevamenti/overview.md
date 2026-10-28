@@ -290,6 +290,10 @@ custom, così all'aggiornamento si elimina il primo strato senza toccare il seco
   rilevamento non lo danneggia. Dove un gruppo di duplicati ha prodotto **due punti pubblicati**
   — succede, per esempio `19525` e `19527` dalla stessa sorgente — la scelta su quale tenere
   spetta a chi li ha promossi.
+  La bonifica non li riscrive ma il sistema ora **sa risalire al padre**: se l'EcPoi era stato
+  promosso da una copia cancellata, `checkExistingEcPoi()` lo trova attraverso
+  `ugc_duplicates_archive` e impedisce di promuovere di nuovo il padre sopravvissuto (vedi
+  `notes.md`, «EcPoi promossi da una copia poi cancellata»). Cambia la lettura, non il dato.
 - **Il difetto in `wm-package`**: già corretto in oc:8718, non si tocca. Qui si fa solo il porting.
 - **Il raggruppamento per istante di compilazione nel package**: su camminiditalia tutti i
   rilevamenti hanno l'uuid (0 su 369), quindi là non servirebbe a nulla.

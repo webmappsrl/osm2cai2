@@ -262,6 +262,18 @@ realizzati.
   azzera il riferimento nella prima e fa sparire le righe dei secondi. Esposizione attuale misurata: **zero
   record coinvolti** oggi. Il percorso però esiste, e un rilancio futuro su dati più vecchi lo incontrerebbe.
 
+- **EcPoi promossi da una copia poi cancellata**: dopo il collaudo sul dump 101 EcPoi hanno
+  `properties->ugc->ugc_poi_id` orfano; per 100 il padre è ricostruibile da `ugc_duplicates_archive` e per
+  **17** di questi il padre risulta non promosso, quindi un operatore potrebbe promuoverlo di nuovo creando
+  un secondo EcPoi per lo stesso punto (esempio: EcPoi `13522` «Sorgente SEC» punta all'UgcPoi `4079`,
+  cancellato; l'archivio dice `reference_id = 3759`, vivo). I dati non si toccano: cambia solo la lettura
+  in `UgcCommonModelTrait::checkExistingEcPoi()`, che se la ricerca diretta non trova nulla risale dagli
+  `original_id` archiviati con `reference_id = id` del POI (solo per gli UgcPoi, filtrando per
+  `model_type`; la query scatta solo in caso di mancato riscontro e senza la tabella si comporta come prima).
+  Il warning nel log indica `trovato_via_archivio` e l'`original_id`. Lo scopo è evitare la doppia promozione.
+  L'archivio va quindi **conservato** finché ci sono EcPoi con riferimenti orfani. Test:
+  `tests/Feature/Ugc/UgcEcPoiViaArchivioTest.php`.
+
 ## Divergenze dello strato 1 rispetto a oc:8718
 
 Il codice di `store()`, `findExistingByUuid()`, `fillModelWithRequest()` e `UgcMediaHashService` è copiato
