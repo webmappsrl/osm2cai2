@@ -22,7 +22,7 @@ class HikingRouteGeojsonDescriptionTest extends TestCase
 
     public function test_uses_sicai_percorribilita_and_sicai_data_when_present(): void
     {
-        $route = new HikingRoute();
+        $route = new HikingRoute;
         $route->properties = [
             'sicai' => [
                 'percorribilità' => '<b>OK</b>',
@@ -50,7 +50,7 @@ class HikingRouteGeojsonDescriptionTest extends TestCase
 
     public function test_falls_back_to_issues_fields_when_sicai_fields_are_missing(): void
     {
-        $route = new HikingRoute();
+        $route = new HikingRoute;
         $route->properties = ['sicai' => []];
         $route->issues_status = 'Praticabile';
         $route->issues_last_update = Carbon::create(2026, 4, 22);
@@ -69,7 +69,7 @@ class HikingRouteGeojsonDescriptionTest extends TestCase
 
     public function test_prefers_sicai_values_over_issues_values_when_both_are_present(): void
     {
-        $route = new HikingRoute();
+        $route = new HikingRoute;
         $route->properties = [
             'sicai' => [
                 'percorribilità' => 'Da SICAi',
@@ -96,7 +96,7 @@ class HikingRouteGeojsonDescriptionTest extends TestCase
 
     public function test_does_not_add_percorribilita_block_when_no_value_is_available(): void
     {
-        $route = new HikingRoute();
+        $route = new HikingRoute;
         $route->properties = [];
         $route->issues_status = null;
         $route->issues_last_update = null;
@@ -112,5 +112,25 @@ class HikingRouteGeojsonDescriptionTest extends TestCase
         $this->assertStringNotContainsString('Percorribilità:', $out['properties']['description']['it']);
         $this->assertStringNotContainsString('Ultimo aggiornamento:', $out['properties']['description']['it']);
     }
-}
 
+    public function test_filters_sicai_personal_data_regardless_of_app_id(): void
+    {
+        $route = new HikingRoute;
+        $route->app_id = 1;
+        $route->properties = ['sicai' => [
+            'referente' => ['name' => 'M', 'email' => 'm@example.com'],
+            'email_ref_regionale' => 'r@example.com',
+            'sezione' => 'S',
+        ]];
+
+        $out = $this->callEnhanceHikingRouteProperties($route, [
+            'type' => 'Feature',
+            'properties' => ['sicai' => $route->properties['sicai']],
+            'geometry' => null,
+        ]);
+
+        $this->assertArrayNotHasKey('referente', $out['properties']['sicai']);
+        $this->assertArrayNotHasKey('email_ref_regionale', $out['properties']['sicai']);
+        $this->assertSame('S', $out['properties']['sicai']['sezione']);
+    }
+}

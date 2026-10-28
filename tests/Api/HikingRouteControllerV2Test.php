@@ -403,4 +403,50 @@ class HikingRouteControllerV2Test extends TestCase
         $response->assertStatus(404)
             ->assertSee('No Hiking Route found with this id');
     }
+
+    private function createTestHikingRouteWithSicai($id, $osm_id, $status)
+    {
+        $hikingRoute = $this->createTestHikingRoute($id, $osm_id, $status);
+        $hikingRoute->updateQuietly(['properties' => ['sicai' => [
+            'referente' => ['name' => 'Mario Rossi', 'email' => 'mario@example.com'],
+            'referente_regionale' => 'Luigi Verdi',
+            'email_ref_regionale' => 'luigi@example.com',
+            'sezione_ref_regionale' => 'Sez. Test',
+            'sezioni_manutenzione' => 'Sez. A, Sez. B',
+            'sezione' => 'Sez. Tappa',
+            'percorribilità' => 'Percorribile',
+            'segnaletica' => 'Buona',
+        ]]]);
+
+        return $hikingRoute;
+    }
+
+    private function assertSicaiWithoutPersonalData($response): void
+    {
+        $response->assertStatus(200);
+        $sicai = $response->json('properties.sicai');
+
+        foreach (['referente', 'referente_regionale', 'email_ref_regionale', 'sezione_ref_regionale', 'sezioni_manutenzione'] as $key) {
+            $this->assertArrayNotHasKey($key, $sicai);
+        }
+        $this->assertSame('Sez. Tappa', $sicai['sezione']);
+        $this->assertSame('Percorribile', $sicai['percorribilità']);
+        $this->assertSame('Buona', $sicai['segnaletica']);
+        $this->assertStringNotContainsString('mario@example.com', $response->getContent());
+        $this->assertStringNotContainsString('luigi@example.com', $response->getContent());
+    }
+
+    public function test_hiking_route_show_does_not_expose_sicai_personal_data()
+    {
+        $hikingRoute = $this->createTestHikingRouteWithSicai(1, 12345, 3);
+
+        $this->assertSicaiWithoutPersonalData($this->get('/api/v2/hiking-route/'.$hikingRoute->id));
+    }
+
+    public function test_hiking_route_show_by_osm_id_does_not_expose_sicai_personal_data()
+    {
+        $this->createTestHikingRouteWithSicai(1, 12345, 3);
+
+        $this->assertSicaiWithoutPersonalData($this->get('/api/v2/hiking-route-osm/12345'));
+    }
 }

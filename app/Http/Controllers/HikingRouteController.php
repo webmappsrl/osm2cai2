@@ -902,11 +902,12 @@ class HikingRouteController extends Controller
             'geometry' => json_decode($geom, true),
         ];
 
-        // Espone eventuali dati aggiuntivi salvati in hiking_routes.properties (es. blocco "sicai")
-        if (is_array($hikingRoute->properties) && ! empty($hikingRoute->properties)) {
+        // Espone eventuali dati aggiuntivi salvati in hiking_routes.properties (es. blocco "sicai"), senza i dati personali dei referenti
+        $publicProperties = $hikingRoute->getPublicProperties();
+        if (! empty($publicProperties)) {
             $response['properties'] = array_merge(
                 $response['properties'],
-                $hikingRoute->properties
+                $publicProperties
             );
         }
 
