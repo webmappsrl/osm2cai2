@@ -1,7 +1,10 @@
 # oc:8867 — scaletta di esecuzione in produzione
 
-Ogni passo si lancia **da solo**, si guarda l'esito e solo allora si passa al successivo. Dove c'è
-scritto **STOP** ci si ferma e si decide insieme: nessun passo successivo parte in automatico.
+**Nessun passo parte senza il via libera esplicito di chi conduce.** Si lancia un passo alla volta, si
+legge l'esito insieme, si aspetta il sì e solo allora si passa al successivo: niente sequenze
+automatiche, niente «già che ci sono faccio anche il prossimo». Vale per tutti i passi, non solo per
+quelli marcati **STOP** — quelli sono i punti in cui, oltre al via libera, va presa una decisione sui
+numeri che si sono appena letti.
 
 Server: `netseven@195.231.60.153` (Aruba, infrastruttura CAI), progetto in `/var/www/html/osm2cai2`,
 container php `php81-osm2cai2`, container database `postgres-osm2cai2`. Il demone docker vuole `sudo`.
