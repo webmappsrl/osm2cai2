@@ -29,7 +29,7 @@ class ExportController extends Controller
     public function hikingRoutesList(): JsonResponse
     {
         /** @var Collection<int, HikingRoute> $hikingRoutes */
-        $hikingRoutes = HikingRoute::all('id', 'updated_at');
+        $hikingRoutes = HikingRoute::where('app_id', HikingRoute::OSM2CAI_APP_ID)->get(['id', 'updated_at']);
 
         $data = $hikingRoutes->mapWithKeys(function (HikingRoute $hikingRoute) {
             return [$hikingRoute->id => $hikingRoute->updated_at];

@@ -160,7 +160,9 @@ class EcPoiController extends Controller
      */
     public function indexByBufferFromHikingRouteOsmId(string $osmId, string $type)
     {
-        $hr = HikingRoute::where('osmfeatures_data->properties->osm_id', $osmId)->first();
+        $hr = HikingRoute::where('osmfeatures_data->properties->osm_id', $osmId)
+            ->where('app_id', HikingRoute::OSM2CAI_APP_ID)
+            ->first();
         $pois = EcPoi::whereRaw(
             'ST_DWithin(geometry, ?, 1000, true)',
             [$hr->geometry]

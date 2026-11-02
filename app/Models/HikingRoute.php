@@ -49,6 +49,9 @@ class HikingRoute extends EcTrack
 
     protected const CHECKPOINT_RADIUS = 6;
 
+    // app_id dei sentieri osm2cai: le tappe Sentiero Italia (SiHikingRoute, SiMTBRoute) hanno app_id 2
+    public const OSM2CAI_APP_ID = 1;
+
     protected $table = 'hiking_routes';
 
     protected $fillable = [
