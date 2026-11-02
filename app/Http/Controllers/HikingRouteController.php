@@ -792,7 +792,9 @@ class HikingRouteController extends Controller
     public function showByOsmId(int $osm_id)
     {
         try {
-            $hr = HikingRoute::where('osmfeatures_data->properties->osm_id', '=', $osm_id)->first();
+            $hr = HikingRoute::where('osmfeatures_data->properties->osm_id', '=', $osm_id)
+                ->where('app_id', HikingRoute::OSM2CAI_APP_ID)
+                ->first();
 
             if (is_null($hr)) {
                 return $this->notFoundResponse('No Hiking Route found with this id');
@@ -966,6 +968,7 @@ class HikingRouteController extends Controller
                     floatval($la1),
                 ])
                 ->whereIn('osm2cai_status', explode(',', $osm2cai_status))
+                ->where('app_id', HikingRoute::OSM2CAI_APP_ID)
                 ->get([
                     'id',
                     'osm2cai_status',

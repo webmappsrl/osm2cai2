@@ -14,6 +14,9 @@ class HikingRouteControllerV2Test extends TestCase
 {
     use DatabaseTransactions;
 
+    // app_id delle tappe Sentiero Italia (SiHikingRoute, SiMTBRoute)
+    private const SI_APP_ID = 2;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,10 +30,11 @@ class HikingRouteControllerV2Test extends TestCase
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
     }
 
-    private function createTestHikingRoute($id, $osm_id, $status, $geometry = null)
+    private function createTestHikingRoute($id, $osm_id, $status, $geometry = null, int $appId = HikingRoute::OSM2CAI_APP_ID)
     {
         return HikingRoute::createQuietly([
             'id' => $id,
+            'app_id' => $appId,
             'osm2cai_status' => $status,
             'updated_at' => now(),
             'source' => 'survey:CAI',
@@ -238,6 +242,27 @@ class HikingRouteControllerV2Test extends TestCase
             ]);
     }
 
+    public function test_hiking_route_show_by_osm_id_returns_trail_not_si_stage()
+    {
+        // La tappa SI va creata prima del sentiero: senza filtro su app_id la query restituirebbe la prima riga trovata
+        $osmId = 999000001;
+        $this->createTestHikingRoute(null, $osmId, 4, null, self::SI_APP_ID);
+        $trail = $this->createTestHikingRoute(null, $osmId, 4);
+
+        $response = $this->get("/api/v2/hiking-route-osm/{$osmId}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('properties.id', $trail->id);
+    }
+
+    public function test_hiking_route_show_by_osm_id_ignores_si_stage_without_trail()
+    {
+        $osmId = 999000002;
+        $this->createTestHikingRoute(null, $osmId, 4, null, self::SI_APP_ID);
+
+        $this->get("/api/v2/hiking-route-osm/{$osmId}")->assertStatus(404);
+    }
+
     public function test_hiking_route_index_by_bounding_box()
     {
         $hikingRoute = $this->createTestHikingRoute(1, 12345, 4);
@@ -265,6 +290,20 @@ class HikingRouteControllerV2Test extends TestCase
         $response = $this->get('/api/v2/hiking-routes-collection/bb/10.0,45.0,10.3,45.2/4');
 
         $response->assertStatus(200);
+    }
+
+    public function test_hiking_route_collection_by_bounding_box_excludes_si_stages()
+    {
+        $osmId = 999000003;
+        $stage = $this->createTestHikingRoute(null, $osmId, 4, null, self::SI_APP_ID);
+        $trail = $this->createTestHikingRoute(null, $osmId, 4);
+
+        // Riquadro attorno al punto (15, 15) della linea dell'helper, in una zona senza dati reali
+        $response = $this->get('/api/v2/hiking-routes-collection/bb/14.9,14.9,15.1,15.1/4');
+
+        $ids = collect($response->assertStatus(200)->json('features'))->pluck('properties.id');
+        $this->assertTrue($ids->contains($trail->id));
+        $this->assertFalse($ids->contains($stage->id));
     }
 
     public function test_hiking_route_show_returns_404_when_not_found()

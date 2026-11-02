@@ -196,6 +196,20 @@ class ExportControllerTest extends TestCase
         $this->test_list_endpoint('/api/v2/export/hiking-routes/list', HikingRoute::class);
     }
 
+    public function test_hiking_routes_list_excludes_si_stages(): void
+    {
+        $geometry = DB::raw("ST_GeomFromText('MULTILINESTRING((1 1, 2 2))', 4326)");
+        // app_id 2 = tappa Sentiero Italia
+        $stage = HikingRoute::factory()->createQuietly(['app_id' => 2, 'osm2cai_status' => 4, 'geometry' => $geometry]);
+        $trail = HikingRoute::factory()->createQuietly(['app_id' => HikingRoute::OSM2CAI_APP_ID, 'osm2cai_status' => 4, 'geometry' => $geometry]);
+
+        $response = $this->get('/api/v2/export/hiking-routes/list');
+
+        $response->assertStatus(200)
+            ->assertJsonMissingPath((string) $stage->id)
+            ->assertJsonPath((string) $trail->id, fn ($value) => $value !== null);
+    }
+
     public function test_hiking_routes_single_feature(): void
     {
         $this->test_single_feature_endpoint('/api/v2/export/hiking-routes', HikingRoute::class);
