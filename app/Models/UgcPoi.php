@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ValidatedStatusEnum;
+use App\Services\FlowRateParser;
 use App\Traits\UgcCommonModelTrait;
 use Wm\WmPackage\Models\UgcPoi as WmUgcPoi;
 use Wm\WmPackage\Services\GeometryComputationService;
@@ -48,29 +49,16 @@ class UgcPoi extends WmUgcPoi
     }
 
     /**
-     * Calculates the water flow rate based on raw data for UGC POIS ACQUASORGENTE
+     * Calculates the water flow rate for UGC POIS ACQUASORGENTE and stores it in raw_data
      *
-     * @return string
+     * @return float|string
      */
     public function calculateFlowRate()
     {
-        $rawData = $this->raw_data;
-        if (! is_array($rawData)) {
-            $rawData = is_string($rawData) ? json_decode($rawData, true) : [];
-            $rawData = is_array($rawData) ? $rawData : [];
-        }
-        $flowRate = 'N/A';
-
-        if ($this->water_flow_rate_validated == ValidatedStatusEnum::VALID->value) {
-            $volume = $this->formatNumericValue($rawData['range_volume'] ?? '');
-            $time = $this->formatNumericValue($rawData['range_time'] ?? '');
-
-            if (is_numeric($volume) && is_numeric($time) && $time != 0) {
-                $flowRate = round($volume / $time, 3);
-            }
-        }
+        $flowRate = $this->computeFlowRate();
 
         // Update raw_data with the calculated flow rate
+        $rawData = $this->getRawDataArray();
         $rawData['flow_rate'] = $flowRate;
         $this->raw_data = $rawData;
         $this->saveQuietly();
@@ -79,19 +67,47 @@ class UgcPoi extends WmUgcPoi
     }
 
     /**
-     * Formats a numeric value for calculation.
-     *
-     * @param  string  $value
-     * @return string
+     * Computes the water flow rate (L/s) without saving the model.
+     * Returns 'N/A' when the flow rate is not validated or the values are not interpretable.
      */
-    private function formatNumericValue($value)
+    public function computeFlowRate(): float|string
     {
-        if (strpos($value, '.') !== false) {
+        if ($this->water_flow_rate_validated != ValidatedStatusEnum::VALID->value) {
+            return 'N/A';
+        }
+
+        $volume = FlowRateParser::parseVolume($this->getFlowRateInput('range_volume'));
+        $time = FlowRateParser::parseTime($this->getFlowRateInput('range_time'));
+
+        if ($volume === null || $time === null || $time == 0) {
+            return 'N/A';
+        }
+
+        return round($volume / $time, 3);
+    }
+
+    /**
+     * Surveys sent by the app through wm-package keep the form data in properties.form,
+     * older surveys in raw_data.
+     */
+    private function getFlowRateInput(string $key): mixed
+    {
+        $value = $this->properties['form'][$key] ?? null;
+        if ($value !== null && trim((string) $value) !== '') {
             return $value;
         }
 
-        $value = preg_replace('/[^0-9,]/', '', $value);
+        return $this->getRawDataArray()[$key] ?? null;
+    }
 
-        return str_replace(',', '.', $value);
+    private function getRawDataArray(): array
+    {
+        $rawData = $this->raw_data;
+        if (! is_array($rawData)) {
+            $rawData = is_string($rawData) ? json_decode($rawData, true) : [];
+            $rawData = is_array($rawData) ? $rawData : [];
+        }
+
+        return $rawData;
     }
 }
