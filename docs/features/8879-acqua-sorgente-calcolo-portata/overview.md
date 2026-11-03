@@ -2,6 +2,85 @@
 
 # Acqua Sorgente - Calcolo portata
 
+Il ticket ha due cicli. Il secondo, qui sotto, si aggiunge al primo senza cambiarne il calcolo: il primo ciclo resta valido e descritto più in basso.
+
+# Ciclo 2 — Il motivo del N/A
+
+## Cosa cambia
+
+Quando la portata non si può calcolare, la scheda Nova della sorgente dice **perché**. Nel dettaglio e nel form di modifica il campo *Flow Rate L/s* passa da «N/A» a «N/A (motivo)». Nell'elenco Nova e nel dato salvato (`raw_data.flow_rate`) resta «N/A».
+
+| Caso | Schede nel DB locale* | Valore mostrato (it) |
+|---|---|---|
+| Portata non validata (`water_flow_rate_validated` ≠ valid) | — | N/A (portata non validata) |
+| Sorgente non attiva, volume e tempo vuoti | 79 | N/A (sorgente non attiva) |
+| Volume e tempo entrambi vuoti (sorgente attiva) | 128 | N/A (volume e tempo non inseriti) |
+| Solo volume vuoto | 5 | N/A (volume non inserito) |
+| Solo tempo vuoto | 2 | N/A (tempo non inserito) |
+| Volume non interpretabile (es. `1 litro2`) | 3 | N/A (volume non valido: inserire solo numeri) |
+| Tempo non interpretabile (es. `7s 80`) | 3 | N/A (tempo non valido: inserire solo numeri) |
+| Volume e tempo non interpretabili | 4 | N/A (volume e tempo non validi: inserire solo numeri) |
+| Tempo pari a zero | 2 | N/A (il tempo non può essere zero) |
+
+\* Schede `water` con portata validata: 1884, di cui 227 in N/A. «Sorgente attiva» si legge da `properties.form.active`, con fallback su `raw_data.active`.
+
+Esempio: scheda 8833, volume e tempo vuoti e portata `not_validated`. Oggi il dettaglio mostra «N/A»; dopo mostra «N/A (portata non validata; volume e tempo non inseriti)»: la portata non validata è sempre N/A, ma i problemi dei dati si elencano comunque, altrimenti comparirebbero solo dopo la validazione.
+
+| Dove | Prima | Dopo |
+|---|---|---|
+| Elenco Nova | N/A | N/A |
+| Dettaglio Nova | N/A | N/A (motivo) |
+| Form di modifica Nova (campo in sola lettura) | N/A | N/A (motivo); il testo di aiuto fisso resta invariato |
+| `raw_data.flow_rate` salvato, export, popup dell'overlay | N/A | N/A (invariati) |
+
+## Perché
+
+- **Scrum del 03/11** (trascrizione incollata dalla dev): Giuseppe Bonfanti chiede di rendere esplicito il N/A, perché chi ha scritto «1 litro2» non capisce perché la portata non c'è: «quell ND magari tra parentesi gli possiamo mettere la motivazione». La correzione del primo ciclo resta; in più si aggiunge un controllo all'inserimento nel form dell'app, in un ticket separato.
+- Il dato salvato resta «N/A» per non cambiare nulla per chi lo legge: l'overlay lo confronta con `!== 'N/A'` (`SourceSurveyController.php:345`) e gli export lo scrivono così com'è. Il motivo si calcola quando lo si mostra.
+- Nell'elenco il motivo non va perché la colonna è stretta; nel dettaglio va nel valore e non nel testo di aiuto, perché Nova 5 mostra l'aiuto solo nel form di modifica (verificato sulla scheda 8833 in locale).
+- Le sorgenti non attive hanno un motivo a parte perché lì non misurare è corretto: «volume e tempo non inseriti» farebbe pensare a una dimenticanza (challenge: 79 schede su 207 con volume e tempo vuoti).
+
+## Requisiti
+
+- [ ] Un solo metodo privato di `UgcPoi` fa tutti i controlli e restituisce insieme valore e motivo, senza salvare nulla. `computeFlowRate()` ne usa solo il valore: risultato e dato salvato restano identici a oggi.
+- [ ] Ordine dei motivi: «portata non validata» in testa se la portata non è validata, seguito dai problemi dei dati se ci sono; poi sorgente non attiva con volume e tempo vuoti; campi vuoti; valori non interpretabili; tempo zero. Quando volume e tempo hanno problemi diversi (uno vuoto, l'altro non interpretabile) i due motivi si uniscono con «; ».
+- [ ] «Vuoto» e «non interpretabile» si distinguono sul valore letto con la stessa regola del calcolo (`properties.form` con fallback su `raw_data`): vuoto se assente o stringa vuota dopo `trim`, non interpretabile se presente ma il parser restituisce `null`.
+- [ ] Il campo Nova *Flow Rate L/s* mostra «N/A (motivo)» nel dettaglio e nel form di modifica, «N/A» nell'elenco; i valori numerici non cambiano e il valore salvato resta «N/A».
+- [ ] Ogni motivo è una chiave inglese passata a `__()`, con traduzione in `lang/vendor/nova/it.json` e `lang/vendor/nova/en.json`.
+- [ ] Test unitari: un caso per ogni riga della tabella, il caso misto (volume vuoto e tempo non interpretabile) e il caso calcolabile (nessun motivo). Un test sul data provider dei valori reali del primo ciclo verifica che il motivo ci sia se e solo se la portata è «N/A». I test esistenti su `computeFlowRate()` restano invariati.
+- [ ] Verifica manuale in Nova locale, in italiano: dettaglio, modifica ed elenco della scheda 8833 e di una scheda per ciascun motivo.
+
+## Rischi
+
+- **Traduzioni in locale:** fino al 03/11 il locale non leggeva `lang/vendor/nova/*.json` per via di due cartelle vuote e non versionate in `resources/lang/`, che spostavano `lang_path()`; per questo la scheda 8833 mostrava «Flow Rate L/s». Cancellate con l'ok della dev: ora `__('Flow Rate L/s')` restituisce «Portata L/s». In produzione le cartelle non esistono, perché non sono in git.
+- **Calcolo e motivo divergenti:** gestito con un solo metodo per valore e motivo e con il test «motivo se e solo se N/A» (challenge).
+- **Il campo Nova scrive nel DB anche quando lo si mostra:** `calculateFlowRate()` fa `saveQuietly()` dentro `resolveUsing`, anche per ogni riga dell'elenco, e salva solo se il valore cambia. È il comportamento del primo ciclo e non cambia: il motivo non viene mai salvato.
+
+## Domande da riportare nel ticket del form per Alessandro
+
+Incongruenze notate durante l'analisi, estranee alla richiesta del 03/11. Non si toccano in questo ciclo: vanno nel ticket separato sul form dell'app, da aprire per Alessandro Peci a fine lavoro.
+
+1. **Popup dell'overlay** (`/api/v2/source_survey/overlay.geojson`): restituisce per ogni sorgente un riquadro HTML con la portata, ma nel repo e nelle configurazioni delle app non risulta chi lo mostra. Domanda per Alessandro Peci: dove compare, e se si usa ancora? Se sì, oggi mostra la portata salvata, che può essere vecchia (sul DB locale 18 schede su 2216, per esempio la 1602 con «15 L/s» invece di N/A), e non mostrerebbe il motivo.
+2. Lo stesso popup ha 8 label scritte a mano in italiano e «Conducibilitá» con l'accento sbagliato: portarle a `__()` e correggere l'accento?
+3. Nel dettaglio Nova *Flow Rate Validation* mostra il valore grezzo (`not_validated`) invece di una label leggibile. Va sistemato?
+4. La label del form dell'app «TEMPO DI RIEPIMENTO IN SECONDI» manca della L. Lo schema del form sta nel campo `poi_acquisition_form` della tabella `apps`: va corretto nel ticket del form?
+
+## Out of scope
+
+- **Controllo all'inserimento nel form dell'app** (volume e tempo numerici, aiuto «in litri», punto e virgola gestiti dal form): ticket separato da aprire per Alessandro Peci, deciso nello scrum del 03/11. Lo schema è in `apps.poi_acquisition_form`.
+- **Motivo nel popup dell'overlay e negli export**: il popup si valuta dopo la risposta di Alessandro nel ticket del form (domanda 1 qui sopra); gli export e il ricalcolo di `raw_data.flow_rate` nel ticket separato già previsto dal primo ciclo.
+
+## Moduli toccati
+
+Tutto nel repo principale `osm2cai2`, nessuna modifica a `wm-package`:
+
+- `app/Models/UgcPoi.php` — metodo unico per valore e motivo; `computeFlowRate()` ne usa il valore; metodo che compone «N/A (motivo)» per la visualizzazione
+- `app/Nova/SourceSurvey.php` — campo *Flow Rate L/s*: motivo nel dettaglio e nel form, «N/A» nell'elenco
+- `lang/vendor/nova/it.json`, `lang/vendor/nova/en.json` — chiavi dei motivi
+- `tests/Unit/Models/UgcPoiFlowRateTest.php` — test dei motivi e del legame motivo/N/A
+
+# Ciclo 1 — Calcolo della portata (approvato il 02/11/2026)
+
 ## Cosa cambia
 
 Nella scheda Nova delle sorgenti (`SourceSurvey`, form `water`) con *Validazione Portata* = **Valid**, il campo **Flow Rate L/s** (volume / tempo) mostra il valore corretto in due situazioni in cui oggi sbaglia:
