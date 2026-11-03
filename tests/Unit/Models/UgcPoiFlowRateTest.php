@@ -4,13 +4,22 @@ namespace Tests\Unit\Models;
 
 use App\Enums\ValidatedStatusEnum;
 use App\Models\UgcPoi;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
+use Tests\Unit\Services\FlowRateParserTest;
 
 /**
  * computeFlowRate() works on unsaved models: no database writes.
  */
 class UgcPoiFlowRateTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // the expected reasons are the Italian translations
+        app()->setLocale('it');
+    }
+
     private function makeSurvey(array $form = [], ?array $rawData = null, string $validated = 'valid'): UgcPoi
     {
         $poi = new UgcPoi;
@@ -103,5 +112,68 @@ class UgcPoiFlowRateTest extends TestCase
         $poi = $this->makeSurvey();
 
         $this->assertSame('N/A', $poi->computeFlowRate());
+    }
+
+    /**
+     * Reasons shown in Nova next to N/A (oc:8879, second cycle).
+     * Inputs come from real surveys of the local DB (id in the comment).
+     */
+    public static function reasonProvider(): array
+    {
+        return [
+            'not validated' => [['range_volume' => '1', 'range_time' => '10'], null, ValidatedStatusEnum::NOT_VALIDATED->value, 'N/A (portata non validata)'],
+            'not validated with data problems (8833)' => [['active' => 'yes'], null, ValidatedStatusEnum::NOT_VALIDATED->value, 'N/A (portata non validata; volume e tempo non inseriti)'],
+            'source not active (1084)' => [['active' => 'no'], null, ValidatedStatusEnum::VALID->value, 'N/A (sorgente non attiva)'],
+            'source not active but measured' => [['active' => 'no', 'range_volume' => '1', 'range_time' => '10'], null, ValidatedStatusEnum::VALID->value, 0.1],
+            'source not active read from raw_data' => [[], ['active' => 'NO'], ValidatedStatusEnum::VALID->value, 'N/A (sorgente non attiva)'],
+            'volume and time empty (1122)' => [['active' => 'yes'], null, ValidatedStatusEnum::VALID->value, 'N/A (volume e tempo non inseriti)'],
+            'volume empty (1831)' => [['range_time' => '4'], null, ValidatedStatusEnum::VALID->value, 'N/A (volume non inserito)'],
+            'time empty (1060)' => [['range_volume' => '1,5'], null, ValidatedStatusEnum::VALID->value, 'N/A (tempo non inserito)'],
+            'volume not interpretable (1337)' => [['range_volume' => "0'.5", 'range_time' => '5.90'], null, ValidatedStatusEnum::VALID->value, 'N/A (volume non valido: inserire solo numeri)'],
+            'time not interpretable (1166)' => [['range_volume' => '0,75', 'range_time' => 'Mezzo secondo'], null, ValidatedStatusEnum::VALID->value, 'N/A (tempo non valido: inserire solo numeri)'],
+            'both not interpretable (4510)' => [['range_volume' => 'lt1..', 'range_time' => '1 secondo e 50 cent'], null, ValidatedStatusEnum::VALID->value, 'N/A (volume e tempo non validi: inserire solo numeri)'],
+            'volume not interpretable and time empty (4610)' => [['range_volume' => "Impossibile determinazione stillicidio d'acqua"], null, ValidatedStatusEnum::VALID->value, 'N/A (volume non valido: inserire solo numeri; tempo non inserito)'],
+            'volume empty and time not interpretable' => [['range_time' => 'Mezzo secondo'], null, ValidatedStatusEnum::VALID->value, 'N/A (volume non inserito; tempo non valido: inserire solo numeri)'],
+            'source not active read from raw_data when blank in properties' => [['active' => ' '], ['active' => 'no'], ValidatedStatusEnum::VALID->value, 'N/A (sorgente non attiva)'],
+            'zero time (1449)' => [['range_volume' => '0', 'range_time' => '0'], null, ValidatedStatusEnum::VALID->value, 'N/A (il tempo non può essere zero)'],
+            'computable (197)' => [['range_volume' => '0,500', 'range_time' => '3'], null, ValidatedStatusEnum::VALID->value, 0.167],
+            'blank properties value falls back to raw_data' => [['range_volume' => ' ', 'range_time' => '10'], ['range_volume' => '2'], ValidatedStatusEnum::VALID->value, 0.2],
+        ];
+    }
+
+    #[DataProvider('reasonProvider')]
+    public function test_flow_rate_for_display_explains_na(array $form, ?array $rawData, string $validated, float|string $expected): void
+    {
+        $poi = $this->makeSurvey($form, $rawData, $validated);
+
+        $this->assertSame($expected, $poi->flowRateForDisplay());
+    }
+
+    /**
+     * On every real value of the parser providers, a reason is shown if and only if
+     * the flow rate is N/A, and otherwise the displayed value is the computed one.
+     */
+    public function test_reason_is_shown_if_and_only_if_flow_rate_is_na(): void
+    {
+        $cases = [];
+        foreach (FlowRateParserTest::volumeProvider() as $name => [$volume]) {
+            $cases["volume {$name}"] = ['range_volume' => $volume, 'range_time' => '10'];
+        }
+        foreach (FlowRateParserTest::timeProvider() as $name => [$time]) {
+            $cases["time {$name}"] = ['range_volume' => '1', 'range_time' => $time];
+        }
+
+        foreach ($cases as $name => $form) {
+            $poi = $this->makeSurvey($form);
+            $value = $poi->computeFlowRate();
+            $displayed = $poi->flowRateForDisplay();
+
+            if ($value === 'N/A') {
+                $this->assertIsString($displayed, $name);
+                $this->assertStringStartsWith('N/A (', $displayed, $name);
+            } else {
+                $this->assertSame($value, $displayed, $name);
+            }
+        }
     }
 }
