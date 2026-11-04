@@ -55,11 +55,21 @@ class SourceSurvey extends AbstractValidationResource
      */
     private function prepareSurveyFields(): array
     {
-        // Water flow rate field (calculated)
-        $flowRateField = Text::make(__('Flow Rate L/s'), 'raw_data->flow_rate')
+        // Water flow rate field (calculated): plain value in the index, where the column is narrow
+        $flowRateIndexField = Text::make(__('Flow Rate L/s'), 'raw_data->flow_rate')
             ->resolveUsing(function ($value) {
                 return $this->model()->calculateFlowRate();
             })
+            ->onlyOnIndex();
+
+        // In detail and form N/A is followed by the reason; the saved value stays N/A
+        $flowRateField = Text::make(__('Flow Rate L/s'), 'raw_data->flow_rate')
+            ->resolveUsing(function ($value) {
+                $this->model()->calculateFlowRate();
+
+                return $this->model()->flowRateForDisplay();
+            })
+            ->hideFromIndex()
             ->readonly()
             ->help(__('This data is calculated automatically based on the data entered'));
 
@@ -68,6 +78,7 @@ class SourceSurvey extends AbstractValidationResource
             ->options($this->validatedStatusOptions());
 
         return [
+            $flowRateIndexField,
             $flowRateField,
             $waterFlowRateValidatedField,
         ];
