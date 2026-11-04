@@ -92,6 +92,6 @@ Documentazione per chi tocca questo calcolo in futuro: [docs/knowledge/calcolo-d
 
 ## Follow-up
 
-- Ticket separato «Export sorgenti allineati ai dati wm-package»: 433 schede validate con `form_id` vuoto escluse da GeoJSON/GPX/KML/shapefile; `range_volume` letto solo da `raw_data`; portata esportata con l'etichetta `range_time`; `raw_data.flow_rate` salvato e non aggiornato (ricalcolo al salvataggio e comando di ricalcolo).
+- Ticket separato «Export sorgenti allineati ai dati wm-package» (**per il GeoJSON `survey.geojson` risolto in oc:8868**: schede con `form_id` vuoto incluse, valori da `properties.form`, portata ricalcolata; restano GPX, KML e shapefile): 433 schede validate con `form_id` vuoto escluse da GeoJSON/GPX/KML/shapefile; `range_volume` letto solo da `raw_data`; portata esportata con l'etichetta `range_time`; `raw_data.flow_rate` salvato e non aggiornato (ricalcolo al salvataggio e comando di ricalcolo).
 - Dopo il deploy: aprire la scheda 10296 in produzione e verificare il valore.
 - Dopo il deploy: aprire in produzione le schede 1110, 1602 e 4669 e controllare che mostrino `N/A` (vedi [Schede che passano da un numero a N/A](#schede-che-passano-da-un-numero-a-na)).

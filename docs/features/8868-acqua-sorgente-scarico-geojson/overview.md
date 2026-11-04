@@ -2,65 +2,98 @@
 
 # Acqua Sorgente - Scarico GeoJson
 
-# Ciclo 2 — Data di registrazione nel GeoJSON (04/11/2026)
+# Ciclo 2 — GeoJSON delle sorgenti: tutti i rilievi validati e data della misura (04/11/2026)
 
 ## Cosa cambia
 
-Ogni sorgente del file `/api/v2/source_survey/survey.geojson` ha un campo in più, `date`: la data e l'ora in cui è stata fatta la misura alla sorgente. Il resto del file non cambia: stessi rilievi (validati, `form_id = 'water'`), stessi campi, stesso ordine.
+Il file `/api/v2/source_survey/survey.geojson` cambia in due punti:
+
+1. **Restituisce tutti i rilievi validati che Nova mostra come validi.** Oggi prende solo quelli con `form_id = 'water'`; dopo prende anche quelli con `form_id` vuoto e `properties.form.id = 'water'`, cioè tutti i rilievi inviati dall'app dalla sera del 27/10/2025. I valori di misura di questi rilievi (temperatura, conducibilità, volume, `active`, `info`, portata) si leggono da `properties.form`, dove l'app li salva.
+2. **Ogni sorgente ha il campo `date`**: la data e l'ora in cui è stata fatta la misura.
+
+Per i rilievi che il file restituisce già oggi, i valori diventano quelli che Nova mostra nel pannello «Form»: dove la copia in `raw_data` era diversa il valore cambia: sul DB locale `info` in 894 sorgenti (da `N/A` al testo del form), `temperature` in 30, `range_volume` in 17, `conductivity` e `active` in una ciascuno.
 
 ## Perché
 
-Il 03/11 Matteo Nigro ha aggiunto alla richiesta: «Servirebbe che nel file geojson ci fosse anche la data di registrazione, altrimenti è difficile gestire le serie di dati nel tempo». Allo scrum del 04/11 Alessio Piccioli ha deciso di farla («quel dato lì è fondamentale […] facciamolo assolutamente sì») e Giuseppe Bonfanti ha chiesto di farla prima di riprendere l'errore dell'export («concentrati su inserire la data di registrazione […] appena l'hai fatto vediamo assieme il problema del che dà errore»).
+### Rilievi mancanti
 
-Nessuno ha detto in quale file né quale data. L'interpretazione di questo ciclo è scritta come domanda aperta per Alessandro Peci nelle note dev del ticket (04/11):
+Il 04/11 alle 14:06 Matteo Nigro, il cliente, ha scritto nella richiesta del ticket: «in questi giorni ho validato parecchi punti e nonostante questo il geojson che si scarica dal link a cui mi riferivo non pare essersi aggiornato. al momento risultano ca. 2900 POI in stato di validazione = valid, tuttavia il geojson arriva solo a 2107».
+
+La causa è il filtro: il file usa `form_id = 'water'` (`app/Http/Controllers/SourceSurveyController.php:92`), Nova `form_id = 'water'` **oppure** `properties->form->id = 'water'` (`app/Nova/AbstractValidationResource.php:22-26`). Sul DB locale (dump fermo al 09/03/2026):
+
+| Rilievi validati | Quanti | Dal | Al |
+|---|---|---|---|
+| con `form_id = 'water'` (nel file) | 2216 | 28/12/2023 | 27/10/2025 00:38 |
+| con `form_id` vuoto e `properties.form.id = 'water'` (esclusi) | 434 | 27/10/2025 19:01 | 09/03/2026 |
+
+In produzione la differenza è di circa 800 (2895 validi in Nova, 2107 nel file). Nella call del pomeriggio del 04/11 Alessandro Peci ha deciso di correggerlo in questo ciclo: le feature del GeoJSON devono essere le stesse che si vedono validate in Nova, con i dati conformi a come Nova li mostra.
+
+Nei 434 rilievi esclusi `raw_data` contiene solo `flow_rate`: temperatura, conducibilità, volume, tempo, `active` e `info` sono in `properties.form`. Leggendo solo `raw_data` il file mostrerebbe `N/A`.
+
+### Data della misura
+
+Il 03/11 alle 17:27 Matteo Nigro ha aggiunto nella richiesta del ticket: «Servirebbe che nel file geojson ci fosse anche la data di registrazione, altrimenti è difficile gestire le serie di dati nel tempo». Allo scrum del 04/11 Alessio Piccioli ha deciso di farla («quel dato lì è fondamentale […] facciamolo assolutamente sì») e Giuseppe Bonfanti ha chiesto di farla prima di riprendere l'errore dell'export («concentrati su inserire la data di registrazione […] appena l'hai fatto vediamo assieme il problema del che dà errore»).
+
+Interpretazione, scritta nelle note dev del ticket e letta da Alessandro nella call del 04/11:
 
 - **file:** `survey.geojson`, l'unico GeoJSON che il cliente cita e usa; l'export Nova produce Excel/CSV;
 - **data:** quella della misura, non quella di arrivo nel DB, perché serve a ordinare nel tempo più misure della stessa sorgente.
 
 ### Da dove si prende la data (verificato sul DB locale)
 
-Oggi il file non espone nessuna data (`app/Http/Controllers/SourceSurveyController.php:107-117`). `created_at` non è la data della misura: è quella in cui il rilievo è arrivato nel DB. Per esempio il rilievo 7253 ha la misura nel 2024 e `created_at` al 25/09/2025, giorno dell'importazione.
+Oggi il file non espone nessuna data (`app/Http/Controllers/SourceSurveyController.php:107-117`).
 
-Sui 2216 rilievi che il file restituisce in locale:
+- `properties.createdAt`: data del dispositivo al momento del rilievo, salvata dall'app attuale (millisecondi, es. `2026-03-09T09:05:26.687Z`).
+- `raw_data.date`: la stessa data, salvata dall'app vecchia. Da giugno 2025 compare solo in 5 rilievi. `properties.form.date`, quando c'è, coincide con `raw_data.date`.
+- `created_at`: momento di arrivo nel DB (invio dall'app o importazione). Sui 973 rilievi in cui si può confrontare con `properties.createdAt`, lo scarto mediano è di 1,6 giorni: 67% entro una settimana, 25% fra 8 e 30 giorni, 8% oltre un mese.
 
-| Fonte della data | Rilievi |
-|---|---|
-| `raw_data.date` | 805 |
-| solo `properties.createdAt` (data dell'app al rilievo) | 623 |
-| nessuna data della misura, resta `created_at` | 788 |
+**Ordine** (deciso con Alessandro Peci, call del 04/11: «inverti solo quei due […] adesso tanto l'app la mette lì»): `properties.createdAt`, poi `raw_data.date`, poi `created_at`. L'ordine dei primi due conta solo per i 3 rilievi che le hanno entrambe (7252, 7253, 7254, importati il 25/09/2025, con `createdAt` a microsecondi zero): nel 7252 la data passa dal 02/09 al 03/09/2024. Effetto accettato.
 
-`properties.form.date`, quando c'è, coincide con `raw_data.date` (nessun rilievo ha solo quella).
+**Ripiego su `created_at`** (decisione della dev): meglio una data approssimata di qualche giorno che nessuna data, perché un rilievo senza data non si colloca nella serie. La risposta al cliente dirà che per i rilievi salvati senza la data del dispositivo la data è quella di arrivo sul server.
 
 ## Requisiti
 
-- [ ] Nel GeoJSON ogni feature ha la property `date`, in formato ISO 8601 (es. `2024-08-11T12:46:11+00:00`)
-- [ ] La data si prende da `raw_data.date`, poi `properties.createdAt`, poi `created_at`, in un solo metodo del modello `UgcPoi`, così chi la mostra altrove non può calcolarla diversamente
-- [ ] Una data non interpretabile non fa fallire il file: si passa alla fonte successiva
-- [ ] Il resto del GeoJSON resta identico (rilievi, campi esistenti, valori)
-- [ ] Test sul metodo con i casi delle tre fonti e della data non interpretabile
-- [ ] Rilascio in produzione solo dopo la risposta di Alessandro alle domande nelle note dev
+- [ ] Il file restituisce i rilievi validati con `form_id = 'water'` oppure `properties.form.id = 'water'`: la condizione è scritta in un solo punto, usato sia da Nova sia dal controller, così i due conteggi non possono più divergere
+- [ ] Per ogni rilievo `temperature`, `conductivity`, `range_volume`, `active` e `info` si leggono da `properties.form`, poi da `raw_data` (stesso ordine di oc:8879); `range_time` (la portata) usa il calcolo di oc:8879
+- [ ] I valori di misura sono quelli che Nova mostra nel pannello «Form» della scheda (`properties.form`, modificabile), anche per i rilievi già presenti nel file: dove `properties.form` e `raw_data` divergono il valore cambia (decisione della dev, 04/11, dopo la verifica: `info` in 894 sorgenti, altri campi in 49). Un valore vuoto diventa `N/A`
+- [ ] Ogni feature ha la property `date`, in ISO 8601 normalizzato in UTC (es. `2024-08-11T12:46:11+00:00`), anche quando viene da `created_at`
+- [ ] La data si prende da `properties.createdAt`, poi `raw_data.date`, poi `created_at`, in un solo metodo del modello `UgcPoi` (`getSurveyDate()`)
+- [ ] Una data vuota o non interpretabile non fa fallire il file e non diventa «adesso»: si passa alla fonte successiva
+- [ ] Test sul metodo della data (tre fonti, data vuota, data non interpretabile) e sulla condizione condivisa (SQL dello scope); il conteggio uguale a Nova si verifica in locale
+- [ ] Verifica in locale: numero di feature uguale ai validi di Nova (2650 sul DB locale)
 
 ## Rischi
 
-- **Interpretazione da confermare.** Se Alessandro o Matteo intendono un altro file o un'altra data, cambiano il metodo e il test, non la struttura. Per questo il rilascio aspetta la risposta.
-- **Ripiego su `created_at` per 788 rilievi.** Può essere successivo alla misura anche di più di un anno, e il cliente non lo distingue da una data vera. È la seconda domanda per Alessandro: se si sceglie il campo vuoto, cambia solo l'ultima fonte.
-- **Nome del campo.** Una volta pubblicato finisce negli script del cliente: cambiarlo dopo il rilascio rompe chi lo legge.
+- **Il branch non contiene oc:8879.** È nato prima del merge (`558867f`): la lettura da `properties.form` e il calcolo della portata nuovo sono solo su develop. Prima di scrivere codice va unito develop nel branch.
+- **Gli altri formati cambiano solo in parte.** gpx, kml e `overlay.geojson` usano lo stesso metodo che sceglie i rilievi (`getValidatedSurveys()`): dopo la correzione contengono anche i rilievi recenti, ma leggono i valori ancora solo da `raw_data`, quindi per quei rilievi temperatura, conducibilità, volume e `active` escono `N/A` e la portata è quella salvata, non ricalcolata. Lo shapefile invece **non** cambia: la sua query ripete `AND form_id = 'water'` (`SourceSurveyController.php:246`) e resta con i soli rilievi vecchi. Non richiesti dal cliente: restano così (vedi Out of scope).
+- **Data diversa da «Registrato il» di Nova** (decisione della dev, 04/11, dopo la review). La scheda Nova ha già un campo «Registrato il» (`app/Traits/Nova/UgcCommonFieldsTrait.php:117-119`, calcolato alle righe 259-271 con `properties.date` → `properties.createdAt` → `created_at`, senza `raw_data.date`). Per gli 803 rilievi validati con la sola `raw_data.date` (app vecchia) Nova mostra la data di arrivo sul server, il GeoJSON quella della misura: per esempio il rilievo 1842 ha 11/08/2024 nel GeoJSON e 12/08/2024 in Nova. La differenza è voluta: il GeoJSON è più vicino alla misura, e cambiare Nova non è stato chiesto.
+- **Il file diventa più lento.** Da 2216 a circa 2650 feature in locale (circa 2900 in produzione), con una query per feature per la geometria. Prima della modifica 1,6-2,3 s in locale a seconda della misura; dopo 2,05 s.
+- **Ripiego su `created_at`:** per circa un rilievo su tre la data può distare più di una settimana dalla misura, e il cliente non lo distingue. Mitigato con la frase nella risposta al cliente.
+- **Nome del campo e significato.** Una volta pubblicato finisce negli script del cliente: cambiarli dopo il rilascio rompe chi lo legge.
+- **Fusi orari misti.** `created_at` è salvato nell'ora italiana, le altre fonti in UTC: senza normalizzare, i giorni vicini alla mezzanotte slitterebbero. Per questo il requisito chiede tutto in UTC.
 
 ## Out of scope
 
 - L'errore 500 dell'export Nova e la scelta fra A, B e C del ciclo 1: si riprendono con Giuseppe dopo questo ciclo
 - Il link GeoJSON con tutti i rilievi indipendentemente dalla validazione
-- I 533 rilievi con `form_id` vuoto e `properties.form.id = 'water'`, che il GeoJSON non restituisce (in Nova sì)
-- Gli altri formati dello stesso controller (gpx, kml, shp, overlay) e la data mostrata nel popup dei monitoraggi (`formatSurveyData`, riga 339)
-- La query per feature della geometria (`SourceSurveyController.php:118`)
+- La data negli altri formati (gpx, kml, shp)
+- I valori dei rilievi recenti in gpx, kml e `overlay.geojson`, che leggono solo `raw_data` (escono `N/A`), e lo shapefile, che filtra ancora solo su `form_id` (`SourceSurveyController.php:246`). Non richiesti
+- Il campo «Registrato il» di Nova, che calcola la data con un altro ordine di fonti (vedi Rischi). Non richiesto
+- Gli altri conteggi che filtrano ancora solo su `form_id = 'water'`: card della dashboard Acqua Sorgente (`app/Helpers/Nova/DashboardCardsHelper.php:290`), metrica `app/Nova/Metrics/AcquaSorgenteTrend.php:18`, comando `app/Console/Commands/ConvertValidatedWaterUgcPoisToEcPois.php:57`. Non richiesti
+- `elevation` sempre `N/A` per i rilievi recenti (la quota non è in `raw_data.position`). Non richiesto
+- La data nel popup di `overlay.geojson` (`formatSurveyData`, `SourceSurveyController.php:339`), che la calcola per conto suo (`raw_data.date`, poi `created_at`): per i rilievi dell'app attuale mostrerà una data diversa dal GeoJSON (per il 7253, 25/09/2025 contro 04/08/2024). Non richiesto; il popup non risulta usato da nessuna configurazione (domanda 1 di oc:8879)
+- Il conteggio di `/api/v2/source_survey/monitorings` (`SourceSurveyController.php:284`), che filtra ancora solo su `form_id = 'water'`. Non richiesto
+- La query per feature della geometria (`SourceSurveyController.php:118`), salvo che la nuova misura dei tempi la renda necessaria
+- Un identificativo stabile della sorgente per raggruppare le misure: non chiesto dal cliente
 
 ## Moduli toccati
 
 Tutto nel repo principale `osm2cai2`, nessuna modifica a `wm-package`:
 
-- `app/Models/UgcPoi.php` — metodo che restituisce la data della misura
-- `app/Http/Controllers/SourceSurveyController.php` — property `date` in `createFeatures()`
-- `tests/Unit/Models/` — test del metodo
+- `app/Models/UgcPoi.php` — scope `forForm()`, `getFormValue()` (valori del form, `properties.form` poi `raw_data`), `getSurveyDate()` (data della misura)
+- `app/Nova/AbstractValidationResource.php` — la condizione sul form diventa riusabile (es. scope sul modello)
+- `app/Http/Controllers/SourceSurveyController.php` — `getValidatedSurveys()` con la condizione di Nova; `createFeatures()` con i valori dal form e la property `date`
+- `tests/Unit/Models/UgcPoiSurveyDateTest.php`, `tests/Unit/Models/UgcPoiFormTest.php` — test della data, dello scope e di `getFormValue()`
 
 # Ciclo 1 — Analisi dell'export Nova (03/11/2026)
 
