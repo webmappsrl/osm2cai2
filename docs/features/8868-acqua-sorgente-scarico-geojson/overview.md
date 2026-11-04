@@ -2,6 +2,68 @@
 
 # Acqua Sorgente - Scarico GeoJson
 
+# Ciclo 2 — Data di registrazione nel GeoJSON (04/11/2026)
+
+## Cosa cambia
+
+Ogni sorgente del file `/api/v2/source_survey/survey.geojson` ha un campo in più, `date`: la data e l'ora in cui è stata fatta la misura alla sorgente. Il resto del file non cambia: stessi rilievi (validati, `form_id = 'water'`), stessi campi, stesso ordine.
+
+## Perché
+
+Il 03/11 Matteo Nigro ha aggiunto alla richiesta: «Servirebbe che nel file geojson ci fosse anche la data di registrazione, altrimenti è difficile gestire le serie di dati nel tempo». Allo scrum del 04/11 Alessio Piccioli ha deciso di farla («quel dato lì è fondamentale […] facciamolo assolutamente sì») e Giuseppe Bonfanti ha chiesto di farla prima di riprendere l'errore dell'export («concentrati su inserire la data di registrazione […] appena l'hai fatto vediamo assieme il problema del che dà errore»).
+
+Nessuno ha detto in quale file né quale data. L'interpretazione di questo ciclo è scritta come domanda aperta per Alessandro Peci nelle note dev del ticket (04/11):
+
+- **file:** `survey.geojson`, l'unico GeoJSON che il cliente cita e usa; l'export Nova produce Excel/CSV;
+- **data:** quella della misura, non quella di arrivo nel DB, perché serve a ordinare nel tempo più misure della stessa sorgente.
+
+### Da dove si prende la data (verificato sul DB locale)
+
+Oggi il file non espone nessuna data (`app/Http/Controllers/SourceSurveyController.php:107-117`). `created_at` non è la data della misura: è quella in cui il rilievo è arrivato nel DB. Per esempio il rilievo 7253 ha la misura nel 2024 e `created_at` al 25/09/2025, giorno dell'importazione.
+
+Sui 2216 rilievi che il file restituisce in locale:
+
+| Fonte della data | Rilievi |
+|---|---|
+| `raw_data.date` | 805 |
+| solo `properties.createdAt` (data dell'app al rilievo) | 623 |
+| nessuna data della misura, resta `created_at` | 788 |
+
+`properties.form.date`, quando c'è, coincide con `raw_data.date` (nessun rilievo ha solo quella).
+
+## Requisiti
+
+- [ ] Nel GeoJSON ogni feature ha la property `date`, in formato ISO 8601 (es. `2024-08-11T12:46:11+00:00`)
+- [ ] La data si prende da `raw_data.date`, poi `properties.createdAt`, poi `created_at`, in un solo metodo del modello `UgcPoi`, così chi la mostra altrove non può calcolarla diversamente
+- [ ] Una data non interpretabile non fa fallire il file: si passa alla fonte successiva
+- [ ] Il resto del GeoJSON resta identico (rilievi, campi esistenti, valori)
+- [ ] Test sul metodo con i casi delle tre fonti e della data non interpretabile
+- [ ] Rilascio in produzione solo dopo la risposta di Alessandro alle domande nelle note dev
+
+## Rischi
+
+- **Interpretazione da confermare.** Se Alessandro o Matteo intendono un altro file o un'altra data, cambiano il metodo e il test, non la struttura. Per questo il rilascio aspetta la risposta.
+- **Ripiego su `created_at` per 788 rilievi.** Può essere successivo alla misura anche di più di un anno, e il cliente non lo distingue da una data vera. È la seconda domanda per Alessandro: se si sceglie il campo vuoto, cambia solo l'ultima fonte.
+- **Nome del campo.** Una volta pubblicato finisce negli script del cliente: cambiarlo dopo il rilascio rompe chi lo legge.
+
+## Out of scope
+
+- L'errore 500 dell'export Nova e la scelta fra A, B e C del ciclo 1: si riprendono con Giuseppe dopo questo ciclo
+- Il link GeoJSON con tutti i rilievi indipendentemente dalla validazione
+- I 533 rilievi con `form_id` vuoto e `properties.form.id = 'water'`, che il GeoJSON non restituisce (in Nova sì)
+- Gli altri formati dello stesso controller (gpx, kml, shp, overlay) e la data mostrata nel popup dei monitoraggi (`formatSurveyData`, riga 339)
+- La query per feature della geometria (`SourceSurveyController.php:118`)
+
+## Moduli toccati
+
+Tutto nel repo principale `osm2cai2`, nessuna modifica a `wm-package`:
+
+- `app/Models/UgcPoi.php` — metodo che restituisce la data della misura
+- `app/Http/Controllers/SourceSurveyController.php` — property `date` in `createFeatures()`
+- `tests/Unit/Models/` — test del metodo
+
+# Ciclo 1 — Analisi dell'export Nova (03/11/2026)
+
 Analisi della situazione e proposta di soluzione per l'export completo dei rilievi Acqua Sorgente. Il titolo del ticket parla di GeoJSON, ma il lavoro riguarda l'azione Nova «Esporta in» (Excel/CSV). Il GeoJSON pubblico (`/api/v2/source_survey/survey.geojson`) resta com'è, cioè con i soli rilievi validati.
 
 ## Cosa cambia
