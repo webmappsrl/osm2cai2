@@ -89,9 +89,22 @@ class SourceSurveyController extends Controller
 
     private function getValidatedSurveys()
     {
-        return UgcPoi::where('form_id', 'water')
+        // Same surveys Nova shows as valid, including the ones with the form only in properties.form.id
+        return UgcPoi::forForm('water')
             ->where('validated', 'valid')
             ->get();
+    }
+
+    private function formValueOrNotAvailable(UgcPoi $survey, string $key): mixed
+    {
+        $value = $survey->getFormValue($key);
+
+        return $this->isBlank($value) ? 'N/A' : $value;
+    }
+
+    private function isBlank(mixed $value): bool
+    {
+        return $value === null || (is_string($value) && trim($value) === '');
     }
 
     private function createFeatures($surveys)
@@ -107,13 +120,18 @@ class SourceSurveyController extends Controller
                 'properties' => [
                     'id' => $survey->id,
                     'title' => $survey->name ?? 'N/A',
-                    'active' => $rawData['active'] ?? 'N/A',
-                    'info' => $survey->description ?? 'N/A',
-                    'range_time' => $rawData['flow_rate'] ?? 'N/A',
-                    'temperature' => $rawData['temperature'] ?? 'N/A',
-                    'conductivity' => $rawData['conductivity'] ?? 'N/A',
-                    'range_volume' => $rawData['range_volume'] ?? 'N/A',
+                    // properties.form for the surveys sent by the current app, raw_data for the older ones
+                    'active' => $this->formValueOrNotAvailable($survey, 'active'),
+                    'info' => $this->isBlank($survey->description)
+                        ? $this->formValueOrNotAvailable($survey, 'info')
+                        : $survey->description,
+                    // flow rate computed like in Nova (oc:8879), without saving
+                    'range_time' => $survey->computeFlowRate(),
+                    'temperature' => $this->formValueOrNotAvailable($survey, 'temperature'),
+                    'conductivity' => $this->formValueOrNotAvailable($survey, 'conductivity'),
+                    'range_volume' => $this->formValueOrNotAvailable($survey, 'range_volume'),
                     'elevation' => $altitude,
+                    'date' => $survey->getSurveyDate()?->toIso8601String(),
                 ],
                 'geometry' => json_decode(DB::select("select st_asGeojson(geometry) as geom from ugc_pois where id=$survey->id;")[0]->geom, true),
             ];

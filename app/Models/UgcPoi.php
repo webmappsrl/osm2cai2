@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Enums\ValidatedStatusEnum;
 use App\Services\FlowRateParser;
 use App\Traits\UgcCommonModelTrait;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Throwable;
 use Wm\WmPackage\Models\UgcPoi as WmUgcPoi;
 use Wm\WmPackage\Services\GeometryComputationService;
 
@@ -46,6 +49,73 @@ class UgcPoi extends WmUgcPoi
     public function setGeometryAttribute($value)
     {
         $this->attributes['geometry'] = GeometryComputationService::make()->convertTo3DGeometry($value);
+    }
+
+    /**
+     * Surveys of a form: older ones have the form in the form_id column, the ones sent
+     * by the app through wm-package (from 27/10/2025) only in properties.form.id.
+     * Used by Nova and by the public source survey endpoints, so they select the same surveys.
+     */
+    public function scopeForForm(Builder $query, string $formId): Builder
+    {
+        return $query->where(function (Builder $q) use ($formId) {
+            $q->where('form_id', $formId)
+                ->orWhere('properties->form->id', $formId);
+        });
+    }
+
+    /**
+     * Value of a form field: properties.form for the surveys sent by the app through
+     * wm-package, raw_data for the older ones. A blank value falls back to raw_data.
+     */
+    public function getFormValue(string $key): mixed
+    {
+        $value = $this->properties['form'][$key] ?? null;
+        if ($value !== null && (! is_scalar($value) || trim((string) $value) !== '')) {
+            return $value;
+        }
+
+        return $this->getRawDataArray()[$key] ?? null;
+    }
+
+    /**
+     * Date of the survey, in UTC: the device date saved by the current app
+     * (properties.createdAt), then the one saved by the old app (raw_data.date),
+     * then the date the survey reached the database (created_at), which is usually
+     * a few days later. Blank or non ISO 8601 dates are skipped.
+     */
+    public function getSurveyDate(): ?Carbon
+    {
+        $candidates = [
+            $this->properties['createdAt'] ?? null,
+            $this->getRawDataArray()['date'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            $date = $this->parseIsoDate($candidate);
+            if ($date !== null) {
+                return $date;
+            }
+        }
+
+        return $this->created_at ? Carbon::parse($this->created_at)->utc() : null;
+    }
+
+    /**
+     * Only ISO 8601 strings (YYYY-MM-DD...): Carbon::parse('') would return "now"
+     * and '11/08/2024' would be read as November 8th.
+     */
+    private function parseIsoDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}-\d{2}/', trim($value))) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse(trim($value))->utc();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**
@@ -174,18 +244,9 @@ class UgcPoi extends WmUgcPoi
         return is_string($active) && strtolower(trim($active)) === 'no';
     }
 
-    /**
-     * Surveys sent by the app through wm-package keep the form data in properties.form,
-     * older surveys in raw_data.
-     */
     private function getFlowRateInput(string $key): mixed
     {
-        $value = $this->properties['form'][$key] ?? null;
-        if ($value !== null && trim((string) $value) !== '') {
-            return $value;
-        }
-
-        return $this->getRawDataArray()[$key] ?? null;
+        return $this->getFormValue($key);
     }
 
     private function getRawDataArray(): array
