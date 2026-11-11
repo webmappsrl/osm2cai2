@@ -46,6 +46,8 @@
     "Accessibility": "Percorribilità",
     "Accessibility History": "Cronologia Percorribilità",
     "Accessibility Issue": "Segnalazioni Percorribilità",
+    "You are not authorized to report issues on the selected hiking routes": "Non sei autorizzato a inserire segnalazioni sui percorsi selezionati",
+    "Issues updated on :updated hiking routes, :skipped skipped because outside your territory": "Segnalazioni aggiornate su :updated percorsi, :skipped saltati perché fuori dal tuo territorio",
     "Accessibility Status": "Stato Percorribilità",
     "Accessibility Status SAL": "Stato Percorribilità SAL",
     "Accessibility Summary": "Statistiche Percorribilità",

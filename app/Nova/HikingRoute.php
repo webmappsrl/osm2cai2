@@ -400,7 +400,21 @@ class HikingRoute extends OsmfeaturesResource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel'))
                 ->canSee(function ($request) {
-                    return auth()->user()->getTerritorialRole() != 'unknown';
+                    $user = $request->user();
+
+                    // Detail view e righe della index view (CreateIssue è showInline): la Resource ha il percorso,
+                    // quindi la action compare solo se l'utente lo può gestire (oc:8945).
+                    // Menu della selezione multipla ed esecuzione: modello vuoto, vale il controllo per ruolo.
+                    if ($this->resource instanceof HikingRouteModel && $this->resource->exists) {
+                        return $user->canManageHikingRoute($this->resource);
+                    }
+
+                    return $user->getTerritorialRole() != 'unknown';
+                })
+                // Senza canRun Nova usa HikingRoutePolicy::update(), che rifiuta chi non è Administrator (oc:8945).
+                // Il secondo argomento è il percorso, non l'utente; il filtro per territorio è in CreateIssue::handle().
+                ->canRun(function ($request, $hikingRoute) {
+                    return $request->user()->getTerritorialRole() != 'unknown';
                 })
                 ->showInline(),
             (new OverpassMap($this->model()))
