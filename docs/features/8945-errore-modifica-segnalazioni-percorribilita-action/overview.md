@@ -15,9 +15,9 @@ I permessi territoriali sono quelli già definiti da `User::canManageHikingRoute
 
 In concreto:
 
-- `CreateIssue` riceve un `canRun` che lascia passare chi ha un ruolo territoriale (`getTerritorialRole() != 'unknown'`): così Nova non usa più la policy `update` e non scarta in silenzio nessun percorso;
+- `CreateIssue` riceve un `canRun` che lascia passare chi ha un ruolo territoriale (`getTerritorialRole() != 'unknown'`): così Nova non usa più la policy `update` e non scarta in silenzio nessun percorso. Il controllo si imposta con `->canRun(...)` in `HikingRoute::actions()`: ridefinire `authorizedToRun()` nella classe della action non basta, perché Nova controlla la proprietà `runCallback` (`vendor/laravel/nova/src/Actions/ActionModelCollection.php:29`). Nella closure l'utente va preso da `$request->user()`: il secondo argomento è il percorso (`vendor/laravel/nova/src/Actions/Action.php:482`), anche se nelle altre action della Resource si chiama `$user`;
 - `CreateIssue::handle()` aggiorna solo i percorsi per cui `canManageHikingRoute()` è vero e conta quelli saltati. Se ne salta alcuni risponde con `Action::message`, dicendo quanti percorsi sono stati aggiornati e quanti saltati perché fuori territorio; se li salta tutti risponde con `Action::danger` e non modifica nulla. Con più di un percorso selezionato Nova applica prima `HikingRoute::indexQuery()` (`vendor/laravel/nova/src/Http/Requests/ActionRequest.php:127-131`), che per il RegionalReferent filtra già per regione: il conteggio dei saltati riguarda quindi in pratica il LocalReferent, mentre il RegionalReferent dalla index view vede e seleziona solo percorsi della sua regione;
-- il `canSee` di `CreateIssue`, quando la Resource ha un percorso esistente (detail view), mostra la action solo se `canManageHikingRoute()` è vero per quel percorso; altrimenti (index view, esecuzione della action) resta il controllo per ruolo attuale;
+- il `canSee` di `CreateIssue`, quando la Resource ha un percorso esistente, mostra la action solo se `canManageHikingRoute()` è vero per quel percorso; altrimenti resta il controllo per ruolo attuale. La Resource ha un percorso esistente in due casi: nella detail view e sulle righe della index view, dove `CreateIssue` compare come pulsante perché è `showInline()` (`app/Nova/HikingRoute.php:405`) e Nova valuta il `canSee` con il percorso della riga (`vendor/laravel/nova/src/Resource.php:521` → `vendor/laravel/nova/src/ResolvesActions.php:101-108`). Il controllo per ruolo vale quindi solo per il menu delle action sulla selezione multipla della index view e per l'esecuzione della action;
 - `canManageHikingRoute()` restituisce `false` invece di lanciare un errore per un RegionalReferent senza regione assegnata.
 
 ## Perché
@@ -41,13 +41,13 @@ Il `canSee` viene allineato ai permessi nella detail view perché mostrare un co
 - [ ] Un LocalReferent esegue `CreateIssue` sui percorsi che intersecano i suoi settori, aree o province; su un percorso senza intersezione riceve la risposta `danger` di `handle()` e il percorso non viene modificato.
 - [ ] Un utente senza ruolo territoriale non vede `CreateIssue` (comportamento attuale invariato).
 - [ ] Nella detail view di un percorso, `CreateIssue` compare solo se `canManageHikingRoute()` è vero per quel percorso.
-- [ ] Nella index view, `CreateIssue` compare a chi ha un ruolo territoriale.
+- [ ] Nella index view, il pulsante inline di `CreateIssue` compare solo sulle righe dei percorsi per cui `canManageHikingRoute()` è vero; nel menu delle action sulla selezione multipla `CreateIssue` compare a chi ha un ruolo territoriale.
 - [ ] Su una selezione mista di un LocalReferent, `CreateIssue` aggiorna solo i percorsi nel suo territorio e risponde con `Action::message` indicando quanti ne ha aggiornati e quanti ne ha saltati.
 - [ ] Se nessun percorso selezionato è nel territorio dell'utente, `CreateIssue` non aggiorna nulla e risponde con `Action::danger`.
 - [ ] I testi nuovi dei messaggi sono scritti in inglese e tradotti in `lang/vendor/nova/it.json`, il file che contiene già le traduzioni della action (`"Accessibility Issue"`, riga 48).
 - [ ] `canManageHikingRoute()` restituisce `false`, senza errore, per un RegionalReferent senza regione.
 - [ ] Le altre action di `HikingRoute` non cambiano permessi.
-- [ ] Test Feature sull'endpoint delle action di Nova (`uriKey` `segnalazioni-percorribilità`, ricavato dal nome tradotto) con i casi: Administrator, NationalReferent, RegionalReferent della regione del percorso, RegionalReferent di un'altra regione, LocalReferent con intersezione, LocalReferent senza intersezione, RegionalReferent senza regione (con un solo percorso selezionato, così Nova usa `detailQuery()` e non il difetto di `indexQuery()` lasciato fuori; esito atteso: risposta `danger`, nessuna modifica), selezione mista di un LocalReferent.
+- [ ] Test Feature sull'endpoint delle action di Nova (`uriKey` ricavato con `(new CreateIssue)->uriKey()`, non scritto a mano: dipende dal nome tradotto della action) con i casi: Administrator, NationalReferent, RegionalReferent della regione del percorso, RegionalReferent di un'altra regione, LocalReferent con intersezione, LocalReferent senza intersezione, RegionalReferent senza regione (con un solo percorso selezionato, così Nova usa `detailQuery()` e non il difetto di `indexQuery()` lasciato fuori; esito atteso: risposta `danger`, nessuna modifica), selezione mista di un LocalReferent. Un test in più sulla index view di un LocalReferent verifica che il pulsante inline di `CreateIssue` compaia sulla riga del percorso nel suo territorio e non su quella del percorso fuori territorio.
 - [ ] Il test esistente `tests/Unit/Models/UserTest.php::regional_referent_without_region_cannot_manage_routes`, che oggi si aspetta un'eccezione, viene riscritto perché si aspetti `false`.
 
 ## Rischi
@@ -73,5 +73,6 @@ Tutti nel repo principale `osm2cai2` (feature custom, nessun submodule coinvolto
 - `app/Nova/Actions/CreateIssue.php` — filtro per territorio e messaggi in `handle()`
 - `app/Models/User.php` — `canManageHikingRoute()`, caso del RegionalReferent senza regione
 - `lang/vendor/nova/it.json` — traduzione dei messaggi nuovi
+- `lang/vendor/nova/en.json` — chiavi dei messaggi nuovi, perché il file contiene già le altre chiavi della action
 - `tests/Feature/` — nuovo test sull'endpoint delle action per `CreateIssue`
 - `tests/Unit/Models/UserTest.php` — riscrittura di `regional_referent_without_region_cannot_manage_routes`
