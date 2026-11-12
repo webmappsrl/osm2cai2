@@ -635,10 +635,8 @@ class UserTest extends TestCase
             'region_id' => $region->id,
         ]);
 
-        // Il codice tenta di accedere a $this->region->id quando region è null
-        // Questo causerà un errore, quindi il test verifica che venga lanciata un'eccezione
-        $this->expectException(\ErrorException::class);
-        $user->canManageHikingRoute($hikingRoute);
+        // Senza regione assegnata il RegionalReferent non gestisce nessun percorso (oc:8945)
+        $this->assertFalse($user->canManageHikingRoute($hikingRoute));
     }
 
     /** @test */

@@ -181,6 +181,10 @@ class User extends WmUser
         }
 
         if ($this->hasRole(UserRole::RegionalReferent)) {
+            if ($this->region === null) {
+                return false;
+            }
+
             return $hr->regions->pluck('id')->contains($this->region->id);
         }
 

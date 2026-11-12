@@ -42,7 +42,13 @@ class CreateIssue extends Action
     {
         // set the user to the current logged in user
         $user = User::find(auth()->user()->id);
-        foreach ($models as $hikingRoute) {
+
+        // Si aggiornano solo i percorsi nel territorio dell'utente; gli altri vengono saltati e contati (oc:8945)
+        [$authorizedRoutes, $skippedRoutes] = $models->partition(
+            fn ($hikingRoute) => $user->canManageHikingRoute($hikingRoute)
+        );
+
+        foreach ($authorizedRoutes as $hikingRoute) {
             $hikingRoute->issues_status = $fields->issues_status ?? $hikingRoute->issues_status;
             $hikingRoute->issues_description = $fields->issues_description;
             // set the date field to the current date time when the action is performed
@@ -60,6 +66,41 @@ class CreateIssue extends Action
             $hikingRoute->issues_last_update = now();
             $hikingRoute->saveQuietly();
         }
+
+        // Nova chiama handle() una volta per ogni blocco di $chunkCount percorsi: qui si restituiscono
+        // solo i conteggi del blocco, il messaggio si sceglie sul totale in handleResult() (oc:8945)
+        return [
+            'updated' => $authorizedRoutes->count(),
+            'skipped' => $skippedRoutes->count(),
+        ];
+    }
+
+    /**
+     * Sceglie il messaggio finale sommando i conteggi di tutti i blocchi.
+     *
+     * Senza questo override Nova mostrerebbe solo l'esito dell'ultimo blocco (Action::handleResult()).
+     *
+     * @return mixed
+     */
+    public function handleResult(ActionFields $fields, array $results)
+    {
+        // Nova restituisce null per i blocchi senza percorsi
+        $counts = array_filter($results, 'is_array');
+        $updated = array_sum(array_column($counts, 'updated'));
+        $skipped = array_sum(array_column($counts, 'skipped'));
+
+        if ($updated === 0) {
+            return Action::danger(__('You are not authorized to report issues on the selected hiking routes'));
+        }
+
+        if ($skipped > 0) {
+            return Action::message(__('Issues updated on :updated hiking routes, :skipped skipped because outside your territory', [
+                'updated' => $updated,
+                'skipped' => $skipped,
+            ]));
+        }
+
+        return null;
     }
 
     /**
